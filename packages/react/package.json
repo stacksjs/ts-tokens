@@ -1,0 +1,61 @@
+{
+  "name": "react-tokenx",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Generate your own fungible or non-fungible tokens. React components. Placeholder.",
+  "author": "Chris Breuer <chris@stacksjs.org>",
+  "license": "MIT",
+  "homepage": "https://github.com/stacksjs/tokenx/tree/main/packages/react#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stacksjs/tokenx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stacksjs/tokenx/issues"
+  },
+  "keywords": [
+    "typescript",
+    "token",
+    "fungible",
+    "non-fungible",
+    "tokenx",
+    "react",
+    "stacksjs"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./*": {
+      "import": "./dist/*"
+    }
+  },
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "scripts": {
+    "build": "echo 'coming soon'",
+    "lint": "bunx --bun eslint .",
+    "lint:fix": "bunx --bun eslint . --fix",
+    "release": "bun publish --access public",
+    "prepublishOnly": "bun --bun run build",
+    "test": "bun test",
+    "typecheck": "bun --bun tsc --noEmit"
+  },
+  "dependencies": {
+    "@stacksjs/tokenx": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.10",
+    "lint-staged": "^15.5.1",
+    "simple-git-hooks": "^2.12.1",
+    "typescript": "^5.8.3"
+  },
+  "lint-staged": {
+    "*.{js,ts}": "bunx --bun eslint . --fix"
+  }
+}
