@@ -1,0 +1,65 @@
+{
+  "name": "ts-quick-reaction",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "QR & Bar Code generating & reading. Lightweight & powerful.",
+  "author": "Chris Breuer <chris@stacksjs.org>",
+  "license": "MIT",
+  "homepage": "https://github.com/stacksjs/qrx#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stacksjs/qrx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stacksjs/qrx/issues"
+  },
+  "keywords": ["typescript", "qrcode", "barcode", "qr", "bar", "code", "generate", "read", "lightweight", "powerful", "scanner", "reader", "decoder", "encoder", "code128", "code39", "ean", "ean-2", "ean-5", "ean-8", "ean-13", "upc-a", "upc-e", "msi", "msi10", "msi11", "msi1010", "msi1110", "codabar", "itf-14", "pharmacode", "stacksjs"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./*": {
+      "import": "./dist/*"
+    }
+  },
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["README.md", "dist"],
+  "scripts": {
+    "build": "bun --bun build.ts && bun run compile",
+    "lint": "bunx --bun eslint .",
+    "lint:fix": "bunx --bun eslint . --fix",
+    "fresh": "bunx rimraf node_modules/ bun.lock && bun i",
+    "changelog": "bunx changelogen --output CHANGELOG.md",
+    "release": "bun run changelog && bunx bumpp -r --all",
+    "test": "bun test",
+    "dev:docs": "bun --bun vitepress dev docs",
+    "build:docs": "bun --bun vitepress build docs",
+    "preview:docs": "bun --bun vitepress preview docs",
+    "typecheck": "bun --bun tsc --noEmit"
+  },
+  "devDependencies": {
+    "@stacksjs/docs": "^0.69.3",
+    "@stacksjs/eslint-config": "^3.13.1-beta.2",
+    "@stacksjs/qrx": "workspace:*",
+    "@types/bun": "^1.1.14",
+    "bumpp": "^10.0.1",
+    "bun-plugin-dtsx": "^0.21.9",
+    "changelogen": "^0.5.7",
+    "lint-staged": "^15.3.0",
+    "simple-git-hooks": "^2.11.1",
+    "typescript": "^5.7.2",
+    "unocss": "^66.0.0"
+  },
+  "overrides": {
+    "unconfig": "0.3.10"
+  },
+  "lint-staged": {
+    "*.{js,ts}": "bunx --bun eslint . --fix"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}
