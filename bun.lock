@@ -23,9 +23,9 @@
         "ts-tokens": "workspace:*",
       },
       "devDependencies": {
-        "@types/bun": "^1.2.10",
-        "lint-staged": "^15.5.1",
-        "simple-git-hooks": "^2.12.1",
+        "@types/bun": "^1.2.13",
+        "lint-staged": "^15.5.2",
+        "simple-git-hooks": "^2.13.0",
         "typescript": "^5.8.3",
       },
     },
@@ -36,11 +36,11 @@
         "tokens": "./dist/cli.js",
       },
       "devDependencies": {
-        "@types/bun": "^1.2.10",
-        "bun-plugin-dtsx": "^0.21.9",
-        "bunfig": "^0.8.2",
-        "lint-staged": "^15.5.1",
-        "simple-git-hooks": "^2.12.1",
+        "@types/bun": "^1.2.13",
+        "bun-plugin-dtsx": "^0.21.12",
+        "bunfig": "^0.10.0",
+        "lint-staged": "^15.5.2",
+        "simple-git-hooks": "^2.13.0",
         "typescript": "^5.8.3",
       },
     },
@@ -51,9 +51,9 @@
         "ts-tokens": "workspace:*",
       },
       "devDependencies": {
-        "@types/bun": "^1.2.10",
-        "lint-staged": "^15.5.1",
-        "simple-git-hooks": "^2.12.1",
+        "@types/bun": "^1.2.13",
+        "lint-staged": "^15.5.2",
+        "simple-git-hooks": "^2.13.0",
         "typescript": "^5.8.3",
       },
     },
@@ -804,7 +804,7 @@
 
     "bundle-name": ["bundle-name@4.1.0", "", { "dependencies": { "run-applescript": "^7.0.0" } }, "sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q=="],
 
-    "bunfig": ["bunfig@0.8.2", "", { "bin": { "bunfig": "bin/cli.js" } }, "sha512-fJxLZ8pI2J0LQuYFAvpgfvLcQGCHZDcr2tRCafUQpgICwbagkBJby9EGKwKGicUaM8cYR42Rz41o/57OefQLEw=="],
+    "bunfig": ["bunfig@0.10.0", "", { "bin": { "bunfig": "bin/cli.js" } }, "sha512-WqRX+7ed/VU2U5zY2YtbOH7uP2tW6gwYNVLmP0UfUNrJpC0BLjxxFrXaB5wS5LlBEhNVdA8TfI1Gv69Kj50/dw=="],
 
     "c12": ["c12@3.0.3", "", { "dependencies": { "chokidar": "^4.0.3", "confbox": "^0.2.2", "defu": "^6.1.4", "dotenv": "^16.4.7", "exsolve": "^1.0.4", "giget": "^2.0.0", "jiti": "^2.4.2", "ohash": "^2.0.11", "pathe": "^2.0.3", "perfect-debounce": "^1.0.0", "pkg-types": "^2.1.0", "rc9": "^2.1.2" }, "peerDependencies": { "magicast": "^0.3.5" }, "optionalPeers": ["magicast"] }, "sha512-uC3MacKBb0Z15o5QWCHvHWj5Zv34pGQj9P+iXKSpTuSGFS0KKhUWf4t9AJ+gWjYOdmWCPEGpEzm8sS0iqbpo1w=="],
 
