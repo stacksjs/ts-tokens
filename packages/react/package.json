@@ -47,7 +47,7 @@
     "typecheck": "bun --bun tsc --noEmit"
   },
   "dependencies": {
-    "@stacksjs/tokenx": "workspace:*"
+    "ts-tokens": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "^1.2.10",
