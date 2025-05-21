@@ -1,20 +1,20 @@
 {
-  "name": "tokenx",
+  "name": "ts-tokens",
   "type": "module",
   "version": "0.0.0",
   "private": true,
   "description": "Generate your own fungible or non-fungible tokens.",
   "author": "Chris Breuer <chris@stacksjs.org>",
   "license": "MIT",
-  "homepage": "https://github.com/stacksjs/tokenx#readme",
+  "homepage": "https://github.com/stacksjs/ts-tokens#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stacksjs/tokenx.git"
+    "url": "git+https://github.com/stacksjs/ts-tokens.git"
   },
   "bugs": {
-    "url": "https://github.com/stacksjs/tokenx/issues"
+    "url": "https://github.com/stacksjs/ts-tokens/issues"
   },
-  "keywords": ["typescript", "token", "tokenx", "lightweight", "powerful", "stacksjs"],
+  "keywords": ["typescript", "token", "tokens", "lightweight", "powerful", "stacksjs"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

@@ -1,28 +1,34 @@
-name: CI
+name: Releaser
 
 on:
   push:
     tags:
       - 'v*'
 
-jobs:
-  release:
-    name: release
-    runs-on: ubuntu-latest
+permissions:
+  contents: write
+  packages: write
+  id-token: write
 
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ env.VERSION }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install Bun
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Use cached node_modules
+      - name: Use Cached node_modules
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node-modules-${{ hashFiles('**/bun.lockb') }}
+          key: node-modules-${{ hashFiles('**/bun.lock') }}
           restore-keys: |
             node-modules-
 
@@ -30,23 +36,28 @@ jobs:
         run: bun install
 
       - name: Publish to npm
-        run: bun run --filter './packages/*' release
+        run: ./scripts/publish.sh
         env:
           BUN_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
-      - name: Create GitHub release
-        run: bunx changelogithub
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Attach Binaries
-        uses: softprops/action-gh-release@v2
+      - name: Create GitHub Release
+        id: create_release
+        uses: stacksjs/action-releaser@v1.1.0
         with:
           files: |
-            packages/qrx/bin/qrx-linux-x64
-            packages/qrx/bin/qrx-linux-arm64
-            packages/qrx/bin/qrx-windows-x64.exe
-            packages/qrx/bin/qrx-darwin-x64
-            packages/qrx/bin/qrx-darwin-arm64
+            ./packages/tlsx/bin/tlsx-linux-x64.zip
+            ./packages/tlsx/bin/tlsx-linux-arm64.zip
+            ./packages/tlsx/bin/tlsx-windows-x64.zip
+            ./packages/tlsx/bin/tlsx-darwin-x64.zip
+            ./packages/tlsx/bin/tlsx-darwin-arm64.zip
+          # --- Homebrew tap update support ---
+          # Path to your Homebrew formula template (update this path as needed)
+          # homebrewFormula: .github/homebrew-formula.rb
+          # The owner/repo of your Homebrew tap (update this value as needed)
+          # homebrewRepo: stacksjs/homebrew-tap
+          # Optionally uncomment and set these if you need custom values:
+          # homebrewBranch: main
+          # homebrewPath: Formula
+          # homebrewCommitFormat: "update: {{ formula }} to {{ version }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
