@@ -1,4 +1,5 @@
 import type { TokenxConfig } from './types'
+// @ts-expect-error there currently is a dtsx issue with bunfig so this is expected to error
 import { loadConfig } from 'bunfig'
 
 export const defaults: TokenxConfig = {
