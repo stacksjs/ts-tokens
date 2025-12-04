@@ -3161,20 +3161,20 @@ const info = await votes.dao.info(dao)
 
 ### 21.8 CLI for ts-governance
 
-- [ ] Create `packages/ts-governance/bin/cli.ts`
-- [ ] `votes dao create` - Create DAO (interactive)
-- [ ] `votes dao info <address>` - Show DAO info
-- [ ] `votes dao config <address>` - Show/update config
-- [ ] `votes proposal create <dao>` - Create proposal
-- [ ] `votes proposal list <dao>` - List proposals
-- [ ] `votes proposal info <address>` - Show proposal details
-- [ ] `votes proposal vote <address> <for|against|abstain>` - Vote
-- [ ] `votes proposal execute <address>` - Execute passed proposal
-- [ ] `votes delegate <dao> <to> [amount]` - Delegate votes
-- [ ] `votes undelegate <dao>` - Remove delegation
-- [ ] `votes power <dao>` - Show your voting power
-- [ ] `votes treasury info <dao>` - Show treasury balance
-- [ ] `votes treasury deposit <dao> <amount>` - Deposit to treasury
+- [x] Create `src/cli/governance.ts` CLI commands
+- [x] `votes dao create` - Create DAO (interactive)
+- [x] `votes dao info <address>` - Show DAO info
+- [x] `votes dao config <address>` - Show/update config
+- [x] `votes proposal create <dao>` - Create proposal
+- [x] `votes proposal list <dao>` - List proposals
+- [x] `votes proposal info <address>` - Show proposal details
+- [x] `votes proposal vote <address> <for|against|abstain>` - Vote
+- [x] `votes proposal execute <address>` - Execute passed proposal
+- [x] `votes delegate <dao> <to> [amount]` - Delegate votes
+- [x] `votes undelegate <dao>` - Remove delegation
+- [x] `votes power <dao>` - Show your voting power
+- [x] `votes treasury info <dao>` - Show treasury balance
+- [x] `votes treasury deposit <dao> <amount>` - Deposit to treasury
 
 ### 21.9 React Components for ts-governance
 
@@ -3369,24 +3369,24 @@ const info = await votes.dao.info(dao)
 
 ### 25.2 DeFi Integrations
 
-- [ ] Jupiter swap integration (for token payments)
-- [ ] Raydium pool creation helpers
+- [x] Jupiter swap integration (for token payments)
+- [x] Raydium pool creation helpers
 - [ ] Orca whirlpool integration
 - [ ] Marinade staking integration
 - [ ] Token lending protocol helpers
 
 ### 25.3 Marketplace Integrations
 
-- [ ] Magic Eden listing helpers
-- [ ] Tensor listing helpers
+- [x] Magic Eden listing helpers
+- [x] Tensor listing helpers
 - [ ] OpenSea (if Solana support)
 - [ ] Marketplace royalty verification
 - [ ] Cross-marketplace listing
 
 ### 25.4 Infrastructure Integrations
 
-- [ ] Helius DAS API integration
-- [ ] Helius webhooks
+- [x] Helius DAS API integration
+- [x] Helius webhooks
 - [ ] QuickNode add-ons
 - [ ] Triton RPC optimization
 - [ ] Shyft API integration

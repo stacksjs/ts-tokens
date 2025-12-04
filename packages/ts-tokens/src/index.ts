@@ -137,3 +137,33 @@ export {
   IPFSStorageAdapter,
   ShadowDriveStorageAdapter,
 } from './storage'
+
+// Programs (namespace exports to avoid conflicts)
+export * as programs from './programs'
+
+// Security
+export * as security from './security'
+
+// Staking
+export * as staking from './staking'
+
+// Batch operations
+export * as batch from './batch'
+
+// Multi-sig
+export * as multisig from './multisig'
+
+// Governance
+export * as governance from './governance'
+
+// DeFi integrations
+export * as defi from './defi'
+
+// Marketplace integrations
+export * as marketplace from './marketplace'
+
+// Indexer / DAS API
+export * as indexer from './indexer'
+
+// Wallet adapters
+export * as wallets from './wallets'
