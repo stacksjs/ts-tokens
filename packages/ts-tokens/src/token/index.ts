@@ -9,6 +9,7 @@ export * from './mint'
 export * from './transfer'
 export * from './burn'
 export * from './authority'
+export * from './account'
 
 // Re-export convenience functions
 export { createToken, createSimpleToken } from './create'
@@ -23,3 +24,11 @@ export {
   freezeAccount,
   thawAccount,
 } from './authority'
+export {
+  getOrCreateAssociatedTokenAccount,
+  createTokenAccount,
+  closeTokenAccount,
+  getTokenAccountInfo,
+  getAssociatedTokenAccountAddress,
+  tokenAccountExists,
+} from './account'

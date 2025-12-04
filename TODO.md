@@ -413,11 +413,11 @@
 
 ### 3.6 Token Account Management
 
-- [ ] Create `src/token/account.ts`:
-  - [ ] `getOrCreateAssociatedTokenAccount(owner, mint)` - Get or create ATA
-  - [ ] `createTokenAccount(owner, mint)` - Create new token account
-  - [ ] `closeTokenAccount(account)` - Close empty token account (reclaim SOL)
-  - [ ] `getTokenAccountInfo(account)` - Get token account details
+- [x] Create `src/token/account.ts`:
+  - [x] `getOrCreateAssociatedTokenAccount(owner, mint)` - Get or create ATA
+  - [x] `createTokenAccount(owner, mint)` - Create new token account
+  - [x] `closeTokenAccount(account)` - Close empty token account (reclaim SOL)
+  - [x] `getTokenAccountInfo(account)` - Get token account details
 
 ### 3.7 Token Metadata
 
