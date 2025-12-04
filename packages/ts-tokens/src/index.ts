@@ -167,3 +167,14 @@ export * as indexer from './indexer'
 
 // Wallet adapters
 export * as wallets from './wallets'
+
+// Analytics
+export * as analytics from './analytics'
+
+// Fluent API
+export * as fluent from './fluent'
+export { TokenBuilder, tokens } from './fluent/token-builder'
+export { NFTBuilder, nfts, CandyMachineBuilder, candyMachine } from './fluent/nft-builder'
+
+// Simple NFT Standard
+export * as simpleNFT from './simple-nft'

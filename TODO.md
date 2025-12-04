@@ -1577,34 +1577,34 @@
 
 ### 14.1 On-Chain Data Indexing
 
-- [ ] Implement transaction history fetching
-- [ ] Parse and index token transfers
-- [ ] Parse and index NFT sales/transfers
-- [ ] Track holder snapshots over time
+- [x] Implement transaction history fetching
+- [x] Parse and index token transfers
+- [x] Parse and index NFT sales/transfers
+- [x] Track holder snapshots over time
 - [ ] Implement real-time event streaming (websockets)
 
 ### 14.2 DAS API Integration (Digital Asset Standard)
 
-- [ ] Create `src/das/` directory for DAS API client
-- [ ] Implement DAS RPC methods (no external SDK):
-  - [ ] `getAsset` - Get asset by ID
-  - [ ] `getAssetsByOwner` - Get assets by owner
-  - [ ] `getAssetsByGroup` - Get assets by collection
-  - [ ] `getAssetsByCreator` - Get assets by creator
-  - [ ] `searchAssets` - Search with filters
-  - [ ] `getAssetProof` - Get Merkle proof for cNFTs
-  - [ ] `getAssetsByAuthority` - Get by authority
-- [ ] Support multiple DAS providers (Helius, Triton, etc.)
-- [ ] Implement pagination and cursor handling
-- [ ] Add response caching
+- [x] Create `src/indexer/` directory for DAS API client
+- [x] Implement DAS RPC methods (no external SDK):
+  - [x] `getAsset` - Get asset by ID
+  - [x] `getAssetsByOwner` - Get assets by owner
+  - [x] `getAssetsByGroup` - Get assets by collection
+  - [x] `getAssetsByCreator` - Get assets by creator
+  - [x] `searchAssets` - Search with filters
+  - [x] `getAssetProof` - Get Merkle proof for cNFTs
+  - [x] `getAssetsByAuthority` - Get by authority
+- [x] Support multiple DAS providers (Helius, Triton, etc.)
+- [x] Implement pagination and cursor handling
+- [x] Add response caching
 
 ### 14.3 Analytics Utilities
 
-- [ ] `tokens analytics holders <mint>` - Holder distribution
-- [ ] `tokens analytics volume <mint>` - Trading volume
-- [ ] `tokens analytics history <mint>` - Price history
-- [ ] `tokens analytics whale-watch <mint>` - Large holder tracking
-- [ ] Export to CSV/JSON formats
+- [x] `tokens analytics holders <mint>` - Holder distribution
+- [x] `tokens analytics volume <mint>` - Trading volume
+- [x] `tokens analytics history <mint>` - Price history
+- [x] `tokens analytics whale-watch <mint>` - Large holder tracking
+- [x] Export to CSV/JSON formats
 
 ---
 
@@ -1627,7 +1627,7 @@
 
 ### 15.3 Scripting API
 
-- [ ] Create fluent API for chaining operations:
+- [x] Create fluent API for chaining operations:
 
   ```ts
   await tokens
@@ -1637,8 +1637,8 @@
     .execute()
   ```
 
-- [ ] Implement transaction batching in fluent API
-- [ ] Add dry-run support for scripts
+- [x] Implement transaction batching in fluent API
+- [x] Add dry-run support for scripts
 - [ ] Create script templates for common workflows
 
 ---
@@ -2210,11 +2210,11 @@
   // 4. Creates NFT with URI
   ```
 
-- [ ] Support multiple metadata input formats:
-  - [ ] Full metadata JSON object
-  - [ ] Simple object (auto-generates JSON)
-  - [ ] URI string (use as-is)
-  - [ ] Local file path (auto-upload)
+- [x] Support multiple metadata input formats:
+  - [x] Full metadata JSON object
+  - [x] Simple object (auto-generates JSON)
+  - [x] URI string (use as-is)
+  - [x] Local file path (auto-upload)
 
 ### 17.7 Comparison: ts-tokens vs Metaplex
 
