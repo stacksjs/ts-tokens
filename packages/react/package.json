@@ -2,24 +2,24 @@
   "name": "react-tokens",
   "type": "module",
   "version": "0.0.0",
-  "description": "Generate your own fungible or non-fungible tokens. React components. Placeholder.",
+  "description": "React components for Solana tokens and NFTs",
   "author": "Chris Breuer <chris@stacksjs.org>",
   "license": "MIT",
-  "homepage": "https://github.com/stacksjs/tokenx/tree/main/packages/react#readme",
+  "homepage": "https://github.com/stacksjs/ts-tokens/tree/main/packages/react#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stacksjs/tokenx.git"
+    "url": "git+https://github.com/stacksjs/ts-tokens.git"
   },
   "bugs": {
-    "url": "https://github.com/stacksjs/tokenx/issues"
+    "url": "https://github.com/stacksjs/ts-tokens/issues"
   },
   "keywords": [
     "typescript",
     "token",
-    "fungible",
-    "non-fungible",
-    "tokenx",
+    "solana",
+    "nft",
     "react",
+    "components",
     "stacksjs"
   ],
   "exports": {
@@ -27,8 +27,13 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./*": {
-      "import": "./dist/*"
+    "./components": {
+      "types": "./dist/components/index.d.ts",
+      "import": "./dist/components/index.js"
+    },
+    "./hooks": {
+      "types": "./dist/hooks/index.d.ts",
+      "import": "./dist/hooks/index.js"
     }
   },
   "module": "./dist/index.js",
@@ -38,7 +43,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "echo 'coming soon'",
+    "build": "bun build ./src/index.ts --outdir ./dist --target browser",
     "lint": "bunx --bun eslint .",
     "lint:fix": "bunx --bun eslint . --fix",
     "release": "bun publish --access public",
@@ -49,10 +54,21 @@
   "dependencies": {
     "ts-tokens": "workspace:*"
   },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "@solana/wallet-adapter-react": ">=0.15.0",
+    "@solana/wallet-adapter-react-ui": ">=0.9.0",
+    "@solana/web3.js": ">=1.87.0"
+  },
   "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "better-dx": "^0.2.5"
   },
   "lint-staged": {
-    "*.{js,ts}": "bunx --bun eslint . --fix"
+    "*.{js,ts,tsx}": "bunx --bun eslint . --fix"
   }
 }

@@ -730,65 +730,65 @@
 
 ### 6.1 Setup
 
-- [ ] Set up `packages/react/` with proper React + TypeScript config
-- [ ] Add peer dependencies: `react`, `react-dom`, `@solana/wallet-adapter-react`
-- [ ] Create component library build configuration
+- [x] Set up `packages/react/` with proper React + TypeScript config
+- [x] Add peer dependencies: `react`, `react-dom`, `@solana/wallet-adapter-react`
+- [x] Create component library build configuration
 - [ ] Set up Storybook for component development
 
 ### 6.2 Wallet Components
 
-- [ ] `<WalletProvider>` - Wallet context provider
+- [x] `<TokensProvider>` - Tokens context provider
 - [ ] `<WalletConnectButton>` - Connect wallet button
 - [ ] `<WalletDisconnectButton>` - Disconnect button
 - [ ] `<WalletMultiButton>` - Multi-wallet selector
-- [ ] `<WalletAddress>` - Display wallet address (truncated)
-- [ ] `<WalletBalance>` - Display SOL balance
+- [x] `<WalletAddress>` - Display wallet address (truncated)
+- [x] `<WalletBalance>` - Display SOL balance
 
 ### 6.3 Token Components
 
-- [ ] `<TokenBalance mint={} />` - Display token balance
-- [ ] `<TokenInfo mint={} />` - Display token info card
-- [ ] `<TokenList owner={} />` - List all tokens owned
+- [x] `<TokenBalance mint={} />` - Display token balance
+- [x] `<TokenInfo mint={} />` - Display token info card
+- [x] `<TokenList owner={} />` - List all tokens owned
 - [ ] `<TokenTransferForm mint={} />` - Token transfer form
 - [ ] `<TokenMintForm mint={} />` - Token mint form (for authorities)
 
 ### 6.4 NFT Components
 
-- [ ] `<NFTCard mint={} />` - NFT display card with image
-- [ ] `<NFTGrid owner={} />` - Grid of owned NFTs
+- [x] `<NFTCard mint={} />` - NFT display card with image
+- [x] `<NFTGrid owner={} />` - Grid of owned NFTs
 - [ ] `<NFTGallery collection={} />` - Collection gallery
-- [ ] `<NFTDetails mint={} />` - Full NFT details view
+- [x] `<NFTDetails mint={} />` - Full NFT details view
 - [ ] `<NFTTransferButton mint={} />` - Transfer NFT button
 - [ ] `<NFTBurnButton mint={} />` - Burn NFT button
 
 ### 6.5 Candy Machine Components
 
 - [ ] `<CandyMachineProvider>` - CM context provider
-- [ ] `<MintButton candyMachine={} />` - Mint button
-- [ ] `<MintCounter candyMachine={} />` - Minted/Total counter
-- [ ] `<MintProgress candyMachine={} />` - Progress bar
+- [x] `<MintButton candyMachine={} />` - Mint button
+- [x] `<MintCounter candyMachine={} />` - Minted/Total counter
+- [x] `<MintProgress candyMachine={} />` - Progress bar
 - [ ] `<MintPrice candyMachine={} />` - Display mint price
 - [ ] `<CountdownTimer date={} />` - Countdown to mint start
 - [ ] `<AllowlistChecker candyMachine={} />` - Check allowlist status
 
 ### 6.6 Utility Components
 
-- [ ] `<TransactionToast />` - Transaction notification toast
-- [ ] `<ExplorerLink signature={} />` - Link to block explorer
-- [ ] `<AddressDisplay address={} />` - Formatted address display
-- [ ] `<SolAmount amount={} />` - Formatted SOL amount
+- [x] `<TransactionToast />` - Transaction notification toast
+- [x] `<ExplorerLink signature={} />` - Link to block explorer
+- [x] `<AddressDisplay address={} />` - Formatted address display
+- [x] `<SolAmount amount={} />` - Formatted SOL amount
 - [ ] `<TokenAmount mint={} amount={} />` - Formatted token amount
 
 ### 6.7 Hooks
 
 - [ ] `useWallet()` - Wallet state and methods
-- [ ] `useConnection()` - Solana connection
-- [ ] `useTokenBalance(mint)` - Token balance hook
-- [ ] `useNFT(mint)` - NFT data hook
-- [ ] `useNFTs(owner)` - All NFTs hook
-- [ ] `useCandyMachine(address)` - CM state hook
-- [ ] `useTransaction()` - Transaction sending hook
-- [ ] `useTokenAccounts(owner)` - Token accounts hook
+- [x] `useConnection()` - Solana connection
+- [x] `useTokenBalance(mint)` - Token balance hook
+- [x] `useNFT(mint)` - NFT data hook
+- [x] `useNFTs(owner)` - All NFTs hook
+- [x] `useCandyMachine(address)` - CM state hook
+- [x] `useTransaction()` - Transaction sending hook
+- [x] `useTokenAccounts(owner)` - Token accounts hook
 
 ---
 
