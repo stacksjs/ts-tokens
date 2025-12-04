@@ -20,6 +20,7 @@
 - [Phase 14: Analytics & Indexing](#phase-14-analytics--indexing)
 - [Phase 15: Automation & Scripting](#phase-15-automation--scripting)
 - [Phase 16: Migration & Compatibility Tools](#phase-16-migration--compatibility-tools)
+- [Phase 17: Simple NFT Standard (ts-tokens Native)](#phase-17-simple-nft-standard-ts-tokens-native)
 
 ---
 
@@ -1282,9 +1283,299 @@
 
 ### Potential New Standards
 
-- [ ] Evaluate creating our own NFT standard (simpler than Metaplex Core)
 - [ ] Research cross-chain token bridging
 - [ ] Investigate ZK-based privacy features
+
+---
+
+## Phase 17: Simple NFT Standard (ts-tokens Native)
+
+> **Goal**: Create a simpler, more intuitive NFT standard that provides the same features as Metaplex but with cleaner APIs, less boilerplate, and better DX. This becomes our competitive advantage.
+
+### 17.1 Design Principles
+
+- [ ] **Single instruction where possible** - Combine common multi-instruction flows
+- [ ] **Sensible defaults** - No required params that have obvious defaults
+- [ ] **Readable account names** - No cryptic PDA seeds or account naming
+- [ ] **Minimal account overhead** - Fewer accounts = cheaper = faster
+- [ ] **TypeScript-first** - Types that make sense, not auto-generated from Rust
+- [ ] **Progressive complexity** - Simple things simple, complex things possible
+
+### 17.2 Core Program Design
+
+- [ ] Create `programs/ts-nft/` directory for on-chain program (Anchor or native)
+- [ ] Program features:
+  - [ ] **Single-instruction mint** - Create NFT in one transaction
+  - [ ] **Inline metadata** - Store small metadata on-chain (no separate account)
+  - [ ] **Optional external URI** - For larger metadata/media
+  - [ ] **Built-in collection support** - No separate verification step
+  - [ ] **Native royalties** - Enforced at protocol level
+  - [ ] **Simple editions** - Print editions without master edition complexity
+
+### 17.3 Account Structure (Simplified)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ NFT Account (single account vs Metaplex's 3+ accounts)      │
+├─────────────────────────────────────────────────────────────┤
+│ mint: Pubkey              // The SPL token mint             │
+│ owner: Pubkey             // Current owner                  │
+│ collection: Option<Pubkey> // Collection (if any)           │
+│ name: String[32]          // On-chain name                  │
+│ symbol: String[10]        // On-chain symbol                │
+│ uri: String[200]          // Metadata URI                   │
+│ royalty_bps: u16          // Royalty in basis points        │
+│ creators: Vec<Creator>    // Up to 5 creators with shares   │
+│ is_mutable: bool          // Can metadata be updated        │
+│ edition: Option<Edition>  // Edition info (if applicable)   │
+│ attributes: Vec<Attr>     // On-chain attributes (optional) │
+└─────────────────────────────────────────────────────────────┘
+```
+
+- [ ] Design single NFT account structure (vs Metaplex: Mint + Metadata + MasterEdition + Edition)
+- [ ] Design Collection account structure
+- [ ] Design Creator verification system (simpler than Metaplex)
+- [ ] Implement efficient serialization (Borsh with optimizations)
+
+### 17.4 Instruction Set (Clean & Minimal)
+
+#### Core Instructions
+
+- [ ] `create_nft` - Create NFT with all data in one instruction
+
+  ```ts
+  // Metaplex requires: createMint + createMetadataAccountV3 + createMasterEditionV3
+  // ts-tokens:
+  await createNFT({
+    name: 'My NFT',
+    symbol: 'MNFT',
+    uri: 'https://...',
+    royalty: 5, // 5% (not basis points!)
+    creators: [{ address: wallet, share: 100 }],
+  })
+  ```
+
+- [ ] `update_nft` - Update mutable fields
+
+  ```ts
+  await updateNFT(mint, { name: 'New Name', uri: 'https://new...' })
+  ```
+
+- [ ] `transfer_nft` - Transfer with royalty tracking
+
+  ```ts
+  await transferNFT(mint, { to: recipient })
+  ```
+
+- [ ] `burn_nft` - Burn and reclaim rent
+
+  ```ts
+  await burnNFT(mint) // Returns rent to owner
+  ```
+
+#### Collection Instructions
+
+- [ ] `create_collection` - Create collection
+
+  ```ts
+  await createCollection({
+    name: 'My Collection',
+    symbol: 'MCOL',
+    uri: 'https://...',
+    royalty: 5,
+    maxSize: 10000, // Optional cap
+  })
+  ```
+
+- [ ] `add_to_collection` - Add NFT to collection (no separate verify step)
+
+  ```ts
+  await addToCollection(nftMint, collectionMint)
+  // Automatically verified if caller is collection authority
+  ```
+
+- [ ] `remove_from_collection` - Remove NFT from collection
+- [ ] `update_collection` - Update collection metadata
+
+#### Edition Instructions
+
+- [ ] `create_editions` - Create edition NFT (simplified)
+
+  ```ts
+  await createEditions(masterMint, {
+    maxSupply: 100, // or null for unlimited
+  })
+  ```
+
+- [ ] `print_edition` - Print a single edition
+
+  ```ts
+  const edition = await printEdition(masterMint, { to: recipient })
+  // Returns edition number automatically
+  ```
+
+#### Utility Instructions
+
+- [ ] `freeze_nft` / `thaw_nft` - Freeze/unfreeze NFT
+- [ ] `delegate` / `revoke` - Delegate authority
+- [ ] `set_royalty` - Update royalty (if mutable)
+- [ ] `verify_creator` - Creator signs to verify
+
+### 17.5 TypeScript SDK Design
+
+#### Simple, Intuitive API
+
+- [ ] Create `src/simple-nft/` directory
+- [ ] Design fluent builder pattern:
+
+  ```ts
+  // Creating an NFT
+  const nft = await tokens.nft
+    .create()
+    .name('My NFT')
+    .symbol('MNFT')
+    .image('https://...') // Auto-generates metadata JSON
+    .royalty(5)
+    .creator(wallet)
+    .inCollection(collectionMint)
+    .mint()
+
+  // Or with object syntax
+  const nft = await tokens.nft.create({
+    name: 'My NFT',
+    image: 'https://...',
+    royalty: 5,
+  })
+  ```
+
+- [ ] Design query API:
+
+  ```ts
+  // Get NFT data
+  const nft = await tokens.nft.get(mint)
+  console.log(nft.name, nft.owner, nft.royalty)
+
+  // Get all NFTs by owner
+  const nfts = await tokens.nft.byOwner(wallet)
+
+  // Get collection NFTs
+  const items = await tokens.nft.byCollection(collectionMint)
+  ```
+
+- [ ] Design batch operations:
+
+  ```ts
+  // Batch mint
+  await tokens.nft.batchCreate([
+    { name: 'NFT #1', uri: '...' },
+    { name: 'NFT #2', uri: '...' },
+    { name: 'NFT #3', uri: '...' },
+  ])
+
+  // Batch transfer (airdrop)
+  await tokens.nft.batchTransfer(mints, recipients)
+  ```
+
+### 17.6 Metadata Handling (Simplified)
+
+- [ ] **Auto-generate metadata JSON** from simple inputs:
+
+  ```ts
+  // User provides:
+  await createNFT({
+    name: 'Cool NFT',
+    description: 'A very cool NFT',
+    image: './image.png', // Local file
+    attributes: [
+      { trait: 'Background', value: 'Blue' },
+      { trait: 'Rarity', value: 'Legendary' },
+    ],
+  })
+
+  // Library automatically:
+  // 1. Uploads image to configured storage
+  // 2. Generates metadata JSON
+  // 3. Uploads metadata JSON
+  // 4. Creates NFT with URI
+  ```
+
+- [ ] Support multiple metadata input formats:
+  - [ ] Full metadata JSON object
+  - [ ] Simple object (auto-generates JSON)
+  - [ ] URI string (use as-is)
+  - [ ] Local file path (auto-upload)
+
+### 17.7 Comparison: ts-tokens vs Metaplex
+
+| Feature | Metaplex | ts-tokens Simple NFT |
+|---------|----------|---------------------|
+| Create NFT | 3+ instructions | 1 instruction |
+| Accounts per NFT | 3-4 (Mint, Metadata, MasterEdition, Edition) | 1-2 (Mint, NFTData) |
+| Collection verify | Separate instruction | Automatic on add |
+| Royalty format | Basis points (500 = 5%) | Percentage (5 = 5%) |
+| Default mutability | Mutable | Immutable (safer default) |
+| Creator verification | Required separate tx | Optional, can be inline |
+| TypeScript types | Auto-generated, verbose | Hand-crafted, intuitive |
+| Error messages | Program error codes | Human-readable messages |
+
+### 17.8 Migration & Compatibility
+
+- [ ] Create migration tool from Metaplex NFTs to ts-tokens format
+- [ ] Ensure marketplace compatibility (Magic Eden, Tensor, etc.)
+- [ ] Support reading both Metaplex and ts-tokens NFTs
+- [ ] Provide adapter for existing Metaplex collections
+
+### 17.9 CLI Commands for Simple NFT
+
+- [ ] `tokens nft create` - Interactive NFT creation
+
+  ```bash
+  $ tokens nft create
+  ? NFT Name: My Cool NFT
+  ? Description: A very cool NFT
+  ? Image path or URL: ./image.png
+  ? Royalty percentage: 5
+  ? Add to collection? (Y/n): y
+  ? Collection address: ABC123...
+
+  ✓ Uploaded image to Arweave: ar://xyz...
+  ✓ Generated metadata JSON
+  ✓ Uploaded metadata to Arweave: ar://abc...
+  ✓ Created NFT: 7nft...
+  ```
+
+- [ ] `tokens nft create --simple` - One-liner creation
+
+  ```bash
+  tokens nft create --name "My NFT" --image ./img.png --royalty 5
+  ```
+
+- [ ] `tokens collection create` - Create collection
+- [ ] `tokens collection add <nft> <collection>` - Add NFT to collection
+- [ ] `tokens nft editions create <master> --max 100` - Create editions
+- [ ] `tokens nft editions print <master>` - Print edition
+
+### 17.10 On-Chain Program Development
+
+- [ ] Decide: Anchor vs Native Rust
+  - [ ] Anchor: Faster development, more dependencies
+  - [ ] Native: Zero dependencies, more control, harder
+  - [ ] Recommendation: Start with Anchor, optimize later
+- [ ] Set up program development environment
+- [ ] Write program instructions
+- [ ] Write comprehensive tests
+- [ ] Audit program before mainnet deployment
+- [ ] Deploy to devnet for testing
+- [ ] Deploy to mainnet
+
+### 17.11 Documentation for Simple NFT
+
+- [ ] `docs/simple-nft/overview.md` - Why we created this
+- [ ] `docs/simple-nft/quickstart.md` - 5-minute guide
+- [ ] `docs/simple-nft/api.md` - Full API reference
+- [ ] `docs/simple-nft/migration.md` - Migrating from Metaplex
+- [ ] `docs/simple-nft/program.md` - On-chain program docs
+- [ ] `docs/simple-nft/comparison.md` - Detailed comparison with Metaplex
 
 ---
 
