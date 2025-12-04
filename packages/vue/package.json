@@ -1,25 +1,26 @@
 {
-  "name": "vuqe-tokenx",
+  "name": "vue-tokens",
   "type": "module",
   "version": "0.0.0",
-  "description": "Generate your own fungible or non-fungible tokens. Vue components.",
+  "description": "Vue 3 components for Solana tokens and NFTs",
   "author": "Chris Breuer <chris@stacksjs.org>",
   "license": "MIT",
-  "homepage": "https://github.com/stacksjs/tokenx/tree/main/packages/vue#readme",
+  "homepage": "https://github.com/stacksjs/ts-tokens/tree/main/packages/vue#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stacksjs/tokenx.git"
+    "url": "git+https://github.com/stacksjs/ts-tokens.git"
   },
   "bugs": {
-    "url": "https://github.com/stacksjs/tokenx/issues"
+    "url": "https://github.com/stacksjs/ts-tokens/issues"
   },
   "keywords": [
     "typescript",
-    "tokenx",
+    "solana",
     "token",
-    "fungible",
-    "non-fungible",
+    "nft",
     "vue",
+    "vue3",
+    "components",
     "stacksjs"
   ],
   "exports": {
@@ -27,8 +28,13 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./*": {
-      "import": "./dist/*"
+    "./composables": {
+      "types": "./dist/composables/index.d.ts",
+      "import": "./dist/composables/index.js"
+    },
+    "./components": {
+      "types": "./dist/components/index.d.ts",
+      "import": "./dist/components/index.js"
     }
   },
   "module": "./dist/index.js",
@@ -38,7 +44,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "echo 'coming soon'",
+    "build": "bun build ./src/index.ts --outdir ./dist --target browser",
     "lint": "bunx --bun eslint .",
     "lint:fix": "bunx --bun eslint . --fix",
     "release": "bun publish --access public",
@@ -49,13 +55,15 @@
   "dependencies": {
     "ts-tokens": "workspace:*"
   },
+  "peerDependencies": {
+    "vue": "^3.5.25",
+    "@solana/web3.js": ">=1.87.0"
+  },
   "devDependencies": {
-    "@types/bun": "^1.2.13",
-    "lint-staged": "^15.5.2",
-    "simple-git-hooks": "^2.13.0",
-    "typescript": "^5.8.3"
+    "vue": "^3.5.25",
+    "better-dx": "^0.2.5"
   },
   "lint-staged": {
-    "*.{js,ts}": "bunx --bun eslint . --fix"
+    "*.{js,ts,vue}": "bunx --bun eslint . --fix"
   }
 }
