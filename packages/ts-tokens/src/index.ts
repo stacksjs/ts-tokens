@@ -108,6 +108,21 @@ export {
   createCandyMachine,
   addConfigLines,
   mintFromCandyMachine,
+  // Compressed NFTs
+  createMerkleTree,
+  getMerkleTreeInfo,
+  getTreeCapacity,
+  mintCompressedNFT,
+  mintCompressedNFTBatch,
+  transferCompressedNFT,
+  getAssetProof,
+  getAsset,
+  burnCompressedNFT,
+  // Editions
+  createMasterEdition,
+  printEdition,
+  getEditionInfo,
+  getEditionsByMaster,
 } from './nft'
 
 // Storage adapters

@@ -579,32 +579,32 @@
 
 ### 4.11 Compressed NFTs (cNFTs)
 
-- [ ] Create `src/nft/compressed/` directory
-- [ ] Create `src/nft/compressed/tree.ts`:
-  - [ ] `createMerkleTree(options)` - Create Merkle tree for cNFTs
-    - [ ] `maxDepth` - Tree depth (determines capacity)
-    - [ ] `maxBufferSize` - Concurrent update buffer
-    - [ ] `canopyDepth` - Proof caching depth
-  - [ ] `getMerkleTreeInfo(tree)` - Get tree info
-  - [ ] `getTreeCapacity(tree)` - Get remaining capacity
-- [ ] Create `src/nft/compressed/mint.ts`:
-  - [ ] `mintCompressedNFT(tree, options)` - Mint cNFT to tree
-  - [ ] `mintCompressedNFTBatch(tree, items)` - Batch mint cNFTs
-- [ ] Create `src/nft/compressed/transfer.ts`:
-  - [ ] `transferCompressedNFT(options)` - Transfer cNFT
-  - [ ] `getAssetProof(assetId)` - Get proof for transfer
+- [x] Create `src/nft/compressed/` directory
+- [x] Create `src/nft/compressed/tree.ts`:
+  - [x] `createMerkleTree(options)` - Create Merkle tree for cNFTs
+    - [x] `maxDepth` - Tree depth (determines capacity)
+    - [x] `maxBufferSize` - Concurrent update buffer
+    - [x] `canopyDepth` - Proof caching depth
+  - [x] `getMerkleTreeInfo(tree)` - Get tree info
+  - [x] `getTreeCapacity(tree)` - Get remaining capacity
+- [x] Create `src/nft/compressed/mint.ts`:
+  - [x] `mintCompressedNFT(tree, options)` - Mint cNFT to tree
+  - [x] `mintCompressedNFTBatch(tree, items)` - Batch mint cNFTs
+- [x] Create `src/nft/compressed/transfer.ts`:
+  - [x] `transferCompressedNFT(options)` - Transfer cNFT
+  - [x] `getAssetProof(assetId)` - Get proof for transfer
 - [ ] Create `src/nft/compressed/query.ts`:
-  - [ ] `getCompressedNFTsByOwner(owner)` - Get cNFTs by owner
-  - [ ] `getCompressedNFTsByTree(tree)` - Get cNFTs in tree
-  - [ ] `getCompressedNFTMetadata(assetId)` - Get cNFT metadata
+  - [ ] `getCompressedNFTsByOwner(owner)` - Get cNFTs by owner (requires DAS API)
+  - [ ] `getCompressedNFTsByTree(tree)` - Get cNFTs in tree (requires DAS API)
+  - [x] `getCompressedNFTMetadata(assetId)` - Get cNFT metadata (via getAsset)
 
 ### 4.12 Editions (Prints)
 
-- [ ] Create `src/nft/editions.ts`:
-  - [ ] `createMasterEdition(mint, maxSupply)` - Create master edition
-  - [ ] `printEdition(masterMint, options)` - Print edition from master
-  - [ ] `getEditionInfo(mint)` - Get edition info
-  - [ ] `getEditionsByMaster(masterMint)` - Get all editions
+- [x] Create `src/nft/editions.ts`:
+  - [x] `createMasterEdition(mint, maxSupply)` - Create master edition
+  - [x] `printEdition(masterMint, options)` - Print edition from master
+  - [x] `getEditionInfo(mint)` - Get edition info
+  - [x] `getEditionsByMaster(masterMint)` - Get all editions
 
 ---
 

@@ -10,6 +10,8 @@ export * from './burn'
 export * from './metadata'
 export * from './candy-machine'
 export * from './query'
+export * from './compressed'
+export * from './editions'
 
 // Re-export convenience functions
 export { createNFT, createCollection, mintNFT } from './create'
