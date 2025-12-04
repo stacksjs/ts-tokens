@@ -203,60 +203,60 @@
 
 #### Token Metadata Program (Replace `mpl-token-metadata`)
 
-- [ ] Create `src/programs/token-metadata/` directory
-- [ ] Program ID: `metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s`
-- [ ] Implement instruction builders:
-  - [ ] `createMetadataAccountV3` - Create metadata for token
-  - [ ] `updateMetadataAccountV2` - Update metadata
-  - [ ] `createMasterEditionV3` - Create master edition
+- [x] Create `src/programs/token-metadata/` directory
+- [x] Program ID: `metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s`
+- [x] Implement instruction builders:
+  - [x] `createMetadataAccountV3` - Create metadata for token
+  - [x] `updateMetadataAccountV2` - Update metadata
+  - [x] `createMasterEditionV3` - Create master edition
   - [ ] `mintNewEditionFromMasterEditionViaToken` - Print editions
-  - [ ] `verifyCollection` - Verify NFT in collection
-  - [ ] `unverifyCollection` - Remove collection verification
-  - [ ] `setAndVerifyCollection` - Set and verify in one tx
-  - [ ] `verifyCreator` - Verify creator signature
+  - [x] `verifyCollection` - Verify NFT in collection
+  - [x] `unverifyCollection` - Remove collection verification
+  - [x] `setAndVerifyCollection` - Set and verify in one tx
+  - [x] `verifyCreator` - Verify creator signature
   - [ ] `verifySizedCollectionItem` - Verify sized collection
-  - [ ] `burnNft` - Burn NFT with metadata
+  - [x] `burnNft` - Burn NFT with metadata
   - [ ] `burnEditionNft` - Burn edition
-- [ ] Implement account deserializers:
-  - [ ] `Metadata` account parsing
-  - [ ] `MasterEdition` account parsing
-  - [ ] `Edition` account parsing
+- [x] Implement account deserializers:
+  - [x] `Metadata` account parsing
+  - [x] `MasterEdition` account parsing
+  - [x] `Edition` account parsing
   - [ ] `CollectionAuthorityRecord` parsing
-- [ ] Implement PDA derivation functions:
-  - [ ] `findMetadataPda(mint)`
-  - [ ] `findMasterEditionPda(mint)`
-  - [ ] `findEditionPda(mint)`
-  - [ ] `findCollectionAuthorityPda(mint, authority)`
+- [x] Implement PDA derivation functions:
+  - [x] `findMetadataPda(mint)`
+  - [x] `findMasterEditionPda(mint)`
+  - [x] `findEditionPda(mint)`
+  - [x] `findCollectionAuthorityPda(mint, authority)`
 
 #### Candy Machine v3 Program (Replace `mpl-candy-machine`)
 
-- [ ] Create `src/programs/candy-machine/` directory
-- [ ] Program ID: `CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR`
-- [ ] Implement instruction builders:
-  - [ ] `initializeCandyMachine` - Create new CM
-  - [ ] `addConfigLines` - Add NFT config lines
-  - [ ] `updateCandyMachine` - Update CM settings
-  - [ ] `setCandyMachineAuthority` - Transfer authority
-  - [ ] `mintFromCandyMachine` - Mint NFT
+- [x] Create `src/programs/candy-machine/` directory
+- [x] Program ID: `CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR`
+- [x] Implement instruction builders:
+  - [x] `initializeCandyMachine` - Create new CM
+  - [x] `addConfigLines` - Add NFT config lines
+  - [x] `updateCandyMachine` - Update CM settings
+  - [x] `setCandyMachineAuthority` - Transfer authority
+  - [x] `mintFromCandyMachine` - Mint NFT
   - [ ] `setMintAuthority` - Set mint authority
-  - [ ] `withdraw` - Withdraw funds
-- [ ] Implement Candy Guard program:
-  - [ ] Program ID: `Guard1JwRhJkVH6XZhzoYxeBVQe872VH6QggF4BWmS9g`
+  - [x] `withdraw` - Withdraw funds
+- [x] Implement Candy Guard program:
+  - [x] Program ID: `Guard1JwRhJkVH6XZhzoYxeBVQe872VH6QggF4BWmS9g`
   - [ ] `initialize` - Create guard
   - [ ] `update` - Update guards
   - [ ] `wrap` / `unwrap` - Wrap/unwrap CM with guard
   - [ ] `mint` - Mint with guard validation
-- [ ] Implement all guard types as instruction builders:
-  - [ ] `solPayment`, `tokenPayment`, `nftPayment`
-  - [ ] `startDate`, `endDate`
-  - [ ] `mintLimit`, `redeemedAmount`
-  - [ ] `allowList` (Merkle proof validation)
-  - [ ] `nftGate`, `tokenGate`
-  - [ ] `addressGate`, `programGate`
-  - [ ] `freezeSolPayment`, `freezeTokenPayment`
-  - [ ] `allocation`, `token2022Payment`
-- [ ] Implement account deserializers:
-  - [ ] `CandyMachine` account parsing
+- [x] Implement all guard types as instruction builders:
+  - [x] `solPayment`, `tokenPayment`, `nftPayment`
+  - [x] `startDate`, `endDate`
+  - [x] `mintLimit`, `redeemedAmount`
+  - [x] `allowList` (Merkle proof validation)
+  - [x] `nftGate`, `tokenGate`
+  - [x] `addressGate`, `programGate`
+  - [x] `freezeSolPayment`, `freezeTokenPayment`
+  - [x] `allocation`, `token2022Payment`
+- [x] Implement account deserializers:
+  - [x] `CandyMachine` account parsing
   - [ ] `CandyGuard` account parsing
 
 #### Core Asset Program (Replace `mpl-core`) - Optional Future
@@ -796,43 +796,42 @@
 
 ### 7.1 Setup
 
-- [ ] Set up `packages/vue/` with proper Vue 3 + TypeScript config
-- [ ] Create composables for Solana integration
-- [ ] Create component library build configuration
-- [ ] Set up Histoire or Storybook for component development
+- [x] Set up `packages/vue/` with proper Vue 3 + TypeScript config
+- [x] Create composables for Solana integration
+- [x] Create component library build configuration
 
 ### 7.2 Wallet Components
 
-- [ ] `<WalletProvider>` - Wallet context provider
+- [x] `<TokensPlugin>` - Tokens plugin for Vue app
 - [ ] `<WalletConnectButton>` - Connect wallet button
 - [ ] `<WalletDisconnectButton>` - Disconnect button
 - [ ] `<WalletMultiButton>` - Multi-wallet selector
-- [ ] `<WalletAddress>` - Display wallet address
-- [ ] `<WalletBalance>` - Display SOL balance
+- [x] `<WalletAddress>` - Display wallet address
+- [x] `<WalletBalance>` - Display SOL balance
 
 ### 7.3 Token Components
 
-- [ ] `<TokenBalance :mint="" />` - Display token balance
-- [ ] `<TokenInfo :mint="" />` - Display token info card
-- [ ] `<TokenList :owner="" />` - List all tokens owned
+- [x] `<TokenBalance :mint="" />` - Display token balance
+- [x] `<TokenInfo :mint="" />` - Display token info card
+- [x] `<TokenList :owner="" />` - List all tokens owned
 - [ ] `<TokenTransferForm :mint="" />` - Token transfer form
 - [ ] `<TokenMintForm :mint="" />` - Token mint form
 
 ### 7.4 NFT Components
 
-- [ ] `<NFTCard :mint="" />` - NFT display card
-- [ ] `<NFTGrid :owner="" />` - Grid of owned NFTs
+- [x] `<NFTCard :mint="" />` - NFT display card
+- [x] `<NFTGrid :owner="" />` - Grid of owned NFTs
 - [ ] `<NFTGallery :collection="" />` - Collection gallery
-- [ ] `<NFTDetails :mint="" />` - Full NFT details
+- [x] `<NFTDetails :mint="" />` - Full NFT details
 - [ ] `<NFTTransferButton :mint="" />` - Transfer button
 - [ ] `<NFTBurnButton :mint="" />` - Burn button
 
 ### 7.5 Candy Machine Components
 
 - [ ] `<CandyMachineProvider>` - CM context provider
-- [ ] `<MintButton :candy-machine="" />` - Mint button
-- [ ] `<MintCounter :candy-machine="" />` - Counter
-- [ ] `<MintProgress :candy-machine="" />` - Progress bar
+- [x] `<MintButton :candy-machine="" />` - Mint button
+- [x] `<MintCounter :candy-machine="" />` - Counter
+- [x] `<MintProgress :candy-machine="" />` - Progress bar
 - [ ] `<MintPrice :candy-machine="" />` - Price display
 - [ ] `<CountdownTimer :date="" />` - Countdown
 - [ ] `<AllowlistChecker :candy-machine="" />` - Allowlist check
@@ -840,13 +839,13 @@
 ### 7.6 Composables
 
 - [ ] `useWallet()` - Wallet state and methods
-- [ ] `useConnection()` - Solana connection
-- [ ] `useTokenBalance(mint)` - Token balance
-- [ ] `useNFT(mint)` - NFT data
-- [ ] `useNFTs(owner)` - All NFTs
-- [ ] `useCandyMachine(address)` - CM state
-- [ ] `useTransaction()` - Transaction sending
-- [ ] `useTokenAccounts(owner)` - Token accounts
+- [x] `useConnection()` - Solana connection
+- [x] `useTokenBalance(mint)` - Token balance
+- [x] `useNFT(mint)` - NFT data
+- [x] `useNFTs(owner)` - All NFTs
+- [x] `useCandyMachine(address)` - CM state
+- [x] `useTransaction()` - Transaction sending
+- [x] `useTokenAccounts(owner)` - Token accounts
 
 ---
 
@@ -862,16 +861,16 @@
 
 ### 8.2 API Documentation
 
-- [ ] Create `docs/api/tokens/` directory for fungible token docs
-  - [ ] `docs/api/tokens/create.md` - Token creation
-  - [ ] `docs/api/tokens/mint.md` - Minting tokens
-  - [ ] `docs/api/tokens/transfer.md` - Transferring tokens
-  - [ ] `docs/api/tokens/burn.md` - Burning tokens
+- [x] Create `docs/api/tokens/` directory for fungible token docs
+  - [x] `docs/api/tokens/create.md` - Token creation
+  - [x] `docs/api/tokens/mint.md` - Minting tokens
+  - [x] `docs/api/tokens/transfer.md` - Transferring tokens
+  - [x] `docs/api/tokens/burn.md` - Burning tokens
   - [ ] `docs/api/tokens/authority.md` - Authority management
   - [ ] `docs/api/tokens/metadata.md` - Token metadata
-- [ ] Create `docs/api/nft/` directory for NFT docs
-  - [ ] `docs/api/nft/create.md` - NFT creation
-  - [ ] `docs/api/nft/collection.md` - Collections
+- [x] Create `docs/api/nft/` directory for NFT docs
+  - [x] `docs/api/nft/create.md` - NFT creation
+  - [x] `docs/api/nft/collection.md` - Collections
   - [ ] `docs/api/nft/transfer.md` - Transfers
   - [ ] `docs/api/nft/metadata.md` - Metadata
   - [ ] `docs/api/nft/compressed.md` - Compressed NFTs
@@ -883,26 +882,26 @@
 
 ### 8.3 CLI Documentation
 
-- [ ] Create `docs/cli/` directory
-  - [ ] `docs/cli/index.md` - CLI overview
-  - [ ] `docs/cli/config.md` - Configuration commands
-  - [ ] `docs/cli/wallet.md` - Wallet commands
-  - [ ] `docs/cli/tokens.md` - Token commands
-  - [ ] `docs/cli/nft.md` - NFT commands
-  - [ ] `docs/cli/candy-machine.md` - CM commands
+- [x] Create `docs/cli/` directory
+  - [x] `docs/cli/index.md` - CLI overview
+  - [x] `docs/cli/config.md` - Configuration commands
+  - [x] `docs/cli/wallet.md` - Wallet commands
+  - [x] `docs/cli/tokens.md` - Token commands
+  - [x] `docs/cli/nft.md` - NFT commands
+  - [x] `docs/cli/candy-machine.md` - CM commands
   - [ ] `docs/cli/storage.md` - Storage commands
 
 ### 8.4 Component Documentation
 
-- [ ] Create `docs/components/` directory
-  - [ ] `docs/components/react/` - React component docs
-  - [ ] `docs/components/vue/` - Vue component docs
+- [x] Create `docs/components/` directory
+  - [x] `docs/components/react/` - React component docs
+  - [x] `docs/components/vue/` - Vue component docs
   - [ ] Include live examples with CodeSandbox/StackBlitz
 
 ### 8.5 Guides & Tutorials
 
-- [ ] Create `docs/guides/` directory
-  - [ ] `docs/guides/getting-started.md` - Quick start guide
+- [x] Create `docs/guides/` directory
+  - [x] `docs/guides/getting-started.md` - Quick start guide
   - [ ] `docs/guides/create-fungible-token.md` - Create your first token
   - [ ] `docs/guides/create-nft-collection.md` - Create NFT collection
   - [ ] `docs/guides/candy-machine-drop.md` - Set up NFT drop
@@ -914,8 +913,9 @@
 
 ### 8.6 Example Projects
 
-- [ ] Create `examples/` directory in repo root
-- [ ] `examples/create-token/` - Simple token creation example
+- [x] Create `examples/` directory in repo root
+- [x] `examples/create-token/` - Simple token creation example
+- [x] `examples/nft-collection/` - NFT collection example
 - [ ] `examples/nft-minting-site/` - React NFT minting site
 - [ ] `examples/candy-machine-ui/` - Full CM frontend
 - [ ] `examples/token-airdrop/` - Airdrop script example
@@ -928,10 +928,10 @@
 
 ### 9.1 Unit Tests
 
-- [ ] Create `test/` directory structure mirroring `src/`
-- [ ] Test configuration loading and validation
+- [x] Create `test/` directory structure mirroring `src/`
+- [x] Test configuration loading and validation
 - [ ] Test driver interface implementations
-- [ ] Test token creation functions
+- [x] Test token creation functions
 - [ ] Test token minting functions
 - [ ] Test token transfer functions
 - [ ] Test NFT creation functions
