@@ -38,30 +38,30 @@
 ### 1.1 Project Restructuring
 
 - [ ] Remove existing QR/Barcode code from `packages/ts-tokens/src/` (this is legacy code from a different project)
-- [ ] Update root `README.md` to reflect new blockchain token focus
-- [ ] Update `package.json` description and keywords for blockchain tokens
+- [x] Update root `README.md` to reflect new blockchain token focus
+- [x] Update `package.json` description and keywords for blockchain tokens
 - [ ] Create new project architecture diagram in docs
 
 ### 1.2 Configuration System
 
-- [ ] Rename config name from `tokenx` to `tokens` in `src/config.ts`
-- [ ] Define comprehensive `TokenConfig` interface in `src/types.ts`:
-  - [ ] `chain`: Current active chain (default: `'solana'`)
-  - [ ] `network`: Network environment (`'mainnet-beta'` | `'devnet'` | `'testnet'` | `'localnet'`)
-  - [ ] `rpcUrl`: Custom RPC endpoint (optional)
-  - [ ] `commitment`: Solana commitment level (`'processed'` | `'confirmed'` | `'finalized'`)
-  - [ ] `wallet`: Wallet configuration (keypair path or adapter)
-  - [ ] `verbose`: Logging verbosity
-  - [ ] `dryRun`: Simulate transactions without executing
-  - [ ] `confirmOptions`: Transaction confirmation options
-  - [ ] `ipfsGateway`: IPFS gateway URL for metadata
-  - [ ] `arweaveGateway`: Arweave gateway URL for metadata
-  - [ ] `storageProvider`: Default storage provider (`'ipfs'` | `'arweave'` | `'nft.storage'` | `'shadow-drive'`)
+- [x] Rename config name from `tokenx` to `tokens` in `src/config.ts`
+- [x] Define comprehensive `TokenConfig` interface in `src/types.ts`:
+  - [x] `chain`: Current active chain (default: `'solana'`)
+  - [x] `network`: Network environment (`'mainnet-beta'` | `'devnet'` | `'testnet'` | `'localnet'`)
+  - [x] `rpcUrl`: Custom RPC endpoint (optional)
+  - [x] `commitment`: Solana commitment level (`'processed'` | `'confirmed'` | `'finalized'`)
+  - [x] `wallet`: Wallet configuration (keypair path or adapter)
+  - [x] `verbose`: Logging verbosity
+  - [x] `dryRun`: Simulate transactions without executing
+  - [x] `confirmOptions`: Transaction confirmation options
+  - [x] `ipfsGateway`: IPFS gateway URL for metadata
+  - [x] `arweaveGateway`: Arweave gateway URL for metadata
+  - [x] `storageProvider`: Default storage provider (`'ipfs'` | `'arweave'` | `'nft.storage'` | `'shadow-drive'`)
 
 ### 1.3 Driver/Adapter Architecture
 
-- [ ] Create `src/drivers/` directory for chain-specific implementations
-- [ ] Define `ChainDriver` interface in `src/types/driver.ts`:
+- [x] Create `src/drivers/` directory for chain-specific implementations
+- [x] Define `ChainDriver` interface in `src/types/driver.ts`:
 
   ```ts
   interface ChainDriver {
@@ -81,22 +81,22 @@
   }
   ```
 
-- [ ] Create `src/drivers/solana/` directory structure
-- [ ] Create driver registry/factory in `src/drivers/index.ts`
+- [x] Create `src/drivers/solana/` directory structure
+- [x] Create driver registry/factory in `src/drivers/index.ts`
 - [ ] Implement driver auto-detection from config
 
 ### 1.4 Core Types Definition
 
-- [ ] Create `src/types/` directory with organized type files:
-  - [ ] `src/types/index.ts` - Main export file
-  - [ ] `src/types/config.ts` - Configuration types
-  - [ ] `src/types/driver.ts` - Driver interface types
-  - [ ] `src/types/token.ts` - Fungible token types
-  - [ ] `src/types/nft.ts` - NFT and collection types
-  - [ ] `src/types/metadata.ts` - Metadata standard types
-  - [ ] `src/types/transaction.ts` - Transaction types
-  - [ ] `src/types/wallet.ts` - Wallet types
-  - [ ] `src/types/storage.ts` - Storage provider types
+- [x] Create `src/types/` directory with organized type files:
+  - [x] `src/types/index.ts` - Main export file
+  - [x] `src/types/config.ts` - Configuration types
+  - [x] `src/types/driver.ts` - Driver interface types
+  - [x] `src/types/token.ts` - Fungible token types
+  - [x] `src/types/nft.ts` - NFT and collection types
+  - [x] `src/types/metadata.ts` - Metadata standard types
+  - [x] `src/types/transaction.ts` - Transaction types
+  - [x] `src/types/wallet.ts` - Wallet types
+  - [x] `src/types/storage.ts` - Storage provider types
 
 ### 1.5 Dependency Setup (Zero External Dependencies Philosophy)
 
@@ -104,9 +104,9 @@
 
 #### Official Solana Dependencies (Only These)
 
-- [ ] Add to `packages/ts-tokens/package.json`:
-  - [ ] `@solana/web3.js` - Core Solana SDK (official, required)
-  - [ ] `@solana/spl-token` - SPL Token program client (official, required)
+- [x] Add to `packages/ts-tokens/package.json`:
+  - [x] `@solana/web3.js` - Core Solana SDK (official, required)
+  - [x] `@solana/spl-token` - SPL Token program client (official, required)
 
 #### Internal Stacks Dependencies (Our Own Zero-Dep Packages)
 

@@ -7,14 +7,39 @@
  * @packageDocumentation
  */
 
-// Configuration
-export * from './config'
-
-// Types
+// Types (export first to avoid conflicts)
 export * from './types'
+
+// Configuration (some functions may shadow type exports)
+export {
+  defaults,
+  getConfig,
+  setConfig,
+  resetConfig,
+  getCurrentConfig,
+  mergeConfig,
+  config,
+} from './config'
 
 // Utilities
 export * from './utils'
 
-// Drivers
-export * from './drivers'
+// Drivers (export specific items to avoid conflicts)
+export {
+  registerDriver,
+  getDriver,
+  hasDriver,
+  listDrivers,
+  createDriverRegistry,
+  driverRegistry,
+  // Solana driver exports
+  SolanaConnection,
+  createSolanaConnection,
+  createWallet,
+  loadWallet,
+  generateKeypair,
+  buildTransaction,
+  sendAndConfirmTransaction,
+  simulateTransaction,
+  estimatePriorityFee,
+} from './drivers'
