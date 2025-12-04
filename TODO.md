@@ -14,6 +14,12 @@
 - [Phase 8: Documentation & Examples](#phase-8-documentation--examples)
 - [Phase 9: Testing & Quality Assurance](#phase-9-testing--quality-assurance)
 - [Phase 10: Release & Distribution](#phase-10-release--distribution)
+- [Phase 11: Security & Best Practices](#phase-11-security--best-practices)
+- [Phase 12: Token-2022 (SPL Token Extensions)](#phase-12-token-2022-spl-token-extensions)
+- [Phase 13: Marketplace & Trading Features](#phase-13-marketplace--trading-features)
+- [Phase 14: Analytics & Indexing](#phase-14-analytics--indexing)
+- [Phase 15: Automation & Scripting](#phase-15-automation--scripting)
+- [Phase 16: Migration & Compatibility Tools](#phase-16-migration--compatibility-tools)
 
 ---
 
@@ -1028,6 +1034,227 @@
 
 ---
 
+## Phase 11: Security & Best Practices
+
+### 11.1 Security Auditing
+
+- [ ] Implement transaction simulation before execution (always preview)
+- [ ] Add balance checks before operations (prevent failed txs)
+- [ ] Implement authority validation before sensitive operations
+- [ ] Add warning prompts for irreversible actions (revoke authority, burn)
+- [ ] Create security checklist for token launches
+
+### 11.2 Key Management
+
+- [ ] Support hardware wallet signing (Ledger via HID)
+- [ ] Implement encrypted keypair storage (local keyring)
+- [ ] Add environment variable keypair loading (`TOKENS_KEYPAIR`)
+- [ ] Support keypair from stdin (for CI/CD pipelines)
+- [ ] Implement session-based signing (sign once, execute many)
+
+### 11.3 Rate Limiting & RPC Management
+
+- [ ] Implement RPC request queuing and rate limiting
+- [ ] Add automatic RPC failover (multiple endpoints)
+- [ ] Support custom RPC providers (Helius, QuickNode, Triton, etc.)
+- [ ] Implement request caching for read operations
+- [ ] Add RPC health monitoring and auto-switching
+
+### 11.4 Error Handling & Recovery
+
+- [ ] Create comprehensive error types with actionable messages
+- [ ] Implement transaction retry with exponential backoff
+- [ ] Add transaction recovery for partially failed batches
+- [ ] Create error code documentation
+- [ ] Implement dry-run mode for all destructive operations
+
+---
+
+## Phase 12: Token-2022 (SPL Token Extensions)
+
+> Token-2022 is the next-gen SPL Token program with powerful extensions. Critical for competing with Metaplex.
+
+### 12.1 Core Token-2022 Support
+
+- [ ] Create `src/programs/token-2022/` directory
+- [ ] Program ID: `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`
+- [ ] Implement basic token operations with Token-2022
+
+### 12.2 Token-2022 Extensions
+
+- [ ] **Transfer Fees** - Automatic fee collection on transfers
+  - [ ] `initializeTransferFeeConfig` - Set up transfer fees
+  - [ ] `setTransferFee` - Update fee percentage
+  - [ ] `withdrawWithheldTokensFromMint` - Collect fees
+  - [ ] `harvestWithheldTokensToMint` - Harvest from accounts
+- [ ] **Interest-Bearing Tokens** - Tokens that accrue interest
+  - [ ] `initializeInterestBearingMint` - Set up interest
+  - [ ] `updateRateInterestBearingMint` - Update rate
+  - [ ] `amountToUiAmount` / `uiAmountToAmount` - Convert with interest
+- [ ] **Non-Transferable Tokens** (Soulbound)
+  - [ ] `initializeNonTransferable` - Make token soulbound
+- [ ] **Permanent Delegate**
+  - [ ] `initializePermanentDelegate` - Set permanent delegate
+- [ ] **Transfer Hook** - Custom logic on transfers
+  - [ ] `initializeTransferHook` - Set hook program
+  - [ ] `updateTransferHook` - Update hook
+- [ ] **Metadata Pointer** - On-chain metadata
+  - [ ] `initializeMetadataPointer` - Point to metadata
+  - [ ] `updateMetadataPointer` - Update pointer
+- [ ] **Confidential Transfers** - Private balances
+  - [ ] `initializeConfidentialTransferMint` - Enable confidential
+  - [ ] `configureConfidentialTransferAccount` - Configure account
+  - [ ] `confidentialTransfer` - Private transfer
+- [ ] **Default Account State** - Frozen by default
+  - [ ] `initializeDefaultAccountState` - Set default state
+  - [ ] `updateDefaultAccountState` - Update state
+- [ ] **CPI Guard** - Prevent CPI token transfers
+  - [ ] `enableCpiGuard` / `disableCpiGuard`
+- [ ] **Mint Close Authority** - Close mint accounts
+  - [ ] `initializeMintCloseAuthority` - Set close authority
+- [ ] **Group/Member Pointers** - Token grouping
+  - [ ] `initializeGroupPointer` / `initializeGroupMemberPointer`
+
+### 12.3 CLI Commands for Token-2022
+
+- [ ] `tokens create --token-2022` - Create Token-2022 token
+- [ ] `tokens create --transfer-fee <bps>` - With transfer fees
+- [ ] `tokens create --interest-rate <rate>` - Interest-bearing
+- [ ] `tokens create --soulbound` - Non-transferable
+- [ ] `tokens create --confidential` - Confidential transfers
+- [ ] `tokens fees collect <mint>` - Collect transfer fees
+- [ ] `tokens fees withdraw <mint>` - Withdraw collected fees
+
+---
+
+## Phase 13: Marketplace & Trading Features
+
+### 13.1 Listing & Sales
+
+- [ ] Create `src/marketplace/` directory
+- [ ] Implement direct peer-to-peer NFT sales (no marketplace program)
+- [ ] Implement escrow-based sales with atomic swaps
+- [ ] Support SOL and SPL token payments
+- [ ] Implement offer/bid system
+
+### 13.2 Auction Support
+
+- [ ] Implement English auction (highest bid wins)
+- [ ] Implement Dutch auction (price decreases over time)
+- [ ] Implement timed auctions with auto-settlement
+- [ ] Create auction house program interactions (if using existing)
+
+### 13.3 Royalty Enforcement
+
+- [ ] Implement royalty calculation and distribution
+- [ ] Support creator splits (multiple creators)
+- [ ] Track primary vs secondary sales
+- [ ] Implement royalty bypass detection/prevention
+
+### 13.4 CLI Commands for Trading
+
+- [ ] `tokens nft list <mint> --price <amount>` - List NFT for sale
+- [ ] `tokens nft delist <mint>` - Remove listing
+- [ ] `tokens nft buy <mint>` - Purchase listed NFT
+- [ ] `tokens nft offer <mint> --price <amount>` - Make offer
+- [ ] `tokens nft auction <mint> --type <type> --start <price>` - Start auction
+
+---
+
+## Phase 14: Analytics & Indexing
+
+### 14.1 On-Chain Data Indexing
+
+- [ ] Implement transaction history fetching
+- [ ] Parse and index token transfers
+- [ ] Parse and index NFT sales/transfers
+- [ ] Track holder snapshots over time
+- [ ] Implement real-time event streaming (websockets)
+
+### 14.2 DAS API Integration (Digital Asset Standard)
+
+- [ ] Create `src/das/` directory for DAS API client
+- [ ] Implement DAS RPC methods (no external SDK):
+  - [ ] `getAsset` - Get asset by ID
+  - [ ] `getAssetsByOwner` - Get assets by owner
+  - [ ] `getAssetsByGroup` - Get assets by collection
+  - [ ] `getAssetsByCreator` - Get assets by creator
+  - [ ] `searchAssets` - Search with filters
+  - [ ] `getAssetProof` - Get Merkle proof for cNFTs
+  - [ ] `getAssetsByAuthority` - Get by authority
+- [ ] Support multiple DAS providers (Helius, Triton, etc.)
+- [ ] Implement pagination and cursor handling
+- [ ] Add response caching
+
+### 14.3 Analytics Utilities
+
+- [ ] `tokens analytics holders <mint>` - Holder distribution
+- [ ] `tokens analytics volume <mint>` - Trading volume
+- [ ] `tokens analytics history <mint>` - Price history
+- [ ] `tokens analytics whale-watch <mint>` - Large holder tracking
+- [ ] Export to CSV/JSON formats
+
+---
+
+## Phase 15: Automation & Scripting
+
+### 15.1 Batch Operations
+
+- [ ] Implement batch token transfers (airdrop optimization)
+- [ ] Implement batch NFT minting
+- [ ] Implement batch metadata updates
+- [ ] Use lookup tables (ALTs) for large batches
+- [ ] Implement transaction chunking for RPC limits
+
+### 15.2 Scheduled Operations
+
+- [ ] Implement delayed/scheduled transactions
+- [ ] Support cron-like scheduling for CLI
+- [ ] Implement mint start/end automation
+- [ ] Create webhook triggers for events
+
+### 15.3 Scripting API
+
+- [ ] Create fluent API for chaining operations:
+
+  ```ts
+  await tokens
+    .createToken({ name: 'MyToken', symbol: 'MTK' })
+    .mint({ amount: 1000000 })
+    .transfer({ to: recipient, amount: 500000 })
+    .execute()
+  ```
+
+- [ ] Implement transaction batching in fluent API
+- [ ] Add dry-run support for scripts
+- [ ] Create script templates for common workflows
+
+---
+
+## Phase 16: Migration & Compatibility Tools
+
+### 16.1 Metaplex Migration
+
+- [ ] Create migration guide from Metaplex SDK
+- [ ] Implement 1:1 API compatibility layer (optional)
+- [ ] Create codemod scripts for automatic migration
+- [ ] Document API differences and equivalents
+
+### 16.2 Import/Export Tools
+
+- [ ] Import existing collections from on-chain data
+- [ ] Export collection data to JSON/CSV
+- [ ] Import Candy Machine config from Sugar format
+- [ ] Export to Metaplex-compatible formats
+
+### 16.3 Backward Compatibility
+
+- [ ] Support reading legacy metadata formats
+- [ ] Handle deprecated instruction formats
+- [ ] Maintain compatibility with existing NFT marketplaces
+
+---
+
 ## Future Considerations (Post v1.0)
 
 ### Additional Chain Support
@@ -1039,13 +1266,10 @@
 
 ### Advanced Features
 
-- [ ] Token-2022 extensions support (transfer fees, interest-bearing, etc.)
 - [ ] Programmable NFTs (pNFTs) support
-- [ ] Auction house integration
 - [ ] Staking/locking mechanisms
 - [ ] DAO integration for token governance
 - [ ] Multi-sig support for authorities
-- [ ] Batch operations optimization
 - [ ] Real-time websocket subscriptions
 
 ### Developer Experience
@@ -1055,6 +1279,12 @@
 - [ ] GraphQL API layer
 - [ ] Webhook notifications for events
 - [ ] Analytics dashboard
+
+### Potential New Standards
+
+- [ ] Evaluate creating our own NFT standard (simpler than Metaplex Core)
+- [ ] Research cross-chain token bridging
+- [ ] Investigate ZK-based privacy features
 
 ---
 
@@ -1068,4 +1298,4 @@
 
 ---
 
-*Last updated: December 2024*
+*Last updated: December 2025*
