@@ -2,7 +2,7 @@
   "name": "ts-tokens",
   "type": "module",
   "version": "0.0.0",
-  "description": "Generate your own fungible or non-fungible tokens.",
+  "description": "A TypeScript library for managing fungible and non-fungible tokens on Solana.",
   "author": "Chris Breuer <chris@stacksjs.org>",
   "license": "MIT",
   "homepage": "https://github.com/stacksjs/ts-tokens#readme",
@@ -15,10 +15,14 @@
   },
   "keywords": [
     "typescript",
+    "solana",
     "token",
     "tokens",
-    "lightweight",
-    "powerful",
+    "nft",
+    "spl",
+    "metaplex",
+    "blockchain",
+    "web3",
     "stacksjs"
   ],
   "exports": {
@@ -55,8 +59,16 @@
     "test": "bun test",
     "typecheck": "bun --bun tsc --noEmit"
   },
+  "dependencies": {
+    "@solana/web3.js": "^1.95.0",
+    "@solana/spl-token": "^0.4.0"
+  },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "better-dx": "^0.2.5"
+  },
+  "peerDependencies": {
+    "bunfig": "^0.5.0"
   },
   "lint-staged": {
     "*.{js,ts}": "bunx --bun eslint --flag unstable_ts_config . --fix"
