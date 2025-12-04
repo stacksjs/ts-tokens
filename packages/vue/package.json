@@ -1,5 +1,5 @@
 {
-  "name": "vuqe-tokenx",
+  "name": "vue-tokens",
   "type": "module",
   "version": "0.0.0",
   "description": "Generate your own fungible or non-fungible tokens. Vue components.",
@@ -50,10 +50,7 @@
     "ts-tokens": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "^1.2.13",
-    "lint-staged": "^15.5.2",
-    "simple-git-hooks": "^2.13.0",
-    "typescript": "^5.8.3"
+    "better-dx": "^0.2.5"
   },
   "lint-staged": {
     "*.{js,ts}": "bunx --bun eslint . --fix"
