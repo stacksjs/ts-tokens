@@ -1073,6 +1073,288 @@
 - [ ] Create error code documentation
 - [ ] Implement dry-run mode for all destructive operations
 
+### 11.5 Security Checklists
+
+> **Goal**: Comprehensive security checklists for every operation type to ensure users never make costly mistakes.
+
+#### Pre-Launch Token Security Checklist
+
+- [ ] Create `tokens security check <mint>` CLI command
+- [ ] Implement automated security audit:
+
+  ```ts
+  const audit = await tokens.security.audit(tokenMint)
+  // Returns detailed security report with warnings/recommendations
+  ```
+
+##### Token Configuration Checks
+
+- [ ] **Mint Authority**
+  - [ ] Verify mint authority is set correctly (not compromised wallet)
+  - [ ] Warn if mint authority is a hot wallet (recommend multi-sig)
+  - [ ] Check if mint authority should be revoked for fixed supply
+  - [ ] Verify mint authority is not a known scam address
+- [ ] **Freeze Authority**
+  - [ ] Warn if freeze authority exists (can freeze user tokens)
+  - [ ] Recommend revoking freeze authority for trustless tokens
+  - [ ] Verify freeze authority holder if intentionally kept
+- [ ] **Supply Verification**
+  - [ ] Verify initial supply matches intended amount
+  - [ ] Check for any unexpected mints after creation
+  - [ ] Verify decimal places are correct (common mistake: wrong decimals)
+- [ ] **Metadata Verification**
+  - [ ] Verify metadata URI is accessible and valid JSON
+  - [ ] Check metadata matches on-chain data (name, symbol)
+  - [ ] Verify image URL is accessible
+  - [ ] Check for metadata mutability (warn if mutable)
+  - [ ] Verify update authority is secure
+
+##### Smart Contract Security (Token-2022)
+
+- [ ] **Transfer Fee Checks**
+  - [ ] Verify fee percentage is as intended
+  - [ ] Check fee recipient address is correct
+  - [ ] Warn about high fees (>5%)
+- [ ] **Transfer Hook Checks**
+  - [ ] Verify hook program is audited/trusted
+  - [ ] Check hook program source is available
+  - [ ] Warn about unknown hook programs
+- [ ] **Permanent Delegate Checks**
+  - [ ] Warn if permanent delegate is set (can transfer any time)
+  - [ ] Verify delegate address is intended
+
+#### Pre-Launch NFT Collection Security Checklist
+
+##### Collection Configuration
+
+- [ ] **Collection Authority**
+  - [ ] Verify collection authority is secure (multi-sig recommended)
+  - [ ] Check if authority should be transferred to DAO
+- [ ] **Royalty Configuration**
+  - [ ] Verify royalty percentage is correct
+  - [ ] Verify all creator addresses are correct
+  - [ ] Check creator shares sum to 100%
+  - [ ] Verify creators have signed/verified
+- [ ] **Metadata Mutability**
+  - [ ] Warn if collection is mutable (can be rugged)
+  - [ ] Recommend making immutable after launch
+- [ ] **Update Authority**
+  - [ ] Verify update authority is secure
+  - [ ] Recommend multi-sig for update authority
+
+##### Candy Machine Security
+
+- [ ] **Price Configuration**
+  - [ ] Verify mint price is correct
+  - [ ] Check payment destination address
+- [ ] **Guard Configuration**
+  - [ ] Verify start/end dates are correct
+  - [ ] Check allowlist merkle root is correct
+  - [ ] Verify mint limits are set appropriately
+- [ ] **Bot Protection**
+  - [ ] Recommend enabling bot tax
+  - [ ] Check for rate limiting guards
+  - [ ] Verify captcha/gatekeeper if needed
+
+#### Transaction Security Checklist
+
+- [ ] Create pre-transaction security checks:
+
+  ```ts
+  const check = await tokens.security.checkTransaction(transaction)
+  // {
+  //   safe: false,
+  //   warnings: ['Sending to known scam address', 'Unusually high amount'],
+  //   recommendations: ['Verify recipient address', 'Consider smaller test tx'],
+  // }
+  ```
+
+##### Pre-Transaction Checks
+
+- [ ] **Address Validation**
+  - [ ] Verify recipient is valid Solana address
+  - [ ] Check against known scam address database
+  - [ ] Warn if sending to exchange deposit address without memo
+  - [ ] Warn if address has never been used (potential typo)
+- [ ] **Amount Validation**
+  - [ ] Warn if amount is unusually large
+  - [ ] Check sufficient balance (including fees)
+  - [ ] Verify decimal handling is correct
+- [ ] **Authority Checks**
+  - [ ] Verify signer has required authority
+  - [ ] Check for authority expiration (delegated)
+- [ ] **Simulation**
+  - [ ] Always simulate transaction before sending
+  - [ ] Parse simulation for errors/warnings
+  - [ ] Show expected account changes
+
+#### Wallet Security Checklist
+
+- [ ] Create `tokens security wallet` CLI command
+- [ ] Implement wallet security audit:
+
+  ```ts
+  const walletAudit = await tokens.security.auditWallet(wallet)
+  ```
+
+##### Wallet Checks
+
+- [ ] **Key Security**
+  - [ ] Warn if using file-based keypair (recommend hardware wallet)
+  - [ ] Check keypair file permissions (should be 600)
+  - [ ] Verify keypair is not in version control
+  - [ ] Check for keypair in environment variables (warn about logging)
+- [ ] **Balance Checks**
+  - [ ] Warn if wallet has large SOL balance (recommend cold storage)
+  - [ ] Check for dust attacks (tiny token amounts from unknown sources)
+  - [ ] Identify suspicious token accounts
+- [ ] **Authority Exposure**
+  - [ ] List all tokens where wallet is mint authority
+  - [ ] List all tokens where wallet is freeze authority
+  - [ ] List all NFT collections where wallet is update authority
+  - [ ] Recommend multi-sig for high-value authorities
+
+#### Authority Transfer Security Checklist
+
+- [ ] Create confirmation flow for authority transfers:
+
+  ```ts
+  await tokens.security.confirmAuthorityTransfer({
+    type: 'mint',
+    from: currentAuthority,
+    to: newAuthority,
+    // Requires explicit confirmation with warnings
+  })
+  ```
+
+##### Authority Transfer Checks
+
+- [ ] **Irreversibility Warning**
+  - [ ] Clearly warn that authority transfers are irreversible
+  - [ ] Require explicit confirmation (type address to confirm)
+- [ ] **Destination Validation**
+  - [ ] Verify new authority address is correct
+  - [ ] Check if new authority is multi-sig (recommended)
+  - [ ] Warn if transferring to single hot wallet
+- [ ] **Revocation Checks**
+  - [ ] Double-confirm authority revocation (setting to null)
+  - [ ] Explain implications (no more minting, etc.)
+  - [ ] Require typing "REVOKE" to confirm
+
+#### Burn Security Checklist
+
+- [ ] Create confirmation flow for burns:
+
+  ```ts
+  await tokens.security.confirmBurn({
+    mint: tokenMint,
+    amount: burnAmount,
+    // Requires explicit confirmation
+  })
+  ```
+
+##### Burn Checks
+
+- [ ] **Irreversibility Warning**
+  - [ ] Clearly warn that burns are irreversible
+  - [ ] Show USD value if available
+- [ ] **Amount Validation**
+  - [ ] Confirm amount with decimal display
+  - [ ] Warn if burning large percentage of holdings
+  - [ ] Warn if burning entire balance
+- [ ] **NFT Burns**
+  - [ ] Show NFT image and name before burn
+  - [ ] Require typing NFT name to confirm
+  - [ ] Check if NFT is part of valuable collection
+
+#### DAO/Governance Security Checklist
+
+- [ ] Create `governance security check <dao>` CLI command
+
+##### DAO Configuration Checks
+
+- [ ] **Voting Parameters**
+  - [ ] Warn if quorum is too low (<5%)
+  - [ ] Warn if approval threshold is too low (<50%)
+  - [ ] Check voting period is reasonable (not too short)
+  - [ ] Verify execution delay provides time to react
+- [ ] **Treasury Security**
+  - [ ] Verify treasury is controlled by governance
+  - [ ] Check for backdoor admin access
+  - [ ] Verify proposal threshold prevents spam
+- [ ] **Authority Distribution**
+  - [ ] Check token distribution (warn if concentrated)
+  - [ ] Verify no single entity controls majority
+  - [ ] Check for delegation concentration
+
+#### Staking Security Checklist
+
+- [ ] Create `tokens staking security <pool>` CLI command
+
+##### Staking Pool Checks
+
+- [ ] **Pool Configuration**
+  - [ ] Verify reward rate is sustainable
+  - [ ] Check reward token balance covers obligations
+  - [ ] Verify lock periods are as advertised
+  - [ ] Check early unstake penalties are reasonable
+- [ ] **Authority Checks**
+  - [ ] Verify pool authority is secure
+  - [ ] Check for emergency withdrawal mechanisms
+  - [ ] Verify pause functionality exists
+- [ ] **Smart Contract Checks**
+  - [ ] Verify staking program is audited
+  - [ ] Check for known vulnerabilities
+  - [ ] Verify upgrade authority (if upgradeable)
+
+#### Security Report Generation
+
+- [ ] Create comprehensive security report:
+
+  ```ts
+  const report = await tokens.security.generateReport({
+    tokens: [token1, token2],
+    collections: [collection1],
+    daos: [dao1],
+    stakingPools: [pool1],
+    wallet: myWallet,
+  })
+  // Generates PDF/HTML report with all findings
+  ```
+
+- [ ] Report includes:
+  - [ ] Executive summary with risk score
+  - [ ] Detailed findings by category
+  - [ ] Recommendations with priority levels
+  - [ ] Action items checklist
+  - [ ] Historical comparison (if previous report exists)
+
+#### CLI Security Commands
+
+- [ ] `tokens security audit <mint>` - Full token security audit
+- [ ] `tokens security collection <collection>` - Collection audit
+- [ ] `tokens security wallet` - Wallet security check
+- [ ] `tokens security tx <signature>` - Analyze transaction
+- [ ] `tokens security address <address>` - Check address reputation
+- [ ] `tokens security report` - Generate full security report
+- [ ] `tokens security watch <mint>` - Monitor for security events
+
+#### Security Notifications
+
+- [ ] Implement security event monitoring:
+
+  ```ts
+  tokens.security.watch(tokenMint, {
+    onAuthorityChange: (event) => notify(event),
+    onLargeMint: (event) => notify(event),
+    onSuspiciousActivity: (event) => notify(event),
+  })
+  ```
+
+- [ ] Webhook support for security alerts
+- [ ] Email notifications for critical events
+- [ ] Discord/Telegram bot integration
+
 ---
 
 ## Phase 12: Token-2022 (SPL Token Extensions)
