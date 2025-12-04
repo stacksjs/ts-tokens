@@ -19,4 +19,4 @@ export async function getConfig(): Promise<TokenConfig> {
 }
 
 // For backwards compatibility - synchronous access with default fallback
-export const config: TokenConfig = defaultConfig
+export const config: TokenConfig = defaults
