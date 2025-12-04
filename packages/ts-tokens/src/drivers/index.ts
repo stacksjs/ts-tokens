@@ -7,6 +7,9 @@
 import type { ChainDriver, DriverFactory, DriverRegistry } from '../types'
 import type { TokenConfig, Chain } from '../types'
 
+// Export Solana driver
+export * from './solana'
+
 /**
  * Internal driver registry
  */
@@ -70,7 +73,7 @@ export function createDriverRegistry(): DriverRegistry {
 /**
  * Default driver registry
  */
-export const driverRegistry = createDriverRegistry()
+export const driverRegistry: DriverRegistry = createDriverRegistry()
 
 // Re-export driver types
 export type { ChainDriver, DriverFactory, DriverRegistry }
