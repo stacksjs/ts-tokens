@@ -82,27 +82,209 @@
   - [ ] `src/types/wallet.ts` - Wallet types
   - [ ] `src/types/storage.ts` - Storage provider types
 
-### 1.5 Dependency Setup
+### 1.5 Dependency Setup (Zero External Dependencies Philosophy)
 
-- [ ] Add Solana dependencies to `packages/ts-tokens/package.json`:
-  - [ ] `@solana/web3.js` - Core Solana SDK
-  - [ ] `@solana/spl-token` - SPL Token program
-  - [ ] `@metaplex-foundation/mpl-token-metadata` - Token Metadata program
-  - [ ] `@metaplex-foundation/mpl-candy-machine` - Candy Machine (NFT drops)
-  - [ ] `@metaplex-foundation/umi` - Metaplex unified interface
-  - [ ] `@metaplex-foundation/umi-bundle-defaults` - Umi defaults
-  - [ ] `@metaplex-foundation/mpl-core` - Metaplex Core (new NFT standard)
-  - [ ] `bs58` - Base58 encoding
-- [ ] Add storage dependencies:
-  - [ ] `@irys/sdk` - Arweave uploads via Irys (formerly Bundlr)
-  - [ ] `nft.storage` - NFT.Storage client
-  - [ ] `@shadow-drive/sdk` - Shadow Drive (Solana native storage)
-- [ ] Add utility dependencies:
-  - [ ] `cac` - CLI framework (already present)
-  - [ ] `ora` - CLI spinners
-  - [ ] `chalk` - CLI colors
-  - [ ] `inquirer` or `@inquirer/prompts` - Interactive prompts
-  - [ ] `table` - CLI table formatting
+> **Goal**: Compete with Metaplex by having ZERO dependencies beyond official Solana packages. We implement everything ourselves using raw Solana program instructions, not Metaplex SDKs.
+
+#### Official Solana Dependencies (Only These)
+
+- [ ] Add to `packages/ts-tokens/package.json`:
+  - [ ] `@solana/web3.js` - Core Solana SDK (official, required)
+  - [ ] `@solana/spl-token` - SPL Token program client (official, required)
+
+#### Internal Stacks Dependencies (Our Own Zero-Dep Packages)
+
+- [ ] `@stacksjs/clapp` - CLI framework (source: `~/Code/clapp`, improve as needed)
+  - [ ] Spinners, colors, prompts, tables all from this single package
+- [ ] `@stacksjs/storage` - Storage abstraction (source: `~/Code/stacks/storage/framework/core/storage/src`)
+  - [ ] Use for all file/asset storage operations
+  - [ ] Extend with blockchain-specific drivers (see 1.6)
+
+#### What We Do NOT Use (Metaplex Replacement Strategy)
+
+- [ ] ~~`@metaplex-foundation/mpl-token-metadata`~~ → Implement raw Token Metadata Program instructions
+- [ ] ~~`@metaplex-foundation/mpl-candy-machine`~~ → Implement raw Candy Machine v3 instructions
+- [ ] ~~`@metaplex-foundation/umi`~~ → Build our own lightweight transaction builder
+- [ ] ~~`@metaplex-foundation/mpl-core`~~ → Implement raw Core Asset Program instructions
+- [ ] ~~`bs58`~~ → Use native `Buffer` or implement 10-line base58 encoder
+- [ ] ~~`@irys/sdk`~~ → Direct Arweave HTTP API via `@stacksjs/storage` driver
+- [ ] ~~`nft.storage`~~ → Direct IPFS HTTP API via `@stacksjs/storage` driver
+- [ ] ~~`@shadow-drive/sdk`~~ → Direct Shadow Drive program instructions
+
+### 1.6 Storage Drivers for `@stacksjs/storage`
+
+> Extend `@stacksjs/storage` with blockchain-optimized drivers. Source: `~/Code/stacks/storage/framework/core/storage/src`
+
+#### Arweave Driver
+
+- [ ] Create `ArweaveStorageAdapter` implementing `StorageAdapter` interface
+- [ ] Implement direct Arweave HTTP API calls (no `@irys/sdk`):
+  - [ ] `POST /tx` - Submit transaction
+  - [ ] `GET /tx/{id}/data` - Retrieve data
+  - [ ] `GET /price/{bytes}` - Get upload price
+  - [ ] `GET /{id}` - Get transaction status
+- [ ] Implement Arweave transaction signing with Solana keypair (cross-chain signing)
+- [ ] Implement chunked uploads for large files (>100KB)
+- [ ] Implement bundle transactions for batch uploads (ANS-104 spec)
+- [ ] Add gateway URL configuration (arweave.net, ar-io.net, etc.)
+- [ ] Implement `publicUrl()` returning `https://arweave.net/{txId}`
+- [ ] Add retry logic with exponential backoff
+
+#### IPFS Driver
+
+- [ ] Create `IPFSStorageAdapter` implementing `StorageAdapter` interface
+- [ ] Implement direct IPFS HTTP API calls (no `nft.storage` SDK):
+  - [ ] `POST /api/v0/add` - Add file to IPFS
+  - [ ] `POST /api/v0/cat` - Retrieve file
+  - [ ] `POST /api/v0/pin/add` - Pin content
+  - [ ] `POST /api/v0/pin/rm` - Unpin content
+- [ ] Support multiple IPFS providers via config:
+  - [ ] Local IPFS node (`localhost:5001`)
+  - [ ] Pinata API (`api.pinata.cloud`)
+  - [ ] NFT.Storage API (`api.nft.storage`) - direct HTTP, no SDK
+  - [ ] Web3.Storage API (`api.web3.storage`)
+  - [ ] Infura IPFS (`ipfs.infura.io`)
+- [ ] Implement `publicUrl()` returning configurable gateway URL
+- [ ] Add CID v0/v1 support
+- [ ] Implement directory uploads (CAR files)
+
+#### Shadow Drive Driver (Solana-Native)
+
+- [ ] Create `ShadowDriveStorageAdapter` implementing `StorageAdapter` interface
+- [ ] Implement direct Shadow Drive program instructions (no `@shadow-drive/sdk`):
+  - [ ] `initializeAccount` - Create storage account
+  - [ ] `uploadFile` - Upload file to account
+  - [ ] `deleteFile` - Delete file
+  - [ ] `editFile` - Replace file contents
+  - [ ] `addStorage` - Increase storage capacity
+  - [ ] `reduceStorage` - Decrease storage (get SOL back)
+  - [ ] `claimStake` - Claim staked SOL
+- [ ] Shadow Drive Program ID: `2e1wdyNhUvE76y6yUCvah2KaviavMJYKoRun8acMRBZZ`
+- [ ] Implement SHDW token payment handling
+- [ ] Implement `publicUrl()` returning `https://shdw-drive.genesysgo.net/{account}/{filename}`
+- [ ] Add storage account management utilities
+
+#### Local/Filesystem Driver (Development)
+
+- [ ] Ensure existing local driver in `@stacksjs/storage` works for dev/testing
+- [ ] Add mock URLs for local development (`file://` or `http://localhost`)
+
+#### Driver Factory
+
+- [ ] Create `createStorageDriver(config)` factory function
+- [ ] Auto-select driver based on `config.storageProvider`:
+
+  ```ts
+  type StorageProvider = 'arweave' | 'ipfs' | 'shadow-drive' | 'local'
+  ```
+
+- [ ] Support driver-specific configuration options
+- [ ] Implement fallback chain (try arweave → ipfs → shadow-drive)
+
+### 1.7 Raw Solana Program Implementations (Metaplex Replacement)
+
+> Instead of using Metaplex SDKs, we implement raw instruction builders for each program.
+
+#### Token Metadata Program (Replace `mpl-token-metadata`)
+
+- [ ] Create `src/programs/token-metadata/` directory
+- [ ] Program ID: `metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s`
+- [ ] Implement instruction builders:
+  - [ ] `createMetadataAccountV3` - Create metadata for token
+  - [ ] `updateMetadataAccountV2` - Update metadata
+  - [ ] `createMasterEditionV3` - Create master edition
+  - [ ] `mintNewEditionFromMasterEditionViaToken` - Print editions
+  - [ ] `verifyCollection` - Verify NFT in collection
+  - [ ] `unverifyCollection` - Remove collection verification
+  - [ ] `setAndVerifyCollection` - Set and verify in one tx
+  - [ ] `verifyCreator` - Verify creator signature
+  - [ ] `verifySizedCollectionItem` - Verify sized collection
+  - [ ] `burnNft` - Burn NFT with metadata
+  - [ ] `burnEditionNft` - Burn edition
+- [ ] Implement account deserializers:
+  - [ ] `Metadata` account parsing
+  - [ ] `MasterEdition` account parsing
+  - [ ] `Edition` account parsing
+  - [ ] `CollectionAuthorityRecord` parsing
+- [ ] Implement PDA derivation functions:
+  - [ ] `findMetadataPda(mint)`
+  - [ ] `findMasterEditionPda(mint)`
+  - [ ] `findEditionPda(mint)`
+  - [ ] `findCollectionAuthorityPda(mint, authority)`
+
+#### Candy Machine v3 Program (Replace `mpl-candy-machine`)
+
+- [ ] Create `src/programs/candy-machine/` directory
+- [ ] Program ID: `CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR`
+- [ ] Implement instruction builders:
+  - [ ] `initializeCandyMachine` - Create new CM
+  - [ ] `addConfigLines` - Add NFT config lines
+  - [ ] `updateCandyMachine` - Update CM settings
+  - [ ] `setCandyMachineAuthority` - Transfer authority
+  - [ ] `mintFromCandyMachine` - Mint NFT
+  - [ ] `setMintAuthority` - Set mint authority
+  - [ ] `withdraw` - Withdraw funds
+- [ ] Implement Candy Guard program:
+  - [ ] Program ID: `Guard1JwRhJkVH6XZhzoYxeBVQe872VH6QggF4BWmS9g`
+  - [ ] `initialize` - Create guard
+  - [ ] `update` - Update guards
+  - [ ] `wrap` / `unwrap` - Wrap/unwrap CM with guard
+  - [ ] `mint` - Mint with guard validation
+- [ ] Implement all guard types as instruction builders:
+  - [ ] `solPayment`, `tokenPayment`, `nftPayment`
+  - [ ] `startDate`, `endDate`
+  - [ ] `mintLimit`, `redeemedAmount`
+  - [ ] `allowList` (Merkle proof validation)
+  - [ ] `nftGate`, `tokenGate`
+  - [ ] `addressGate`, `programGate`
+  - [ ] `freezeSolPayment`, `freezeTokenPayment`
+  - [ ] `allocation`, `token2022Payment`
+- [ ] Implement account deserializers:
+  - [ ] `CandyMachine` account parsing
+  - [ ] `CandyGuard` account parsing
+
+#### Core Asset Program (Replace `mpl-core`) - Optional Future
+
+- [ ] Create `src/programs/core/` directory
+- [ ] Program ID: `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`
+- [ ] Implement instruction builders for Core NFT standard
+- [ ] Note: This is Metaplex's new standard, evaluate if we want to support or create our own
+
+#### Bubblegum Program (Compressed NFTs)
+
+- [ ] Create `src/programs/bubblegum/` directory
+- [ ] Program ID: `BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY`
+- [ ] Implement instruction builders:
+  - [ ] `createTree` - Create Merkle tree
+  - [ ] `mintV1` - Mint compressed NFT
+  - [ ] `mintToCollectionV1` - Mint to collection
+  - [ ] `transfer` - Transfer cNFT
+  - [ ] `burn` - Burn cNFT
+  - [ ] `delegate` - Delegate authority
+  - [ ] `redeem` / `cancelRedeem` - Redemption flow
+  - [ ] `decompressV1` - Decompress to regular NFT
+- [ ] Implement concurrent Merkle tree utilities
+- [ ] Implement proof fetching from DAS API
+
+#### Account Compression Program
+
+- [ ] Create `src/programs/account-compression/` directory
+- [ ] Program ID: `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`
+- [ ] Implement Merkle tree operations
+- [ ] Implement proof verification
+
+### 1.8 Base58 Implementation (Replace `bs58`)
+
+- [ ] Create `src/utils/base58.ts` with ~20 lines of code:
+
+  ```ts
+  const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+  export function encode(buffer: Uint8Array): string { /* ... */ }
+  export function decode(str: string): Uint8Array { /* ... */ }
+  ```
+
+- [ ] Add comprehensive tests for encoding/decoding
+- [ ] Ensure compatibility with Solana address format
 
 ---
 
