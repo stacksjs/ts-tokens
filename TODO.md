@@ -866,19 +866,19 @@
   - [x] `docs/api/tokens/mint.md` - Minting tokens
   - [x] `docs/api/tokens/transfer.md` - Transferring tokens
   - [x] `docs/api/tokens/burn.md` - Burning tokens
-  - [ ] `docs/api/tokens/authority.md` - Authority management
-  - [ ] `docs/api/tokens/metadata.md` - Token metadata
+  - [x] `docs/api/tokens/authority.md` - Authority management
+  - [x] `docs/api/tokens/metadata.md` - Token metadata
 - [x] Create `docs/api/nft/` directory for NFT docs
   - [x] `docs/api/nft/create.md` - NFT creation
   - [x] `docs/api/nft/collection.md` - Collections
-  - [ ] `docs/api/nft/transfer.md` - Transfers
-  - [ ] `docs/api/nft/metadata.md` - Metadata
+  - [x] `docs/api/nft/transfer.md` - Transfers
+  - [x] `docs/api/nft/metadata.md` - Metadata
   - [ ] `docs/api/nft/compressed.md` - Compressed NFTs
-- [ ] Create `docs/api/candy-machine/` directory
-  - [ ] `docs/api/candy-machine/create.md` - Creating CM
-  - [ ] `docs/api/candy-machine/guards.md` - Guard configuration
-  - [ ] `docs/api/candy-machine/mint.md` - Minting from CM
-  - [ ] `docs/api/candy-machine/manage.md` - Management
+- [x] Create `docs/api/candy-machine/` directory
+  - [x] `docs/api/candy-machine/create.md` - Creating CM
+  - [x] `docs/api/candy-machine/guards.md` - Guard configuration
+  - [x] `docs/api/candy-machine/mint.md` - Minting from CM
+  - [x] `docs/api/candy-machine/manage.md` - Management
 
 ### 8.3 CLI Documentation
 
@@ -902,14 +902,14 @@
 
 - [x] Create `docs/guides/` directory
   - [x] `docs/guides/getting-started.md` - Quick start guide
-  - [ ] `docs/guides/create-fungible-token.md` - Create your first token
-  - [ ] `docs/guides/create-nft-collection.md` - Create NFT collection
-  - [ ] `docs/guides/candy-machine-drop.md` - Set up NFT drop
-  - [ ] `docs/guides/allowlist-setup.md` - Configure allowlists
-  - [ ] `docs/guides/royalties.md` - Understanding royalties
-  - [ ] `docs/guides/metadata-standards.md` - Metadata best practices
-  - [ ] `docs/guides/storage-options.md` - Choosing storage provider
-  - [ ] `docs/guides/testing-devnet.md` - Testing on devnet
+  - [x] `docs/guides/create-fungible-token.md` - Create your first token
+  - [x] `docs/guides/create-nft-collection.md` - Create NFT collection
+  - [x] `docs/guides/candy-machine-drop.md` - Set up NFT drop
+  - [x] `docs/guides/allowlist-setup.md` - Configure allowlists
+  - [x] `docs/guides/royalties.md` - Understanding royalties
+  - [x] `docs/guides/metadata-standards.md` - Metadata best practices
+  - [x] `docs/guides/storage-options.md` - Choosing storage provider
+  - [x] `docs/guides/testing-devnet.md` - Testing on devnet
 
 ### 8.6 Example Projects
 
@@ -918,9 +918,9 @@
 - [x] `examples/nft-collection/` - NFT collection example
 - [ ] `examples/nft-minting-site/` - React NFT minting site
 - [ ] `examples/candy-machine-ui/` - Full CM frontend
-- [ ] `examples/token-airdrop/` - Airdrop script example
+- [x] `examples/token-airdrop/` - Airdrop script example
 - [ ] `examples/vue-nft-gallery/` - Vue NFT gallery
-- [ ] `examples/cli-scripts/` - CLI automation scripts
+- [x] `examples/cli-scripts/` - CLI automation scripts
 
 ---
 
@@ -936,8 +936,8 @@
 - [ ] Test token transfer functions
 - [ ] Test NFT creation functions
 - [ ] Test collection management functions
-- [ ] Test Candy Machine functions
-- [ ] Test utility functions
+- [x] Test Candy Machine functions
+- [x] Test utility functions
 
 ### 9.2 Integration Tests
 
