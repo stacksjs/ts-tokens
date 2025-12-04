@@ -6,3 +6,4 @@
 
 export * from './token-metadata'
 export * from './candy-machine'
+export * from './bubblegum'

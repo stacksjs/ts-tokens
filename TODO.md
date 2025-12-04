@@ -268,17 +268,17 @@
 
 #### Bubblegum Program (Compressed NFTs)
 
-- [ ] Create `src/programs/bubblegum/` directory
-- [ ] Program ID: `BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY`
-- [ ] Implement instruction builders:
-  - [ ] `createTree` - Create Merkle tree
-  - [ ] `mintV1` - Mint compressed NFT
-  - [ ] `mintToCollectionV1` - Mint to collection
-  - [ ] `transfer` - Transfer cNFT
-  - [ ] `burn` - Burn cNFT
+- [x] Create `src/programs/bubblegum/` directory
+- [x] Program ID: `BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY`
+- [x] Implement instruction builders:
+  - [x] `createTree` - Create Merkle tree
+  - [x] `mintV1` - Mint compressed NFT
+  - [x] `mintToCollectionV1` - Mint to collection
+  - [x] `transfer` - Transfer cNFT
+  - [x] `burn` - Burn cNFT
   - [ ] `delegate` - Delegate authority
   - [ ] `redeem` / `cancelRedeem` - Redemption flow
-  - [ ] `decompressV1` - Decompress to regular NFT
+  - [x] `decompressV1` - Decompress to regular NFT
 - [ ] Implement concurrent Merkle tree utilities
 - [ ] Implement proof fetching from DAS API
 
@@ -873,7 +873,7 @@
   - [x] `docs/api/nft/collection.md` - Collections
   - [x] `docs/api/nft/transfer.md` - Transfers
   - [x] `docs/api/nft/metadata.md` - Metadata
-  - [ ] `docs/api/nft/compressed.md` - Compressed NFTs
+  - [x] `docs/api/nft/compressed.md` - Compressed NFTs
 - [x] Create `docs/api/candy-machine/` directory
   - [x] `docs/api/candy-machine/create.md` - Creating CM
   - [x] `docs/api/candy-machine/guards.md` - Guard configuration
@@ -889,7 +889,7 @@
   - [x] `docs/cli/tokens.md` - Token commands
   - [x] `docs/cli/nft.md` - NFT commands
   - [x] `docs/cli/candy-machine.md` - CM commands
-  - [ ] `docs/cli/storage.md` - Storage commands
+  - [x] `docs/cli/storage.md` - Storage commands
 
 ### 8.4 Component Documentation
 
@@ -1048,11 +1048,11 @@
 
 ### 11.1 Security Auditing
 
-- [ ] Implement transaction simulation before execution (always preview)
-- [ ] Add balance checks before operations (prevent failed txs)
-- [ ] Implement authority validation before sensitive operations
-- [ ] Add warning prompts for irreversible actions (revoke authority, burn)
-- [ ] Create security checklist for token launches
+- [x] Implement transaction simulation before execution (always preview)
+- [x] Add balance checks before operations (prevent failed txs)
+- [x] Implement authority validation before sensitive operations
+- [x] Add warning prompts for irreversible actions (revoke authority, burn)
+- [x] Create security checklist for token launches
 
 ### 11.2 Key Management
 
@@ -1064,18 +1064,18 @@
 
 ### 11.3 Rate Limiting & RPC Management
 
-- [ ] Implement RPC request queuing and rate limiting
-- [ ] Add automatic RPC failover (multiple endpoints)
-- [ ] Support custom RPC providers (Helius, QuickNode, Triton, etc.)
-- [ ] Implement request caching for read operations
-- [ ] Add RPC health monitoring and auto-switching
+- [x] Implement RPC request queuing and rate limiting
+- [x] Add automatic RPC failover (multiple endpoints)
+- [x] Support custom RPC providers (Helius, QuickNode, Triton, etc.)
+- [x] Implement request caching for read operations
+- [x] Add RPC health monitoring and auto-switching
 
 ### 11.4 Error Handling & Recovery
 
-- [ ] Create comprehensive error types with actionable messages
-- [ ] Implement transaction retry with exponential backoff
+- [x] Create comprehensive error types with actionable messages
+- [x] Implement transaction retry with exponential backoff
 - [ ] Add transaction recovery for partially failed batches
-- [ ] Create error code documentation
+- [x] Create error code documentation
 - [ ] Implement dry-run mode for all destructive operations
 
 ### 11.5 Security Checklists
