@@ -184,3 +184,9 @@ export * as pnft from './pnft'
 
 // Events & Webhooks
 export * as events from './events'
+
+// Treasury
+export * as treasury from './treasury'
+
+// Voting Mechanisms
+export * as voting from './voting'

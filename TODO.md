@@ -3061,21 +3061,21 @@ const rules = await tokens.pnft.rules(pnft)
 
 #### Token-Weighted Voting
 
-- [ ] 1 token = 1 vote (standard)
-- [ ] Snapshot voting power at proposal creation
-- [ ] Prevent double-voting with token transfers
+- [x] 1 token = 1 vote (standard)
+- [x] Snapshot voting power at proposal creation
+- [x] Prevent double-voting with token transfers
 
 #### NFT-Based Voting
 
-- [ ] 1 NFT = 1 vote
-- [ ] Trait-weighted voting (rare NFTs = more votes)
-- [ ] Collection-gated DAOs
+- [x] 1 NFT = 1 vote
+- [x] Trait-weighted voting (rare NFTs = more votes)
+- [x] Collection-gated DAOs
 
 #### Quadratic Voting
 
-- [ ] Vote weight = √(tokens)
-- [ ] Reduces plutocracy
-- [ ] Configurable per DAO
+- [x] Vote weight = √(tokens)
+- [x] Reduces plutocracy
+- [x] Configurable per DAO
 
 #### Time-Weighted Voting
 
@@ -3085,8 +3085,8 @@ const rules = await tokens.pnft.rules(pnft)
 
 ### 21.6 Treasury Management
 
-- [ ] Create `src/treasury/` directory
-- [ ] `create_treasury` - Create DAO treasury
+- [x] Create `src/treasury/` directory
+- [x] `create_treasury` - Create DAO treasury
 
   ```ts
   const treasury = await votes.treasury.create({
@@ -3095,10 +3095,10 @@ const rules = await tokens.pnft.rules(pnft)
   })
   ```
 
-- [ ] `deposit_to_treasury` - Anyone can deposit
-- [ ] `withdraw_from_treasury` - Only via passed proposal
-- [ ] Support multiple token types in treasury
-- [ ] Treasury spending proposals with limits
+- [x] `deposit_to_treasury` - Anyone can deposit
+- [x] `withdraw_from_treasury` - Only via passed proposal
+- [x] Support multiple token types in treasury
+- [x] Treasury spending proposals with limits
 
 ### 21.7 TypeScript SDK for ts-governance
 
