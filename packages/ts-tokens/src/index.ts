@@ -65,4 +65,40 @@ export {
   burnTokens,
   burnAll,
   burn,
+  setMintAuthority,
+  revokeMintAuthority,
+  setFreezeAuthority,
+  revokeFreezeAuthority,
+  freezeAccount,
+  thawAccount,
+  getOrCreateAssociatedTokenAccount,
+  createTokenAccount,
+  closeTokenAccount,
+  getTokenAccountInfo,
 } from './token'
+
+// NFT operations
+export {
+  createNFT,
+  createCollection,
+  mintNFT,
+  transferNFT,
+  transferNFTs,
+  transferNFTFrom,
+  burnNFT,
+  burnNFTFull,
+  burnNFTs,
+} from './nft'
+
+// Storage adapters
+export {
+  getStorageAdapter,
+  clearStorageAdapters,
+  createArweaveAdapter,
+  createIPFSAdapter,
+  createShadowDriveAdapter,
+  createLocalAdapter,
+  ArweaveStorageAdapter,
+  IPFSStorageAdapter,
+  ShadowDriveStorageAdapter,
+} from './storage'

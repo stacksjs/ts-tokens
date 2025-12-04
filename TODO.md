@@ -133,57 +133,57 @@
 
 #### Arweave Driver
 
-- [ ] Create `ArweaveStorageAdapter` implementing `StorageAdapter` interface
-- [ ] Implement direct Arweave HTTP API calls (no `@irys/sdk`):
-  - [ ] `POST /tx` - Submit transaction
-  - [ ] `GET /tx/{id}/data` - Retrieve data
-  - [ ] `GET /price/{bytes}` - Get upload price
-  - [ ] `GET /{id}` - Get transaction status
+- [x] Create `ArweaveStorageAdapter` implementing `StorageAdapter` interface
+- [x] Implement direct Arweave HTTP API calls (no `@irys/sdk`):
+  - [x] `POST /tx` - Submit transaction
+  - [x] `GET /tx/{id}/data` - Retrieve data
+  - [x] `GET /price/{bytes}` - Get upload price
+  - [x] `GET /{id}` - Get transaction status
 - [ ] Implement Arweave transaction signing with Solana keypair (cross-chain signing)
-- [ ] Implement chunked uploads for large files (>100KB)
+- [x] Implement chunked uploads for large files (>100KB)
 - [ ] Implement bundle transactions for batch uploads (ANS-104 spec)
-- [ ] Add gateway URL configuration (arweave.net, ar-io.net, etc.)
-- [ ] Implement `publicUrl()` returning `https://arweave.net/{txId}`
-- [ ] Add retry logic with exponential backoff
+- [x] Add gateway URL configuration (arweave.net, ar-io.net, etc.)
+- [x] Implement `publicUrl()` returning `https://arweave.net/{txId}`
+- [x] Add retry logic with exponential backoff
 
 #### IPFS Driver
 
-- [ ] Create `IPFSStorageAdapter` implementing `StorageAdapter` interface
-- [ ] Implement direct IPFS HTTP API calls (no `nft.storage` SDK):
-  - [ ] `POST /api/v0/add` - Add file to IPFS
-  - [ ] `POST /api/v0/cat` - Retrieve file
+- [x] Create `IPFSStorageAdapter` implementing `StorageAdapter` interface
+- [x] Implement direct IPFS HTTP API calls (no `nft.storage` SDK):
+  - [x] `POST /api/v0/add` - Add file to IPFS
+  - [x] `POST /api/v0/cat` - Retrieve file
   - [ ] `POST /api/v0/pin/add` - Pin content
   - [ ] `POST /api/v0/pin/rm` - Unpin content
-- [ ] Support multiple IPFS providers via config:
-  - [ ] Local IPFS node (`localhost:5001`)
-  - [ ] Pinata API (`api.pinata.cloud`)
-  - [ ] NFT.Storage API (`api.nft.storage`) - direct HTTP, no SDK
-  - [ ] Web3.Storage API (`api.web3.storage`)
-  - [ ] Infura IPFS (`ipfs.infura.io`)
-- [ ] Implement `publicUrl()` returning configurable gateway URL
+- [x] Support multiple IPFS providers via config:
+  - [x] Local IPFS node (`localhost:5001`)
+  - [x] Pinata API (`api.pinata.cloud`)
+  - [x] NFT.Storage API (`api.nft.storage`) - direct HTTP, no SDK
+  - [x] Web3.Storage API (`api.web3.storage`)
+  - [x] Infura IPFS (`ipfs.infura.io`)
+- [x] Implement `publicUrl()` returning configurable gateway URL
 - [ ] Add CID v0/v1 support
 - [ ] Implement directory uploads (CAR files)
 
 #### Shadow Drive Driver (Solana-Native)
 
-- [ ] Create `ShadowDriveStorageAdapter` implementing `StorageAdapter` interface
+- [x] Create `ShadowDriveStorageAdapter` implementing `StorageAdapter` interface
 - [ ] Implement direct Shadow Drive program instructions (no `@shadow-drive/sdk`):
   - [ ] `initializeAccount` - Create storage account
-  - [ ] `uploadFile` - Upload file to account
-  - [ ] `deleteFile` - Delete file
+  - [x] `uploadFile` - Upload file to account
+  - [x] `deleteFile` - Delete file
   - [ ] `editFile` - Replace file contents
   - [ ] `addStorage` - Increase storage capacity
   - [ ] `reduceStorage` - Decrease storage (get SOL back)
   - [ ] `claimStake` - Claim staked SOL
 - [ ] Shadow Drive Program ID: `2e1wdyNhUvE76y6yUCvah2KaviavMJYKoRun8acMRBZZ`
 - [ ] Implement SHDW token payment handling
-- [ ] Implement `publicUrl()` returning `https://shdw-drive.genesysgo.net/{account}/{filename}`
+- [x] Implement `publicUrl()` returning `https://shdw-drive.genesysgo.net/{account}/{filename}`
 - [ ] Add storage account management utilities
 
 #### Local/Filesystem Driver (Development)
 
-- [ ] Ensure existing local driver in `@stacksjs/storage` works for dev/testing
-- [ ] Add mock URLs for local development (`file://` or `http://localhost`)
+- [x] Ensure existing local driver in `@stacksjs/storage` works for dev/testing
+- [x] Add mock URLs for local development (`file://` or `http://localhost`)
 
 #### Driver Factory
 
@@ -447,50 +447,50 @@
 
 ### 4.1 Collection Creation
 
-- [ ] Create `src/nft/collection.ts`:
-  - [ ] `createCollection(options)` - Create NFT collection
-    - [ ] `name` - Collection name
-    - [ ] `symbol` - Collection symbol
-    - [ ] `uri` - Collection metadata URI
-    - [ ] `sellerFeeBasisPoints` - Royalty percentage (basis points)
-    - [ ] `creators` - Creator shares array
-    - [ ] `isMutable` - Whether metadata can be updated
+- [x] Create `src/nft/collection.ts`:
+  - [x] `createCollection(options)` - Create NFT collection
+    - [x] `name` - Collection name
+    - [x] `symbol` - Collection symbol
+    - [x] `uri` - Collection metadata URI
+    - [x] `sellerFeeBasisPoints` - Royalty percentage (basis points)
+    - [x] `creators` - Creator shares array
+    - [x] `isMutable` - Whether metadata can be updated
   - [ ] `updateCollection(options)` - Update collection metadata
   - [ ] `verifyCollection(collection, nft)` - Verify NFT belongs to collection
   - [ ] `unverifyCollection(collection, nft)` - Remove collection verification
 
 ### 4.2 NFT Minting
 
-- [ ] Create `src/nft/mint.ts`:
-  - [ ] `mintNFT(options)` - Mint single NFT
-    - [ ] `name` - NFT name
-    - [ ] `symbol` - NFT symbol
-    - [ ] `uri` - Metadata URI
-    - [ ] `sellerFeeBasisPoints` - Royalty
-    - [ ] `creators` - Creator array with shares
-    - [ ] `collection` - Collection address (optional)
-    - [ ] `isMutable` - Metadata mutability
+- [x] Create `src/nft/mint.ts`:
+  - [x] `mintNFT(options)` - Mint single NFT
+    - [x] `name` - NFT name
+    - [x] `symbol` - NFT symbol
+    - [x] `uri` - Metadata URI
+    - [x] `sellerFeeBasisPoints` - Royalty
+    - [x] `creators` - Creator array with shares
+    - [x] `collection` - Collection address (optional)
+    - [x] `isMutable` - Metadata mutability
     - [ ] `primarySaleHappened` - Primary sale flag
   - [ ] `mintNFTToCollection(options)` - Mint directly to collection
   - [ ] `mintCompressedNFT(options)` - Mint compressed NFT (cNFT)
-  - [ ] Return mint address and transaction signature
+  - [x] Return mint address and transaction signature
 
 ### 4.3 NFT Transfers
 
-- [ ] Create `src/nft/transfer.ts`:
-  - [ ] `transferNFT(options)` - Transfer NFT
-    - [ ] `mint` - NFT mint address
-    - [ ] `from` - Current owner
-    - [ ] `to` - New owner
+- [x] Create `src/nft/transfer.ts`:
+  - [x] `transferNFT(options)` - Transfer NFT
+    - [x] `mint` - NFT mint address
+    - [x] `from` - Current owner
+    - [x] `to` - New owner
   - [ ] `transferCompressedNFT(options)` - Transfer cNFT
-  - [ ] Automatic ATA creation for recipient
+  - [x] Automatic ATA creation for recipient
 
 ### 4.4 NFT Burns
 
-- [ ] Create `src/nft/burn.ts`:
-  - [ ] `burnNFT(mint, owner)` - Burn NFT
+- [x] Create `src/nft/burn.ts`:
+  - [x] `burnNFT(mint, owner)` - Burn NFT
   - [ ] `burnCompressedNFT(options)` - Burn cNFT
-  - [ ] Reclaim rent from closed accounts
+  - [x] Reclaim rent from closed accounts
 
 ### 4.5 NFT Metadata Management
 
