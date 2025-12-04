@@ -3262,12 +3262,12 @@ const info = await votes.dao.info(dao)
 
 ### 22.3 Debugging Tools
 
-- [ ] `tokens debug tx <signature>` - Detailed transaction analysis
-- [ ] `tokens debug account <address>` - Account state inspector
-- [ ] `tokens debug simulate <instruction>` - Simulate any instruction
-- [ ] Transaction trace logging (opt-in verbose mode)
+- [x] `tokens debug tx <signature>` - Detailed transaction analysis
+- [x] `tokens debug account <address>` - Account state inspector
+- [x] `tokens debug simulate <instruction>` - Simulate any instruction
+- [x] Transaction trace logging (opt-in verbose mode)
 - [ ] Visual transaction builder (web UI)
-- [ ] Account diff viewer (before/after transaction)
+- [x] Account diff viewer (before/after transaction)
 
 ### 22.4 IDE Integration
 
@@ -3340,11 +3340,11 @@ const info = await votes.dao.info(dao)
 
 ### 24.1 Internationalization (i18n)
 
-- [ ] Extract all user-facing strings
-- [ ] Create translation files (en, es, zh, ja, ko, etc.)
-- [ ] CLI language selection (`tokens config set language es`)
-- [ ] Component prop for language override
-- [ ] Number/date formatting per locale
+- [x] Extract all user-facing strings
+- [x] Create translation files (en, es, zh, ja, ko, etc.)
+- [x] CLI language selection (`tokens config set language es`)
+- [x] Component prop for language override
+- [x] Number/date formatting per locale
 
 ### 24.2 Accessibility (a11y)
 

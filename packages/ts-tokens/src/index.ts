@@ -190,3 +190,9 @@ export * as treasury from './treasury'
 
 // Voting Mechanisms
 export * as voting from './voting'
+
+// Internationalization
+export * as i18n from './i18n'
+
+// Debugging Tools
+export * as debug from './debug'
