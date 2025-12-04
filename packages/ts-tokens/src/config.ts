@@ -6,8 +6,18 @@ export const defaults: TokenxConfig = {
   verbose: true,
 }
 
-// eslint-disable-next-line antfu/no-top-level-await
-export const config: TokenxConfig = await loadConfig({
+// Lazy-loaded config to avoid top-level await (enables bun --compile)
+let _config: TokenxConfig | null = null
+
+export async function getConfig(): Promise<TokenxConfig> {
+  if (!_config) {
+    _config = await loadConfig({
   name: 'tokenx',
   defaultConfig: defaults,
 })
+  }
+  return _config
+}
+
+// For backwards compatibility - synchronous access with default fallback
+export const config: TokenxConfig = defaultConfig
