@@ -1581,7 +1581,7 @@
 - [x] Parse and index token transfers
 - [x] Parse and index NFT sales/transfers
 - [x] Track holder snapshots over time
-- [ ] Implement real-time event streaming (websockets)
+- [x] Implement real-time event streaming (websockets)
 
 ### 14.2 DAS API Integration (Digital Asset Standard)
 
@@ -1623,7 +1623,7 @@
 - [ ] Implement delayed/scheduled transactions
 - [ ] Support cron-like scheduling for CLI
 - [ ] Implement mint start/end automation
-- [ ] Create webhook triggers for events
+- [x] Create webhook triggers for events
 
 ### 15.3 Scripting API
 
@@ -2857,14 +2857,14 @@ const rules = await tokens.pnft.rules(pnft)
 
 ### 20.8 CLI Commands for pNFTs
 
-- [ ] `tokens pnft create` - Create programmable NFT
-- [ ] `tokens pnft rules <mint>` - Show NFT rules
-- [ ] `tokens pnft add-rule <mint> <rule>` - Add rule
-- [ ] `tokens pnft remove-rule <mint> <rule>` - Remove rule
-- [ ] `tokens pnft transfer <mint> <to>` - Transfer with validation
-- [ ] `tokens pnft can-transfer <mint> <to>` - Check if transfer allowed
-- [ ] `tokens sbt create` - Create soulbound token
-- [ ] `tokens sbt recover <mint> <new-owner>` - Recover soulbound
+- [x] `tokens pnft create` - Create programmable NFT
+- [x] `tokens pnft rules <mint>` - Show NFT rules
+- [x] `tokens pnft add-rule <mint> <rule>` - Add rule
+- [x] `tokens pnft remove-rule <mint> <rule>` - Remove rule
+- [x] `tokens pnft transfer <mint> <to>` - Transfer with validation
+- [x] `tokens pnft can-transfer <mint> <to>` - Check if transfer allowed
+- [x] `tokens sbt create` - Create soulbound token
+- [x] `tokens sbt recover <mint> <new-owner>` - Recover soulbound
 
 ---
 
