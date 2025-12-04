@@ -88,6 +88,26 @@ export {
   burnNFT,
   burnNFTFull,
   burnNFTs,
+  // Metadata
+  updateNFTMetadata,
+  getNFTMetadata,
+  fetchOffChainMetadata,
+  getFullNFTData,
+  verifyCreator,
+  unverifyCreator,
+  setAndVerifyCollection,
+  // Queries
+  getNFTsByOwner,
+  getNFTsByCollection,
+  getNFTsByCreator,
+  getCollectionInfo,
+  isInCollection,
+  getNFTHolder,
+  getNFTHistory,
+  // Candy Machine
+  createCandyMachine,
+  addConfigLines,
+  mintFromCandyMachine,
 } from './nft'
 
 // Storage adapters

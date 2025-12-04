@@ -494,33 +494,33 @@
 
 ### 4.5 NFT Metadata Management
 
-- [ ] Create `src/nft/metadata.ts`:
-  - [ ] `updateNFTMetadata(options)` - Update NFT metadata
-    - [ ] `mint` - NFT mint address
-    - [ ] `name` - New name (optional)
-    - [ ] `symbol` - New symbol (optional)
-    - [ ] `uri` - New metadata URI (optional)
-    - [ ] `sellerFeeBasisPoints` - New royalty (optional)
-    - [ ] `creators` - New creators (optional)
-  - [ ] `getNFTMetadata(mint)` - Fetch on-chain metadata
-  - [ ] `fetchOffChainMetadata(uri)` - Fetch JSON metadata from URI
-  - [ ] `verifyCreator(mint, creator)` - Verify creator signature
-  - [ ] `unverifyCreator(mint, creator)` - Remove creator verification
+- [x] Create `src/nft/metadata.ts`:
+  - [x] `updateNFTMetadata(options)` - Update NFT metadata
+    - [x] `mint` - NFT mint address
+    - [x] `name` - New name (optional)
+    - [x] `symbol` - New symbol (optional)
+    - [x] `uri` - New metadata URI (optional)
+    - [x] `sellerFeeBasisPoints` - New royalty (optional)
+    - [x] `creators` - New creators (optional)
+  - [x] `getNFTMetadata(mint)` - Fetch on-chain metadata
+  - [x] `fetchOffChainMetadata(uri)` - Fetch JSON metadata from URI
+  - [x] `verifyCreator(mint, creator)` - Verify creator signature
+  - [x] `unverifyCreator(mint, creator)` - Remove creator verification
 
 ### 4.6 Candy Machine (NFT Drops)
 
-- [ ] Create `src/nft/candy-machine/` directory
-- [ ] Create `src/nft/candy-machine/create.ts`:
-  - [ ] `createCandyMachine(options)` - Create new Candy Machine
-    - [ ] `itemsAvailable` - Total NFTs in collection
-    - [ ] `sellerFeeBasisPoints` - Royalty
-    - [ ] `symbol` - Collection symbol
-    - [ ] `maxEditionSupply` - Max editions (0 for unique)
-    - [ ] `isMutable` - Metadata mutability
-    - [ ] `creators` - Creator array
-    - [ ] `collection` - Collection NFT address
-    - [ ] `configLineSettings` - Config line settings
-    - [ ] `hiddenSettings` - Hidden settings (for reveals)
+- [x] Create `src/nft/candy-machine/` directory
+- [x] Create `src/nft/candy-machine/create.ts`:
+  - [x] `createCandyMachine(options)` - Create new Candy Machine
+    - [x] `itemsAvailable` - Total NFTs in collection
+    - [x] `sellerFeeBasisPoints` - Royalty
+    - [x] `symbol` - Collection symbol
+    - [x] `maxEditionSupply` - Max editions (0 for unique)
+    - [x] `isMutable` - Metadata mutability
+    - [x] `creators` - Creator array
+    - [x] `collection` - Collection NFT address
+    - [x] `configLineSettings` - Config line settings
+    - [x] `hiddenSettings` - Hidden settings (for reveals)
 - [ ] Create `src/nft/candy-machine/config.ts`:
   - [ ] `updateCandyMachine(options)` - Update CM settings
   - [ ] `setCandyMachineAuthority(cm, newAuthority)` - Transfer authority
@@ -552,28 +552,28 @@
 
 ### 4.8 Candy Machine Items
 
-- [ ] Create `src/nft/candy-machine/items.ts`:
-  - [ ] `addConfigLines(candyMachine, items)` - Add NFT config lines
-    - [ ] `name` - NFT name (with index placeholder)
-    - [ ] `uri` - Metadata URI (with index placeholder)
+- [x] Create `src/nft/candy-machine/items.ts`:
+  - [x] `addConfigLines(candyMachine, items)` - Add NFT config lines
+    - [x] `name` - NFT name (with index placeholder)
+    - [x] `uri` - Metadata URI (with index placeholder)
   - [ ] `addConfigLinesFromFile(candyMachine, filePath)` - Bulk add from JSON
   - [ ] `getLoadedItems(candyMachine)` - Get loaded item count
   - [ ] `getMintedItems(candyMachine)` - Get minted item count
 
 ### 4.9 Candy Machine Minting
 
-- [ ] Create `src/nft/candy-machine/mint.ts`:
-  - [ ] `mintFromCandyMachine(candyMachine, options)` - Mint NFT from CM
+- [x] Create `src/nft/candy-machine/mint.ts`:
+  - [x] `mintFromCandyMachine(candyMachine, options)` - Mint NFT from CM
   - [ ] `mintWithGuard(candyMachine, guard, options)` - Mint with specific guard
   - [ ] `mintMultiple(candyMachine, count, options)` - Batch mint
 
 ### 4.10 NFT Queries
 
-- [ ] Create `src/nft/query.ts`:
-  - [ ] `getNFTsByOwner(owner)` - Get all NFTs owned by address
-  - [ ] `getNFTsByCollection(collection)` - Get all NFTs in collection
-  - [ ] `getNFTsByCreator(creator)` - Get all NFTs by creator
-  - [ ] `getCollectionInfo(collection)` - Get collection details
+- [x] Create `src/nft/query.ts`:
+  - [x] `getNFTsByOwner(owner)` - Get all NFTs owned by address
+  - [x] `getNFTsByCollection(collection)` - Get all NFTs in collection
+  - [x] `getNFTsByCreator(creator)` - Get all NFTs by creator
+  - [x] `getCollectionInfo(collection)` - Get collection details
   - [ ] `getCandyMachineInfo(candyMachine)` - Get CM details
   - [ ] `getCandyMachineItems(candyMachine)` - Get all CM items
 
@@ -612,7 +612,7 @@
 
 ### 5.1 CLI Structure
 
-- [ ] Restructure `bin/cli.ts` with proper command organization
+- [x] Restructure `bin/cli.ts` with proper command organization
 - [ ] Create `src/cli/` directory for CLI-specific code
 - [ ] Create `src/cli/commands/` for command implementations
 - [ ] Create `src/cli/utils/` for CLI utilities
@@ -622,34 +622,34 @@
 
 ### 5.2 Configuration Commands
 
-- [ ] `tokens config init` - Initialize config file interactively
-- [ ] `tokens config show` - Display current configuration
+- [x] `tokens config init` - Initialize config file interactively
+- [x] `tokens config show` - Display current configuration
 - [ ] `tokens config set <key> <value>` - Set config value
 - [ ] `tokens config get <key>` - Get config value
-- [ ] `tokens config network <network>` - Switch network (devnet/mainnet/etc)
+- [x] `tokens config network <network>` - Switch network (devnet/mainnet/etc)
 
 ### 5.3 Wallet Commands
 
-- [ ] `tokens wallet generate` - Generate new keypair
+- [x] `tokens wallet generate` - Generate new keypair
 - [ ] `tokens wallet import <path>` - Import keypair from file
-- [ ] `tokens wallet show` - Show current wallet address
-- [ ] `tokens wallet balance` - Show SOL balance
-- [ ] `tokens wallet airdrop [amount]` - Request devnet airdrop
+- [x] `tokens wallet show` - Show current wallet address
+- [x] `tokens wallet balance` - Show SOL balance
+- [x] `tokens wallet airdrop [amount]` - Request devnet airdrop
 
 ### 5.4 Fungible Token Commands
 
-- [ ] `tokens create` - Create new fungible token (interactive)
-  - [ ] `--name <name>` - Token name
-  - [ ] `--symbol <symbol>` - Token symbol
-  - [ ] `--decimals <n>` - Decimal places
-  - [ ] `--supply <amount>` - Initial supply
+- [x] `tokens create` - Create new fungible token (interactive)
+  - [x] `--name <name>` - Token name
+  - [x] `--symbol <symbol>` - Token symbol
+  - [x] `--decimals <n>` - Decimal places
+  - [x] `--supply <amount>` - Initial supply
   - [ ] `--metadata-uri <uri>` - Metadata URI
-- [ ] `tokens mint <mint> <amount>` - Mint tokens
-  - [ ] `--to <address>` - Recipient (default: self)
-- [ ] `tokens transfer <mint> <amount> <to>` - Transfer tokens
-- [ ] `tokens burn <mint> <amount>` - Burn tokens
-- [ ] `tokens info <mint>` - Show token info
-- [ ] `tokens balance <mint>` - Show token balance
+- [x] `tokens mint <mint> <amount>` - Mint tokens
+  - [x] `--to <address>` - Recipient (default: self)
+- [x] `tokens transfer <mint> <amount> <to>` - Transfer tokens
+- [x] `tokens burn <mint> <amount>` - Burn tokens
+- [x] `tokens info <mint>` - Show token info
+- [x] `tokens balance <mint>` - Show token balance
 - [ ] `tokens holders <mint>` - List token holders
 - [ ] `tokens authority <mint>` - Manage authorities
   - [ ] `--revoke-mint` - Revoke mint authority
@@ -659,24 +659,24 @@
 
 ### 5.5 NFT Commands
 
-- [ ] `tokens nft create` - Create single NFT (interactive)
-  - [ ] `--name <name>` - NFT name
+- [x] `tokens nft create` - Create single NFT (interactive)
+  - [x] `--name <name>` - NFT name
   - [ ] `--symbol <symbol>` - Symbol
-  - [ ] `--uri <uri>` - Metadata URI
-  - [ ] `--royalty <bps>` - Royalty in basis points
-  - [ ] `--collection <address>` - Collection address
+  - [x] `--uri <uri>` - Metadata URI
+  - [x] `--royalty <bps>` - Royalty in basis points
+  - [x] `--collection <address>` - Collection address
 - [ ] `tokens nft mint <uri>` - Mint NFT from metadata URI
-- [ ] `tokens nft transfer <mint> <to>` - Transfer NFT
-- [ ] `tokens nft burn <mint>` - Burn NFT
-- [ ] `tokens nft info <mint>` - Show NFT info
-- [ ] `tokens nft list [owner]` - List NFTs owned
+- [x] `tokens nft transfer <mint> <to>` - Transfer NFT
+- [x] `tokens nft burn <mint>` - Burn NFT
+- [x] `tokens nft info <mint>` - Show NFT info
+- [x] `tokens nft list [owner]` - List NFTs owned
 
 ### 5.6 Collection Commands
 
-- [ ] `tokens collection create` - Create collection (interactive)
-  - [ ] `--name <name>` - Collection name
-  - [ ] `--symbol <symbol>` - Symbol
-  - [ ] `--uri <uri>` - Metadata URI
+- [x] `tokens collection create` - Create collection (interactive)
+  - [x] `--name <name>` - Collection name
+  - [x] `--symbol <symbol>` - Symbol
+  - [x] `--uri <uri>` - Metadata URI
   - [ ] `--royalty <bps>` - Royalty in basis points
 - [ ] `tokens collection info <address>` - Show collection info
 - [ ] `tokens collection items <address>` - List collection items

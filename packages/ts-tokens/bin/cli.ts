@@ -127,7 +127,7 @@ cli
   })
 
 // ============================================
-// Token Commands (Placeholders)
+// Token Commands
 // ============================================
 
 cli
@@ -137,50 +137,134 @@ cli
   .option('--decimals <decimals>', 'Decimal places', '9')
   .option('--supply <supply>', 'Initial supply')
   .action(async (options: { name?: string; symbol?: string; decimals?: string; supply?: string }) => {
-    console.log('Creating token...')
-    console.log('Options:', options)
-    console.log('\n[Token creation not yet implemented]')
+    if (!options.name || !options.symbol) {
+      console.error('Error: --name and --symbol are required')
+      process.exit(1)
+    }
+
+    const config = await getConfig()
+    const { createToken } = await import('../src/token/create')
+
+    try {
+      console.log('Creating token...')
+      const result = await createToken({
+        name: options.name,
+        symbol: options.symbol,
+        decimals: parseInt(options.decimals || '9'),
+        initialSupply: options.supply ? BigInt(options.supply) : undefined,
+      }, config)
+
+      console.log('\n✓ Token created successfully!')
+      console.log(`  Mint: ${result.mint}`)
+      console.log(`  Signature: ${result.signature}`)
+      if (result.metadataAddress) {
+        console.log(`  Metadata: ${result.metadataAddress}`)
+      }
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
   })
 
 cli
   .command('mint <mint> <amount>', 'Mint tokens')
   .option('--to <address>', 'Recipient address')
   .action(async (mint: string, amount: string, options: { to?: string }) => {
-    console.log(`Minting ${amount} tokens from ${mint}...`)
-    console.log('Options:', options)
-    console.log('\n[Token minting not yet implemented]')
+    const config = await getConfig()
+    const { mintTokens } = await import('../src/token/mint')
+
+    try {
+      console.log(`Minting ${amount} tokens...`)
+      const result = await mintTokens({
+        mint,
+        amount: BigInt(amount),
+        destination: options.to,
+      }, config)
+
+      console.log('\n✓ Tokens minted successfully!')
+      console.log(`  Signature: ${result.signature}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
   })
 
 cli
   .command('transfer <mint> <amount> <to>', 'Transfer tokens')
   .action(async (mint: string, amount: string, to: string) => {
-    console.log(`Transferring ${amount} tokens of ${mint} to ${to}...`)
-    console.log('\n[Token transfer not yet implemented]')
+    const config = await getConfig()
+    const { transfer } = await import('../src/token/transfer')
+
+    try {
+      console.log(`Transferring ${amount} tokens to ${to}...`)
+      const result = await transfer(mint, to, BigInt(amount), config)
+
+      console.log('\n✓ Transfer successful!')
+      console.log(`  Signature: ${result.signature}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
   })
 
 cli
   .command('burn <mint> <amount>', 'Burn tokens')
   .action(async (mint: string, amount: string) => {
-    console.log(`Burning ${amount} tokens of ${mint}...`)
-    console.log('\n[Token burning not yet implemented]')
+    const config = await getConfig()
+    const { burn } = await import('../src/token/burn')
+
+    try {
+      console.log(`Burning ${amount} tokens...`)
+      const result = await burn(mint, BigInt(amount), config)
+
+      console.log('\n✓ Tokens burned successfully!')
+      console.log(`  Signature: ${result.signature}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
   })
 
 cli
   .command('info <mint>', 'Show token information')
   .action(async (mint: string) => {
-    console.log(`Fetching info for ${mint}...`)
-    console.log('\n[Token info not yet implemented]')
+    const config = await getConfig()
+    const { getMintInfo } = await import('../src/drivers/solana/account')
+
+    try {
+      const info = await getMintInfo(mint, config)
+      console.log('Token Information:')
+      console.log(`  Mint: ${mint}`)
+      console.log(`  Supply: ${info.supply}`)
+      console.log(`  Decimals: ${info.decimals}`)
+      console.log(`  Mint Authority: ${info.mintAuthority || 'None (fixed supply)'}`)
+      console.log(`  Freeze Authority: ${info.freezeAuthority || 'None'}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
   })
 
 cli
   .command('balance <mint>', 'Show token balance')
   .action(async (mint: string) => {
-    console.log(`Fetching balance for ${mint}...`)
-    console.log('\n[Token balance not yet implemented]')
+    const config = await getConfig()
+    const { getTokenBalance } = await import('../src/drivers/solana/account')
+    const { getPublicKey } = await import('../src/drivers/solana/wallet')
+
+    try {
+      const owner = getPublicKey(config)
+      const balance = await getTokenBalance(owner, mint, config)
+      console.log(`Token: ${mint}`)
+      console.log(`Balance: ${balance}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
   })
 
 // ============================================
-// NFT Commands (Placeholders)
+// NFT Commands
 // ============================================
 
 cli
@@ -188,10 +272,112 @@ cli
   .option('--name <name>', 'NFT name')
   .option('--uri <uri>', 'Metadata URI')
   .option('--collection <address>', 'Collection address')
-  .action(async (options: { name?: string; uri?: string; collection?: string }) => {
-    console.log('Creating NFT...')
-    console.log('Options:', options)
-    console.log('\n[NFT creation not yet implemented]')
+  .option('--royalty <bps>', 'Royalty in basis points (e.g., 500 = 5%)')
+  .action(async (options: { name?: string; uri?: string; collection?: string; royalty?: string }) => {
+    if (!options.name || !options.uri) {
+      console.error('Error: --name and --uri are required')
+      process.exit(1)
+    }
+
+    const config = await getConfig()
+    const { createNFT } = await import('../src/nft/create')
+
+    try {
+      console.log('Creating NFT...')
+      const result = await createNFT({
+        name: options.name,
+        uri: options.uri,
+        collection: options.collection,
+        sellerFeeBasisPoints: options.royalty ? parseInt(options.royalty) : 0,
+      }, config)
+
+      console.log('\n✓ NFT created successfully!')
+      console.log(`  Mint: ${result.mint}`)
+      console.log(`  Metadata: ${result.metadata}`)
+      console.log(`  Master Edition: ${result.masterEdition}`)
+      console.log(`  Signature: ${result.signature}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('nft:transfer <mint> <to>', 'Transfer an NFT')
+  .action(async (mint: string, to: string) => {
+    const config = await getConfig()
+    const { transferNFT } = await import('../src/nft/transfer')
+
+    try {
+      console.log(`Transferring NFT ${mint} to ${to}...`)
+      const result = await transferNFT(mint, to, config)
+
+      console.log('\n✓ NFT transferred successfully!')
+      console.log(`  Signature: ${result.signature}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('nft:burn <mint>', 'Burn an NFT')
+  .action(async (mint: string) => {
+    const config = await getConfig()
+    const { burnNFT } = await import('../src/nft/burn')
+
+    try {
+      console.log(`Burning NFT ${mint}...`)
+      const result = await burnNFT(mint, config)
+
+      console.log('\n✓ NFT burned successfully!')
+      console.log(`  Signature: ${result.signature}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('nft:info <mint>', 'Show NFT information')
+  .action(async (mint: string) => {
+    const config = await getConfig()
+    const { getNFTMetadata, fetchOffChainMetadata } = await import('../src/nft/metadata')
+
+    try {
+      const metadata = await getNFTMetadata(mint, config)
+      if (!metadata) {
+        console.error('NFT not found')
+        process.exit(1)
+      }
+
+      console.log('NFT Information:')
+      console.log(`  Mint: ${mint}`)
+      console.log(`  Name: ${metadata.name}`)
+      console.log(`  Symbol: ${metadata.symbol}`)
+      console.log(`  URI: ${metadata.uri}`)
+      console.log(`  Royalty: ${metadata.sellerFeeBasisPoints / 100}%`)
+      console.log(`  Mutable: ${metadata.isMutable}`)
+      console.log(`  Update Authority: ${metadata.updateAuthority}`)
+
+      if (metadata.creators && metadata.creators.length > 0) {
+        console.log('  Creators:')
+        for (const creator of metadata.creators) {
+          console.log(`    - ${creator.address} (${creator.share}%)${creator.verified ? ' ✓' : ''}`)
+        }
+      }
+
+      // Fetch off-chain metadata
+      const offChain = await fetchOffChainMetadata(metadata.uri)
+      if (offChain) {
+        console.log('\nOff-chain Metadata:')
+        console.log(`  Description: ${(offChain as any).description || 'N/A'}`)
+        console.log(`  Image: ${(offChain as any).image || 'N/A'}`)
+      }
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
   })
 
 cli
@@ -200,9 +386,61 @@ cli
   .option('--symbol <symbol>', 'Collection symbol')
   .option('--uri <uri>', 'Metadata URI')
   .action(async (options: { name?: string; symbol?: string; uri?: string }) => {
-    console.log('Creating collection...')
-    console.log('Options:', options)
-    console.log('\n[Collection creation not yet implemented]')
+    if (!options.name || !options.uri) {
+      console.error('Error: --name and --uri are required')
+      process.exit(1)
+    }
+
+    const config = await getConfig()
+    const { createCollection } = await import('../src/nft/create')
+
+    try {
+      console.log('Creating collection...')
+      const result = await createCollection({
+        name: options.name,
+        symbol: options.symbol,
+        uri: options.uri,
+      }, config)
+
+      console.log('\n✓ Collection created successfully!')
+      console.log(`  Mint: ${result.mint}`)
+      console.log(`  Metadata: ${result.metadata}`)
+      console.log(`  Signature: ${result.signature}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('nft:list [owner]', 'List NFTs owned by address')
+  .action(async (owner?: string) => {
+    const config = await getConfig()
+    const { getNFTsByOwner } = await import('../src/nft/query')
+    const { getPublicKey } = await import('../src/drivers/solana/wallet')
+
+    try {
+      const address = owner || getPublicKey(config)
+      console.log(`Fetching NFTs for ${address}...`)
+
+      const nfts = await getNFTsByOwner(address, config)
+
+      if (nfts.length === 0) {
+        console.log('No NFTs found')
+        return
+      }
+
+      console.log(`\nFound ${nfts.length} NFT(s):\n`)
+      for (const nft of nfts) {
+        console.log(`  ${nft.name}`)
+        console.log(`    Mint: ${nft.mint}`)
+        console.log(`    Symbol: ${nft.symbol}`)
+        console.log('')
+      }
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
   })
 
 // ============================================
