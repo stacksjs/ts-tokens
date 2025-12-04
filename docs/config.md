@@ -1,14 +1,14 @@
 # Configuration
 
-`qrx` can be configured using a `qrx.config.ts` _(or `qrx.config.js`)_ file and it will be automatically loaded when running the `qrx` command.
+`tokens` can be configured using a `tokens.config.ts` _(or `tokens.config.js`)_ file and it will be automatically loaded when running the `tokens` command.
 
 ```ts
-// qrx.config.{ts,js}
-import type { QrxConfig } from '@stacksjs/qrx'
+// tokens.config.{ts,js}
+import type { tokensConfig } from 'ts-tokens'
 import os from 'node:os'
 import path from 'node:path'
 
-const config: QrxConfig = {
+const config: tokensConfig = {
   /**
    * The type of the QR code.
    */

@@ -5,7 +5,7 @@ EAN-2 is a supplemental two-digit barcode typically used for periodical publicat
 ## Basic Usage
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '53', { format: 'EAN2' })
 ```
@@ -24,7 +24,7 @@ An EAN-2 barcode consists of:
 ## Usage with Main Barcode
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode')
   .EAN13('9771234567003')
@@ -42,7 +42,7 @@ barcode('#barcode')
 ## Customization Options
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '53', {
   format: 'EAN2',
@@ -59,18 +59,21 @@ barcode('#barcode', '53', {
 ## Common Applications
 
 1. Magazine Issues
+
    ```ts
    // Issue 12 of a magazine
    barcode('#barcode', '12', { format: 'EAN2' })
    ```
 
 2. Newspaper Editions
+
    ```ts
    // Sunday edition (01)
    barcode('#barcode', '01', { format: 'EAN2' })
    ```
 
 3. Version Indicators
+
    ```ts
    // Version 2.0
    barcode('#barcode', '20', { format: 'EAN2' })
@@ -86,6 +89,7 @@ barcode('#barcode', '53', {
    - Baseline alignment with main barcode
 
 2. Height Considerations
+
    ```ts
    // Typically taller than main barcode
    barcode('#barcode', '53', {
@@ -99,7 +103,7 @@ barcode('#barcode', '53', {
 ## Error Handling
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '53', {
   format: 'EAN2',

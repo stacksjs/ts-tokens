@@ -1,6 +1,6 @@
 # Install
 
-Installing `qrx` is easy. Simply pull it in via your package manager of choice, or download the binary directly.
+Installing `tokens` is easy. Simply pull it in via your package manager of choice, or download the binary directly.
 
 ## Package Managers
 
@@ -9,44 +9,44 @@ Choose your package manager of choice:
 ::: code-group
 
 ```sh [npm]
-npm install @stacksjs/qrx
-# npm i @stacksjs/qrx
+npm install ts-tokens
+# npm i ts-tokens
 
 # or, install globally via
-npm i -g @stacksjs/qrx
+npm i -g ts-tokens
 ```
 
 ```sh [bun]
-bun install @stacksjs/qrx
-# bun add @stacksjs/qrx
-# bun i @stacksjs/qrx
+bun install ts-tokens
+# bun add ts-tokens
+# bun i ts-tokens
 
 # or, install globally via
-bun add --global @stacksjs/qrx
+bun add --global ts-tokens
 ```
 
 ```sh [pnpm]
-pnpm add @stacksjs/qrx
-# pnpm i @stacksjs/qrx
+pnpm add ts-tokens
+# pnpm i ts-tokens
 
 # or, install globally via
-pnpm add --global @stacksjs/qrx
+pnpm add --global ts-tokens
 ```
 
 ```sh [yarn]
-yarn add @stacksjs/qrx
-# yarn i -d @stacksjs/qrx
+yarn add ts-tokens
+# yarn i -d ts-tokens
 
 # or, install globally via
-yarn global add @stacksjs/qrx
+yarn global add ts-tokens
 ```
 
 ```sh [brew]
-brew install qrx # coming soon
+brew install tokens # coming soon
 ```
 
 ```sh [pkgx]
-pkgx qrx # coming soon
+pkgx tokens # coming soon
 ```
 
 :::
@@ -61,56 +61,56 @@ Choose the binary that matches your platform and architecture:
 
 ```sh [macOS (arm64)]
 # Download the binary
-curl -L https://github.com/stacksjs/qrx/releases/download/v0.1.0/qrx-darwin-arm64 -o qrx
+curl -L https://github.com/stacksjs/tokens/releases/download/v0.1.0/tokens-darwin-arm64 -o tokens
 
 # Make it executable
-chmod +x qrx
+chmod +x tokens
 
 # Move it to your PATH
-mv qrx /usr/local/bin/qrx
+mv tokens /usr/local/bin/tokens
 ```
 
 ```sh [macOS (x64)]
 # Download the binary
-curl -L https://github.com/stacksjs/qrx/releases/download/v0.1.0/qrx-darwin-x64 -o qrx
+curl -L https://github.com/stacksjs/tokens/releases/download/v0.1.0/tokens-darwin-x64 -o tokens
 
 # Make it executable
-chmod +x qrx
+chmod +x tokens
 
 # Move it to your PATH
-mv qrx /usr/local/bin/qrx
+mv tokens /usr/local/bin/tokens
 ```
 
 ```sh [Linux (arm64)]
 # Download the binary
-curl -L https://github.com/stacksjs/qrx/releases/download/v0.1.0/qrx-linux-arm64 -o qrx
+curl -L https://github.com/stacksjs/tokens/releases/download/v0.1.0/tokens-linux-arm64 -o tokens
 
 # Make it executable
-chmod +x qrx
+chmod +x tokens
 
 # Move it to your PATH
-mv qrx /usr/local/bin/qrx
+mv tokens /usr/local/bin/tokens
 ```
 
 ```sh [Linux (x64)]
 # Download the binary
-curl -L https://github.com/stacksjs/qrx/releases/download/v0.1.0/qrx-linux-x64 -o qrx
+curl -L https://github.com/stacksjs/tokens/releases/download/v0.1.0/tokens-linux-x64 -o tokens
 
 # Make it executable
-chmod +x qrx
+chmod +x tokens
 
 # Move it to your PATH
-mv qrx /usr/local/bin/qrx
+mv tokens /usr/local/bin/tokens
 ```
 
 ```sh [Windows (x64)]
 # Download the binary
-curl -L https://github.com/stacksjs/qrx/releases/download/v0.1.0/qrx-windows-x64.exe -o qrx.exe
+curl -L https://github.com/stacksjs/tokens/releases/download/v0.1.0/tokens-windows-x64.exe -o tokens.exe
 
 # Move it to your PATH (adjust the path as needed)
-move qrx.exe C:\Windows\System32\qrx.exe
+move tokens.exe C:\Windows\System32\tokens.exe
 ```
 
 ::: tip
-You can also find the `qrx` binaries in GitHub [releases](https://github.com/stacksjs/qrx/releases).
+You can also find the `tokens` binaries in GitHub [releases](https://github.com/stacksjs/tokens/releases).
 :::

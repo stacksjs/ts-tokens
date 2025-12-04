@@ -5,7 +5,7 @@ EAN-5 is a supplemental barcode that adds 5 additional digits to EAN-13 or UPC b
 ## Basic Usage
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '54495', { format: 'EAN5' })
 ```
@@ -23,7 +23,7 @@ An EAN-5 barcode consists of:
 ## Common Usage with EAN-13
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode')
   .EAN13('9781234567897')
@@ -41,7 +41,7 @@ barcode('#barcode')
 ## Customization Options
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '54495', {
   format: 'EAN5',
@@ -66,6 +66,7 @@ barcode('#barcode', '54495', {
    - Price information
 
 3. **Currency Encoding** Example codes:
+
    ```ts
    // £5.99 in GBP
    barcode('#barcode', '05991', { format: 'EAN5' })
@@ -79,11 +80,13 @@ barcode('#barcode', '54495', {
 ## Positioning Guidelines
 
 1. **Placement**
-  - Right-aligned with main barcode
-  - Standard gap between main barcode
-  - Same baseline alignment
+
+- Right-aligned with main barcode
+- Standard gap between main barcode
+- Same baseline alignment
 
 2. **Height Options**
+
    ```ts
    // Taller than main barcode
    barcode('#barcode', '54495', {
@@ -97,7 +100,7 @@ barcode('#barcode', '54495', {
 ## Error Handling
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '54495', {
   format: 'EAN5',

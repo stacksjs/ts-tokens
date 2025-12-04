@@ -5,7 +5,7 @@ MSI10 is the MSI variant that uses a single Mod 10 check digit for error detecti
 ## Basic Usage
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '1234', { format: 'MSI10' }) // Result: 12344
 ```
@@ -15,12 +15,14 @@ barcode('#barcode', '1234', { format: 'MSI10' }) // Result: 12344
 ## Mod 10 Checksum Calculation
 
 The Mod 10 checksum is calculated as follows:
+
 1. Multiply alternate digits by 2, starting from the right
 2. Sum the individual digits of the products
 3. Add the remaining numbers
 4. The check digit is the number needed to make sum divisible by 10
 
 Example:
+
 ```
 Data: 1234
 Step 1: 1 2 3 4 → (1)(2×2)(3)(4×2)
@@ -33,7 +35,7 @@ Result: 12344
 ## Advanced Options
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '1234', {
   format: 'MSI10',
@@ -53,7 +55,7 @@ barcode('#barcode', '1234', {
 ## Error Detection
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '1234', {
   format: 'MSI10',
@@ -111,6 +113,7 @@ barcode('#barcode', '1234', {
 ## Upgrade Path
 
 If you need better error detection, consider upgrading to:
+
 ```ts
 // Current MSI10
 barcode('#barcode', '1234', { format: 'MSI10' })

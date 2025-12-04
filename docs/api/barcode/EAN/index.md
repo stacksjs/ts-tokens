@@ -4,7 +4,7 @@ EAN _(European Article Number)_ and UPC _(Universal Product Code)_ are standardi
 
 ## Supported Formats
 
-qrx supports the following EAN/UPC formats:
+tokens supports the following EAN/UPC formats:
 
 - [EAN-13](/api/barcode/EAN/EAN-13) _(GTIN-13)_
 - [EAN-8](/api/barcode/EAN/EAN-8)
@@ -16,7 +16,7 @@ qrx supports the following EAN/UPC formats:
 ## Basic Usage
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 // EAN-13 example
 barcode('#barcode', '5901234123457', { format: 'EAN13' })
@@ -37,7 +37,7 @@ barcode('#barcode', '53', { format: 'EAN2' })
 All EAN/UPC formats support these basic options:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '5901234123457', {
   format: 'EAN13',
@@ -59,7 +59,7 @@ barcode('#barcode', '5901234123457', {
 EAN-5 and EAN-2 are supplemental barcodes typically used with EAN-13 or UPC-A. They can be combined using the advanced syntax:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode')
   .EAN13('1234567890128')
@@ -79,7 +79,7 @@ barcode('#barcode')
 EAN-13, EAN-8, and UPC formats support a `flat` option to remove guard bars:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '1234567890128', {
   format: 'EAN13',

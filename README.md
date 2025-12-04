@@ -6,7 +6,7 @@
 <!-- [![npm downloads][npm-downloads-src]][npm-downloads-href] -->
 <!-- [![Codecov][codecov-src]][codecov-href] -->
 
-# qrx
+# tokens
 
 > A QR & Barcode Library & CLI for Node.js/Bun/Browser.
 
@@ -26,10 +26,10 @@
 It's simple to install the library and CLI:
 
 ```sh
-npm install qrx
-bun add qrx
-yarn add qrx
-pnpm add qrx
+npm install tokens
+bun add tokens
+yarn add tokens
+pnpm add tokens
 ```
 
 _Check out the package.json scripts for more commands._
@@ -134,7 +134,7 @@ barcode('#barcode', 'Hi!')
 #### Example with options
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '1234', {
   format: 'pharmacode',
@@ -150,7 +150,7 @@ barcode('#barcode', '1234', {
 #### More advanced use case
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode')
   .options({ font: 'OCR-B' }) // Will affect all barcodes
@@ -202,7 +202,7 @@ data will be filled with a ``` encodings ``` property which has all the needed v
 #### With canvas
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 import { createCanvas } from 'canvas'
 
 const canvas = createCanvas()
@@ -263,7 +263,7 @@ bun test
 
 ## Changelog
 
-Please see our [releases](https://github.com/stackjs/qrx/releases) page for more information on what has changed recently.
+Please see our [releases](https://github.com/stackjs/tokens/releases) page for more information on what has changed recently.
 
 ## Contributing
 
@@ -273,7 +273,7 @@ Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
 
 For help, discussion about best practices, or any other conversation that would benefit from being searchable:
 
-[Discussions on GitHub](https://github.com/stacksjs/qrx/discussions)
+[Discussions on GitHub](https://github.com/stacksjs/tokens/discussions)
 
 For casual chit-chat with others using this package:
 
@@ -281,7 +281,7 @@ For casual chit-chat with others using this package:
 
 ## Postcardware
 
-“Software that is free, but hopes for a postcard.” We love receiving postcards from around the world showing where `qrx` is being used! We showcase them on our website too.
+“Software that is free, but hopes for a postcard.” We love receiving postcards from around the world showing where `tokens` is being used! We showcase them on our website too.
 
 Our address: Stacks.js, 12665 Village Ln #2306, Playa Vista, CA 90094, United States 🌎
 
@@ -307,10 +307,10 @@ The MIT License (MIT). Please see [LICENSE](LICENSE.md) for more information.
 Made with 💙
 
 <!-- Badges -->
-[npm-version-src]: https://img.shields.io/npm/v/@stacksjs/qrx?style=flat-square
-[npm-version-href]: https://npmjs.com/package/@stacksjs/qrx
-[github-actions-src]: https://img.shields.io/github/actions/workflow/status/stacksjs/qrx/ci.yml?style=flat-square&branch=main
-[github-actions-href]: https://github.com/stacksjs/qrx/actions?query=workflow%3Aci
+[npm-version-src]: https://img.shields.io/npm/v/ts-tokens?style=flat-square
+[npm-version-href]: https://npmjs.com/package/ts-tokens
+[github-actions-src]: https://img.shields.io/github/actions/workflow/status/stacksjs/tokens/ci.yml?style=flat-square&branch=main
+[github-actions-href]: https://github.com/stacksjs/tokens/actions?query=workflow%3Aci
 
-<!-- [codecov-src]: https://img.shields.io/codecov/c/gh/stacksjs/qrx/main?style=flat-square
-[codecov-href]: https://codecov.io/gh/stacksjs/qrx -->
+<!-- [codecov-src]: https://img.shields.io/codecov/c/gh/stacksjs/tokens/main?style=flat-square
+[codecov-href]: https://codecov.io/gh/stacksjs/tokens -->

@@ -1,6 +1,6 @@
 # CODE128
 
-CODE128 is one of the most versatile barcode formats available. It has full support for all 128 ASCII characters while maintaining efficient number encoding. The format features three modes (A/B/C) and can dynamically switch between them, making it highly adaptable for various use cases. CODE128 is the default format in qrx when no specific format is specified.
+CODE128 is one of the most versatile barcode formats available. It has full support for all 128 ASCII characters while maintaining efficient number encoding. The format features three modes (A/B/C) and can dynamically switch between them, making it highly adaptable for various use cases. CODE128 is the default format in tokens when no specific format is specified.
 
 ## Understanding CODE128 Modes
 
@@ -14,10 +14,10 @@ CODE128 has three different modes, each optimized for different types of data:
 
 ## Basic Usage
 
-The simplest way to use CODE128 is to let qrx automatically choose the best mode:
+The simplest way to use CODE128 is to let tokens automatically choose the best mode:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 // Automatic mode (recommended)
 barcode('#barcode', 'Example1234') // CODE128 auto is the default
@@ -31,7 +31,7 @@ barcode('#barcode', 'Example1234', { format: 'CODE128' }) // Explicit format spe
 Sometimes you may need to force a specific CODE128 mode, particularly when working with barcode scanners that only support certain modes:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 // Mode A - Uppercase & Control Characters
 barcode('#barcode', 'EXAMPLE\n1234', { format: 'CODE128A' })
@@ -50,7 +50,7 @@ barcode('#barcode', '12345678', { format: 'CODE128C' })
 CODE128 can be encoded as GS1-128 _(formerly known as EAN-128)_ using the `ean128` option:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '12345678', {
   format: 'CODE128C',
@@ -65,7 +65,7 @@ barcode('#barcode', '12345678', {
 CODE128 supports the full ASCII character set (0-127). Here are different ways to encode special characters:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 // Using escape sequences
 barcode('#barcode', '\n\t\r')
@@ -84,7 +84,7 @@ barcode('#barcode', String.fromCharCode(10, 9, 13))
 You can customize the appearance of CODE128 barcodes with these options:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', 'Example1234', {
   format: 'CODE128',
@@ -111,6 +111,7 @@ barcode('#barcode', 'Example1234', {
    - Use Mode B for mixed-case text
 
 2. Data Validation:
+
    ```ts
    barcode('#barcode', 'Your Data', {
      format: 'CODE128',
@@ -122,6 +123,7 @@ barcode('#barcode', 'Example1234', {
    ```
 
 3. Error Handling:
+
    ```ts
    try {
      barcode('#barcode', 'Your Data', { format: 'CODE128' })

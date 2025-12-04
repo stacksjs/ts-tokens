@@ -16,7 +16,7 @@ CODE39 supports:
 Here's a simple example of generating a CODE39 barcode:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', 'CODE39 Barcode', {
   format: 'CODE39'
@@ -36,7 +36,7 @@ CODE39 supports an optional modulo 43 checksum digit for enhanced error detectio
 Enable the checksum using the `mod43` option:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', 'ABCDEFG', {
   format: 'CODE39',
@@ -51,7 +51,7 @@ barcode('#barcode', 'ABCDEFG', {
 CODE39 supports all standard customization options:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', 'CUSTOM39', {
   format: 'CODE39',
@@ -118,6 +118,7 @@ barcode('#barcode', 'CUSTOM39', {
    - Consider using uppercase transformation for input
 
 2. Error Handling
+
    ```ts
    try {
      barcode('#barcode', 'TEST-123', { format: 'CODE39' })

@@ -1,6 +1,6 @@
-import type { BarcodeOptions } from '@stacksjs/qrx'
+import type { BarcodeOptions } from 'ts-tokens'
 import type { Component, PropType } from 'vue'
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 import { defineComponent, h } from 'vue'
 
 interface BarcodeData {

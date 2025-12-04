@@ -1,10 +1,10 @@
 ---
 description: General information based on the latest ./README.md content
-globs: 
+globs:
 ---
 Update it if APIs change:
 
-# qrx
+# tokens
 
 > A QR & Barcode Library & CLI for Node.js/Bun/Browser.
 
@@ -24,10 +24,10 @@ Update it if APIs change:
 It's simple to install the library and CLI:
 
 ```sh
-npm install qrx
-bun add qrx
-yarn add qrx
-pnpm add qrx
+npm install tokens
+bun add tokens
+yarn add tokens
+pnpm add tokens
 ```
 
 _Check out the package.json scripts for more commands._
@@ -131,7 +131,7 @@ barcode('#barcode', 'Hi!')
 #### Example with options
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '1234', {
   format: 'pharmacode',
@@ -147,7 +147,7 @@ barcode('#barcode', '1234', {
 #### More advanced use case
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode')
   .options({ font: 'OCR-B' }) // Will affect all barcodes
@@ -199,7 +199,7 @@ data will be filled with a ``` encodings ``` property which has all the needed v
 #### With canvas
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 import { createCanvas } from 'canvas'
 
 const canvas = createCanvas()

@@ -18,7 +18,7 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      '@stacksjs/qrx': resolve(__dirname, '../../packages/qrx/src/index.ts'),
+      'ts-tokens': resolve(__dirname, '../../packages/tokens/src/index.ts'),
     },
     dedupe: [
       'vue',

@@ -1,6 +1,6 @@
 # Showcase
 
-Here are all the cool projects that people have built using `qrx`.
+Here are all the cool projects that people have built using `tokens`.
 
 ## Community Projects
 
@@ -10,7 +10,7 @@ If you authored a project you’d like to showcase, please share it with us in a
 
 ## First-Party
 
-Part of the Stacks ecosystem utilizes `qrx`. In particular, the commerce platform is tightly integrated with `qrx`.
+Part of the Stacks ecosystem utilizes `tokens`. In particular, the commerce platform is tightly integrated with `tokens`.
 
 - [`stacks`](https://github.com/stacksjs/stacks) _(A progressive full-stack framework)_
 - [`@stacksjs/commerce`](https://github.com/stacksjs/stacks) _(A modern commerce solution)_

@@ -1,6 +1,6 @@
-import type { TokenxConfig } from './src/types'
+import type { TokenConfig } from './src/types'
 
-const config: TokenxConfig = {
+const config: TokenConfig = {
   verbose: true,
 }
 

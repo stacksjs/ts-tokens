@@ -3,7 +3,7 @@
 layout: home
 
 hero:
-  name: "qrx"
+  name: "tokens"
   text: "QR & Barcode Generator & Reader"
   tagline: "Works in browser and on server."
   image: /images/logo-white.png
@@ -13,7 +13,7 @@ hero:
       link: /intro
     - theme: alt
       text: View on GitHub
-      link: https://github.com/stacksjs/qrx
+      link: https://github.com/stacksjs/tokens
 
 features:
   - title: "QR Code"

@@ -26,10 +26,10 @@
 It's simple to install the library and CLI:
 
 ```sh
-npm install qrx
-bun add qrx
-yarn add qrx
-pnpm add qrx
+npm install tokens
+bun add tokens
+yarn add tokens
+pnpm add tokens
 ```
 
 _Check out the package.json scripts for more commands._
@@ -182,7 +182,7 @@ data will be filled with a ``` encodings ``` property which has all the needed v
 #### With canvas
 
 ```ts
-import { Barcode } from '@stacksjs/qrx'
+import { Barcode } from 'ts-tokens'
 import { createCanvas } from 'canvas'
 
 const canvas = createCanvas()
@@ -243,7 +243,7 @@ bun test
 
 ## Changelog
 
-Please see our [releases](https://github.com/stackjs/qrx/releases) page for more information on what has changed recently.
+Please see our [releases](https://github.com/stackjs/tokens/releases) page for more information on what has changed recently.
 
 ## Contributing
 
@@ -253,7 +253,7 @@ Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
 
 For help, discussion about best practices, or any other conversation that would benefit from being searchable:
 
-[Discussions on GitHub](https://github.com/stacksjs/qrx/discussions)
+[Discussions on GitHub](https://github.com/stacksjs/tokens/discussions)
 
 For casual chit-chat with others using this package:
 
@@ -286,10 +286,10 @@ The MIT License (MIT). Please see [LICENSE](LICENSE.md) for more information.
 Made with 💙
 
 <!-- Badges -->
-[npm-version-src]: https://img.shields.io/npm/v/qrx?style=flat-square
-[npm-version-href]: https://npmjs.com/package/qrx
-[github-actions-src]: https://img.shields.io/github/actions/workflow/status/stacksjs/qrx/ci.yml?style=flat-square&branch=main
-[github-actions-href]: https://github.com/stacksjs/qrx/actions?query=workflow%3Aci
+[npm-version-src]: https://img.shields.io/npm/v/tokens?style=flat-square
+[npm-version-href]: https://npmjs.com/package/tokens
+[github-actions-src]: https://img.shields.io/github/actions/workflow/status/stacksjs/tokens/ci.yml?style=flat-square&branch=main
+[github-actions-href]: https://github.com/stacksjs/tokens/actions?query=workflow%3Aci
 
-<!-- [codecov-src]: https://img.shields.io/codecov/c/gh/stacksjs/qrx/main?style=flat-square
-[codecov-href]: https://codecov.io/gh/stacksjs/qrx -->
+<!-- [codecov-src]: https://img.shields.io/codecov/c/gh/stacksjs/tokens/main?style=flat-square
+[codecov-href]: https://codecov.io/gh/stacksjs/tokens -->

@@ -1,7 +1,7 @@
 // import { describe, expect, it } from 'bun:test'
-// import { QRCode, QRErrorCorrectLevel } from '../packages/qrx/src'
+// import { QRCode, QRErrorCorrectLevel } from '../packages/tokens/src'
 
-// describe('qrx', () => {
+// describe('tokens', () => {
 //   it('should create a QR code instance', () => {
 //     const qr = new QRCode(1, QRErrorCorrectLevel.L)
 //     expect(qr).toBeDefined()

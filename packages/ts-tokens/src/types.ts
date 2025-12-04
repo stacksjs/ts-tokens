@@ -1,5 +1,5 @@
-export interface TokenxConfig {
+export interface TokenConfig {
   verbose: boolean
 }
 
-export type TokenxOptions = Partial<TokenxConfig>
+export type TokenOptions = Partial<TokenConfig>

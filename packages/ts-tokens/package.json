@@ -41,13 +41,13 @@
   ],
   "scripts": {
     "build": "bun --bun build.ts && bun run compile",
-    "compile": "bun build ./bin/cli.ts --compile --minify --outfile ./bin/qrx",
+    "compile": "bun build ./bin/cli.ts --compile --minify --outfile ./bin/tokens",
     "compile:all": "bun run compile:linux-x64 && bun run compile:linux-arm64 && bun run compile:windows-x64 && bun run compile:darwin-x64 && bun run compile:darwin-arm64",
-    "compile:linux-x64": "bun build ./bin/cli.ts --compile --minify --target=bun-linux-x64 --outfile ./bin/qrx-linux-x64",
-    "compile:linux-arm64": "bun build ./bin/cli.ts --compile --minify --target=bun-linux-arm64 --outfile ./bin/qrx-linux-arm64",
-    "compile:windows-x64": "bun build ./bin/cli.ts --compile --minify --target=bun-windows-x64 --outfile ./bin/qrx-windows-x64.exe",
-    "compile:darwin-x64": "bun build ./bin/cli.ts --compile --minify --target=bun-darwin-x64 --outfile ./bin/qrx-darwin-x64",
-    "compile:darwin-arm64": "bun build ./bin/cli.ts --compile --minify --target=bun-darwin-arm64 --outfile ./bin/qrx-darwin-arm64",
+    "compile:linux-x64": "bun build ./bin/cli.ts --compile --minify --target=bun-linux-x64 --outfile ./bin/tokens-linux-x64",
+    "compile:linux-arm64": "bun build ./bin/cli.ts --compile --minify --target=bun-linux-arm64 --outfile ./bin/tokens-linux-arm64",
+    "compile:windows-x64": "bun build ./bin/cli.ts --compile --minify --target=bun-windows-x64 --outfile ./bin/tokens-windows-x64.exe",
+    "compile:darwin-x64": "bun build ./bin/cli.ts --compile --minify --target=bun-darwin-x64 --outfile ./bin/tokens-darwin-x64",
+    "compile:darwin-arm64": "bun build ./bin/cli.ts --compile --minify --target=bun-darwin-arm64 --outfile ./bin/tokens-darwin-arm64",
     "lint": "bunx --bun eslint --flag unstable_ts_config .",
     "lint:fix": "bunx --bun eslint --flag unstable_ts_config . --fix",
     "prepublishOnly": "bun --bun run build && bun run compile:all",
@@ -56,12 +56,7 @@
     "typecheck": "bun --bun tsc --noEmit"
   },
   "devDependencies": {
-    "@types/bun": "^1.2.13",
-    "bun-plugin-dtsx": "^0.21.12",
-    "bunfig": "^0.10.0",
-    "lint-staged": "^15.5.2",
-    "simple-git-hooks": "^2.13.0",
-    "typescript": "^5.8.3"
+    "better-dx": "^0.2.5"
   },
   "lint-staged": {
     "*.{js,ts}": "bunx --bun eslint --flag unstable_ts_config . --fix"

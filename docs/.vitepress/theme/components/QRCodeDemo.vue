@@ -1,5 +1,5 @@
 <script setup>
-import { QRCode, QRErrorCorrectLevel } from '@stacksjs/qrx'
+import { QRCode, QRErrorCorrectLevel } from 'ts-tokens'
 import { onMounted, ref, watch } from 'vue'
 
 const text = ref('Hello World!')

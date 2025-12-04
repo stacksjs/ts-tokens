@@ -5,7 +5,7 @@ Codabar _(also known as Code 2 of 7, USD-4, or NW-7)_ is a linear barcode format
 ## Basic Usage
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', '1234567890', {
   format: 'codabar'
@@ -19,7 +19,7 @@ barcode('#barcode', '1234567890', {
 You can specify start and stop characters (`A`, `B`, `C`, or `D`). If not specified, `A` is used by default:
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', 'C1234567890D', {
   format: 'codabar'
@@ -31,6 +31,7 @@ barcode('#barcode', 'C1234567890D', {
 ## Character Set
 
 Codabar supports:
+
 - Numbers (0-9)
 - Special characters: `-`, `$`, `:`, `/`, `+`, `.`
 - Start/Stop characters: `A`, `B`, `C`, `D`
@@ -38,7 +39,7 @@ Codabar supports:
 ## Advanced Options
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', 'A1234-5678.90B', {
   format: 'codabar',
@@ -60,16 +61,19 @@ barcode('#barcode', 'A1234-5678.90B', {
 ## Common Applications
 
 1. **Blood Banks**
+
    ```ts
    barcode('#barcode', 'A1234567B', { format: 'codabar' }) // Blood type labeling
    ```
 
 2. **Libraries**
+
    ```ts
    barcode('#barcode', 'A123-456+789B', { format: 'codabar' }) // Book tracking
    ```
 
 3. **Photo Labs**
+
    ```ts
    barcode('#barcode', 'C12345/678D', { format: 'codabar' }) // Photo processing
    ```
@@ -79,7 +83,7 @@ barcode('#barcode', 'A1234-5678.90B', {
 ## Error Handling
 
 ```ts
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 
 barcode('#barcode', 'A123456B', {
   format: 'codabar',
@@ -100,6 +104,7 @@ barcode('#barcode', 'A123456B', {
    - Consider scanner configuration
 
 2. **Data Validation**
+
    ```ts
    // Valid examples
    barcode('#barcode', 'A1234-5678B') // Numbers and hyphen

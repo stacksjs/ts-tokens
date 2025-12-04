@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { barcode } from '@stacksjs/qrx'
+import { barcode } from 'ts-tokens'
 import { nextTick, onMounted, ref, watch } from 'vue'
 
 interface BarcodeFormat {

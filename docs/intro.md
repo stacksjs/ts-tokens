@@ -1,6 +1,6 @@
-<p align="center"><img src="https://github.com/stacksjs/qrx/blob/main/.github/art/cover.jpg?raw=true" alt="Social Card of this repo"></p>
+<p align="center"><img src="https://github.com/stacksjs/tokens/blob/main/.github/art/cover.jpg?raw=true" alt="Social Card of this repo"></p>
 
-# qrx
+# tokens
 
 > A QR & Barcode Library & CLI for Node.js/Bun/Browser.
 
@@ -56,7 +56,7 @@ We would like to extend our thanks to the following sponsors for funding Stacks 
 - [JsBarcode](https://github.com/lindell/JsBarcode)
 - [qrcodejs](https://github.com/davidshimjs/qrcodejs)
 - [Chris Breuer](https://github.com/chrisbbreuer)
-- [All Contributors](https://github.com/stacksjs/qrx/graphs/contributors)
+- [All Contributors](https://github.com/stacksjs/tokens/graphs/contributors)
 
 ## License
 
@@ -66,5 +66,5 @@ Made with 💙
 
 <!-- Badges -->
 
-<!-- [codecov-src]: https://img.shields.io/codecov/c/gh/stacksjs/qrx/main?style=flat-square
-[codecov-href]: https://codecov.io/gh/stacksjs/qrx -->
+<!-- [codecov-src]: https://img.shields.io/codecov/c/gh/stacksjs/tokens/main?style=flat-square
+[codecov-href]: https://codecov.io/gh/stacksjs/tokens -->

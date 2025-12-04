@@ -1,2 +1,2 @@
 #!/usr/bin/env bun
-import('./packages/qrx/bin/cli')
+import('./packages/tokens/bin/cli')
