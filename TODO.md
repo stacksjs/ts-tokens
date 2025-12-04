@@ -21,6 +21,10 @@
 - [Phase 15: Automation & Scripting](#phase-15-automation--scripting)
 - [Phase 16: Migration & Compatibility Tools](#phase-16-migration--compatibility-tools)
 - [Phase 17: Simple NFT Standard (ts-tokens Native)](#phase-17-simple-nft-standard-ts-tokens-native)
+- [Phase 18: Staking & Token Locking](#phase-18-staking--token-locking)
+- [Phase 19: Multi-Sig Authority Support](#phase-19-multi-sig-authority-support)
+- [Phase 20: Programmable NFTs (pNFTs)](#phase-20-programmable-nfts-pnfts)
+- [Phase 21: ts-governance - DAO & Governance Package](#phase-21-ts-governance---dao--governance-package)
 
 ---
 
@@ -1254,6 +1258,310 @@
 - [ ] Handle deprecated instruction formats
 - [ ] Maintain compatibility with existing NFT marketplaces
 
+### 16.4 Legacy Metaplex Collection Management
+
+> **Goal**: Full management capabilities for existing Metaplex-generated NFT collections, including old Candy Machine v1/v2 collections.
+
+#### Collection Discovery & Import
+
+- [ ] `importCollection(collectionMint)` - Import existing collection
+
+  ```ts
+  const collection = await tokens.legacy.importCollection({
+    collectionMint: 'ABC123...',
+    // Automatically detects:
+    // - Metaplex version (v1, v2, v3, Core)
+    // - Candy Machine version (v1, v2, v3)
+    // - Collection size and minted count
+    // - Creator addresses and royalties
+  })
+  ```
+
+- [ ] `discoverCollectionByCreator(creator)` - Find all collections by creator
+- [ ] `discoverCollectionByAuthority(authority)` - Find by update authority
+- [ ] `discoverCollectionByCandyMachine(cm)` - Find by CM address
+- [ ] Auto-detect collection type and version
+
+#### Collection Metadata Management
+
+- [ ] `getCollectionMetadata(collection)` - Fetch full collection metadata
+
+  ```ts
+  const metadata = await tokens.legacy.getCollectionMetadata(collectionMint)
+  // {
+  //   name: 'My Old Collection',
+  //   symbol: 'MOC',
+  //   uri: 'https://arweave.net/...',
+  //   sellerFeeBasisPoints: 500,
+  //   creators: [...],
+  //   collection: { verified: true, key: '...' },
+  //   uses: null,
+  //   isMutable: true,
+  //   primarySaleHappened: true,
+  //   editionNonce: 255,
+  // }
+  ```
+
+- [ ] `updateCollectionMetadata(collection, updates)` - Update collection NFT metadata
+
+  ```ts
+  await tokens.legacy.updateCollectionMetadata(collectionMint, {
+    name: 'Updated Collection Name',
+    uri: 'https://new-metadata-uri...',
+    // Only works if isMutable: true
+  })
+  ```
+
+- [ ] `updateCollectionUri(collection, newUri)` - Update just the URI
+- [ ] `updateCollectionRoyalty(collection, newRoyaltyBps)` - Update royalty
+
+#### Individual NFT Management
+
+- [ ] `getNFTsInCollection(collection, options)` - Get all NFTs in collection
+
+  ```ts
+  const nfts = await tokens.legacy.getNFTsInCollection(collectionMint, {
+    page: 1,
+    limit: 100,
+    includeMetadata: true, // Fetch off-chain metadata too
+  })
+  // Returns array of NFT data with on-chain + off-chain metadata
+  ```
+
+- [ ] `getNFTMetadata(mint)` - Get single NFT metadata (Metaplex format)
+- [ ] `updateNFTMetadata(mint, updates)` - Update individual NFT
+
+  ```ts
+  await tokens.legacy.updateNFTMetadata(nftMint, {
+    name: 'NFT #123 - Renamed',
+    uri: 'https://new-uri...',
+  })
+  ```
+
+- [ ] `updateNFTUri(mint, newUri)` - Update just URI
+- [ ] `batchUpdateNFTMetadata(mints, updates)` - Batch update multiple NFTs
+
+  ```ts
+  // Update all NFTs in collection with new base URI
+  await tokens.legacy.batchUpdateNFTMetadata({
+    collection: collectionMint,
+    transform: (nft, index) => ({
+      uri: `https://new-base-uri.com/${index}.json`,
+    }),
+  })
+  ```
+
+#### Authority Management
+
+- [ ] `getCollectionAuthorities(collection)` - Get all authorities
+
+  ```ts
+  const authorities = await tokens.legacy.getCollectionAuthorities(collectionMint)
+  // {
+  //   updateAuthority: 'ABC...',
+  //   mintAuthority: null, // NFTs don't have mint authority
+  //   collectionAuthority: 'DEF...',
+  //   creators: [{ address: '...', verified: true, share: 100 }],
+  // }
+  ```
+
+- [ ] `transferUpdateAuthority(collection, newAuthority)` - Transfer update authority
+
+  ```ts
+  await tokens.legacy.transferUpdateAuthority(collectionMint, newAuthorityPubkey)
+  ```
+
+- [ ] `transferNFTUpdateAuthority(mint, newAuthority)` - Transfer for single NFT
+- [ ] `batchTransferUpdateAuthority(mints, newAuthority)` - Batch transfer
+- [ ] `setCollectionAuthority(collection, authority)` - Set collection authority record
+- [ ] `revokeCollectionAuthority(collection, authority)` - Revoke authority
+
+#### Creator Management
+
+- [ ] `verifyCreator(mint, creator)` - Verify creator on NFT
+
+  ```ts
+  // Creator signs to verify themselves on NFT
+  await tokens.legacy.verifyCreator(nftMint, creatorPubkey)
+  ```
+
+- [ ] `unverifyCreator(mint, creator)` - Remove creator verification
+- [ ] `batchVerifyCreator(mints, creator)` - Batch verify across collection
+- [ ] `updateCreators(mint, newCreators)` - Update creator array
+
+  ```ts
+  await tokens.legacy.updateCreators(nftMint, [
+    { address: creator1, share: 70, verified: false },
+    { address: creator2, share: 30, verified: false },
+  ])
+  // Note: Creators need to verify themselves after update
+  ```
+
+#### Collection Verification
+
+- [ ] `verifyNFTInCollection(nft, collection)` - Verify NFT belongs to collection
+
+  ```ts
+  await tokens.legacy.verifyNFTInCollection(nftMint, collectionMint)
+  // Requires collection authority signature
+  ```
+
+- [ ] `unverifyNFTFromCollection(nft, collection)` - Remove from collection
+- [ ] `batchVerifyCollection(nfts, collection)` - Batch verify multiple NFTs
+- [ ] `setAndVerifyCollection(nft, collection)` - Set and verify in one tx
+- [ ] `migrateToSizedCollection(collection)` - Migrate to sized collection
+
+  ```ts
+  // Upgrade old unsized collection to sized collection
+  await tokens.legacy.migrateToSizedCollection(collectionMint, {
+    size: 10000, // Total collection size
+  })
+  ```
+
+#### Royalty Management
+
+- [ ] `getRoyaltyInfo(mint)` - Get royalty configuration
+
+  ```ts
+  const royalty = await tokens.legacy.getRoyaltyInfo(nftMint)
+  // {
+  //   sellerFeeBasisPoints: 500, // 5%
+  //   creators: [
+  //     { address: '...', share: 70 }, // Gets 70% of 5%
+  //     { address: '...', share: 30 }, // Gets 30% of 5%
+  //   ],
+  // }
+  ```
+
+- [ ] `updateRoyalty(mint, newRoyaltyBps)` - Update royalty percentage
+- [ ] `updateRoyaltySplits(mint, newCreators)` - Update creator splits
+- [ ] `batchUpdateRoyalty(collection, newRoyaltyBps)` - Update entire collection
+
+#### Edition Management (Master Editions & Prints)
+
+- [ ] `getMasterEditionInfo(mint)` - Get master edition details
+
+  ```ts
+  const edition = await tokens.legacy.getMasterEditionInfo(masterMint)
+  // {
+  //   supply: 50, // Editions printed
+  //   maxSupply: 100, // Max editions (null = unlimited)
+  //   type: 'MasterEditionV2',
+  // }
+  ```
+
+- [ ] `getEditionInfo(mint)` - Get print edition details
+- [ ] `printEdition(masterMint, options)` - Print new edition
+
+  ```ts
+  const edition = await tokens.legacy.printEdition(masterMint, {
+    to: recipientAddress,
+    editionNumber: 51, // Optional, auto-increments if not specified
+  })
+  ```
+
+- [ ] `getEditionsByMaster(masterMint)` - Get all editions of a master
+- [ ] `updateMasterEditionMaxSupply(mint, newMax)` - Reduce max supply
+
+#### Burning & Closing
+
+- [ ] `burnNFT(mint)` - Burn NFT and reclaim rent
+
+  ```ts
+  const rent = await tokens.legacy.burnNFT(nftMint)
+  // Burns token, closes metadata, master edition, and token accounts
+  // Returns reclaimed rent in lamports
+  ```
+
+- [ ] `burnEdition(mint)` - Burn print edition
+- [ ] `batchBurnNFTs(mints)` - Batch burn multiple NFTs
+- [ ] `closeEmptyAccounts(owner)` - Close empty token accounts
+
+#### Freeze/Thaw Operations
+
+- [ ] `freezeNFT(mint, owner)` - Freeze NFT (prevent transfers)
+- [ ] `thawNFT(mint, owner)` - Unfreeze NFT
+- [ ] `batchFreezeNFTs(mints)` - Batch freeze
+- [ ] `batchThawNFTs(mints)` - Batch thaw
+
+#### Delegation
+
+- [ ] `delegateNFT(mint, delegate, options)` - Delegate NFT authority
+
+  ```ts
+  await tokens.legacy.delegateNFT(nftMint, delegateAddress, {
+    type: 'transfer', // 'transfer' | 'sale' | 'utility' | 'staking'
+  })
+  ```
+
+- [ ] `revokeDelegate(mint)` - Revoke delegation
+- [ ] `getDelegateInfo(mint)` - Get current delegate
+
+#### Collection Analytics
+
+- [ ] `getCollectionStats(collection)` - Get collection statistics
+
+  ```ts
+  const stats = await tokens.legacy.getCollectionStats(collectionMint)
+  // {
+  //   totalSupply: 10000,
+  //   holders: 3500,
+  //   uniqueHolders: 2800,
+  //   listedCount: 450,
+  //   floorPrice: 2.5, // SOL
+  //   totalVolume: 150000, // SOL
+  // }
+  ```
+
+- [ ] `getHolderSnapshot(collection)` - Snapshot all holders
+
+  ```ts
+  const holders = await tokens.legacy.getHolderSnapshot(collectionMint)
+  // [{ owner: '...', mints: ['...', '...'], count: 2 }, ...]
+  ```
+
+- [ ] `getCollectionHistory(collection)` - Transaction history
+- [ ] `exportCollectionData(collection, format)` - Export to JSON/CSV
+
+#### Legacy Candy Machine Management
+
+- [ ] `getCandyMachineInfo(cm)` - Get CM details (v1, v2, or v3)
+
+  ```ts
+  const cm = await tokens.legacy.getCandyMachineInfo(candyMachineAddress)
+  // {
+  //   version: 'v2',
+  //   itemsAvailable: 10000,
+  //   itemsRedeemed: 8500,
+  //   itemsRemaining: 1500,
+  //   price: 1.5, // SOL
+  //   goLiveDate: Date,
+  //   authority: '...',
+  //   // ... other CM-specific fields
+  // }
+  ```
+
+- [ ] `updateCandyMachine(cm, updates)` - Update CM settings
+- [ ] `withdrawCandyMachineFunds(cm)` - Withdraw SOL from CM
+- [ ] `closeCandyMachine(cm)` - Close CM and reclaim rent
+
+#### CLI Commands for Legacy Management
+
+- [ ] `tokens legacy import <collection>` - Import existing collection
+- [ ] `tokens legacy info <collection>` - Show collection info
+- [ ] `tokens legacy nfts <collection>` - List all NFTs in collection
+- [ ] `tokens legacy update <mint>` - Update NFT metadata (interactive)
+- [ ] `tokens legacy batch-update <collection>` - Batch update collection
+- [ ] `tokens legacy authority <collection>` - Manage authorities
+- [ ] `tokens legacy verify <nft> <collection>` - Verify NFT in collection
+- [ ] `tokens legacy royalty <mint> [new-bps]` - View/update royalty
+- [ ] `tokens legacy creators <mint>` - Manage creators
+- [ ] `tokens legacy burn <mint>` - Burn NFT
+- [ ] `tokens legacy snapshot <collection>` - Export holder snapshot
+- [ ] `tokens legacy export <collection>` - Export collection data
+- [ ] `tokens legacy cm-info <candy-machine>` - Show CM info
+- [ ] `tokens legacy cm-withdraw <candy-machine>` - Withdraw CM funds
+
 ---
 
 ## Future Considerations (Post v1.0)
@@ -1267,10 +1575,6 @@
 
 ### Advanced Features
 
-- [ ] Programmable NFTs (pNFTs) support
-- [ ] Staking/locking mechanisms
-- [ ] DAO integration for token governance
-- [ ] Multi-sig support for authorities
 - [ ] Real-time websocket subscriptions
 
 ### Developer Experience
@@ -1576,6 +1880,934 @@
 - [ ] `docs/simple-nft/migration.md` - Migrating from Metaplex
 - [ ] `docs/simple-nft/program.md` - On-chain program docs
 - [ ] `docs/simple-nft/comparison.md` - Detailed comparison with Metaplex
+
+---
+
+## Phase 18: Staking & Token Locking
+
+> **Goal**: Implement comprehensive staking and token locking mechanisms for both fungible tokens and NFTs, enabling yield generation, governance participation, and token utility.
+
+### 18.1 Core Staking Program Design
+
+- [ ] Create `src/programs/staking/` directory for on-chain program
+- [ ] Program ID: Deploy our own staking program
+- [ ] Design principles:
+  - [ ] Flexible lock periods (no lock, fixed, variable)
+  - [ ] Multiple reward token support
+  - [ ] Compound vs simple interest options
+  - [ ] Emergency unstake with penalty option
+
+### 18.2 Staking Account Structures
+
+```rust
+// Stake Pool - Manages a staking pool for a specific token
+┌─────────────────────────────────────────────────────────────┐
+│ StakePool Account                                           │
+├─────────────────────────────────────────────────────────────┤
+│ authority: Pubkey           // Pool admin                   │
+│ stake_mint: Pubkey          // Token being staked           │
+│ reward_mint: Pubkey         // Reward token (can be same)   │
+│ total_staked: u64           // Total tokens staked          │
+│ reward_rate: u64            // Rewards per second           │
+│ min_stake_amount: u64       // Minimum stake                │
+│ lock_period: i64            // Lock duration (0 = none)     │
+│ early_unstake_penalty: u16  // Penalty bps for early exit   │
+│ last_update_time: i64       // Last reward calculation      │
+│ reward_per_token_stored: u128 // Accumulated rewards        │
+│ is_paused: bool             // Emergency pause              │
+└─────────────────────────────────────────────────────────────┘
+
+// User Stake - Individual user's stake position
+┌─────────────────────────────────────────────────────────────┐
+│ UserStake Account                                           │
+├─────────────────────────────────────────────────────────────┤
+│ owner: Pubkey               // Staker                       │
+│ pool: Pubkey                // Stake pool                   │
+│ amount: u64                 // Amount staked                │
+│ stake_time: i64             // When staked                  │
+│ lock_end_time: i64          // When lock expires            │
+│ rewards_earned: u64         // Unclaimed rewards            │
+│ reward_per_token_paid: u128 // Last reward checkpoint       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+- [ ] Design StakePool account structure
+- [ ] Design UserStake account structure
+- [ ] Design reward distribution mechanism (per-second accrual)
+- [ ] Implement efficient reward calculation (checkpoint system)
+
+### 18.3 Staking Instructions
+
+#### Pool Management
+
+- [ ] `create_stake_pool` - Create new staking pool
+
+  ```ts
+  await createStakePool({
+    stakeMint: tokenMint,
+    rewardMint: rewardTokenMint, // Can be same as stake
+    rewardRate: 100, // Tokens per day
+    lockPeriod: 30 * 24 * 60 * 60, // 30 days in seconds
+    minStake: 1000,
+    earlyUnstakePenalty: 10, // 10% penalty
+  })
+  ```
+
+- [ ] `update_stake_pool` - Update pool parameters
+- [ ] `pause_stake_pool` / `resume_stake_pool` - Emergency controls
+- [ ] `fund_rewards` - Add reward tokens to pool
+- [ ] `withdraw_rewards` - Remove unfunded rewards (admin)
+- [ ] `close_stake_pool` - Close pool and return funds
+
+#### User Staking
+
+- [ ] `stake` - Stake tokens
+
+  ```ts
+  await stake({
+    pool: stakePoolAddress,
+    amount: 10000,
+  })
+  // Automatically claims pending rewards
+  ```
+
+- [ ] `unstake` - Unstake tokens
+
+  ```ts
+  await unstake({
+    pool: stakePoolAddress,
+    amount: 5000, // Partial unstake supported
+  })
+  // Applies penalty if before lock_end_time
+  ```
+
+- [ ] `claim_rewards` - Claim accumulated rewards
+
+  ```ts
+  const rewards = await claimRewards(stakePoolAddress)
+  console.log(`Claimed ${rewards} tokens`)
+  ```
+
+- [ ] `compound_rewards` - Restake rewards (if same token)
+- [ ] `emergency_unstake` - Force unstake with max penalty
+
+### 18.4 NFT Staking
+
+- [ ] Create `src/staking/nft.ts` for NFT-specific staking
+- [ ] `create_nft_stake_pool` - Pool for staking NFTs
+
+  ```ts
+  await createNFTStakePool({
+    collection: collectionMint, // Only NFTs from this collection
+    rewardMint: tokenMint,
+    rewardPerNFT: 10, // Tokens per NFT per day
+    rarityMultipliers: {
+      common: 1,
+      rare: 1.5,
+      legendary: 3,
+    },
+  })
+  ```
+
+- [ ] `stake_nft` - Stake NFT (transfers to escrow)
+- [ ] `unstake_nft` - Unstake and return NFT
+- [ ] `claim_nft_rewards` - Claim rewards for staked NFTs
+- [ ] Support rarity-based reward multipliers
+- [ ] Support trait-based reward bonuses
+
+### 18.5 Token Locking (Vesting)
+
+- [ ] Create `src/locking/` directory
+- [ ] `create_lock` - Lock tokens with vesting schedule
+
+  ```ts
+  await createLock({
+    mint: tokenMint,
+    amount: 1000000,
+    beneficiary: recipientAddress,
+    schedule: {
+      type: 'linear', // or 'cliff', 'milestone'
+      start: new Date('2025-01-01'),
+      end: new Date('2026-01-01'),
+      cliffDuration: 90 * 24 * 60 * 60, // 90 day cliff
+    },
+  })
+  ```
+
+- [ ] `claim_vested` - Claim unlocked tokens
+- [ ] `get_vested_amount` - Calculate currently vested amount
+- [ ] `revoke_lock` - Revoke unvested tokens (if revocable)
+- [ ] Support vesting schedules:
+  - [ ] **Linear** - Continuous unlock over time
+  - [ ] **Cliff** - Nothing until cliff, then linear
+  - [ ] **Milestone** - Unlock at specific dates
+  - [ ] **Custom** - User-defined unlock points
+
+### 18.6 Liquid Staking (Advanced)
+
+- [ ] Create `src/staking/liquid.ts`
+- [ ] `create_liquid_stake_pool` - Pool that issues receipt tokens
+
+  ```ts
+  // User stakes SOL/Token, receives stSOL/stToken
+  await createLiquidStakePool({
+    stakeMint: SOL_MINT,
+    receiptMint: stSOL_MINT, // Liquid staking token
+    exchangeRate: 1.0, // Initial 1:1
+  })
+  ```
+
+- [ ] Receipt tokens represent staked position
+- [ ] Receipt tokens can be traded/used in DeFi
+- [ ] Exchange rate increases as rewards accrue
+- [ ] `liquid_stake` / `liquid_unstake` operations
+
+### 18.7 TypeScript SDK for Staking
+
+- [ ] Create `src/staking/index.ts` with clean API:
+
+  ```ts
+  // Create pool
+  const pool = await tokens.staking.createPool({
+    token: myToken,
+    rewards: { token: rewardToken, rate: '100/day' },
+    lock: '30 days',
+  })
+
+  // Stake
+  await tokens.staking.stake(pool, { amount: 10000 })
+
+  // Check rewards
+  const pending = await tokens.staking.pendingRewards(pool)
+
+  // Claim
+  await tokens.staking.claim(pool)
+
+  // Unstake
+  await tokens.staking.unstake(pool, { amount: 5000 })
+  ```
+
+- [ ] Create query functions:
+
+  ```ts
+  // Get all pools for a token
+  const pools = await tokens.staking.pools(tokenMint)
+
+  // Get user's stakes
+  const myStakes = await tokens.staking.myStakes(wallet)
+
+  // Get pool stats
+  const stats = await tokens.staking.poolStats(pool)
+  // { totalStaked, apy, totalStakers, rewardsRemaining }
+  ```
+
+### 18.8 CLI Commands for Staking
+
+- [ ] `tokens stake create-pool` - Create staking pool (interactive)
+- [ ] `tokens stake fund <pool> <amount>` - Fund pool with rewards
+- [ ] `tokens stake <pool> <amount>` - Stake tokens
+- [ ] `tokens unstake <pool> [amount]` - Unstake (all if no amount)
+- [ ] `tokens stake claim <pool>` - Claim rewards
+- [ ] `tokens stake compound <pool>` - Compound rewards
+- [ ] `tokens stake info <pool>` - Show pool info
+- [ ] `tokens stake my-stakes` - Show all user stakes
+- [ ] `tokens lock create` - Create token lock/vesting
+- [ ] `tokens lock claim <lock>` - Claim vested tokens
+- [ ] `tokens lock info <lock>` - Show lock info
+
+### 18.9 Staking Analytics
+
+- [ ] APY/APR calculation utilities
+- [ ] Historical reward tracking
+- [ ] Pool performance metrics
+- [ ] User earnings history
+- [ ] Export staking reports
+
+---
+
+## Phase 19: Multi-Sig Authority Support
+
+> **Goal**: Enable secure multi-signature control over token authorities, collections, and staking pools. Critical for teams and DAOs managing tokens.
+
+### 19.1 Multi-Sig Program Design
+
+- [ ] Create `src/programs/multisig/` directory
+- [ ] Design lightweight multi-sig (simpler than Squads)
+- [ ] Support M-of-N signature schemes
+- [ ] Time-locked transactions option
+
+### 19.2 Multi-Sig Account Structures
+
+```rust
+┌─────────────────────────────────────────────────────────────┐
+│ MultiSig Account                                            │
+├─────────────────────────────────────────────────────────────┤
+│ threshold: u8               // Required signatures (M)      │
+│ owners: Vec<Pubkey>         // Signers (N, max 10)          │
+│ nonce: u64                  // Transaction counter          │
+│ owner_set_seqno: u32        // Owner change tracking        │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ Transaction Account                                         │
+├─────────────────────────────────────────────────────────────┤
+│ multisig: Pubkey            // Parent multisig              │
+│ program_id: Pubkey          // Target program               │
+│ accounts: Vec<AccountMeta>  // Transaction accounts         │
+│ data: Vec<u8>               // Instruction data             │
+│ signers: Vec<bool>          // Who has signed               │
+│ did_execute: bool           // Execution status             │
+│ created_at: i64             // Creation timestamp           │
+│ expires_at: Option<i64>     // Optional expiry              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+- [ ] Design MultiSig account structure
+- [ ] Design Transaction account structure
+- [ ] Implement signature tracking
+- [ ] Implement transaction expiry
+
+### 19.3 Multi-Sig Instructions
+
+#### Setup
+
+- [ ] `create_multisig` - Create multi-sig wallet
+
+  ```ts
+  const multisig = await createMultiSig({
+    owners: [owner1, owner2, owner3],
+    threshold: 2, // 2-of-3
+  })
+  ```
+
+- [ ] `add_owner` - Add new owner (requires threshold)
+- [ ] `remove_owner` - Remove owner (requires threshold)
+- [ ] `change_threshold` - Change required signatures
+
+#### Transactions
+
+- [ ] `create_transaction` - Propose a transaction
+
+  ```ts
+  const tx = await createMultiSigTransaction({
+    multisig: multisigAddress,
+    instruction: mintTokensInstruction, // Any instruction
+    expiresIn: 7 * 24 * 60 * 60, // 7 days
+  })
+  ```
+
+- [ ] `approve` - Sign/approve transaction
+
+  ```ts
+  await approveTransaction(txAddress)
+  // Auto-executes if threshold reached
+  ```
+
+- [ ] `reject` - Reject transaction
+- [ ] `execute` - Execute approved transaction
+- [ ] `cancel` - Cancel pending transaction (proposer only)
+
+### 19.4 Multi-Sig Integration with Tokens
+
+- [ ] `set_token_authority_multisig` - Transfer authority to multisig
+
+  ```ts
+  // Transfer mint authority to multisig
+  await setTokenAuthorityMultiSig({
+    mint: tokenMint,
+    authority: 'mint',
+    multisig: multisigAddress,
+  })
+  ```
+
+- [ ] Multi-sig controlled operations:
+  - [ ] Token minting
+  - [ ] Authority transfers
+  - [ ] Metadata updates
+  - [ ] Collection management
+  - [ ] Staking pool management
+  - [ ] Treasury withdrawals
+
+### 19.5 TypeScript SDK for Multi-Sig
+
+```ts
+// Create multi-sig
+const ms = await tokens.multisig.create({
+  owners: [alice, bob, charlie],
+  threshold: 2,
+})
+
+// Propose minting tokens
+const proposal = await tokens.multisig.propose(ms, {
+  action: 'mint',
+  params: { mint: tokenMint, amount: 1000000, to: treasury },
+})
+
+// Other owners approve
+await tokens.multisig.approve(proposal) // As bob
+await tokens.multisig.approve(proposal) // As charlie
+// Auto-executes after 2nd approval
+
+// Query pending transactions
+const pending = await tokens.multisig.pending(ms)
+
+// Get multi-sig info
+const info = await tokens.multisig.info(ms)
+// { owners: [...], threshold: 2, pendingTxs: 3 }
+```
+
+### 19.6 CLI Commands for Multi-Sig
+
+- [ ] `tokens multisig create` - Create multi-sig (interactive)
+- [ ] `tokens multisig info <address>` - Show multi-sig info
+- [ ] `tokens multisig owners <address>` - List owners
+- [ ] `tokens multisig propose <multisig>` - Propose transaction
+- [ ] `tokens multisig approve <tx>` - Approve transaction
+- [ ] `tokens multisig reject <tx>` - Reject transaction
+- [ ] `tokens multisig execute <tx>` - Execute approved tx
+- [ ] `tokens multisig pending <multisig>` - List pending txs
+- [ ] `tokens multisig history <multisig>` - Transaction history
+
+---
+
+## Phase 20: Programmable NFTs (pNFTs)
+
+> **Goal**: Implement programmable NFTs with rule-based transfer restrictions, enabling royalty enforcement, soulbound tokens, and custom transfer logic.
+
+### 20.1 pNFT Program Design
+
+- [ ] Create `src/programs/pnft/` directory
+- [ ] Design rule engine for transfer validation
+- [ ] Support composable rules (AND/OR logic)
+- [ ] Maintain compatibility with standard NFT operations
+
+### 20.2 Rule Types
+
+```rust
+┌─────────────────────────────────────────────────────────────┐
+│ TransferRule Types                                          │
+├─────────────────────────────────────────────────────────────┤
+│ RoyaltyEnforcement    // Must pay royalties to transfer     │
+│ Soulbound             // Cannot be transferred              │
+│ TimeLock              // Cannot transfer until date         │
+│ AllowList             // Only transfer to approved addresses│
+│ DenyList              // Cannot transfer to blocked addrs   │
+│ ProgramGate           // Require specific program in tx     │
+│ HolderGate            // Recipient must hold specific token │
+│ CreatorApproval       // Creator must co-sign transfer      │
+│ CooldownPeriod        // Minimum time between transfers     │
+│ MaxTransfers          // Maximum lifetime transfers         │
+│ Custom                // Custom program for validation      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+- [ ] Implement each rule type
+- [ ] Design rule composition (multiple rules per NFT)
+- [ ] Implement rule inheritance from collection
+
+### 20.3 pNFT Account Structure
+
+```rust
+┌─────────────────────────────────────────────────────────────┐
+│ ProgrammableNFT Account                                     │
+├─────────────────────────────────────────────────────────────┤
+│ mint: Pubkey                // NFT mint                     │
+│ rules: Vec<TransferRule>    // Active rules                 │
+│ rule_set: Option<Pubkey>    // Shared rule set (collection) │
+│ delegate: Option<Pubkey>    // Transfer delegate            │
+│ state: NFTState             // Unlocked/Listed/Staked       │
+│ last_transfer: i64          // For cooldown tracking        │
+│ transfer_count: u32         // For max transfer tracking    │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ RuleSet Account (Collection-level rules)                    │
+├─────────────────────────────────────────────────────────────┤
+│ authority: Pubkey           // Who can update rules         │
+│ rules: Vec<TransferRule>    // Default rules for collection │
+│ is_mutable: bool            // Can rules be changed         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 20.4 pNFT Instructions
+
+#### Creation
+
+- [ ] `create_pnft` - Create programmable NFT
+
+  ```ts
+  await createPNFT({
+    name: 'My pNFT',
+    uri: 'https://...',
+    rules: [
+      { type: 'royalty_enforcement', royalty: 5 },
+      { type: 'cooldown', period: 24 * 60 * 60 }, // 24 hours
+    ],
+  })
+  ```
+
+- [ ] `create_rule_set` - Create shared rule set for collection
+
+  ```ts
+  await createRuleSet({
+    collection: collectionMint,
+    rules: [
+      { type: 'royalty_enforcement', royalty: 5 },
+      { type: 'deny_list', addresses: [knownScammer] },
+    ],
+  })
+  ```
+
+#### Rule Management
+
+- [ ] `add_rule` - Add rule to NFT or rule set
+- [ ] `remove_rule` - Remove rule
+- [ ] `update_rule` - Update rule parameters
+- [ ] `freeze_rules` - Make rules immutable
+
+#### Transfers
+
+- [ ] `transfer_pnft` - Transfer with rule validation
+
+  ```ts
+  await transferPNFT({
+    mint: pnftMint,
+    to: recipient,
+    // Automatically validates all rules
+    // Automatically pays royalties if required
+  })
+  ```
+
+- [ ] `delegate_transfer` - Delegate transfer authority
+- [ ] `revoke_delegate` - Revoke delegation
+
+#### State Management
+
+- [ ] `lock_pnft` - Lock NFT (for staking, listing, etc.)
+- [ ] `unlock_pnft` - Unlock NFT
+- [ ] State transitions: `Unlocked` ↔ `Listed` ↔ `Staked`
+
+### 20.5 Royalty Enforcement
+
+- [ ] Implement on-chain royalty payment validation
+- [ ] Support multiple royalty recipients (creator splits)
+- [ ] Calculate royalty based on sale price
+- [ ] Integrate with marketplace escrow patterns
+- [ ] Provide royalty bypass for specific programs (bridges, etc.)
+
+### 20.6 Soulbound Tokens (SBTs)
+
+- [ ] `create_soulbound` - Create non-transferable NFT
+
+  ```ts
+  await createSoulbound({
+    name: 'Achievement Badge',
+    uri: 'https://...',
+    recipient: userAddress,
+    // Automatically adds Soulbound rule
+  })
+  ```
+
+- [ ] Support "recoverable" soulbound (issuer can reassign)
+- [ ] Support "burnable" soulbound (holder can destroy)
+- [ ] Use cases: credentials, achievements, memberships
+
+### 20.7 TypeScript SDK for pNFTs
+
+```ts
+// Create pNFT with rules
+const pnft = await tokens.pnft.create({
+  name: 'Programmable NFT',
+  rules: [
+    tokens.pnft.rules.royalty(5), // 5% royalty
+    tokens.pnft.rules.cooldown('24h'),
+    tokens.pnft.rules.holderGate(membershipToken),
+  ],
+})
+
+// Create soulbound
+const sbt = await tokens.pnft.createSoulbound({
+  name: 'Verified Member',
+  to: userAddress,
+  recoverable: true, // Issuer can reassign
+})
+
+// Transfer (validates rules automatically)
+await tokens.pnft.transfer(pnft, {
+  to: buyer,
+  salePrice: 10, // SOL - for royalty calculation
+})
+
+// Check if transfer is allowed
+const canTransfer = await tokens.pnft.canTransfer(pnft, {
+  to: recipient,
+})
+// { allowed: false, reason: 'Cooldown period active (23h remaining)' }
+
+// Get NFT rules
+const rules = await tokens.pnft.rules(pnft)
+```
+
+### 20.8 CLI Commands for pNFTs
+
+- [ ] `tokens pnft create` - Create programmable NFT
+- [ ] `tokens pnft rules <mint>` - Show NFT rules
+- [ ] `tokens pnft add-rule <mint> <rule>` - Add rule
+- [ ] `tokens pnft remove-rule <mint> <rule>` - Remove rule
+- [ ] `tokens pnft transfer <mint> <to>` - Transfer with validation
+- [ ] `tokens pnft can-transfer <mint> <to>` - Check if transfer allowed
+- [ ] `tokens sbt create` - Create soulbound token
+- [ ] `tokens sbt recover <mint> <new-owner>` - Recover soulbound
+
+---
+
+## Phase 21: ts-governance - DAO & Governance Package
+
+> **Goal**: Create a separate core package `ts-governance` for DAO governance, voting, and token-based decision making. This is a standalone package that integrates with `ts-tokens`.
+
+### 21.1 Package Setup
+
+- [ ] Create `packages/ts-governance/` directory in monorepo
+- [ ] Set up package.json:
+
+  ```json
+  {
+    "name": "ts-governance",
+    "description": "TypeScript SDK for DAO governance and voting on Solana",
+    "dependencies": {
+      "@solana/web3.js": "...",
+      "ts-tokens": "workspace:*"
+    }
+  }
+  ```
+
+- [ ] Create directory structure:
+
+  ```
+  packages/ts-governance/
+  ├── src/
+  │   ├── programs/           # On-chain programs
+  │   │   ├── governance/     # Core governance program
+  │   │   └── voting/         # Voting mechanisms
+  │   ├── dao/                # DAO management
+  │   ├── proposals/          # Proposal system
+  │   ├── voting/             # Voting logic
+  │   ├── treasury/           # Treasury management
+  │   ├── delegation/         # Vote delegation
+  │   └── types/              # TypeScript types
+  ├── bin/
+  │   └── cli.ts              # CLI entry point
+  └── package.json
+  ```
+
+### 21.2 Governance Program Design
+
+- [ ] Create `src/programs/governance/` directory
+- [ ] Design principles:
+  - [ ] Token-weighted voting (1 token = 1 vote)
+  - [ ] NFT-based voting (1 NFT = 1 vote or trait-weighted)
+  - [ ] Quadratic voting option
+  - [ ] Time-weighted voting (longer holders = more weight)
+  - [ ] Delegation support
+  - [ ] Proposal lifecycle management
+
+### 21.3 Account Structures
+
+```rust
+┌─────────────────────────────────────────────────────────────┐
+│ DAO Account                                                 │
+├─────────────────────────────────────────────────────────────┤
+│ name: String[32]            // DAO name                     │
+│ governance_token: Pubkey    // Token for voting power       │
+│ treasury: Pubkey            // Treasury account             │
+│ config: GovernanceConfig    // Voting parameters            │
+│ proposal_count: u64         // Total proposals created      │
+│ total_voting_power: u64     // Snapshot of total power      │
+│ authority: Pubkey           // Admin (can be multisig)      │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ GovernanceConfig                                            │
+├─────────────────────────────────────────────────────────────┤
+│ voting_period: i64          // How long voting lasts        │
+│ quorum_percentage: u8       // Min participation (e.g., 10%)│
+│ approval_threshold: u8      // Min yes votes (e.g., 51%)    │
+│ proposal_threshold: u64     // Min tokens to propose        │
+│ execution_delay: i64        // Timelock after approval      │
+│ vote_weight_type: VoteWeight // Token/NFT/Quadratic        │
+│ allow_early_execution: bool // Execute before period ends   │
+│ allow_vote_change: bool     // Can voters change vote       │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ Proposal Account                                            │
+├─────────────────────────────────────────────────────────────┤
+│ dao: Pubkey                 // Parent DAO                   │
+│ proposer: Pubkey            // Who created proposal         │
+│ title: String[64]           // Proposal title               │
+│ description_uri: String     // IPFS/Arweave link to details │
+│ instructions: Vec<Instruction> // On-chain actions         │
+│ status: ProposalStatus      // Draft/Active/Passed/Failed   │
+│ votes_for: u64              // Total yes votes              │
+│ votes_against: u64          // Total no votes               │
+│ votes_abstain: u64          // Total abstain votes          │
+│ start_time: i64             // Voting start                 │
+│ end_time: i64               // Voting end                   │
+│ executed_at: Option<i64>    // When executed (if passed)    │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ VoteRecord Account                                          │
+├─────────────────────────────────────────────────────────────┤
+│ proposal: Pubkey            // Which proposal               │
+│ voter: Pubkey               // Who voted                    │
+│ vote: Vote                  // For/Against/Abstain          │
+│ weight: u64                 // Voting power used            │
+│ timestamp: i64              // When voted                   │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ VoteDelegation Account                                      │
+├─────────────────────────────────────────────────────────────┤
+│ delegator: Pubkey           // Who is delegating            │
+│ delegate: Pubkey            // Who receives the power       │
+│ dao: Pubkey                 // Which DAO                    │
+│ amount: u64                 // Delegated voting power       │
+│ expires_at: Option<i64>     // Optional expiry              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 21.4 DAO Instructions
+
+#### DAO Management
+
+- [ ] `create_dao` - Create new DAO
+
+  ```ts
+  const dao = await votes.dao.create({
+    name: 'My DAO',
+    governanceToken: tokenMint,
+    config: {
+      votingPeriod: '7 days',
+      quorum: 10, // 10% participation required
+      approvalThreshold: 51, // 51% yes to pass
+      proposalThreshold: 10000, // Min tokens to propose
+      executionDelay: '2 days', // Timelock
+    },
+  })
+  ```
+
+- [ ] `update_dao_config` - Update governance parameters (via proposal)
+- [ ] `set_dao_authority` - Transfer admin (via proposal)
+
+#### Proposals
+
+- [ ] `create_proposal` - Create new proposal
+
+  ```ts
+  const proposal = await votes.proposal.create({
+    dao: daoAddress,
+    title: 'Increase staking rewards',
+    description: 'ipfs://Qm...', // Detailed description
+    instructions: [
+      // On-chain actions to execute if passed
+      updateStakingRewardsInstruction,
+    ],
+  })
+  ```
+
+- [ ] `cancel_proposal` - Cancel (proposer or admin only)
+- [ ] `execute_proposal` - Execute passed proposal
+
+#### Voting
+
+- [ ] `cast_vote` - Vote on proposal
+
+  ```ts
+  await votes.vote.cast({
+    proposal: proposalAddress,
+    vote: 'for', // 'for' | 'against' | 'abstain'
+  })
+  // Automatically calculates voting power from token balance
+  ```
+
+- [ ] `change_vote` - Change vote (if allowed)
+- [ ] `withdraw_vote` - Remove vote (if allowed)
+
+#### Delegation
+
+- [ ] `delegate_votes` - Delegate voting power
+
+  ```ts
+  await votes.delegate({
+    dao: daoAddress,
+    to: delegateAddress,
+    amount: 50000, // Or 'all'
+    expires: '30 days', // Optional
+  })
+  ```
+
+- [ ] `undelegate` - Remove delegation
+- [ ] `accept_delegation` - Delegate accepts (optional)
+
+### 21.5 Voting Mechanisms
+
+#### Token-Weighted Voting
+
+- [ ] 1 token = 1 vote (standard)
+- [ ] Snapshot voting power at proposal creation
+- [ ] Prevent double-voting with token transfers
+
+#### NFT-Based Voting
+
+- [ ] 1 NFT = 1 vote
+- [ ] Trait-weighted voting (rare NFTs = more votes)
+- [ ] Collection-gated DAOs
+
+#### Quadratic Voting
+
+- [ ] Vote weight = √(tokens)
+- [ ] Reduces plutocracy
+- [ ] Configurable per DAO
+
+#### Time-Weighted Voting
+
+- [ ] Longer holders get more weight
+- [ ] Incentivizes long-term alignment
+- [ ] Configurable decay/growth curves
+
+### 21.6 Treasury Management
+
+- [ ] Create `src/treasury/` directory
+- [ ] `create_treasury` - Create DAO treasury
+
+  ```ts
+  const treasury = await votes.treasury.create({
+    dao: daoAddress,
+    // Treasury is controlled by DAO governance
+  })
+  ```
+
+- [ ] `deposit_to_treasury` - Anyone can deposit
+- [ ] `withdraw_from_treasury` - Only via passed proposal
+- [ ] Support multiple token types in treasury
+- [ ] Treasury spending proposals with limits
+
+### 21.7 TypeScript SDK for ts-governance
+
+```ts
+import { votes } from 'ts-governance'
+
+// Create DAO
+const dao = await votes.dao.create({
+  name: 'My Project DAO',
+  token: governanceToken,
+  config: {
+    votingPeriod: '5 days',
+    quorum: 10,
+    approvalThreshold: 66,
+  },
+})
+
+// Create proposal
+const proposal = await votes.proposal.create({
+  dao,
+  title: 'Fund marketing campaign',
+  description: 'ipfs://...',
+  actions: [
+    votes.actions.transferFromTreasury({
+      to: marketingWallet,
+      amount: 50000,
+      token: usdcMint,
+    }),
+  ],
+})
+
+// Vote
+await votes.vote(proposal, 'for')
+
+// Check proposal status
+const status = await votes.proposal.status(proposal)
+// {
+//   status: 'active',
+//   votesFor: 150000,
+//   votesAgainst: 30000,
+//   quorumReached: true,
+//   passingThreshold: true,
+//   timeRemaining: '2 days',
+// }
+
+// Delegate votes
+await votes.delegate(dao, {
+  to: trustedDelegate,
+  amount: 'all',
+})
+
+// Get voting power
+const power = await votes.votingPower(dao, wallet)
+// { own: 50000, delegated: 25000, total: 75000 }
+
+// Get DAO info
+const info = await votes.dao.info(dao)
+// { name, token, treasury, proposalCount, config, ... }
+```
+
+### 21.8 CLI for ts-governance
+
+- [ ] Create `packages/ts-governance/bin/cli.ts`
+- [ ] `votes dao create` - Create DAO (interactive)
+- [ ] `votes dao info <address>` - Show DAO info
+- [ ] `votes dao config <address>` - Show/update config
+- [ ] `votes proposal create <dao>` - Create proposal
+- [ ] `votes proposal list <dao>` - List proposals
+- [ ] `votes proposal info <address>` - Show proposal details
+- [ ] `votes proposal vote <address> <for|against|abstain>` - Vote
+- [ ] `votes proposal execute <address>` - Execute passed proposal
+- [ ] `votes delegate <dao> <to> [amount]` - Delegate votes
+- [ ] `votes undelegate <dao>` - Remove delegation
+- [ ] `votes power <dao>` - Show your voting power
+- [ ] `votes treasury info <dao>` - Show treasury balance
+- [ ] `votes treasury deposit <dao> <amount>` - Deposit to treasury
+
+### 21.9 React Components for ts-governance
+
+- [ ] Create `packages/ts-governance-react/` package
+- [ ] `<DAOProvider>` - DAO context provider
+- [ ] `<ProposalList>` - List of proposals
+- [ ] `<ProposalCard>` - Single proposal display
+- [ ] `<ProposalDetails>` - Full proposal view
+- [ ] `<VoteButton>` - Vote for/against/abstain
+- [ ] `<VotingPower>` - Display user's voting power
+- [ ] `<DelegateForm>` - Delegate votes UI
+- [ ] `<TreasuryBalance>` - Show treasury holdings
+- [ ] `<CreateProposalForm>` - Proposal creation wizard
+- [ ] `<GovernanceStats>` - DAO statistics
+
+### 21.10 Vue Components for ts-governance
+
+- [ ] Create `packages/ts-governance-vue/` package
+- [ ] Same components as React, Vue 3 syntax
+
+### 21.11 Integration with ts-tokens
+
+- [ ] Seamless token balance → voting power
+- [ ] Staked tokens can vote (optional config)
+- [ ] NFT collection → DAO membership
+- [ ] Multi-sig as DAO admin
+- [ ] Treasury uses ts-tokens for transfers
+
+### 21.12 Documentation for ts-governance
+
+- [ ] Create `docs/ts-governance/` directory
+- [ ] `docs/ts-governance/overview.md` - What is ts-governance
+- [ ] `docs/ts-governance/quickstart.md` - Create your first DAO
+- [ ] `docs/ts-governance/dao.md` - DAO configuration
+- [ ] `docs/ts-governance/proposals.md` - Proposal lifecycle
+- [ ] `docs/ts-governance/voting.md` - Voting mechanisms
+- [ ] `docs/ts-governance/delegation.md` - Vote delegation
+- [ ] `docs/ts-governance/treasury.md` - Treasury management
+- [ ] `docs/ts-governance/cli.md` - CLI reference
+- [ ] `docs/ts-governance/components.md` - React/Vue components
 
 ---
 
