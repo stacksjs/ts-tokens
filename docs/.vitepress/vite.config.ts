@@ -18,7 +18,7 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      'ts-tokens': resolve(__dirname, '../../packages/tokens/src/index.ts'),
+      'ts-tokens': resolve(__dirname, '../../packages/ts-tokens/src/index.ts'),
     },
     dedupe: [
       'vue',

@@ -1,5 +1,5 @@
 // import { describe, expect, it } from 'bun:test'
-// import { QRCode, QRErrorCorrectLevel } from '../packages/tokens/src'
+// import { QRCode, QRErrorCorrectLevel } from '../packages/ts-tokens/src'
 
 // describe('tokens', () => {
 //   it('should create a QR code instance', () => {
