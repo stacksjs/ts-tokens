@@ -291,7 +291,7 @@
 
 ### 1.8 Base58 Implementation (Replace `bs58`)
 
-- [ ] Create `src/utils/base58.ts` with ~20 lines of code:
+- [x] Create `src/utils/base58.ts` with ~20 lines of code:
 
   ```ts
   const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
@@ -300,7 +300,7 @@
   ```
 
 - [ ] Add comprehensive tests for encoding/decoding
-- [ ] Ensure compatibility with Solana address format
+- [x] Ensure compatibility with Solana address format
 
 ---
 
@@ -308,23 +308,23 @@
 
 ### 2.1 Connection Management
 
-- [ ] Create `src/drivers/solana/connection.ts`:
-  - [ ] `createConnection(config)` - Create RPC connection
-  - [ ] `getConnection()` - Get cached connection
-  - [ ] Connection pooling for multiple requests
-  - [ ] Automatic retry logic with exponential backoff
+- [x] Create `src/drivers/solana/connection.ts`:
+  - [x] `createConnection(config)` - Create RPC connection
+  - [x] `getConnection()` - Get cached connection
+  - [x] Connection pooling for multiple requests
+  - [x] Automatic retry logic with exponential backoff
   - [ ] RPC rate limiting handling
-  - [ ] Health check functionality
+  - [x] Health check functionality
 
 ### 2.2 Wallet Management
 
-- [ ] Create `src/drivers/solana/wallet.ts`:
-  - [ ] `loadKeypair(path)` - Load keypair from file
-  - [ ] `loadKeypairFromEnv(envVar)` - Load from environment variable
-  - [ ] `generateKeypair()` - Generate new keypair
-  - [ ] `getPublicKey()` - Get current wallet public key
-  - [ ] `signTransaction(tx)` - Sign transaction
-  - [ ] `signAllTransactions(txs)` - Batch sign
+- [x] Create `src/drivers/solana/wallet.ts`:
+  - [x] `loadKeypair(path)` - Load keypair from file
+  - [x] `loadKeypairFromEnv(envVar)` - Load from environment variable
+  - [x] `generateKeypair()` - Generate new keypair
+  - [x] `getPublicKey()` - Get current wallet public key
+  - [x] `signTransaction(tx)` - Sign transaction
+  - [x] `signAllTransactions(txs)` - Batch sign
 - [ ] Create `src/wallet/adapter.ts` for browser wallet adapters:
   - [ ] Phantom adapter support
   - [ ] Solflare adapter support
@@ -332,25 +332,25 @@
 
 ### 2.3 Transaction Utilities
 
-- [ ] Create `src/drivers/solana/transaction.ts`:
-  - [ ] `buildTransaction(instructions)` - Build transaction from instructions
-  - [ ] `sendTransaction(tx)` - Send and confirm transaction
-  - [ ] `sendTransactionWithRetry(tx, retries)` - Retry on failure
-  - [ ] `simulateTransaction(tx)` - Simulate without sending
-  - [ ] `getTransactionStatus(signature)` - Check transaction status
-  - [ ] `waitForConfirmation(signature)` - Wait for confirmation
-  - [ ] Priority fee estimation and setting
-  - [ ] Compute unit optimization
+- [x] Create `src/drivers/solana/transaction.ts`:
+  - [x] `buildTransaction(instructions)` - Build transaction from instructions
+  - [x] `sendTransaction(tx)` - Send and confirm transaction
+  - [x] `sendTransactionWithRetry(tx, retries)` - Retry on failure
+  - [x] `simulateTransaction(tx)` - Simulate without sending
+  - [x] `getTransactionStatus(signature)` - Check transaction status
+  - [x] `waitForConfirmation(signature)` - Wait for confirmation
+  - [x] Priority fee estimation and setting
+  - [x] Compute unit optimization
 
 ### 2.4 Account Utilities
 
-- [ ] Create `src/drivers/solana/account.ts`:
-  - [ ] `getAccountInfo(address)` - Fetch account info
-  - [ ] `getMultipleAccounts(addresses)` - Batch fetch
-  - [ ] `getTokenAccounts(owner)` - Get all token accounts for owner
-  - [ ] `getNFTAccounts(owner)` - Get all NFT accounts for owner
-  - [ ] `getBalance(address)` - Get SOL balance
-  - [ ] `getTokenBalance(owner, mint)` - Get token balance
+- [x] Create `src/drivers/solana/account.ts`:
+  - [x] `getAccountInfo(address)` - Fetch account info
+  - [x] `getMultipleAccounts(addresses)` - Batch fetch
+  - [x] `getTokenAccounts(owner)` - Get all token accounts for owner
+  - [x] `getNFTAccounts(owner)` - Get all NFT accounts for owner
+  - [x] `getBalance(address)` - Get SOL balance
+  - [x] `getTokenBalance(owner, mint)` - Get token balance
 
 ---
 
@@ -358,58 +358,58 @@
 
 ### 3.1 Token Creation
 
-- [ ] Create `src/token/create.ts`:
-  - [ ] `createToken(options)` - Create new SPL token
-    - [ ] `name` - Token name
-    - [ ] `symbol` - Token symbol (max 10 chars)
-    - [ ] `decimals` - Decimal places (0-9)
-    - [ ] `initialSupply` - Initial mint amount (optional)
-    - [ ] `mintAuthority` - Mint authority pubkey
-    - [ ] `freezeAuthority` - Freeze authority pubkey (optional)
-    - [ ] `metadata` - Token metadata (name, symbol, uri)
-  - [ ] `createTokenWithMetadata(options)` - Create with Metaplex metadata
-  - [ ] Return token mint address and transaction signature
+- [x] Create `src/token/create.ts`:
+  - [x] `createToken(options)` - Create new SPL token
+    - [x] `name` - Token name
+    - [x] `symbol` - Token symbol (max 10 chars)
+    - [x] `decimals` - Decimal places (0-9)
+    - [x] `initialSupply` - Initial mint amount (optional)
+    - [x] `mintAuthority` - Mint authority pubkey
+    - [x] `freezeAuthority` - Freeze authority pubkey (optional)
+    - [x] `metadata` - Token metadata (name, symbol, uri)
+  - [x] `createTokenWithMetadata(options)` - Create with Metaplex metadata
+  - [x] Return token mint address and transaction signature
 
 ### 3.2 Token Minting
 
-- [ ] Create `src/token/mint.ts`:
-  - [ ] `mintTokens(options)` - Mint tokens to address
-    - [ ] `mint` - Token mint address
-    - [ ] `destination` - Recipient address
-    - [ ] `amount` - Amount to mint (in base units)
-    - [ ] `mintAuthority` - Authority signer
-  - [ ] `mintToMultiple(options)` - Batch mint to multiple addresses
-  - [ ] Validate mint authority before minting
+- [x] Create `src/token/mint.ts`:
+  - [x] `mintTokens(options)` - Mint tokens to address
+    - [x] `mint` - Token mint address
+    - [x] `destination` - Recipient address
+    - [x] `amount` - Amount to mint (in base units)
+    - [x] `mintAuthority` - Authority signer
+  - [x] `mintToMultiple(options)` - Batch mint to multiple addresses
+  - [x] Validate mint authority before minting
 
 ### 3.3 Token Transfers
 
-- [ ] Create `src/token/transfer.ts`:
-  - [ ] `transferTokens(options)` - Transfer tokens
-    - [ ] `mint` - Token mint address
-    - [ ] `from` - Source token account or owner
-    - [ ] `to` - Destination address
-    - [ ] `amount` - Amount to transfer
-  - [ ] `transferToMultiple(options)` - Batch transfer (airdrop)
-  - [ ] Auto-create associated token accounts if needed
+- [x] Create `src/token/transfer.ts`:
+  - [x] `transferTokens(options)` - Transfer tokens
+    - [x] `mint` - Token mint address
+    - [x] `from` - Source token account or owner
+    - [x] `to` - Destination address
+    - [x] `amount` - Amount to transfer
+  - [x] `transferToMultiple(options)` - Batch transfer (airdrop)
+  - [x] Auto-create associated token accounts if needed
 
 ### 3.4 Token Burns
 
-- [ ] Create `src/token/burn.ts`:
-  - [ ] `burnTokens(options)` - Burn tokens
-    - [ ] `mint` - Token mint address
-    - [ ] `from` - Token account to burn from
-    - [ ] `amount` - Amount to burn
-  - [ ] `burnAll(mint, owner)` - Burn entire balance
+- [x] Create `src/token/burn.ts`:
+  - [x] `burnTokens(options)` - Burn tokens
+    - [x] `mint` - Token mint address
+    - [x] `from` - Token account to burn from
+    - [x] `amount` - Amount to burn
+  - [x] `burnAll(mint, owner)` - Burn entire balance
 
 ### 3.5 Token Authority Management
 
-- [ ] Create `src/token/authority.ts`:
-  - [ ] `setMintAuthority(mint, newAuthority)` - Transfer mint authority
-  - [ ] `revokeMintAuthority(mint)` - Revoke mint authority (make fixed supply)
-  - [ ] `setFreezeAuthority(mint, newAuthority)` - Transfer freeze authority
-  - [ ] `revokeFreezeAuthority(mint)` - Revoke freeze authority
-  - [ ] `freezeAccount(mint, account)` - Freeze token account
-  - [ ] `thawAccount(mint, account)` - Unfreeze token account
+- [x] Create `src/token/authority.ts`:
+  - [x] `setMintAuthority(mint, newAuthority)` - Transfer mint authority
+  - [x] `revokeMintAuthority(mint)` - Revoke mint authority (make fixed supply)
+  - [x] `setFreezeAuthority(mint, newAuthority)` - Transfer freeze authority
+  - [x] `revokeFreezeAuthority(mint)` - Revoke freeze authority
+  - [x] `freezeAccount(mint, account)` - Freeze token account
+  - [x] `thawAccount(mint, account)` - Unfreeze token account
 
 ### 3.6 Token Account Management
 

@@ -42,4 +42,27 @@ export {
   sendAndConfirmTransaction,
   simulateTransaction,
   estimatePriorityFee,
+  // Account utilities
+  getAccountInfo,
+  getMultipleAccounts,
+  getBalance,
+  getTokenBalance,
+  getTokenAccounts,
+  getNFTAccounts,
+  getMintInfo,
+  getLargestTokenHolders,
 } from './drivers'
+
+// Token operations
+export {
+  createToken,
+  createSimpleToken,
+  mintTokens,
+  mintTokensToMany,
+  transferTokens,
+  transferTokensToMany,
+  transfer,
+  burnTokens,
+  burnAll,
+  burn,
+} from './token'

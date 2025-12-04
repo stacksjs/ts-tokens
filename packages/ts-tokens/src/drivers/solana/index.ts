@@ -7,6 +7,7 @@
 export * from './connection'
 export * from './wallet'
 export * from './transaction'
+export * from './account'
 
 // Re-export for convenience
 export { SolanaConnection, createSolanaConnection } from './connection'
@@ -17,3 +18,13 @@ export {
   simulateTransaction,
   estimatePriorityFee,
 } from './transaction'
+export {
+  getAccountInfo,
+  getMultipleAccounts,
+  getBalance,
+  getTokenBalance,
+  getTokenAccounts,
+  getNFTAccounts,
+  getMintInfo,
+  getLargestTokenHolders,
+} from './account'
