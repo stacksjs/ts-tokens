@@ -2874,7 +2874,7 @@ const rules = await tokens.pnft.rules(pnft)
 
 ### 21.1 Package Setup
 
-- [ ] Create `packages/ts-governance/` directory in monorepo
+- [x] Create `src/governance/` module in ts-tokens (integrated approach)
 - [ ] Set up package.json:
 
   ```json
@@ -2909,14 +2909,14 @@ const rules = await tokens.pnft.rules(pnft)
 
 ### 21.2 Governance Program Design
 
-- [ ] Create `src/programs/governance/` directory
-- [ ] Design principles:
-  - [ ] Token-weighted voting (1 token = 1 vote)
+- [x] Create `src/governance/` directory
+- [x] Design principles:
+  - [x] Token-weighted voting (1 token = 1 vote)
   - [ ] NFT-based voting (1 NFT = 1 vote or trait-weighted)
   - [ ] Quadratic voting option
   - [ ] Time-weighted voting (longer holders = more weight)
-  - [ ] Delegation support
-  - [ ] Proposal lifecycle management
+  - [x] Delegation support
+  - [x] Proposal lifecycle management
 
 ### 21.3 Account Structures
 
@@ -3224,7 +3224,7 @@ const info = await votes.dao.info(dao)
 
 ### 22.1 Error Handling & Messages
 
-- [ ] Create custom error classes with actionable messages:
+- [x] Create custom error classes with actionable messages:
 
   ```ts
   class InsufficientBalanceError extends TokenError {
@@ -3236,9 +3236,9 @@ const info = await votes.dao.info(dao)
   }
   ```
 
-- [ ] Include transaction simulation errors with decoded reasons
+- [x] Include transaction simulation errors with decoded reasons
 - [ ] Add "Did you mean?" suggestions for common mistakes
-- [ ] Link to relevant documentation in error messages
+- [x] Link to relevant documentation in error messages
 - [ ] Provide fix commands where applicable (`tokens fix <error-code>`)
 
 ### 22.2 TypeScript Developer Experience
@@ -3291,8 +3291,8 @@ const info = await votes.dao.info(dao)
 
 ### 22.6 Logging & Observability
 
-- [ ] Structured logging (JSON format option)
-- [ ] Log levels (debug, info, warn, error)
+- [x] Structured logging (JSON format option)
+- [x] Log levels (debug, info, warn, error)
 - [ ] Request/response logging for RPC calls
 - [ ] Performance timing for operations
 - [ ] OpenTelemetry integration (optional)
@@ -3306,17 +3306,17 @@ const info = await votes.dao.info(dao)
 ### 23.1 RPC Optimization
 
 - [ ] Batch RPC calls with `getMultipleAccounts`
-- [ ] Implement request deduplication
-- [ ] Add response caching with TTL
+- [x] Implement request deduplication
+- [x] Add response caching with TTL
 - [ ] Prefetch related accounts
 - [ ] Connection pooling for high-throughput
 
 ### 23.2 Transaction Optimization
 
-- [ ] Automatic compute unit estimation
-- [ ] Priority fee optimization (dynamic based on network)
-- [ ] Transaction packing (combine multiple ops)
-- [ ] Lookup tables for common accounts
+- [x] Automatic compute unit estimation
+- [x] Priority fee optimization (dynamic based on network)
+- [x] Transaction packing (combine multiple ops)
+- [x] Lookup tables for common accounts
 - [ ] Parallel transaction sending
 
 ### 23.3 Bundle Size
@@ -3329,10 +3329,10 @@ const info = await votes.dao.info(dao)
 
 ### 23.4 Caching Strategy
 
-- [ ] In-memory cache for account data
+- [x] In-memory cache for account data
 - [ ] Persistent cache option (localStorage/IndexedDB)
-- [ ] Cache invalidation on transaction confirmation
-- [ ] Configurable cache TTL per data type
+- [x] Cache invalidation on transaction confirmation
+- [x] Configurable cache TTL per data type
 
 ---
 
@@ -3360,12 +3360,12 @@ const info = await votes.dao.info(dao)
 
 ### 25.1 Wallet Integrations
 
-- [ ] Phantom deep linking
-- [ ] Solflare deep linking
-- [ ] Backpack integration
+- [x] Phantom deep linking
+- [x] Solflare deep linking
+- [x] Backpack integration
 - [ ] Ledger hardware wallet
 - [ ] Trezor hardware wallet
-- [ ] Mobile wallet adapters (Solana Mobile)
+- [x] Mobile wallet adapters (Solana Mobile)
 
 ### 25.2 DeFi Integrations
 
