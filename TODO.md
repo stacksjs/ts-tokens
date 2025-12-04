@@ -1355,6 +1355,126 @@
 - [ ] Email notifications for critical events
 - [ ] Discord/Telegram bot integration
 
+#### Phishing & Social Engineering Protection
+
+- [ ] **Approval Phishing Detection**
+  - [ ] Warn when approving unlimited token spending
+  - [ ] Detect suspicious approval patterns
+  - [ ] Show approval history and recommend revocations
+  - [ ] `tokens security approvals` - List all active approvals
+- [ ] **Fake Token Detection**
+  - [ ] Check if token name/symbol mimics known tokens
+  - [ ] Verify token against official registries
+  - [ ] Warn about tokens with similar names (e.g., "USDC" vs "USDC.e")
+  - [ ] Check token age and holder count
+- [ ] **Malicious Metadata Detection**
+  - [ ] Scan metadata URIs for known malicious domains
+  - [ ] Check for redirect chains in metadata URLs
+  - [ ] Detect hidden characters in names/symbols
+  - [ ] Warn about external links in NFT metadata
+
+#### Program/Contract Security
+
+- [ ] **Program Verification**
+  - [ ] Verify program is verified on-chain (Anchor verified)
+  - [ ] Check program upgrade authority status
+  - [ ] Warn if program is upgradeable by unknown authority
+  - [ ] Check program against known vulnerability database
+- [ ] **CPI (Cross-Program Invocation) Analysis**
+  - [ ] Analyze which programs a transaction will invoke
+  - [ ] Warn about unknown or unverified programs
+  - [ ] Detect potential sandwich attack vectors
+- [ ] **IDL Verification**
+  - [ ] Verify program IDL matches on-chain bytecode
+  - [ ] Warn if IDL is missing or outdated
+
+#### MEV & Front-Running Protection
+
+- [ ] **Transaction Privacy**
+  - [ ] Support private transaction submission (Jito bundles)
+  - [ ] Implement transaction timing randomization
+  - [ ] Warn about MEV-vulnerable transactions
+- [ ] **Slippage Protection**
+  - [ ] Enforce maximum slippage on swaps
+  - [ ] Detect abnormal price impact
+  - [ ] Warn about low liquidity situations
+- [ ] **Sandwich Attack Detection**
+  - [ ] Analyze mempool for potential sandwich attacks
+  - [ ] Recommend Jito bundles for high-value transactions
+
+#### Backup & Recovery Security
+
+- [ ] **Keypair Backup Verification**
+  - [ ] Prompt for backup verification on first use
+  - [ ] Implement encrypted backup export
+  - [ ] Support Shamir secret sharing for key backup
+- [ ] **Recovery Options**
+  - [ ] Document recovery procedures for lost keys
+  - [ ] Implement social recovery options (multi-sig guardians)
+  - [ ] Support hardware wallet recovery flows
+- [ ] **Disaster Recovery**
+  - [ ] Export all authority positions for recovery planning
+  - [ ] Generate recovery documentation
+  - [ ] Test recovery procedures in devnet
+
+#### Operational Security (OpSec)
+
+- [ ] **Environment Checks**
+  - [ ] Warn if running on shared/public computer
+  - [ ] Check for screen recording software
+  - [ ] Verify secure network connection (warn on public WiFi)
+  - [ ] Check clipboard for sensitive data exposure
+- [ ] **Session Security**
+  - [ ] Implement session timeouts for CLI
+  - [ ] Clear sensitive data from memory after use
+  - [ ] Secure logging (redact sensitive values)
+- [ ] **Audit Logging**
+  - [ ] Log all sensitive operations locally
+  - [ ] Tamper-evident audit trail
+  - [ ] Export audit logs for compliance
+
+#### Compliance & Regulatory
+
+- [ ] **OFAC Sanctions Screening**
+  - [ ] Check addresses against OFAC sanctions list
+  - [ ] Warn before transacting with flagged addresses
+  - [ ] Configurable compliance mode
+- [ ] **Transaction Limits**
+  - [ ] Configurable daily/weekly transaction limits
+  - [ ] Require additional confirmation above thresholds
+  - [ ] Cool-down periods for large operations
+- [ ] **Record Keeping**
+  - [ ] Export transaction history for tax reporting
+  - [ ] Generate cost basis reports
+  - [ ] Track gains/losses per token
+
+#### Third-Party Integration Security
+
+- [ ] **RPC Provider Security**
+  - [ ] Verify RPC responses against multiple providers
+  - [ ] Detect RPC manipulation attacks
+  - [ ] Warn about untrusted RPC endpoints
+- [ ] **API Key Management**
+  - [ ] Secure storage for API keys (Helius, etc.)
+  - [ ] Key rotation reminders
+  - [ ] Scope-limited API keys where possible
+- [ ] **Dependency Security**
+  - [ ] Regular dependency audits
+  - [ ] Lock file verification
+  - [ ] Warn about known vulnerable dependencies
+
+#### Incident Response
+
+- [ ] **Emergency Procedures**
+  - [ ] `tokens emergency freeze` - Quick freeze all authorities
+  - [ ] `tokens emergency revoke` - Revoke all approvals
+  - [ ] `tokens emergency transfer` - Emergency authority transfer
+  - [ ] Document incident response playbook
+- [ ] **Post-Incident Analysis**
+  - [ ] Transaction trace analysis tools
+  - [ ] Timeline reconstruction
+  - [ ] Loss calculation utilities
+
 ---
 
 ## Phase 12: Token-2022 (SPL Token Extensions)
