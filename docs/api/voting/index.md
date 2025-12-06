@@ -16,7 +16,7 @@ ts-tokens supports multiple voting mechanisms:
 Standard 1 token = 1 vote mechanism.
 
 ```typescript
-import { voting, getConfig } from 'ts-tokens'
+import { getConfig, voting } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -38,7 +38,7 @@ console.log('Total:', power.total)
 ### Snapshots
 
 ```typescript
-import { voting, getConfig } from 'ts-tokens'
+import { getConfig, voting } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -110,7 +110,7 @@ console.log('Quadratic Top 10%:', comparison.quadratic.top10Percentage)
 ### 1 NFT = 1 Vote
 
 ```typescript
-import { voting, getConfig } from 'ts-tokens'
+import { getConfig, voting } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -129,7 +129,7 @@ console.log('NFTs owned:', power.own)
 ### Trait-Weighted Voting
 
 ```typescript
-import { voting, getConfig } from 'ts-tokens'
+import { getConfig, voting } from 'ts-tokens'
 
 const config = await getConfig()
 

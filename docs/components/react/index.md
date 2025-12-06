@@ -64,7 +64,7 @@ function App() {
 All components are backed by hooks you can use directly:
 
 ```tsx
-import { useTokenBalance, useNFT, useTransaction } from 'react-tokens'
+import { useNFT, useTokenBalance, useTransaction } from 'react-tokens'
 
 function MyComponent() {
   const { balance, loading } = useTokenBalance(mint, owner)
@@ -77,15 +77,15 @@ function MyComponent() {
 
 ### Available Hooks
 
-| Hook | Description |
-|------|-------------|
-| `useConnection()` | Get Solana connection |
-| `useTokenBalance(mint, owner)` | Token balance |
-| `useTokenAccounts(owner)` | All token accounts |
-| `useNFT(mint)` | Single NFT data |
-| `useNFTs(owner)` | All NFTs for owner |
-| `useCandyMachine(address)` | Candy Machine state |
-| `useTransaction()` | Send transactions |
+| Hook                           | Description           |
+| ------------------------------ | --------------------- |
+| `useConnection()`              | Get Solana connection |
+| `useTokenBalance(mint, owner)` | Token balance         |
+| `useTokenAccounts(owner)`      | All token accounts    |
+| `useNFT(mint)`                 | Single NFT data       |
+| `useNFTs(owner)`               | All NFTs for owner    |
+| `useCandyMachine(address)`     | Candy Machine state   |
+| `useTransaction()`             | Send transactions     |
 
 ## Styling
 
@@ -110,5 +110,5 @@ Or style with Tailwind:
 Full TypeScript support included:
 
 ```tsx
-import type { TokenDisplayInfo, NFTDisplayInfo } from 'react-tokens'
+import type { NFTDisplayInfo, TokenDisplayInfo } from 'react-tokens'
 ```

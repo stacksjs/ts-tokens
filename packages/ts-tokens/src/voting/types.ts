@@ -7,12 +7,12 @@ import type { PublicKey } from '@solana/web3.js'
 /**
  * Voting mechanism types
  */
-export type VotingMechanism =
-  | 'token_weighted'
-  | 'quadratic'
-  | 'nft_based'
-  | 'time_weighted'
-  | 'conviction'
+export type VotingMechanism
+  = | 'token_weighted'
+    | 'quadratic'
+    | 'nft_based'
+    | 'time_weighted'
+    | 'conviction'
 
 /**
  * Vote choice

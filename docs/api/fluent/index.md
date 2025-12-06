@@ -15,7 +15,7 @@ The fluent API provides a builder pattern for:
 ### Basic Usage
 
 ```typescript
-import { tokens, getConfig } from 'ts-tokens'
+import { getConfig, tokens } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -37,7 +37,7 @@ console.log('Signatures:', result.signatures)
 ### Chained Operations
 
 ```typescript
-import { tokens, getConfig } from 'ts-tokens'
+import { getConfig, tokens } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -54,7 +54,7 @@ const result = await tokens()
 ### Using Existing Token
 
 ```typescript
-import { tokens, getConfig } from 'ts-tokens'
+import { getConfig, tokens } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -69,7 +69,7 @@ const result = await tokens()
 ### Batch Transfers
 
 ```typescript
-import { tokens, getConfig } from 'ts-tokens'
+import { getConfig, tokens } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -88,7 +88,7 @@ const result = await tokens()
 ### Authority Management
 
 ```typescript
-import { tokens, getConfig } from 'ts-tokens'
+import { getConfig, tokens } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -106,7 +106,7 @@ const result = await tokens()
 ### Create Collection and Mint
 
 ```typescript
-import { nfts, getConfig } from 'ts-tokens'
+import { getConfig, nfts } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -134,7 +134,7 @@ const result = await nfts()
 ### Batch Minting
 
 ```typescript
-import { nfts, getConfig } from 'ts-tokens'
+import { getConfig, nfts } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -155,7 +155,7 @@ const result = await nfts()
 ### Transfer NFTs
 
 ```typescript
-import { nfts, getConfig } from 'ts-tokens'
+import { getConfig, nfts } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -171,7 +171,7 @@ const result = await nfts()
 ### Update Metadata
 
 ```typescript
-import { nfts, getConfig } from 'ts-tokens'
+import { getConfig, nfts } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -216,7 +216,7 @@ const result = await candyMachine()
 Preview operations without executing:
 
 ```typescript
-import { tokens, getConfig } from 'ts-tokens'
+import { getConfig, tokens } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -235,7 +235,7 @@ console.log('Warnings:', preview.warnings)
 ## Options
 
 ```typescript
-import { tokens, getConfig } from 'ts-tokens'
+import { getConfig, tokens } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -254,7 +254,7 @@ const result = await tokens()
 ## Error Handling
 
 ```typescript
-import { tokens, getConfig } from 'ts-tokens'
+import { getConfig, tokens } from 'ts-tokens'
 
 const config = await getConfig()
 

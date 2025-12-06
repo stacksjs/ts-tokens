@@ -4,14 +4,14 @@
  * Unified storage interface for Arweave, IPFS, and Shadow Drive.
  */
 
+import type { StorageAdapter, StorageProvider, TokenConfig } from '../types'
+import { ArweaveStorageAdapter, createArweaveAdapter } from './arweave'
+import { createIPFSAdapter, IPFSStorageAdapter } from './ipfs'
+import { createShadowDriveAdapter, ShadowDriveStorageAdapter } from './shadow-drive'
+
 export * from './arweave'
 export * from './ipfs'
 export * from './shadow-drive'
-
-import type { StorageAdapter, StorageProvider, TokenConfig } from '../types'
-import { ArweaveStorageAdapter, createArweaveAdapter } from './arweave'
-import { IPFSStorageAdapter, createIPFSAdapter } from './ipfs'
-import { ShadowDriveStorageAdapter, createShadowDriveAdapter } from './shadow-drive'
 
 /**
  * Storage adapter registry
@@ -23,7 +23,7 @@ const adapters = new Map<StorageProvider, StorageAdapter>()
  */
 export function getStorageAdapter(
   provider: StorageProvider,
-  config?: TokenConfig
+  config?: TokenConfig,
 ): StorageAdapter {
   // Check cache
   const cached = adapters.get(provider)
@@ -76,7 +76,7 @@ class LocalStorageAdapter implements StorageAdapter {
   private baseDir: string
   private baseUrl: string
 
-  constructor(config?: { baseDir?: string; baseUrl?: string }) {
+  constructor(config?: { baseDir?: string, baseUrl?: string }) {
     this.baseDir = config?.baseDir || './storage'
     this.baseUrl = config?.baseUrl || 'http://localhost:3000/storage'
   }
@@ -136,18 +136,19 @@ class LocalStorageAdapter implements StorageAdapter {
     return this.upload(data, { contentType })
   }
 
-  async uploadBatch(files: Array<{ path: string; name?: string }>): Promise<{
-    results: Array<{ id: string; url: string; provider: 'local'; size: number; contentType: string }>
-    failed: Array<{ file: string; error: string }>
+  async uploadBatch(files: Array<{ path: string, name?: string }>): Promise<{
+    results: Array<{ id: string, url: string, provider: 'local', size: number, contentType: string }>
+    failed: Array<{ file: string, error: string }>
   }> {
-    const results: Array<{ id: string; url: string; provider: 'local'; size: number; contentType: string }> = []
-    const failed: Array<{ file: string; error: string }> = []
+    const results: Array<{ id: string, url: string, provider: 'local', size: number, contentType: string }> = []
+    const failed: Array<{ file: string, error: string }> = []
 
     for (const file of files) {
       try {
         const result = await this.uploadFile(file.path)
         results.push(result)
-      } catch (error) {
+      }
+      catch (error) {
         failed.push({
           file: file.path,
           error: error instanceof Error ? error.message : String(error),
@@ -231,17 +232,17 @@ class LocalStorageAdapter implements StorageAdapter {
 /**
  * Create a local storage adapter
  */
-export function createLocalAdapter(config?: { baseDir?: string; baseUrl?: string }): LocalStorageAdapter {
+export function createLocalAdapter(config?: { baseDir?: string, baseUrl?: string }): LocalStorageAdapter {
   return new LocalStorageAdapter(config)
 }
 
 // Re-export adapters
 export {
   ArweaveStorageAdapter,
-  IPFSStorageAdapter,
-  ShadowDriveStorageAdapter,
-  LocalStorageAdapter,
   createArweaveAdapter,
   createIPFSAdapter,
   createShadowDriveAdapter,
+  IPFSStorageAdapter,
+  LocalStorageAdapter,
+  ShadowDriveStorageAdapter,
 }

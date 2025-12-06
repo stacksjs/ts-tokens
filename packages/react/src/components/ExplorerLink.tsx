@@ -1,5 +1,5 @@
-import React from 'react'
 import type { CommonProps } from '../types'
+import React from 'react'
 
 export interface ExplorerLinkProps extends CommonProps {
   signature?: string
@@ -14,10 +14,10 @@ export function ExplorerLink({ signature, address, cluster = 'devnet', className
   const url = signature
     ? `${baseUrl}/tx/${signature}${clusterParam}`
     : address
-    ? `${baseUrl}/address/${address}${clusterParam}`
-    : '#'
+      ? `${baseUrl}/address/${address}${clusterParam}`
+      : '#'
 
-  const label = signature ? signature.slice(0, 8) + '...' : address ? address.slice(0, 8) + '...' : 'View'
+  const label = signature ? `${signature.slice(0, 8)}...` : address ? `${address.slice(0, 8)}...` : 'View'
 
   return (
     <a href={url} target="_blank" rel="noopener noreferrer" className={className} style={{ color: '#1976D2', textDecoration: 'none', ...style }}>

@@ -5,7 +5,7 @@ Manage and update NFT metadata.
 ## Get Metadata
 
 ```typescript
-import { getNFTMetadata, getConfig } from 'ts-tokens'
+import { getConfig, getNFTMetadata } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -48,7 +48,7 @@ interface Collection {
 ## Update Metadata
 
 ```typescript
-import { updateNFTMetadata, getConfig } from 'ts-tokens'
+import { getConfig, updateNFTMetadata } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -61,15 +61,15 @@ await updateNFTMetadata('NFT_MINT_ADDRESS', {
 
 ### Updatable Fields
 
-| Field | Description |
-|-------|-------------|
-| `name` | NFT name (max 32 chars) |
-| `symbol` | NFT symbol (max 10 chars) |
-| `uri` | Metadata URI |
-| `sellerFeeBasisPoints` | Royalty percentage |
-| `creators` | Creator list |
-| `isMutable` | Allow future updates |
-| `primarySaleHappened` | Mark as sold |
+| Field                  | Description               |
+| ---------------------- | ------------------------- |
+| `name`                 | NFT name (max 32 chars)   |
+| `symbol`               | NFT symbol (max 10 chars) |
+| `uri`                  | Metadata URI              |
+| `sellerFeeBasisPoints` | Royalty percentage        |
+| `creators`             | Creator list              |
+| `isMutable`            | Allow future updates      |
+| `primarySaleHappened`  | Mark as sold              |
 
 ## Update URI Only
 
@@ -82,7 +82,7 @@ await updateNFTUri('NFT_MINT_ADDRESS', 'https://new-uri.com', config)
 Creators must verify their address to receive royalties:
 
 ```typescript
-import { verifyCreator, getConfig } from 'ts-tokens'
+import { getConfig, verifyCreator } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -100,7 +100,7 @@ await unverifyCreator('NFT_MINT_ADDRESS', creatorAddress, config)
 Transfer update authority to another wallet:
 
 ```typescript
-import { setUpdateAuthority, getConfig } from 'ts-tokens'
+import { getConfig, setUpdateAuthority } from 'ts-tokens'
 
 const config = await getConfig()
 

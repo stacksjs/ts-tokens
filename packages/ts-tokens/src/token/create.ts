@@ -4,31 +4,29 @@
  * Create new SPL tokens with metadata.
  */
 
+import type { CreateTokenOptions, TokenConfig, TokenResult } from '../types'
 import {
-  Connection,
+  createAssociatedTokenAccountInstruction,
+  createInitializeInterestBearingMintInstruction,
+  createInitializeMintInstruction,
+  createInitializeNonTransferableMintInstruction,
+  createInitializePermanentDelegateInstruction,
+  createInitializeTransferFeeConfigInstruction,
+  createMintToInstruction,
+  ExtensionType,
+  getAssociatedTokenAddress,
+  getMintLen,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token'
+import {
   Keypair,
   PublicKey,
   SystemProgram,
-  Transaction,
 } from '@solana/web3.js'
-import {
-  createInitializeMintInstruction,
-  createMintToInstruction,
-  getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
-  getMintLen,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
-  ExtensionType,
-  createInitializeTransferFeeConfigInstruction,
-  createInitializeInterestBearingMintInstruction,
-  createInitializeNonTransferableMintInstruction,
-  createInitializePermanentDelegateInstruction,
-} from '@solana/spl-token'
-import type { TokenConfig, CreateTokenOptions, TokenResult, TransactionOptions } from '../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
-import { loadWallet } from '../drivers/solana/wallet'
 import { createConnection } from '../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Token Metadata Program ID (Metaplex)
@@ -45,7 +43,7 @@ function getMetadataAddress(mint: PublicKey): PublicKey {
       TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
   return address
 }
@@ -58,8 +56,8 @@ function createMetadataInstructionData(
   symbol: string,
   uri: string,
   sellerFeeBasisPoints: number = 0,
-  creators: Array<{ address: string; verified: boolean; share: number }> | null = null,
-  isMutable: boolean = true
+  creators: Array<{ address: string, verified: boolean, share: number }> | null = null,
+  isMutable: boolean = true,
 ): Buffer {
   // Instruction discriminator for CreateMetadataAccountV3
   const discriminator = Buffer.from([33, 0, 0, 0, 0, 0, 0, 0])
@@ -70,16 +68,16 @@ function createMetadataInstructionData(
   const uriBuffer = Buffer.from(uri)
 
   // Calculate total size
-  let size = 8 + // discriminator
-    4 + nameBuffer.length + // name (string with length prefix)
-    4 + symbolBuffer.length + // symbol
-    4 + uriBuffer.length + // uri
-    2 + // seller_fee_basis_points
-    1 + // creators option
-    1 + // collection option
-    1 + // uses option
-    1 + // is_mutable
-    1   // collection_details option
+  let size = 8 // discriminator
+    + 4 + nameBuffer.length // name (string with length prefix)
+    + 4 + symbolBuffer.length // symbol
+    + 4 + uriBuffer.length // uri
+    + 2 // seller_fee_basis_points
+    + 1 // creators option
+    + 1 // collection option
+    + 1 // uses option
+    + 1 // is_mutable
+    + 1 // collection_details option
 
   if (creators) {
     size += 4 + creators.length * (32 + 1 + 1) // vec length + (pubkey + verified + share) per creator
@@ -129,7 +127,8 @@ function createMetadataInstructionData(
       buffer.writeUInt8(creator.share, offset)
       offset += 1
     }
-  } else {
+  }
+  else {
     buffer.writeUInt8(0, offset) // None
     offset += 1
   }
@@ -161,7 +160,7 @@ function createMetadataInstructionData(
  */
 export async function createToken(
   options: CreateTokenOptions,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<TokenResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -211,7 +210,7 @@ export async function createToken(
       space: mintLen,
       lamports,
       programId,
-    })
+    }),
   )
 
   // Add extension initialization instructions for Token-2022
@@ -226,8 +225,8 @@ export async function createToken(
               ext.withdrawAuthority ? new PublicKey(ext.withdrawAuthority) : payer.publicKey,
               ext.feeBasisPoints,
               ext.maxFee,
-              programId
-            )
+              programId,
+            ),
           )
           break
         case 'interestBearing':
@@ -236,13 +235,13 @@ export async function createToken(
               mint,
               ext.rateAuthority ? new PublicKey(ext.rateAuthority) : payer.publicKey,
               ext.rate,
-              programId
-            )
+              programId,
+            ),
           )
           break
         case 'nonTransferable':
           instructions.push(
-            createInitializeNonTransferableMintInstruction(mint, programId)
+            createInitializeNonTransferableMintInstruction(mint, programId),
           )
           break
         case 'permanentDelegate':
@@ -250,8 +249,8 @@ export async function createToken(
             createInitializePermanentDelegateInstruction(
               mint,
               new PublicKey(ext.delegate),
-              programId
-            )
+              programId,
+            ),
           )
           break
       }
@@ -274,8 +273,8 @@ export async function createToken(
       options.decimals ?? 9,
       mintAuthority,
       freezeAuthority,
-      programId
-    )
+      programId,
+    ),
   )
 
   // Create metadata if name/symbol provided
@@ -294,7 +293,7 @@ export async function createToken(
         verified: c.verified,
         share: c.share,
       })) || null,
-      options.isMutable ?? true
+      options.isMutable ?? true,
     )
 
     instructions.push({
@@ -312,29 +311,31 @@ export async function createToken(
   }
 
   // Mint initial supply if specified
+  let ata: string | undefined
   if (options.initialSupply && BigInt(options.initialSupply) > 0n) {
     // Create associated token account for payer
-    const ata = await getAssociatedTokenAddress(mint, payer.publicKey, false, programId)
+    const ataPublicKey = await getAssociatedTokenAddress(mint, payer.publicKey, false, programId)
+    ata = ataPublicKey.toBase58()
 
     instructions.push(
       createAssociatedTokenAccountInstruction(
         payer.publicKey,
-        ata,
+        ataPublicKey,
         payer.publicKey,
         mint,
-        programId
-      )
+        programId,
+      ),
     )
 
     instructions.push(
       createMintToInstruction(
         mint,
-        ata,
+        ataPublicKey,
         mintAuthority,
         BigInt(options.initialSupply),
         [],
-        programId
-      )
+        programId,
+      ),
     )
   }
 
@@ -343,7 +344,7 @@ export async function createToken(
     connection,
     instructions,
     payer.publicKey,
-    options.options
+    options.options,
   )
 
   // Sign with mint keypair
@@ -356,6 +357,7 @@ export async function createToken(
     mint: mint.toBase58(),
     signature: result.signature,
     metadataAddress,
+    ata,
   }
 }
 
@@ -367,7 +369,7 @@ export async function createSimpleToken(
   symbol: string,
   decimals: number = 9,
   initialSupply?: bigint | number,
-  config?: TokenConfig
+  config?: TokenConfig,
 ): Promise<TokenResult> {
   const defaultConfig: TokenConfig = config || {
     chain: 'solana',
@@ -389,6 +391,6 @@ export async function createSimpleToken(
       decimals,
       initialSupply,
     },
-    defaultConfig
+    defaultConfig,
   )
 }

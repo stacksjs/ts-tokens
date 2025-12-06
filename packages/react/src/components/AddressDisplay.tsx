@@ -1,5 +1,5 @@
-import React from 'react'
 import type { CommonProps } from '../types'
+import React from 'react'
 
 export interface AddressDisplayProps extends CommonProps {
   address: string
@@ -14,7 +14,8 @@ export function AddressDisplay({ address, truncate = true, chars = 4, copyable =
   const displayAddress = truncate ? `${address.slice(0, chars)}...${address.slice(-chars)}` : address
 
   const handleCopy = async () => {
-    if (!copyable) return
+    if (!copyable)
+      return
     await navigator.clipboard.writeText(address)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -22,7 +23,9 @@ export function AddressDisplay({ address, truncate = true, chars = 4, copyable =
 
   return (
     <span className={className} style={{ cursor: copyable ? 'pointer' : 'default', fontFamily: 'monospace', ...style }} onClick={handleCopy} title={address}>
-      {displayAddress} {copied && '✓'}
+      {displayAddress}
+      {' '}
+      {copied && '✓'}
     </span>
   )
 }

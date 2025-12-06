@@ -72,7 +72,7 @@ console.log('NFT created:', nft.mint)
 ### Create an NFT Collection
 
 ```typescript
-import { createCollection, mintNFT, getConfig } from 'ts-tokens'
+import { createCollection, getConfig, mintNFT } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -111,7 +111,7 @@ tokens wallet:balance
 ## React Integration
 
 ```tsx
-import { TokensProvider, useTokenBalance, NFTCard } from 'react-tokens'
+import { NFTCard, TokensProvider, useTokenBalance } from 'react-tokens'
 
 function App() {
   return (
@@ -123,7 +123,12 @@ function App() {
 
 function MyComponent() {
   const { balance } = useTokenBalance(mintAddress, ownerAddress)
-  return <div>Balance: {balance}</div>
+  return (
+    <div>
+      Balance:
+      {balance}
+    </div>
+  )
 }
 ```
 

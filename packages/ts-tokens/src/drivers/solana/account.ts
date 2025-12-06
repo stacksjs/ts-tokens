@@ -4,16 +4,16 @@
  * Handles account queries and token account management.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection } from '@solana/web3.js'
+import type { TokenAccountInfo } from '../../types'
 import {
   getAccount,
   getAssociatedTokenAddress,
   getMint,
-  TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
-import type { Account as TokenAccount } from '@solana/spl-token'
-import type { TokenConfig, TokenAccountInfo } from '../../types'
+import { PublicKey } from '@solana/web3.js'
 import { retry } from '../../utils'
 
 /**
@@ -25,7 +25,7 @@ import { retry } from '../../utils'
  */
 export async function getAccountInfo(
   connection: Connection,
-  address: string
+  address: string,
 ): Promise<{
   lamports: bigint
   owner: string
@@ -58,7 +58,7 @@ export async function getAccountInfo(
  */
 export async function getMultipleAccounts(
   connection: Connection,
-  addresses: string[]
+  addresses: string[],
 ): Promise<Array<{
   address: string
   lamports: bigint
@@ -69,11 +69,12 @@ export async function getMultipleAccounts(
   const accounts = await retry(
     () => connection.getMultipleAccountsInfo(pubkeys),
     3,
-    500
+    500,
   )
 
   return accounts.map((info, i) => {
-    if (!info) return null
+    if (!info)
+      return null
     return {
       address: addresses[i],
       lamports: BigInt(info.lamports),
@@ -92,7 +93,7 @@ export async function getMultipleAccounts(
  */
 export async function getBalance(
   connection: Connection,
-  address: string
+  address: string,
 ): Promise<bigint> {
   const pubkey = new PublicKey(address)
   const balance = await retry(() => connection.getBalance(pubkey), 3, 500)
@@ -110,7 +111,7 @@ export async function getBalance(
 export async function getTokenBalance(
   connection: Connection,
   owner: string,
-  mint: string
+  mint: string,
 ): Promise<bigint> {
   const ownerPubkey = new PublicKey(owner)
   const mintPubkey = new PublicKey(mint)
@@ -121,7 +122,8 @@ export async function getTokenBalance(
   try {
     const account = await getAccount(connection, ata)
     return account.amount
-  } catch {
+  }
+  catch {
     // Account doesn't exist, balance is 0
     return 0n
   }
@@ -136,7 +138,7 @@ export async function getTokenBalance(
  */
 export async function getTokenAccounts(
   connection: Connection,
-  owner: string
+  owner: string,
 ): Promise<TokenAccountInfo[]> {
   const ownerPubkey = new PublicKey(owner)
 
@@ -169,7 +171,8 @@ export async function getTokenAccounts(
         isNative: tokenAccount.isNative,
         closeAuthority: tokenAccount.closeAuthority?.toBase58() ?? null,
       })
-    } catch {
+    }
+    catch {
       // Skip accounts that can't be parsed
       continue
     }
@@ -187,7 +190,7 @@ export async function getTokenAccounts(
  */
 export async function getNFTAccounts(
   connection: Connection,
-  owner: string
+  owner: string,
 ): Promise<TokenAccountInfo[]> {
   const tokenAccounts = await getTokenAccounts(connection, owner)
 
@@ -204,7 +207,8 @@ export async function getNFTAccounts(
         if (mintInfo.decimals === 0 && mintInfo.supply === 1n) {
           nftAccounts.push(account)
         }
-      } catch {
+      }
+      catch {
         // Skip if we can't get mint info
         continue
       }
@@ -225,7 +229,7 @@ export async function getNFTAccounts(
 export async function getAssociatedTokenAccountAddress(
   mint: string,
   owner: string,
-  allowOwnerOffCurve: boolean = false
+  allowOwnerOffCurve: boolean = false,
 ): Promise<string> {
   const mintPubkey = new PublicKey(mint)
   const ownerPubkey = new PublicKey(owner)
@@ -233,7 +237,7 @@ export async function getAssociatedTokenAccountAddress(
   const ata = await getAssociatedTokenAddress(
     mintPubkey,
     ownerPubkey,
-    allowOwnerOffCurve
+    allowOwnerOffCurve,
   )
 
   return ata.toBase58()
@@ -248,13 +252,14 @@ export async function getAssociatedTokenAccountAddress(
  */
 export async function tokenAccountExists(
   connection: Connection,
-  address: string
+  address: string,
 ): Promise<boolean> {
   try {
     const pubkey = new PublicKey(address)
     await getAccount(connection, pubkey)
     return true
-  } catch {
+  }
+  catch {
     return false
   }
 }
@@ -268,7 +273,7 @@ export async function tokenAccountExists(
  */
 export async function getMintInfo(
   connection: Connection,
-  mint: string
+  mint: string,
 ): Promise<{
   address: string
   supply: bigint
@@ -301,7 +306,7 @@ export async function getMintInfo(
 export async function getLargestTokenHolders(
   connection: Connection,
   mint: string,
-  limit: number = 20
+  limit: number = 20,
 ): Promise<Array<{
   address: string
   balance: bigint

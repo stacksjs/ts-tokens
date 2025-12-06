@@ -4,7 +4,7 @@
  * Generate deep links for mobile wallet interactions.
  */
 
-import { PublicKey, Transaction } from '@solana/web3.js'
+import type { Transaction } from '@solana/web3.js'
 import type { WalletType } from './types'
 import bs58 from 'bs58'
 
@@ -39,7 +39,7 @@ export function phantomConnectLink(config: DeepLinkConfig): string {
  */
 export function phantomSignTransactionLink(
   transaction: Transaction,
-  config: DeepLinkConfig
+  config: DeepLinkConfig,
 ): string {
   const serialized = transaction.serialize({ requireAllSignatures: false })
   const encoded = bs58.encode(serialized)
@@ -61,7 +61,7 @@ export function phantomSignTransactionLink(
  */
 export function phantomSignAndSendLink(
   transaction: Transaction,
-  config: DeepLinkConfig
+  config: DeepLinkConfig,
 ): string {
   const serialized = transaction.serialize({ requireAllSignatures: false })
   const encoded = bs58.encode(serialized)
@@ -99,7 +99,7 @@ export function solflareConnectLink(config: DeepLinkConfig): string {
  */
 export function solflareSignTransactionLink(
   transaction: Transaction,
-  config: DeepLinkConfig
+  config: DeepLinkConfig,
 ): string {
   const serialized = transaction.serialize({ requireAllSignatures: false })
   const encoded = bs58.encode(serialized)
@@ -123,7 +123,7 @@ export function generateDeepLink(
   wallet: WalletType,
   action: 'connect' | 'sign' | 'signAndSend',
   config: DeepLinkConfig,
-  transaction?: Transaction
+  transaction?: Transaction,
 ): string {
   switch (wallet) {
     case 'phantom':
@@ -155,10 +155,11 @@ export function generateDeepLink(
  * Check if running on mobile
  */
 export function isMobile(): boolean {
-  if (typeof window === 'undefined') return false
+  if (typeof window === 'undefined')
+    return false
 
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
+    navigator.userAgent,
   )
 }
 
@@ -174,7 +175,7 @@ export function isWalletAppInstalled(wallet: WalletType): boolean {
  * Get app store link for wallet
  */
 export function getAppStoreLink(wallet: WalletType, platform: 'ios' | 'android'): string {
-  const links: Record<WalletType, { ios: string; android: string }> = {
+  const links: Record<WalletType, { ios: string, android: string }> = {
     phantom: {
       ios: 'https://apps.apple.com/app/phantom-solana-wallet/id1598432977',
       android: 'https://play.google.com/store/apps/details?id=app.phantom',
@@ -226,9 +227,10 @@ export function getAppStoreLink(wallet: WalletType, platform: 'ios' | 'android')
 export function openWallet(
   wallet: WalletType,
   deepLink: string,
-  fallbackToStore: boolean = true
+  fallbackToStore: boolean = true,
 ): void {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined')
+    return
 
   // Try to open deep link
   window.location.href = deepLink

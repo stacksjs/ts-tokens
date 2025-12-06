@@ -59,7 +59,7 @@ for (const [address, proof] of Object.entries(proofs)) {
 ## Step 3: Add Allowlist Guard
 
 ```typescript
-import { setCandyGuard, getConfig } from 'ts-tokens'
+import { getConfig, setCandyGuard } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -83,7 +83,7 @@ await setCandyGuard('CANDY_MACHINE_ADDRESS', {
 Users need their Merkle proof to mint:
 
 ```typescript
-import { mintFromCandyMachine, getConfig } from 'ts-tokens'
+import { getConfig, mintFromCandyMachine } from 'ts-tokens'
 
 const config = await getConfig()
 

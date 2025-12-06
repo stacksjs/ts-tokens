@@ -4,11 +4,11 @@
  * Fetch all token accounts for an owner.
  */
 
-import { useState, useEffect, useCallback } from 'react'
-import { PublicKey } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { useConnection } from '../context'
 import type { TokenDisplayInfo } from '../types'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { PublicKey } from '@solana/web3.js'
+import { useCallback, useEffect, useState } from 'react'
+import { useConnection } from '../context'
 
 /**
  * Token accounts state
@@ -38,7 +38,7 @@ export function useTokenAccounts(owner: string): TokenAccountsState {
 
       const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
         ownerPubkey,
-        { programId: TOKEN_PROGRAM_ID }
+        { programId: TOKEN_PROGRAM_ID },
       )
 
       const tokens: TokenDisplayInfo[] = tokenAccounts.value
@@ -60,9 +60,11 @@ export function useTokenAccounts(owner: string): TokenAccountsState {
         })
 
       setAccounts(tokens)
-    } catch (err) {
+    }
+    catch (err) {
       setError(err as Error)
-    } finally {
+    }
+    finally {
       setLoading(false)
     }
   }, [connection, owner])

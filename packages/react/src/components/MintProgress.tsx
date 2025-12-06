@@ -1,11 +1,12 @@
-import React from 'react'
 import type { CandyMachineProps } from '../types'
+import React from 'react'
 import { useCandyMachine } from '../hooks'
 
 export function MintProgress({ candyMachine, className, style }: CandyMachineProps): JSX.Element {
   const { candyMachine: cm, loading } = useCandyMachine(candyMachine)
 
-  if (loading || !cm) return <div className={className} style={style} />
+  if (loading || !cm)
+    return <div className={className} style={style} />
 
   const progress = (cm.itemsMinted / cm.itemsAvailable) * 100
 

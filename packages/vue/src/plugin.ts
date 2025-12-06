@@ -4,10 +4,11 @@
  * Install the tokens plugin to provide connection and config globally.
  */
 
-import { ref, provide, inject, type App, type InjectionKey, type Ref } from 'vue'
-import { Connection } from '@solana/web3.js'
 import type { TokenConfig } from 'ts-tokens'
+import type { App, InjectionKey, Ref } from 'vue'
 import type { TokensPluginOptions } from './types'
+import { Connection } from '@solana/web3.js'
+import { inject, ref } from 'vue'
 
 /**
  * Tokens context interface

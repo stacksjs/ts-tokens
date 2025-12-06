@@ -2,13 +2,12 @@
  * Tensor Integration
  */
 
-import { PublicKey } from '@solana/web3.js'
 import type {
-  NFTListing,
   CollectionStats,
-  NFTActivity,
+  NFTListing,
   NFTOffer,
 } from './types'
+import { PublicKey } from '@solana/web3.js'
 
 const TENSOR_API = 'https://api.tensor.so/graphql'
 
@@ -42,7 +41,7 @@ async function tensorQuery<T>(query: string, variables: Record<string, unknown> 
  */
 export async function getCollectionListings(
   collectionId: string,
-  options: { limit?: number; sortBy?: 'PriceAsc' | 'PriceDesc' | 'ListedDesc' } = {}
+  options: { limit?: number, sortBy?: 'PriceAsc' | 'PriceDesc' | 'ListedDesc' } = {},
 ): Promise<NFTListing[]> {
   const { limit = 20, sortBy = 'PriceAsc' } = options
 
@@ -67,7 +66,7 @@ export async function getCollectionListings(
     activeListings: {
       txs: Array<{
         mint: { onchainId: string }
-        tx: { sellerId: string; grossAmount: string; source: string }
+        tx: { sellerId: string, grossAmount: string, source: string }
       }>
     }
   }>(query, { slug: collectionId, limit, sortBy })
@@ -128,7 +127,8 @@ export async function getCollectionStats(collectionId: string): Promise<Collecti
       owners: 0, // Not available in this query
       avgPrice24h: 0n,
     }
-  } catch {
+  }
+  catch {
     return null
   }
 }
@@ -139,7 +139,7 @@ export async function getCollectionStats(collectionId: string): Promise<Collecti
 export async function getNFTInfo(mint: PublicKey): Promise<{
   listing?: NFTListing
   offers: NFTOffer[]
-  lastSale?: { price: bigint; timestamp: number }
+  lastSale?: { price: bigint, timestamp: number }
 } | null> {
   const query = `
     query MintInfo($mint: String!) {
@@ -168,22 +168,24 @@ export async function getNFTInfo(mint: PublicKey): Promise<{
     const data = await tensorQuery<{
       mint: {
         onchainId: string
-        activeListings: Array<{ tx: { sellerId: string; grossAmount: string } }>
-        activeBids: Array<{ bidder: string; price: string; expiry: number }>
-        lastSale?: { price: string; txAt: number }
+        activeListings: Array<{ tx: { sellerId: string, grossAmount: string } }>
+        activeBids: Array<{ bidder: string, price: string, expiry: number }>
+        lastSale?: { price: string, txAt: number }
       }
     }>(query, { mint: mint.toBase58() })
 
     const mintData = data.mint
 
     return {
-      listing: mintData.activeListings[0] ? {
-        mint,
-        seller: new PublicKey(mintData.activeListings[0].tx.sellerId),
-        price: BigInt(mintData.activeListings[0].tx.grossAmount),
-        marketplace: 'tensor' as const,
-        listingId: mintData.onchainId,
-      } : undefined,
+      listing: mintData.activeListings[0]
+        ? {
+            mint,
+            seller: new PublicKey(mintData.activeListings[0].tx.sellerId),
+            price: BigInt(mintData.activeListings[0].tx.grossAmount),
+            marketplace: 'tensor' as const,
+            listingId: mintData.onchainId,
+          }
+        : undefined,
       offers: mintData.activeBids.map(bid => ({
         mint,
         buyer: new PublicKey(bid.bidder),
@@ -192,12 +194,15 @@ export async function getNFTInfo(mint: PublicKey): Promise<{
         offerId: `${mint.toBase58()}_${bid.bidder}`,
         expiry: bid.expiry,
       })),
-      lastSale: mintData.lastSale ? {
-        price: BigInt(mintData.lastSale.price),
-        timestamp: mintData.lastSale.txAt,
-      } : undefined,
+      lastSale: mintData.lastSale
+        ? {
+            price: BigInt(mintData.lastSale.price),
+            timestamp: mintData.lastSale.txAt,
+          }
+        : undefined,
     }
-  } catch {
+  }
+  catch {
     return null
   }
 }
@@ -206,7 +211,7 @@ export async function getNFTInfo(mint: PublicKey): Promise<{
  * Get trending collections
  */
 export async function getTrendingCollections(
-  options: { period?: '1h' | '24h' | '7d'; limit?: number } = {}
+  options: { period?: '1h' | '24h' | '7d', limit?: number } = {},
 ): Promise<Array<{
   slug: string
   name: string
@@ -236,7 +241,7 @@ export async function getTrendingCollections(
         slug: string
         name: string
         imageUri: string
-        statsV2: { buyNowPrice: string; volume24h: string }
+        statsV2: { buyNowPrice: string, volume24h: string }
       }>
     }>(query, { period, limit })
 
@@ -247,7 +252,8 @@ export async function getTrendingCollections(
       floorPrice: BigInt(c.statsV2.buyNowPrice ?? 0),
       volume: BigInt(c.statsV2.volume24h ?? 0),
     }))
-  } catch {
+  }
+  catch {
     return []
   }
 }

@@ -2,15 +2,16 @@
  * Account Debugging
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection } from '@solana/web3.js'
 import type { AccountInspection } from './types'
+import { PublicKey } from '@solana/web3.js'
 
 /**
  * Inspect an account
  */
 export async function inspectAccount(
   connection: Connection,
-  address: PublicKey
+  address: PublicKey,
 ): Promise<AccountInspection> {
   const accountInfo = await connection.getAccountInfo(address)
 
@@ -33,7 +34,7 @@ export async function inspectAccount(
   // Try to parse data
   inspection.parsedData = tryParseAccountData(
     accountInfo.owner,
-    accountInfo.data
+    accountInfo.data,
   )
 
   return inspection
@@ -52,8 +53,10 @@ function getAccountType(owner: PublicKey, data: Buffer): string {
 
   // Token Program
   if (ownerStr === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA') {
-    if (data.length === 82) return 'Token Mint'
-    if (data.length === 165) return 'Token Account'
+    if (data.length === 82)
+      return 'Token Mint'
+    if (data.length === 165)
+      return 'Token Account'
     return 'Token Program Account'
   }
 
@@ -75,7 +78,7 @@ function getAccountType(owner: PublicKey, data: Buffer): string {
  */
 function tryParseAccountData(
   owner: PublicKey,
-  data: Buffer
+  data: Buffer,
 ): Record<string, unknown> | undefined {
   const ownerStr = owner.toBase58()
 
@@ -151,16 +154,17 @@ export function formatAccountInspection(inspection: AccountInspection): string {
 export async function getBalanceHistory(
   connection: Connection,
   address: PublicKey,
-  slots: number[]
-): Promise<Array<{ slot: number; balance: bigint | null }>> {
-  const results: Array<{ slot: number; balance: bigint | null }> = []
+  slots: number[],
+): Promise<Array<{ slot: number, balance: bigint | null }>> {
+  const results: Array<{ slot: number, balance: bigint | null }> = []
 
   for (const slot of slots) {
     try {
       // Note: This requires archive node access
       const balance = await connection.getBalance(address, { minContextSlot: slot })
       results.push({ slot, balance: BigInt(balance) })
-    } catch {
+    }
+    catch {
       results.push({ slot, balance: null })
     }
   }
@@ -175,7 +179,7 @@ export async function diffAccountState(
   connection: Connection,
   address: PublicKey,
   beforeSlot: number,
-  afterSlot: number
+  afterSlot: number,
 ): Promise<{
   before: AccountInspection | null
   after: AccountInspection | null
@@ -196,7 +200,7 @@ export async function diffAccountState(
  */
 export async function findRelatedAccounts(
   connection: Connection,
-  address: PublicKey
+  address: PublicKey,
 ): Promise<{
   tokenAccounts: PublicKey[]
   ownedAccounts: PublicKey[]

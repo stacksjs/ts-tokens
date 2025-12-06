@@ -2,7 +2,7 @@
  * Multi-Signature Types
  */
 
-import type { PublicKey, Keypair } from '@solana/web3.js'
+import type { Keypair, PublicKey } from '@solana/web3.js'
 
 /**
  * Multi-sig account info

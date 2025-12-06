@@ -5,10 +5,10 @@
  */
 
 import type {
+  EventType,
+  TokenEvent,
   WebhookConfig,
   WebhookPayload,
-  TokenEvent,
-  EventType,
 } from './types'
 import { createHmac } from 'crypto'
 
@@ -17,7 +17,7 @@ import { createHmac } from 'crypto'
  */
 export class WebhookManager {
   private webhooks: Map<string, WebhookConfig> = new Map()
-  private retryQueue: Map<string, { payload: WebhookPayload; attempts: number }[]> = new Map()
+  private retryQueue: Map<string, { payload: WebhookPayload, attempts: number }[]> = new Map()
 
   /**
    * Register a webhook
@@ -45,7 +45,7 @@ export class WebhookManager {
   /**
    * List all webhooks
    */
-  list(): Array<{ id: string; config: WebhookConfig }> {
+  list(): Array<{ id: string, config: WebhookConfig }> {
     return Array.from(this.webhooks.entries()).map(([id, config]) => ({
       id,
       config,
@@ -85,7 +85,8 @@ export class WebhookManager {
 
     try {
       await this.deliver(config, payload)
-    } catch (error) {
+    }
+    catch (error) {
       // Add to retry queue
       const queue = this.retryQueue.get(webhookId) ?? []
       queue.push({ payload, attempts: 1 })
@@ -110,7 +111,7 @@ export class WebhookManager {
     const controller = new AbortController()
     const timeout = setTimeout(
       () => controller.abort(),
-      config.timeout ?? 30000
+      config.timeout ?? 30000,
     )
 
     try {
@@ -124,7 +125,8 @@ export class WebhookManager {
       if (!response.ok) {
         throw new Error(`Webhook failed: ${response.status} ${response.statusText}`)
       }
-    } finally {
+    }
+    finally {
       clearTimeout(timeout)
     }
   }
@@ -135,7 +137,8 @@ export class WebhookManager {
   async processRetries(): Promise<void> {
     for (const [webhookId, queue] of this.retryQueue) {
       const config = this.webhooks.get(webhookId)
-      if (!config) continue
+      if (!config)
+        continue
 
       const maxRetries = config.retries ?? 3
       const remaining: typeof queue = []
@@ -148,7 +151,8 @@ export class WebhookManager {
 
         try {
           await this.deliver(config, item.payload)
-        } catch {
+        }
+        catch {
           remaining.push({
             payload: item.payload,
             attempts: item.attempts + 1,
@@ -195,7 +199,7 @@ function signPayload(payload: string, secret: string): string {
 export function verifyWebhookSignature(
   payload: string,
   signature: string,
-  secret: string
+  secret: string,
 ): boolean {
   const expected = signPayload(payload, secret)
   return signature === expected
@@ -218,7 +222,7 @@ export function createWebhookConfig(
     secret?: string
     retries?: number
     timeout?: number
-  } = {}
+  } = {},
 ): WebhookConfig {
   return {
     url,

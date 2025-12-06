@@ -5,13 +5,13 @@ Mint additional tokens to any address.
 ## Quick Start
 
 ```typescript
-import { mintTokens, getConfig } from 'ts-tokens'
+import { getConfig, mintTokens } from 'ts-tokens'
 
 const config = await getConfig()
 
 const result = await mintTokens(
   'TokenMintAddress...',
-  1000000,  // amount
+  1000000, // amount
   'RecipientAddress...',
   config
 )
@@ -21,13 +21,13 @@ console.log('Minted:', result.signature)
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `mint` | string | Token mint address |
-| `amount` | number | Amount to mint (in base units) |
-| `recipient` | string | Recipient wallet address |
-| `config` | TokenConfig | Configuration object |
-| `options` | TransactionOptions | Optional transaction settings |
+| Parameter   | Type               | Description                    |
+| ----------- | ------------------ | ------------------------------ |
+| `mint`      | string             | Token mint address             |
+| `amount`    | number             | Amount to mint (in base units) |
+| `recipient` | string             | Recipient wallet address       |
+| `config`    | TokenConfig        | Configuration object           |
+| `options`   | TransactionOptions | Optional transaction settings  |
 
 ## Examples
 

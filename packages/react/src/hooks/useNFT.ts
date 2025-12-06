@@ -4,9 +4,9 @@
  * Fetch NFT metadata and display info.
  */
 
-import { useState, useEffect, useCallback } from 'react'
-import { useConnection, useConfig } from '../context'
 import type { NFTDisplayInfo } from '../types'
+import { useCallback, useEffect, useState } from 'react'
+import { useConfig, useConnection } from '../context'
 
 /**
  * NFT state
@@ -53,9 +53,11 @@ export function useNFT(mint: string): NFTState {
         description: (offChain as any)?.description,
         attributes: (offChain as any)?.attributes,
       })
-    } catch (err) {
+    }
+    catch (err) {
       setError(err as Error)
-    } finally {
+    }
+    finally {
       setLoading(false)
     }
   }, [connection, config, mint])

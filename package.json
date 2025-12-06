@@ -14,7 +14,14 @@
   "bugs": {
     "url": "https://github.com/stacksjs/ts-tokens/issues"
   },
-  "keywords": ["typescript", "token", "tokens", "lightweight", "powerful", "stacksjs"],
+  "keywords": [
+    "typescript",
+    "token",
+    "tokens",
+    "lightweight",
+    "powerful",
+    "stacksjs"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -26,7 +33,10 @@
   },
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["README.md", "dist"],
+  "files": [
+    "README.md",
+    "dist"
+  ],
   "scripts": {
     "build": "bun --bun build.ts && bun run compile",
     "fresh": "bunx rimraf node_modules/ bun.lock && bun i",
@@ -43,15 +53,20 @@
     "typecheck": "bun --bun tsc --noEmit"
   },
   "devDependencies": {
-    "better-dx": "^0.2.5"
+    "@antfu/eslint-config": "^6.4.2",
+    "@types/node": "^24.10.1",
+    "better-dx": "^0.2.5",
+    "eslint": "^9.39.1",
+    "eslint-plugin-format": "^1.1.0",
+    "typescript": "^5.9.3"
   },
   "git-hooks": {
     "pre-commit": {
       "staged-lint": {
-        "*.{js,ts,json,yaml,yml,md}": "bunx --bun eslint --fix"
+        "*.{js,ts,json,yaml,yml,md}": "$HOME/.bun/bin/bunx --bun eslint --fix"
       }
     },
-    "commit-msg": "bunx gitlint --edit .git/COMMIT_EDITMSG"
+    "commit-msg": "$HOME/.bun/bin/bunx gitlint --edit .git/COMMIT_EDITMSG"
   },
   "workspaces": [
     "packages/*"

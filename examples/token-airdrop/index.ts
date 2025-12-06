@@ -6,8 +6,8 @@
  * Run with: bun run examples/token-airdrop/index.ts
  */
 
-import { mintTokens, transferTokens, getConfig } from 'ts-tokens'
 import { readFileSync } from 'fs'
+import { getConfig, transferTokens } from 'ts-tokens'
 
 interface AirdropRecipient {
   address: string
@@ -21,11 +21,11 @@ async function loadRecipients(filePath: string): Promise<AirdropRecipient[]> {
   // Skip header
   const dataLines = lines.slice(1)
 
-  return dataLines.map(line => {
+  return dataLines.map((line) => {
     const [address, amount] = line.split(',')
     return {
       address: address.trim(),
-      amount: parseInt(amount.trim(), 10),
+      amount: Number.parseInt(amount.trim(), 10),
     }
   })
 }
@@ -33,7 +33,7 @@ async function loadRecipients(filePath: string): Promise<AirdropRecipient[]> {
 async function airdrop(
   mintAddress: string,
   recipients: AirdropRecipient[],
-  decimals: number
+  decimals: number,
 ) {
   const config = await getConfig()
 
@@ -55,12 +55,13 @@ async function airdrop(
         mintAddress,
         Number(baseUnits),
         address,
-        config
+        config,
       )
 
       console.log(`   ✅ Success: ${result.signature.slice(0, 20)}...`)
       successful++
-    } catch (error) {
+    }
+    catch (error) {
       console.log(`   ❌ Failed: ${(error as Error).message}`)
       failed++
     }
@@ -78,7 +79,7 @@ async function airdrop(
 async function main() {
   // Configuration
   const MINT_ADDRESS = process.env.MINT_ADDRESS || 'YOUR_MINT_ADDRESS'
-  const DECIMALS = parseInt(process.env.DECIMALS || '9', 10)
+  const DECIMALS = Number.parseInt(process.env.DECIMALS || '9', 10)
   const RECIPIENTS_FILE = process.env.RECIPIENTS_FILE || './recipients.csv'
 
   if (MINT_ADDRESS === 'YOUR_MINT_ADDRESS') {
@@ -95,7 +96,8 @@ async function main() {
   try {
     const recipients = await loadRecipients(RECIPIENTS_FILE)
     await airdrop(MINT_ADDRESS, recipients, DECIMALS)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error:', (error as Error).message)
     process.exit(1)
   }

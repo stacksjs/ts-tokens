@@ -2,9 +2,9 @@
  * React Hooks for Solana Tokens
  */
 
-export { useTokenBalance } from './useTokenBalance'
+export { useCandyMachine } from './useCandyMachine'
 export { useNFT } from './useNFT'
 export { useNFTs } from './useNFTs'
-export { useTransaction } from './useTransaction'
 export { useTokenAccounts } from './useTokenAccounts'
-export { useCandyMachine } from './useCandyMachine'
+export { useTokenBalance } from './useTokenBalance'
+export { useTransaction } from './useTransaction'

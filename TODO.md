@@ -66,17 +66,17 @@
   ```ts
   interface ChainDriver {
     name: string
-    connect(): Promise<Connection>
-    disconnect(): Promise<void>
-    getBalance(address: string): Promise<bigint>
+    connect: () => Promise<Connection>
+    disconnect: () => Promise<void>
+    getBalance: (address: string) => Promise<bigint>
     // Fungible token methods
-    createToken(options: CreateTokenOptions): Promise<TokenResult>
-    mintTokens(options: MintOptions): Promise<TransactionResult>
-    transferTokens(options: TransferOptions): Promise<TransactionResult>
-    burnTokens(options: BurnOptions): Promise<TransactionResult>
+    createToken: (options: CreateTokenOptions) => Promise<TokenResult>
+    mintTokens: (options: MintOptions) => Promise<TransactionResult>
+    transferTokens: (options: TransferOptions) => Promise<TransactionResult>
+    burnTokens: (options: BurnOptions) => Promise<TransactionResult>
     // NFT methods
-    createCollection(options: CreateCollectionOptions): Promise<CollectionResult>
-    mintNFT(options: MintNFTOptions): Promise<NFTResult>
+    createCollection: (options: CreateCollectionOptions) => Promise<CollectionResult>
+    mintNFT: (options: MintNFTOptions) => Promise<NFTResult>
     // ... more methods
   }
   ```
@@ -1350,9 +1350,9 @@
 
   ```ts
   tokens.security.watch(tokenMint, {
-    onAuthorityChange: (event) => notify(event),
-    onLargeMint: (event) => notify(event),
-    onSuspiciousActivity: (event) => notify(event),
+    onAuthorityChange: event => notify(event),
+    onLargeMint: event => notify(event),
+    onSuspiciousActivity: event => notify(event),
   })
   ```
 
@@ -2218,16 +2218,16 @@
 
 ### 17.7 Comparison: ts-tokens vs Metaplex
 
-| Feature | Metaplex | ts-tokens Simple NFT |
-|---------|----------|---------------------|
-| Create NFT | 3+ instructions | 1 instruction |
-| Accounts per NFT | 3-4 (Mint, Metadata, MasterEdition, Edition) | 1-2 (Mint, NFTData) |
-| Collection verify | Separate instruction | Automatic on add |
-| Royalty format | Basis points (500 = 5%) | Percentage (5 = 5%) |
-| Default mutability | Mutable | Immutable (safer default) |
-| Creator verification | Required separate tx | Optional, can be inline |
-| TypeScript types | Auto-generated, verbose | Hand-crafted, intuitive |
-| Error messages | Program error codes | Human-readable messages |
+| Feature              | Metaplex                                     | ts-tokens Simple NFT      |
+| -------------------- | -------------------------------------------- | ------------------------- |
+| Create NFT           | 3+ instructions                              | 1 instruction             |
+| Accounts per NFT     | 3-4 (Mint, Metadata, MasterEdition, Edition) | 1-2 (Mint, NFTData)       |
+| Collection verify    | Separate instruction                         | Automatic on add          |
+| Royalty format       | Basis points (500 = 5%)                      | Percentage (5 = 5%)       |
+| Default mutability   | Mutable                                      | Immutable (safer default) |
+| Creator verification | Required separate tx                         | Optional, can be inline   |
+| TypeScript types     | Auto-generated, verbose                      | Hand-crafted, intuitive   |
+| Error messages       | Program error codes                          | Human-readable messages   |
 
 ### 17.8 Migration & Compatibility
 
@@ -3460,4 +3460,4 @@ const info = await votes.dao.info(dao)
 
 ---
 
-*Last updated: December 2025*
+_Last updated: December 2025_

@@ -7,14 +7,14 @@
 
 // Base types first (no dependencies)
 export * from './config'
-export * from './transaction'
+// Driver interface depends on all other types
+export * from './driver'
 export * from './metadata'
-export * from './wallet'
+export * from './nft'
 export * from './storage'
 
 // Types that depend on base types
 export * from './token'
-export * from './nft'
+export * from './transaction'
 
-// Driver interface depends on all other types
-export * from './driver'
+export * from './wallet'

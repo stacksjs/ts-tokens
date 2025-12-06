@@ -2,13 +2,14 @@
  * Simple NFT Creation
  */
 
-import { Connection, PublicKey, Keypair, Transaction } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
-  SimpleNFT,
-  CreateSimpleNFTOptions,
-  TransferResult,
   BurnResult,
+  CreateSimpleNFTOptions,
+  SimpleNFT,
+  TransferResult,
 } from './types'
+import { Keypair } from '@solana/web3.js'
 
 /**
  * Create a simple NFT
@@ -25,8 +26,8 @@ import type {
 export async function createSimpleNFT(
   connection: Connection,
   payer: PublicKey,
-  options: CreateSimpleNFTOptions
-): Promise<{ mint: PublicKey; signature: string }> {
+  options: CreateSimpleNFTOptions,
+): Promise<{ mint: PublicKey, signature: string }> {
   const {
     name,
     symbol = '',
@@ -62,7 +63,7 @@ export async function createSimpleNFT(
  */
 export async function getSimpleNFT(
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<SimpleNFT | null> {
   // In production, would fetch and parse NFT data account
   return null
@@ -75,7 +76,7 @@ export async function transferSimpleNFT(
   connection: Connection,
   mint: PublicKey,
   from: PublicKey,
-  to: PublicKey
+  to: PublicKey,
 ): Promise<TransferResult> {
   // In production, would build and send transfer instruction
   return {
@@ -92,7 +93,7 @@ export async function transferSimpleNFT(
 export async function burnSimpleNFT(
   connection: Connection,
   mint: PublicKey,
-  owner: PublicKey
+  owner: PublicKey,
 ): Promise<BurnResult> {
   // In production, would build and send burn instruction
   return {
@@ -113,7 +114,7 @@ export async function updateSimpleNFT(
     name?: string
     symbol?: string
     uri?: string
-  }
+  },
 ): Promise<string> {
   // In production, would build and send update instruction
   return `updated_${Date.now()}`
@@ -125,7 +126,7 @@ export async function updateSimpleNFT(
 export async function freezeSimpleNFT(
   connection: Connection,
   mint: PublicKey,
-  authority: PublicKey
+  authority: PublicKey,
 ): Promise<string> {
   // In production, would set isMutable to false
   return `frozen_${Date.now()}`
@@ -138,7 +139,7 @@ export async function createMasterEditionSimple(
   connection: Connection,
   mint: PublicKey,
   authority: PublicKey,
-  maxSupply?: number
+  maxSupply?: number,
 ): Promise<string> {
   // In production, would create master edition
   return `master_edition_${Date.now()}`
@@ -151,8 +152,8 @@ export async function printEditionSimple(
   connection: Connection,
   masterMint: PublicKey,
   authority: PublicKey,
-  recipient: PublicKey
-): Promise<{ mint: PublicKey; editionNumber: number; signature: string }> {
+  recipient: PublicKey,
+): Promise<{ mint: PublicKey, editionNumber: number, signature: string }> {
   const editionMint = Keypair.generate()
 
   return {
@@ -167,7 +168,7 @@ export async function printEditionSimple(
  */
 export async function getSimpleNFTsByOwner(
   connection: Connection,
-  owner: PublicKey
+  owner: PublicKey,
 ): Promise<SimpleNFT[]> {
   // In production, would query NFT data accounts
   return []
@@ -182,12 +183,16 @@ export function verifySimpleNFT(nft: SimpleNFT): {
 } {
   const issues: string[] = []
 
-  if (!nft.name) issues.push('Missing name')
-  if (!nft.uri) issues.push('Missing URI')
-  if (nft.royalty < 0 || nft.royalty > 100) issues.push('Invalid royalty')
+  if (!nft.name)
+    issues.push('Missing name')
+  if (!nft.uri)
+    issues.push('Missing URI')
+  if (nft.royalty < 0 || nft.royalty > 100)
+    issues.push('Invalid royalty')
 
   const totalShares = nft.creators.reduce((sum, c) => sum + c.share, 0)
-  if (totalShares !== 100) issues.push('Creator shares must sum to 100')
+  if (totalShares !== 100)
+    issues.push('Creator shares must sum to 100')
 
   return {
     valid: issues.length === 0,

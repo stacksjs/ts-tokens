@@ -4,8 +4,8 @@
  * Type definitions for fungible token operations.
  */
 
-import type { TransactionOptions } from './transaction'
 import type { Creator } from './metadata'
+import type { TransactionOptions } from './transaction'
 
 /**
  * Token creation options
@@ -90,17 +90,17 @@ export interface CreateTokenOptions {
 /**
  * Token-2022 extension types
  */
-export type TokenExtension =
-  | { type: 'transferFee'; feeBasisPoints: number; maxFee: bigint; feeAuthority: string; withdrawAuthority: string }
-  | { type: 'interestBearing'; rate: number; rateAuthority: string }
-  | { type: 'nonTransferable' }
-  | { type: 'permanentDelegate'; delegate: string }
-  | { type: 'transferHook'; programId: string }
-  | { type: 'metadataPointer'; metadataAddress: string }
-  | { type: 'confidentialTransfer' }
-  | { type: 'defaultAccountState'; state: 'initialized' | 'frozen' }
-  | { type: 'memoRequired' }
-  | { type: 'cpiGuard' }
+export type TokenExtension
+  = | { type: 'transferFee', feeBasisPoints: number, maxFee: bigint, feeAuthority: string, withdrawAuthority: string }
+    | { type: 'interestBearing', rate: number, rateAuthority: string }
+    | { type: 'nonTransferable' }
+    | { type: 'permanentDelegate', delegate: string }
+    | { type: 'transferHook', programId: string }
+    | { type: 'metadataPointer', metadataAddress: string }
+    | { type: 'confidentialTransfer' }
+    | { type: 'defaultAccountState', state: 'initialized' | 'frozen' }
+    | { type: 'memoRequired' }
+    | { type: 'cpiGuard' }
 
 /**
  * Token minting options

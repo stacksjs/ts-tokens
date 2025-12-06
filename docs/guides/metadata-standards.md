@@ -55,21 +55,21 @@ JSON file hosted on Arweave, IPFS, or other storage:
 
 ## Required Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | NFT name |
+| Field    | Type   | Description       |
+| -------- | ------ | ----------------- |
+| `name`   | string | NFT name          |
 | `symbol` | string | Collection symbol |
-| `image` | string | Primary image URL |
+| `image`  | string | Primary image URL |
 
 ## Optional Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `description` | string | NFT description |
+| Field           | Type   | Description         |
+| --------------- | ------ | ------------------- |
+| `description`   | string | NFT description     |
 | `animation_url` | string | Video/audio/3D file |
-| `external_url` | string | Project website |
-| `attributes` | array | Trait list |
-| `properties` | object | Additional files |
+| `external_url`  | string | Project website     |
+| `attributes`    | array  | Trait list          |
+| `properties`    | object | Additional files    |
 
 ## Attributes
 

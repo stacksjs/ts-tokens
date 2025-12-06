@@ -4,17 +4,18 @@
  * Create and manage Merkle trees for cNFT storage.
  */
 
+import type {
+  TransactionInstruction,
+} from '@solana/web3.js'
+import type { TokenConfig, TransactionOptions } from '../../types'
 import {
-  Connection,
   Keypair,
   PublicKey,
   SystemProgram,
-  TransactionInstruction,
 } from '@solana/web3.js'
-import type { TokenConfig, TransactionResult, TransactionOptions } from '../../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../../drivers/solana/transaction'
-import { loadWallet } from '../../drivers/solana/wallet'
 import { createConnection } from '../../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../../drivers/solana/transaction'
+import { loadWallet } from '../../drivers/solana/wallet'
 
 /**
  * SPL Account Compression Program ID
@@ -58,7 +59,7 @@ export interface MerkleTreeResult {
  * Calculate tree capacity from depth
  */
 export function calculateTreeCapacity(maxDepth: number): number {
-  return Math.pow(2, maxDepth)
+  return 2 ** maxDepth
 }
 
 /**
@@ -66,12 +67,12 @@ export function calculateTreeCapacity(maxDepth: number): number {
  */
 export function calculateTreeSpace(maxDepth: number, maxBufferSize: number, canopyDepth: number = 0): number {
   // Header size
-  const headerSize = 8 + // discriminator
-    32 + // authority
-    32 + // tree creator
-    1 + // is public
-    8 + // creation slot
-    1   // padding
+  const headerSize = 8 // discriminator
+    + 32 // authority
+    + 32 // tree creator
+    + 1 // is public
+    + 8 // creation slot
+    + 1 // padding
 
   // Changelog buffer size
   const changelogSize = maxBufferSize * (32 + 32 + 4 + 4) // path + index + _padding
@@ -94,7 +95,7 @@ export function calculateTreeSpace(maxDepth: number, maxBufferSize: number, cano
 export async function createMerkleTree(
   config: MerkleTreeConfig,
   tokenConfig: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<MerkleTreeResult> {
   const connection = createConnection(tokenConfig)
   const payer = loadWallet(tokenConfig)
@@ -112,7 +113,7 @@ export async function createMerkleTree(
   // Get tree authority PDA
   const [treeAuthority] = PublicKey.findProgramAddressSync(
     [tree.toBuffer()],
-    BUBBLEGUM_PROGRAM_ID
+    BUBBLEGUM_PROGRAM_ID,
   )
 
   const instructions: TransactionInstruction[] = []
@@ -125,7 +126,7 @@ export async function createMerkleTree(
       space,
       lamports,
       programId: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-    })
+    }),
   )
 
   // 2. Initialize empty Merkle tree
@@ -161,7 +162,7 @@ export async function createMerkleTree(
     connection,
     instructions,
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(treeKeypair)
@@ -210,7 +211,7 @@ function serializeCreateTree(maxDepth: number, maxBufferSize: number, isPublic: 
  */
 export async function getMerkleTreeInfo(
   tree: string,
-  tokenConfig: TokenConfig
+  tokenConfig: TokenConfig,
 ): Promise<{
   authority: string
   maxDepth: number
@@ -268,7 +269,7 @@ export async function getMerkleTreeInfo(
  */
 export async function getTreeCapacity(
   tree: string,
-  tokenConfig: TokenConfig
+  tokenConfig: TokenConfig,
 ): Promise<{
   total: number
   used: number

@@ -2,8 +2,8 @@
  * Programmable NFT Tests
  */
 
-import { describe, test, expect } from 'bun:test'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
+import { describe, expect, test } from 'bun:test'
 
 describe('Transfer Rules', () => {
   test('should validate royalty rule', () => {
@@ -109,7 +109,7 @@ describe('Transfer Validation', () => {
     const maxTransfers = 5
 
     expect(transferCount < maxTransfers).toBe(true)
-    expect(5 < maxTransfers).toBe(false)
+    expect(maxTransfers > 5).toBe(false)
   })
 
   test('should check allow list', () => {
@@ -199,9 +199,12 @@ describe('NFT State', () => {
 describe('Rule Formatting', () => {
   test('should format duration', () => {
     const formatDuration = (seconds: number): string => {
-      if (seconds < 60) return `${seconds}s`
-      if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
-      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`
+      if (seconds < 60)
+        return `${seconds}s`
+      if (seconds < 3600)
+        return `${Math.floor(seconds / 60)}m`
+      if (seconds < 86400)
+        return `${Math.floor(seconds / 3600)}h`
       return `${Math.floor(seconds / 86400)}d`
     }
 

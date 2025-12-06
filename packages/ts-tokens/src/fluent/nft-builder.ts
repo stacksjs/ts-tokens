@@ -4,13 +4,13 @@
  * Fluent API for NFT operations.
  */
 
-import { PublicKey, TransactionInstruction } from '@solana/web3.js'
-import { BaseBuilder } from './builder'
+import type { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import type {
-  NFTCreationParams,
   CollectionCreationParams,
   MetadataUpdateParams,
+  NFTCreationParams,
 } from './types'
+import { BaseBuilder } from './builder'
 
 /**
  * Fluent NFT builder
@@ -97,7 +97,7 @@ export class NFTBuilder extends BaseBuilder<NFTBuilder> {
   /**
    * Transfer multiple NFTs
    */
-  transferMany(transfers: Array<{ mint: PublicKey; to: PublicKey }>): NFTBuilder {
+  transferMany(transfers: Array<{ mint: PublicKey, to: PublicKey }>): NFTBuilder {
     for (const t of transfers) {
       this.transfer(t.mint, t.to)
     }
@@ -294,7 +294,7 @@ export class CandyMachineBuilder extends BaseBuilder<CandyMachineBuilder> {
   /**
    * Set creators
    */
-  creators(creators: Array<{ address: PublicKey; share: number }>): CandyMachineBuilder {
+  creators(creators: Array<{ address: PublicKey, share: number }>): CandyMachineBuilder {
     return this.addOperation('setCreators', {
       creators: creators.map(c => ({
         address: c.address.toBase58(),

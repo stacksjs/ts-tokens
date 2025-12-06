@@ -4,9 +4,10 @@
  * Fetch and track token balance for an address.
  */
 
-import { ref, watch, onMounted, type Ref } from 'vue'
+import type { Ref } from 'vue'
+import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
-import { getAssociatedTokenAddress, getAccount } from '@solana/spl-token'
+import { onMounted, ref, watch } from 'vue'
 import { useConnection } from './useConnection'
 
 /**
@@ -58,15 +59,18 @@ export function useTokenBalance(mint: string, owner: Ref<string> | string): UseT
         }
       }
 
-      uiBalance.value = Number(balance.value) / Math.pow(10, decimals.value)
-    } catch (err) {
+      uiBalance.value = Number(balance.value) / 10 ** decimals.value
+    }
+    catch (err) {
       if ((err as Error).message?.includes('could not find account')) {
         balance.value = 0n
         uiBalance.value = 0
-      } else {
+      }
+      else {
         error.value = err as Error
       }
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }

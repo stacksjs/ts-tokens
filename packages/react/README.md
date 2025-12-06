@@ -3,6 +3,7 @@
 [![npm version][npm-version-src]][npm-version-href]
 [![GitHub Actions][github-actions-src]][github-actions-href]
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+
 <!-- [![npm downloads][npm-downloads-src]][npm-downloads-href] -->
 <!-- [![Codecov][codecov-src]][codecov-href] -->
 
@@ -42,7 +43,7 @@ _Check out the package.json scripts for more commands._
 <div id="qrcode"></div>
 
 <script type="text/javascript">
-new QRCode(document.getElementById("qrcode"), "https://stacksjs.org");
+  new QRCode(document.getElementById('qrcode'), 'https://stacksjs.org')
 </script>
 ```
 
@@ -52,14 +53,14 @@ If you want to customize the QR code, you can pass in an options object:
 <div id="qr-code"></div>
 
 <script type="text/javascript">
-var qrCode = new QRCode(document.getElementById("qr-code"), {
-  text: "https://stacksjs.org",
-  width: 128,
-  height: 128,
-  colorDark : "#000000",
-  colorLight : "#ffffff",
-  correctLevel : QRCode.CorrectLevel.H
-});
+  var qrCode = new QRCode(document.getElementById('qr-code'), {
+    text: 'https://stacksjs.org',
+    width: 128,
+    height: 128,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H,
+  })
 </script>
 ```
 
@@ -100,19 +101,19 @@ A lightweight Barcode library with zero dependencies. It supports multiple barco
 
 #### Browser Example
 
-````html
+```html
 <svg id="barcode"></svg>
 <!-- or -->
 <canvas id="barcode"></canvas>
 <!-- or -->
-<img id="barcode"/>
-````
+<img id="barcode" />
+```
 
 ##### Simple example
 
-````javascript
+```javascript
 Barcode('#barcode', 'Hi!')
-````
+```
 
 ![Result](https://s3-eu-west-1.amazonaws.com/js-barcode/barcodes/simple.svg)
 
@@ -132,14 +133,14 @@ Barcode('#barcode', '1234', {
 
 #### More advanced use case
 
-````javascript
+```javascript
 Barcode('#barcode')
   .options({ font: 'OCR-B' }) // Will affect all barcodes
   .EAN13('1234567890128', { fontSize: 18, textMargin: 0 })
   .blank(20) // Create space between the barcodes
   .EAN5('12345', { height: 85, textPosition: 'top', fontSize: 16, marginTop: 15 })
   .render()
-````
+```
 
 ![Result](https://s3-eu-west-1.amazonaws.com/js-barcode/barcodes/simple.svg)
 
@@ -147,14 +148,15 @@ Barcode('#barcode')
 
 Use any `barcode-*` or `data-*` as attributes where `*` is any option.
 
-````html
-<svg class="barcode"
+```html
+<svg
+  class="barcode"
   barcode-format="upc"
   barcode-value="123456789012"
   barcode-text-margin="0"
-  barcode-font-options="bold">
-</svg>
-````
+  barcode-font-options="bold"
+></svg>
+```
 
 And then initialize it with:
 
@@ -173,17 +175,17 @@ const data = {}
 Barcode(data, 'text', { ...options })
 ```
 
-data will be filled with a ``` encodings ``` property which has all the needed values. See docs for examples of what data looks like.
+data will be filled with a `encodings` property which has all the needed values. See docs for examples of what data looks like.
 
 #### Node.js & Bun
 
-----
+---
 
 #### With canvas
 
 ```ts
-import { Barcode } from 'ts-tokens'
 import { createCanvas } from 'canvas'
+import { Barcode } from 'ts-tokens'
 
 const canvas = createCanvas()
 
@@ -213,27 +215,27 @@ const svgText = xmlSerializer.serializeToString(svgNode)
 
 For information about how to use the options, see the docs.
 
-| Option | Default value | Type |
-|--------|---------------|------|
-| [`format`](https://github.com/lindell/JsBarcode/wiki/Options#format) | `"auto" (CODE128)` | `String` |
-| [`width`](https://github.com/lindell/JsBarcode/wiki/Options#width) | `2` | `Number` |
-| [`height`](https://github.com/lindell/JsBarcode/wiki/Options#height) | `100` | `Number` |
-| [`displayValue`](https://github.com/lindell/JsBarcode/wiki/Options#display-value) | `true` | `Boolean` |
-| [`text`](https://github.com/lindell/JsBarcode/wiki/Options#text) | `undefined` | `String` |
-| [`fontOptions`](https://github.com/lindell/JsBarcode/wiki/Options#font-options) | `""` | `String` |
-| [`font`](https://github.com/lindell/JsBarcode/wiki/Options#font) | `"monospace"` | `String` |
-| [`textAlign`](https://github.com/lindell/JsBarcode/wiki/Options#text-align) | `"center"` | `String` |
-| [`textPosition`](https://github.com/lindell/JsBarcode/wiki/Options#text-position) | `"bottom"` | `String` |
-| [`textMargin`](https://github.com/lindell/JsBarcode/wiki/Options#text-margin) | `2` | `Number` |
-| [`fontSize`](https://github.com/lindell/JsBarcode/wiki/Options#font-size) | `20` | `Number` |
-| [`background`](https://github.com/lindell/JsBarcode/wiki/Options#background)  | `"#ffffff"` | `String (CSS color)` |
-| [`lineColor`](https://github.com/lindell/JsBarcode/wiki/Options#line-color) | `"#000000"` | `String (CSS color)` |
-| [`margin`](https://github.com/lindell/JsBarcode/wiki/Options#margins) | `10` | `Number` |
-| [`marginTop`](https://github.com/lindell/JsBarcode/wiki/Options#margins) | `undefined` | `Number` |
-| [`marginBottom`](https://github.com/lindell/JsBarcode/wiki/Options#margins) | `undefined` | `Number` |
-| [`marginLeft`](https://github.com/lindell/JsBarcode/wiki/Options#margins) | `undefined` | `Number` |
-| [`marginRight`](https://github.com/lindell/JsBarcode/wiki/Options#margins) | `undefined` | `Number` |
-| [`valid`](https://github.com/lindell/JsBarcode/wiki/Options#valid) | `function(valid){}` | `Function` |
+| Option                                                                            | Default value       | Type                 |
+| --------------------------------------------------------------------------------- | ------------------- | -------------------- |
+| [`format`](https://github.com/lindell/JsBarcode/wiki/Options#format)              | `"auto" (CODE128)`  | `String`             |
+| [`width`](https://github.com/lindell/JsBarcode/wiki/Options#width)                | `2`                 | `Number`             |
+| [`height`](https://github.com/lindell/JsBarcode/wiki/Options#height)              | `100`               | `Number`             |
+| [`displayValue`](https://github.com/lindell/JsBarcode/wiki/Options#display-value) | `true`              | `Boolean`            |
+| [`text`](https://github.com/lindell/JsBarcode/wiki/Options#text)                  | `undefined`         | `String`             |
+| [`fontOptions`](https://github.com/lindell/JsBarcode/wiki/Options#font-options)   | `""`                | `String`             |
+| [`font`](https://github.com/lindell/JsBarcode/wiki/Options#font)                  | `"monospace"`       | `String`             |
+| [`textAlign`](https://github.com/lindell/JsBarcode/wiki/Options#text-align)       | `"center"`          | `String`             |
+| [`textPosition`](https://github.com/lindell/JsBarcode/wiki/Options#text-position) | `"bottom"`          | `String`             |
+| [`textMargin`](https://github.com/lindell/JsBarcode/wiki/Options#text-margin)     | `2`                 | `Number`             |
+| [`fontSize`](https://github.com/lindell/JsBarcode/wiki/Options#font-size)         | `20`                | `Number`             |
+| [`background`](https://github.com/lindell/JsBarcode/wiki/Options#background)      | `"#ffffff"`         | `String (CSS color)` |
+| [`lineColor`](https://github.com/lindell/JsBarcode/wiki/Options#line-color)       | `"#000000"`         | `String (CSS color)` |
+| [`margin`](https://github.com/lindell/JsBarcode/wiki/Options#margins)             | `10`                | `Number`             |
+| [`marginTop`](https://github.com/lindell/JsBarcode/wiki/Options#margins)          | `undefined`         | `Number`             |
+| [`marginBottom`](https://github.com/lindell/JsBarcode/wiki/Options#margins)       | `undefined`         | `Number`             |
+| [`marginLeft`](https://github.com/lindell/JsBarcode/wiki/Options#margins)         | `undefined`         | `Number`             |
+| [`marginRight`](https://github.com/lindell/JsBarcode/wiki/Options#margins)        | `undefined`         | `Number`             |
+| [`valid`](https://github.com/lindell/JsBarcode/wiki/Options#valid)                | `function(valid){}` | `Function`           |
 
 ## Testing
 
@@ -286,6 +288,7 @@ The MIT License (MIT). Please see [LICENSE](LICENSE.md) for more information.
 Made with 💙
 
 <!-- Badges -->
+
 [npm-version-src]: https://img.shields.io/npm/v/tokens?style=flat-square
 [npm-version-href]: https://npmjs.com/package/tokens
 [github-actions-src]: https://img.shields.io/github/actions/workflow/status/stacksjs/tokens/ci.yml?style=flat-square&branch=main

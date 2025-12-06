@@ -2,14 +2,14 @@
  * Wallet Adapters
  */
 
-import { PublicKey, Transaction } from '@solana/web3.js'
+import type { Transaction } from '@solana/web3.js'
 import type {
-  WalletAdapter,
-  WalletType,
-  WalletMetadata,
-  WalletCapabilities,
   ConnectOptions,
+  WalletAdapter,
+  WalletMetadata,
+  WalletType,
 } from './types'
+import { PublicKey } from '@solana/web3.js'
 
 /**
  * Wallet registry with metadata
@@ -199,14 +199,22 @@ export function getAvailableWallets(): WalletType[] {
 
   const win = window as unknown as Record<string, unknown>
 
-  if (win.phantom?.solana) available.push('phantom')
-  if (win.solflare) available.push('solflare')
-  if (win.backpack) available.push('backpack')
-  if (win.coinbaseSolana) available.push('coinbase')
-  if (win.trustWallet?.solana) available.push('trust')
-  if (win.exodus?.solana) available.push('exodus')
-  if (win.braveSolana) available.push('brave')
-  if (win.glowSolana) available.push('glow')
+  if (win.phantom?.solana)
+    available.push('phantom')
+  if (win.solflare)
+    available.push('solflare')
+  if (win.backpack)
+    available.push('backpack')
+  if (win.coinbaseSolana)
+    available.push('coinbase')
+  if (win.trustWallet?.solana)
+    available.push('trust')
+  if (win.exodus?.solana)
+    available.push('exodus')
+  if (win.braveSolana)
+    available.push('brave')
+  if (win.glowSolana)
+    available.push('glow')
 
   return available
 }
@@ -275,13 +283,13 @@ export function createWalletAdapter(type: WalletType): WalletAdapter | null {
   }
 
   const p = provider as {
-    publicKey?: { toBase58(): string }
+    publicKey?: { toBase58: () => string }
     isConnected?: boolean
-    connect(opts?: ConnectOptions): Promise<{ publicKey: { toBase58(): string } }>
-    disconnect(): Promise<void>
-    signTransaction(tx: Transaction): Promise<Transaction>
-    signAllTransactions(txs: Transaction[]): Promise<Transaction[]>
-    signMessage(msg: Uint8Array): Promise<{ signature: Uint8Array }>
+    connect: (opts?: ConnectOptions) => Promise<{ publicKey: { toBase58: () => string } }>
+    disconnect: () => Promise<void>
+    signTransaction: (tx: Transaction) => Promise<Transaction>
+    signAllTransactions: (txs: Transaction[]) => Promise<Transaction[]>
+    signMessage: (msg: Uint8Array) => Promise<{ signature: Uint8Array }>
   }
 
   return {

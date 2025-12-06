@@ -147,7 +147,7 @@ const assets = await das.getAssetsByOwner(walletAddress)
 ### Get All NFTs by Owner
 
 ```typescript
-import { getAllNFTsByOwner, createDASClient } from 'ts-tokens'
+import { createDASClient, getAllNFTsByOwner } from 'ts-tokens'
 
 const das = createDASClient(rpcUrl)
 const allNFTs = await getAllNFTsByOwner(das, walletAddress)
@@ -161,7 +161,7 @@ const compressed = await getAllNFTsByOwner(das, walletAddress, {
 ### Get All NFTs in Collection
 
 ```typescript
-import { getAllNFTsInCollection, createDASClient } from 'ts-tokens'
+import { createDASClient, getAllNFTsInCollection } from 'ts-tokens'
 
 const das = createDASClient(rpcUrl)
 const collectionNFTs = await getAllNFTsInCollection(das, collectionAddress)

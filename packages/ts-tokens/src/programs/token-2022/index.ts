@@ -5,8 +5,8 @@
  * permanent delegates, and more.
  */
 
-export * from './types'
 export * from './extensions'
 export * from './instructions'
+export * from './types'
 
 export const TOKEN_2022_PROGRAM_ID = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb'

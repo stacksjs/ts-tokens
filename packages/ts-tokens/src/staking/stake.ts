@@ -2,25 +2,21 @@
  * Staking Operations
  */
 
-import { Connection, PublicKey, Keypair, Transaction } from '@solana/web3.js'
+import type { Connection } from '@solana/web3.js'
 import type {
-  StakeInfo,
   NFTStakeInfo,
-  StakeOptions,
-  UnstakeOptions,
-  ClaimOptions,
-  StakeNFTOptions,
-  UnstakeNFTOptions,
   RewardsCalculation,
+  StakeInfo,
 } from './types'
-import { getPool, calculatePendingRewards, calculatePenalty } from './pool'
+import { PublicKey } from '@solana/web3.js'
+import { calculatePenalty, calculatePendingRewards, getPool } from './pool'
 
 /**
  * Get stake info for a user
  */
 export async function getStakeInfo(
   connection: Connection,
-  stakeAccount: PublicKey
+  stakeAccount: PublicKey,
 ): Promise<StakeInfo | null> {
   const accountInfo = await connection.getAccountInfo(stakeAccount)
 
@@ -47,7 +43,7 @@ export async function getStakeInfo(
 export async function getUserStakes(
   connection: Connection,
   pool: PublicKey,
-  owner: PublicKey
+  owner: PublicKey,
 ): Promise<StakeInfo[]> {
   // In practice, would use getProgramAccounts with filters
   // This is a simplified placeholder
@@ -59,7 +55,7 @@ export async function getUserStakes(
  */
 export async function calculateRewards(
   connection: Connection,
-  stakeAccount: PublicKey
+  stakeAccount: PublicKey,
 ): Promise<RewardsCalculation | null> {
   const stakeInfo = await getStakeInfo(connection, stakeAccount)
 
@@ -78,7 +74,7 @@ export async function calculateRewards(
     pool,
     stakeInfo.amount,
     stakeInfo.rewardDebt,
-    currentTime
+    currentTime,
   )
 
   const isLocked = currentTime < stakeInfo.lockEndTime
@@ -106,8 +102,8 @@ export async function calculateRewards(
  */
 export async function canUnstake(
   connection: Connection,
-  stakeAccount: PublicKey
-): Promise<{ canUnstake: boolean; reason?: string; penalty?: bigint }> {
+  stakeAccount: PublicKey,
+): Promise<{ canUnstake: boolean, reason?: string, penalty?: bigint }> {
   const stakeInfo = await getStakeInfo(connection, stakeAccount)
 
   if (!stakeInfo) {
@@ -132,7 +128,7 @@ export async function canUnstake(
       pool.earlyUnstakePenalty,
       stakeInfo.stakedAt,
       pool.minStakeDuration,
-      currentTime
+      currentTime,
     )
 
     return {
@@ -150,7 +146,7 @@ export async function canUnstake(
  */
 export async function getNFTStakeInfo(
   connection: Connection,
-  stakeAccount: PublicKey
+  stakeAccount: PublicKey,
 ): Promise<NFTStakeInfo | null> {
   const accountInfo = await connection.getAccountInfo(stakeAccount)
 
@@ -178,7 +174,7 @@ export function calculateNFTPoints(
   stakedAt: bigint,
   lastClaimTime: bigint,
   pointsPerDay: bigint,
-  currentTime: bigint
+  currentTime: bigint,
 ): bigint {
   const startTime = lastClaimTime > stakedAt ? lastClaimTime : stakedAt
   const duration = currentTime - startTime
@@ -193,7 +189,7 @@ export function calculateNFTPoints(
 export async function getUserStakedNFTs(
   connection: Connection,
   pool: PublicKey,
-  owner: PublicKey
+  owner: PublicKey,
 ): Promise<NFTStakeInfo[]> {
   // In practice, would use getProgramAccounts with filters
   return []
@@ -205,8 +201,8 @@ export async function getUserStakedNFTs(
 export function validateStakeAmount(
   amount: bigint,
   balance: bigint,
-  minStake?: bigint
-): { valid: boolean; error?: string } {
+  minStake?: bigint,
+): { valid: boolean, error?: string } {
   if (amount <= 0n) {
     return { valid: false, error: 'Amount must be greater than 0' }
   }

@@ -2,25 +2,27 @@
  * Transaction Simulation
  */
 
-import {
+import type {
   Connection,
   PublicKey,
-  Transaction,
   TransactionInstruction,
   VersionedTransaction,
 } from '@solana/web3.js'
-import type { SimulationResult, AccountChange } from './types'
+import type { SimulationResult } from './types'
+import {
+  Transaction,
+} from '@solana/web3.js'
 
 /**
  * Simulate a transaction
  */
 export async function simulateTransaction(
   connection: Connection,
-  transaction: Transaction | VersionedTransaction
+  transaction: Transaction | VersionedTransaction,
 ): Promise<SimulationResult> {
   const result = await connection.simulateTransaction(
     transaction as VersionedTransaction,
-    { sigVerify: false }
+    { sigVerify: false },
   )
 
   return {
@@ -37,7 +39,7 @@ export async function simulateTransaction(
 export async function simulateInstructions(
   connection: Connection,
   instructions: TransactionInstruction[],
-  payer: PublicKey
+  payer: PublicKey,
 ): Promise<SimulationResult> {
   const { blockhash } = await connection.getLatestBlockhash()
 
@@ -54,7 +56,7 @@ export async function simulateInstructions(
  */
 export async function estimateComputeUnits(
   connection: Connection,
-  transaction: Transaction | VersionedTransaction
+  transaction: Transaction | VersionedTransaction,
 ): Promise<number> {
   const result = await simulateTransaction(connection, transaction)
   return result.unitsConsumed
@@ -66,7 +68,7 @@ export async function estimateComputeUnits(
 export async function estimateInstructionComputeUnits(
   connection: Connection,
   instructions: TransactionInstruction[],
-  payer: PublicKey
+  payer: PublicKey,
 ): Promise<number> {
   const result = await simulateInstructions(connection, instructions, payer)
   return result.unitsConsumed
@@ -77,8 +79,8 @@ export async function estimateInstructionComputeUnits(
  */
 export async function willSucceed(
   connection: Connection,
-  transaction: Transaction | VersionedTransaction
-): Promise<{ success: boolean; error?: string }> {
+  transaction: Transaction | VersionedTransaction,
+): Promise<{ success: boolean, error?: string }> {
   const result = await simulateTransaction(connection, transaction)
   return {
     success: result.success,
@@ -173,7 +175,7 @@ export async function dryRun(
   options: {
     showLogs?: boolean
     showAccounts?: boolean
-  } = {}
+  } = {},
 ): Promise<{
   success: boolean
   computeUnits: number
@@ -202,7 +204,7 @@ export async function dryRun(
  */
 export function compareSimulations(
   sim1: SimulationResult,
-  sim2: SimulationResult
+  sim2: SimulationResult,
 ): {
   computeDiff: number
   bothSucceeded: boolean

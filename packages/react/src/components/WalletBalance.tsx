@@ -1,5 +1,5 @@
-import React from 'react'
 import type { CommonProps } from '../types'
+import React from 'react'
 import { useConnection } from '../context'
 
 export interface WalletBalanceProps extends CommonProps {
@@ -23,7 +23,9 @@ export function WalletBalance({ address, showSymbol = true, className, style }: 
 
   return (
     <span className={className} style={style}>
-      {balance.toFixed(4)} {showSymbol && 'SOL'}
+      {balance.toFixed(4)}
+      {' '}
+      {showSymbol && 'SOL'}
     </span>
   )
 }

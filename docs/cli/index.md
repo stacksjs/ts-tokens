@@ -16,46 +16,46 @@ bunx ts-tokens <command>
 
 ### Configuration
 
-| Command | Description |
-|---------|-------------|
-| `tokens config:init` | Initialize configuration |
-| `tokens config:show` | Show current configuration |
-| `tokens config:network <network>` | Set network |
+| Command                           | Description                |
+| --------------------------------- | -------------------------- |
+| `tokens config:init`              | Initialize configuration   |
+| `tokens config:show`              | Show current configuration |
+| `tokens config:network <network>` | Set network                |
 
 ### Wallet
 
-| Command | Description |
-|---------|-------------|
-| `tokens wallet:generate` | Generate new wallet |
-| `tokens wallet:show` | Show wallet address |
-| `tokens wallet:balance` | Check SOL balance |
-| `tokens wallet:airdrop` | Request devnet airdrop |
+| Command                  | Description            |
+| ------------------------ | ---------------------- |
+| `tokens wallet:generate` | Generate new wallet    |
+| `tokens wallet:show`     | Show wallet address    |
+| `tokens wallet:balance`  | Check SOL balance      |
+| `tokens wallet:airdrop`  | Request devnet airdrop |
 
 ### Tokens
 
-| Command | Description |
-|---------|-------------|
-| `tokens token:create` | Create fungible token |
-| `tokens token:mint` | Mint tokens |
-| `tokens token:transfer` | Transfer tokens |
-| `tokens token:burn` | Burn tokens |
-| `tokens token:info` | Get token info |
-| `tokens token:balance` | Check token balance |
+| Command                 | Description           |
+| ----------------------- | --------------------- |
+| `tokens token:create`   | Create fungible token |
+| `tokens token:mint`     | Mint tokens           |
+| `tokens token:transfer` | Transfer tokens       |
+| `tokens token:burn`     | Burn tokens           |
+| `tokens token:info`     | Get token info        |
+| `tokens token:balance`  | Check token balance   |
 
 ### NFTs
 
-| Command | Description |
-|---------|-------------|
-| `tokens nft:create` | Create NFT |
-| `tokens nft:transfer` | Transfer NFT |
-| `tokens nft:burn` | Burn NFT |
-| `tokens nft:info` | Get NFT info |
-| `tokens nft:list` | List owned NFTs |
+| Command               | Description     |
+| --------------------- | --------------- |
+| `tokens nft:create`   | Create NFT      |
+| `tokens nft:transfer` | Transfer NFT    |
+| `tokens nft:burn`     | Burn NFT        |
+| `tokens nft:info`     | Get NFT info    |
+| `tokens nft:list`     | List owned NFTs |
 
 ### Collections
 
-| Command | Description |
-|---------|-------------|
+| Command                    | Description       |
+| -------------------------- | ----------------- |
 | `tokens collection:create` | Create collection |
 
 ## Examples
@@ -82,13 +82,13 @@ tokens token:transfer <mint> --amount 1000 --to <recipient>
 
 ## Global Options
 
-| Option | Description |
-|--------|-------------|
+| Option      | Description                                      |
+| ----------- | ------------------------------------------------ |
 | `--network` | Override network (mainnet-beta, devnet, testnet) |
-| `--rpc` | Override RPC URL |
-| `--keypair` | Override keypair path |
-| `--help` | Show help |
-| `--version` | Show version |
+| `--rpc`     | Override RPC URL                                 |
+| `--keypair` | Override keypair path                            |
+| `--help`    | Show help                                        |
+| `--version` | Show version                                     |
 
 ## Related
 

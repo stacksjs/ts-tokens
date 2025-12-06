@@ -9,7 +9,7 @@ import type { MetadataInput, SimpleMetadataObject } from './types'
  */
 export async function parseMetadataInput(
   input: MetadataInput,
-  uploadFn?: (data: unknown) => Promise<string>
+  uploadFn?: (data: unknown) => Promise<string>,
 ): Promise<string> {
   // String - assume it's a URI
   if (typeof input === 'string') {
@@ -85,8 +85,10 @@ export function validateMetadata(metadata: SimpleMetadataObject): {
   const warnings: string[] = []
 
   // Required fields
-  if (!metadata.name) errors.push('Missing name')
-  if (!metadata.image) errors.push('Missing image')
+  if (!metadata.name)
+    errors.push('Missing name')
+  if (!metadata.image)
+    errors.push('Missing image')
 
   // Name length
   if (metadata.name && metadata.name.length > 32) {
@@ -126,7 +128,8 @@ function isValidUrl(str: string): boolean {
   try {
     new URL(str)
     return true
-  } catch {
+  }
+  catch {
     return false
   }
 }
@@ -138,7 +141,7 @@ export function createMetadata(options: {
   name: string
   description?: string
   image: string
-  attributes?: Array<{ trait: string; value: string | number }>
+  attributes?: Array<{ trait: string, value: string | number }>
   externalUrl?: string
   animationUrl?: string
 }): SimpleMetadataObject {
@@ -164,7 +167,7 @@ export function createMetadata(options: {
  */
 export function mergeMetadata(
   existing: SimpleMetadataObject,
-  updates: Partial<SimpleMetadataObject>
+  updates: Partial<SimpleMetadataObject>,
 ): SimpleMetadataObject {
   return {
     ...existing,
@@ -181,7 +184,7 @@ export function mergeMetadata(
  * Extract attributes from metadata
  */
 export function getAttributes(
-  metadata: SimpleMetadataObject
+  metadata: SimpleMetadataObject,
 ): Map<string, string | number> {
   const attrs = new Map<string, string | number>()
 
@@ -197,7 +200,7 @@ export function getAttributes(
  */
 export function getAttribute(
   metadata: SimpleMetadataObject,
-  traitType: string
+  traitType: string,
 ): string | number | undefined {
   return metadata.attributes?.find(a => a.trait_type === traitType)?.value
 }

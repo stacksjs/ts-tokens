@@ -2,18 +2,17 @@
  * Programmable NFT Rules
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
+  AllowListRule,
+  CooldownPeriodRule,
+  DenyListRule,
+  HolderGateRule,
+  MaxTransfersRule,
+  ProgrammableNFT,
+  RoyaltyEnforcementRule,
   TransferRule,
   TransferRuleType,
-  ProgrammableNFT,
-  RuleSet,
-  RoyaltyEnforcementRule,
-  AllowListRule,
-  DenyListRule,
-  CooldownPeriodRule,
-  MaxTransfersRule,
-  HolderGateRule,
 } from './types'
 
 /**
@@ -23,7 +22,7 @@ export async function addRule(
   connection: Connection,
   mint: PublicKey,
   authority: PublicKey,
-  rule: TransferRule
+  rule: TransferRule,
 ): Promise<string> {
   // In production, would add rule to pNFT account
   return `rule_added_${rule.type}_${Date.now()}`
@@ -36,7 +35,7 @@ export async function removeRule(
   connection: Connection,
   mint: PublicKey,
   authority: PublicKey,
-  ruleType: TransferRuleType
+  ruleType: TransferRuleType,
 ): Promise<string> {
   // In production, would remove rule from pNFT account
   return `rule_removed_${ruleType}_${Date.now()}`
@@ -49,7 +48,7 @@ export async function updateRule(
   connection: Connection,
   mint: PublicKey,
   authority: PublicKey,
-  rule: TransferRule
+  rule: TransferRule,
 ): Promise<string> {
   // In production, would update existing rule
   return `rule_updated_${rule.type}_${Date.now()}`
@@ -63,7 +62,7 @@ export async function setRuleEnabled(
   mint: PublicKey,
   authority: PublicKey,
   ruleType: TransferRuleType,
-  enabled: boolean
+  enabled: boolean,
 ): Promise<string> {
   return `rule_${enabled ? 'enabled' : 'disabled'}_${ruleType}_${Date.now()}`
 }
@@ -74,7 +73,7 @@ export async function setRuleEnabled(
 export async function freezeRules(
   connection: Connection,
   mint: PublicKey,
-  authority: PublicKey
+  authority: PublicKey,
 ): Promise<string> {
   // In production, would make rules immutable
   return `rules_frozen_${Date.now()}`
@@ -87,7 +86,7 @@ export async function addRuleToSet(
   connection: Connection,
   ruleSet: PublicKey,
   authority: PublicKey,
-  rule: TransferRule
+  rule: TransferRule,
 ): Promise<string> {
   return `ruleset_rule_added_${rule.type}_${Date.now()}`
 }
@@ -99,7 +98,7 @@ export async function removeRuleFromSet(
   connection: Connection,
   ruleSet: PublicKey,
   authority: PublicKey,
-  ruleType: TransferRuleType
+  ruleType: TransferRuleType,
 ): Promise<string> {
   return `ruleset_rule_removed_${ruleType}_${Date.now()}`
 }
@@ -109,7 +108,7 @@ export async function removeRuleFromSet(
  */
 export async function getAllRules(
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<TransferRule[]> {
   // In production, would fetch pNFT rules + rule set rules
   return []
@@ -127,7 +126,7 @@ export function hasRule(pnft: ProgrammableNFT, ruleType: TransferRuleType): bool
  */
 export function getRule<T extends TransferRule>(
   pnft: ProgrammableNFT,
-  ruleType: T['type']
+  ruleType: T['type'],
 ): T | undefined {
   return pnft.rules.find(r => r.type === ruleType) as T | undefined
 }
@@ -139,7 +138,7 @@ export function getRule<T extends TransferRule>(
  */
 export function createRoyaltyRule(
   royaltyBps: number,
-  recipients: Array<{ address: PublicKey; share: number }>
+  recipients: Array<{ address: PublicKey, share: number }>,
 ): RoyaltyEnforcementRule {
   return {
     type: 'royalty_enforcement',
@@ -198,7 +197,7 @@ export function createMaxTransfersRule(maxTransfers: number): MaxTransfersRule {
  */
 export function createHolderGateRule(
   requiredToken: PublicKey,
-  minAmount: bigint
+  minAmount: bigint,
 ): HolderGateRule {
   return {
     type: 'holder_gate',
@@ -211,7 +210,7 @@ export function createHolderGateRule(
 /**
  * Validate rule configuration
  */
-export function validateRule(rule: TransferRule): { valid: boolean; errors: string[] } {
+export function validateRule(rule: TransferRule): { valid: boolean, errors: string[] } {
   const errors: string[] = []
 
   switch (rule.type) {
@@ -252,7 +251,7 @@ export function validateRule(rule: TransferRule): { valid: boolean; errors: stri
  * Format rules for display
  */
 export function formatRules(rules: TransferRule[]): string {
-  return rules.map(rule => {
+  return rules.map((rule) => {
     const status = rule.enabled ? '✓' : '✗'
     switch (rule.type) {
       case 'royalty_enforcement':

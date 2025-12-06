@@ -4,20 +4,20 @@
  * Mint tokens to addresses.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { MintOptions, TokenConfig, TransactionResult } from '../types'
 import {
-  createMintToInstruction,
-  getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
+  createMintToInstruction,
   getAccount,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
+  getAssociatedTokenAddress,
   getMint,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
-import type { TokenConfig, MintOptions, TransactionResult } from '../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
-import { loadWallet } from '../drivers/solana/wallet'
+import { PublicKey } from '@solana/web3.js'
 import { createConnection } from '../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Mint tokens to an address
@@ -28,7 +28,7 @@ import { createConnection } from '../drivers/solana/connection'
  */
 export async function mintTokens(
   options: MintOptions,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -55,7 +55,8 @@ export async function mintTokens(
   // Check if ATA exists
   try {
     await getAccount(connection, ata, undefined, programId)
-  } catch {
+  }
+  catch {
     // ATA doesn't exist, create it
     if (config.autoCreateAccounts) {
       instructions.push(
@@ -64,13 +65,14 @@ export async function mintTokens(
           ata,
           destination,
           mint,
-          programId
-        )
+          programId,
+        ),
       )
-    } else {
+    }
+    else {
       throw new Error(
-        `Associated token account ${ata.toBase58()} does not exist. ` +
-        `Set autoCreateAccounts: true in config to create it automatically.`
+        `Associated token account ${ata.toBase58()} does not exist. `
+        + `Set autoCreateAccounts: true in config to create it automatically.`,
       )
     }
   }
@@ -83,8 +85,8 @@ export async function mintTokens(
       mintAuthority,
       BigInt(options.amount),
       [],
-      programId
-    )
+      programId,
+    ),
   )
 
   // Build and send transaction
@@ -92,7 +94,7 @@ export async function mintTokens(
     connection,
     instructions,
     payer.publicKey,
-    options.options
+    options.options,
   )
 
   transaction.partialSign(payer)
@@ -110,8 +112,8 @@ export async function mintTokens(
  */
 export async function mintTokensToMany(
   mint: string,
-  recipients: Array<{ address: string; amount: bigint | number }>,
-  config: TokenConfig
+  recipients: Array<{ address: string, amount: bigint | number }>,
+  config: TokenConfig,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -133,7 +135,8 @@ export async function mintTokensToMany(
     // Check if ATA exists
     try {
       await getAccount(connection, ata, undefined, programId)
-    } catch {
+    }
+    catch {
       // Create ATA
       instructions.push(
         createAssociatedTokenAccountInstruction(
@@ -141,8 +144,8 @@ export async function mintTokensToMany(
           ata,
           destination,
           mintPubkey,
-          programId
-        )
+          programId,
+        ),
       )
     }
 
@@ -154,8 +157,8 @@ export async function mintTokensToMany(
         payer.publicKey, // Assumes payer is mint authority
         BigInt(recipient.amount),
         [],
-        programId
-      )
+        programId,
+      ),
     )
   }
 
@@ -163,7 +166,7 @@ export async function mintTokensToMany(
   const transaction = await buildTransaction(
     connection,
     instructions,
-    payer.publicKey
+    payer.publicKey,
   )
 
   transaction.partialSign(payer)

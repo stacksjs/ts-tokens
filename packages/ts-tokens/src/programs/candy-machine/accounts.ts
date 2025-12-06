@@ -2,14 +2,14 @@
  * Candy Machine Account Deserializers
  */
 
-import { PublicKey } from '@solana/web3.js'
 import type {
   CandyMachine,
   CandyMachineData,
-  Creator,
   ConfigLineSettings,
+  Creator,
   HiddenSettings,
 } from './types'
+import { PublicKey } from '@solana/web3.js'
 
 /**
  * Deserialize a Candy Machine account
@@ -57,8 +57,8 @@ export function deserializeCandyMachine(data: Buffer): CandyMachine {
  */
 function parseCandyMachineData(
   data: Buffer,
-  offset: number
-): { data: CandyMachineData; offset: number } {
+  offset: number,
+): { data: CandyMachineData, offset: number } {
   const itemsAvailable = data.readBigUInt64LE(offset)
   offset += 8
 

@@ -1,5 +1,5 @@
-import React from 'react'
 import type { TransactionToastProps } from '../types'
+import React from 'react'
 
 export function TransactionToast({ signature, status, message, explorerUrl, className, style }: TransactionToastProps): JSX.Element {
   const statusColors = { pending: '#FFA500', confirmed: '#4CAF50', error: '#F44336' }

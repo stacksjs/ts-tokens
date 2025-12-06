@@ -11,3 +11,8 @@ node_modules
 temp
 docs/.vitepress/cache
 pantry_modules
+# Environment variables
+.env
+*.json
+!package.json
+!tsconfig.json

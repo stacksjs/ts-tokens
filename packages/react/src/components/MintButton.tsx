@@ -1,5 +1,5 @@
-import React from 'react'
 import type { CandyMachineProps } from '../types'
+import React from 'react'
 import { useCandyMachine } from '../hooks'
 
 export interface MintButtonProps extends CandyMachineProps {
@@ -12,11 +12,13 @@ export function MintButton({ candyMachine, onMint, disabled, className, style }:
   const [minting, setMinting] = React.useState(false)
 
   const handleMint = async () => {
-    if (disabled || minting || !cm || cm.isSoldOut) return
+    if (disabled || minting || !cm || cm.isSoldOut)
+      return
     setMinting(true)
     try {
       onMint?.()
-    } finally {
+    }
+    finally {
       setMinting(false)
     }
   }

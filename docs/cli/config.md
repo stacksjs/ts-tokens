@@ -14,10 +14,10 @@ Creates a `tokens.config.ts` file in the current directory with default settings
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
+| Option      | Description                                     |
+| ----------- | ----------------------------------------------- |
 | `--network` | Initial network (mainnet-beta, devnet, testnet) |
-| `--force` | Overwrite existing config |
+| `--force`   | Overwrite existing config                       |
 
 ## `tokens config:show`
 
@@ -77,11 +77,11 @@ tokens config:storage shadow-drive
 
 Configuration can also be set via environment variables:
 
-| Variable | Description |
-|----------|-------------|
-| `SOLANA_NETWORK` | Network to use |
-| `SOLANA_RPC_URL` | Custom RPC URL |
-| `SOLANA_PRIVATE_KEY` | Base58 private key |
+| Variable              | Description          |
+| --------------------- | -------------------- |
+| `SOLANA_NETWORK`      | Network to use       |
+| `SOLANA_RPC_URL`      | Custom RPC URL       |
+| `SOLANA_PRIVATE_KEY`  | Base58 private key   |
 | `SOLANA_KEYPAIR_PATH` | Path to keypair file |
 
 ## Configuration File

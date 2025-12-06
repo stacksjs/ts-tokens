@@ -4,31 +4,48 @@
  * Main entry point for fungible token operations.
  */
 
-export * from './create'
-export * from './mint'
-export * from './transfer'
-export * from './burn'
-export * from './authority'
 export * from './account'
-
-// Re-export convenience functions
-export { createToken, createSimpleToken } from './create'
-export { mintTokens, mintTokensToMany } from './mint'
-export { transferTokens, transferTokensToMany, transfer } from './transfer'
-export { burnTokens, burnAll, burn } from './burn'
 export {
-  setMintAuthority,
-  revokeMintAuthority,
-  setFreezeAuthority,
-  revokeFreezeAuthority,
-  freezeAccount,
-  thawAccount,
-} from './authority'
-export {
-  getOrCreateAssociatedTokenAccount,
-  createTokenAccount,
   closeTokenAccount,
-  getTokenAccountInfo,
+  createTokenAccount,
   getAssociatedTokenAccountAddress,
+  getOrCreateAssociatedTokenAccount,
+  getTokenAccountInfo,
   tokenAccountExists,
 } from './account'
+export * from './authority'
+export {
+  freezeAccount,
+  revokeFreezeAuthority,
+  revokeMintAuthority,
+  setFreezeAuthority,
+  setMintAuthority,
+  thawAccount,
+} from './authority'
+export * from './burn'
+export { burn, burnAll, burnTokens } from './burn'
+export * from './create'
+// Re-export convenience functions
+export { createSimpleToken, createToken } from './create'
+
+export * from './metadata'
+export {
+  createTokenMetadata,
+  fetchOffChainMetadata,
+  getCompleteTokenMetadata,
+  getTokenMetadata,
+  updateTokenMetadata,
+} from './metadata'
+export * from './mint'
+export { mintTokens, mintTokensToMany } from './mint'
+export * from './query'
+export {
+  getLargestAccounts,
+  getTokenAccountBalance,
+  getTokenHistory,
+  getTokenHolders,
+  getTokenInfo,
+  getTokenSupply,
+} from './query'
+export * from './transfer'
+export { transfer, transferTokens, transferTokensToMany } from './transfer'

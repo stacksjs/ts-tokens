@@ -11,7 +11,8 @@ const props = withDefaults(defineProps<{
 })
 
 const displayAddress = computed(() => {
-  if (!props.truncate) return props.address
+  if (!props.truncate)
+    return props.address
   return `${props.address.slice(0, props.chars)}...${props.address.slice(-props.chars)}`
 })
 </script>

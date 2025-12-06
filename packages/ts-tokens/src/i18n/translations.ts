@@ -2,7 +2,7 @@
  * Translations
  */
 
-import type { Locale, TranslationDictionary, TranslationKey, InterpolationValues, I18nConfig } from './types'
+import type { I18nConfig, InterpolationValues, Locale, TranslationDictionary, TranslationKey } from './types'
 
 /**
  * English translations

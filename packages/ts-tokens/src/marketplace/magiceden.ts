@@ -2,14 +2,13 @@
  * Magic Eden Integration
  */
 
-import { PublicKey } from '@solana/web3.js'
 import type {
-  NFTListing,
-  ListNFTOptions,
   CollectionStats,
   NFTActivity,
+  NFTListing,
   NFTOffer,
 } from './types'
+import { PublicKey } from '@solana/web3.js'
 
 const ME_API = 'https://api-mainnet.magiceden.dev/v2'
 
@@ -18,12 +17,12 @@ const ME_API = 'https://api-mainnet.magiceden.dev/v2'
  */
 export async function getCollectionListings(
   collectionSymbol: string,
-  options: { offset?: number; limit?: number } = {}
+  options: { offset?: number, limit?: number } = {},
 ): Promise<NFTListing[]> {
   const { offset = 0, limit = 20 } = options
 
   const response = await fetch(
-    `${ME_API}/collections/${collectionSymbol}/listings?offset=${offset}&limit=${limit}`
+    `${ME_API}/collections/${collectionSymbol}/listings?offset=${offset}&limit=${limit}`,
   )
 
   if (!response.ok) {
@@ -51,7 +50,7 @@ export async function getCollectionListings(
  * Get collection stats
  */
 export async function getCollectionStats(
-  collectionSymbol: string
+  collectionSymbol: string,
 ): Promise<CollectionStats | null> {
   const response = await fetch(`${ME_API}/collections/${collectionSymbol}/stats`)
 
@@ -78,12 +77,12 @@ export async function getCollectionStats(
  */
 export async function getNFTActivity(
   mint: PublicKey,
-  options: { offset?: number; limit?: number } = {}
+  options: { offset?: number, limit?: number } = {},
 ): Promise<NFTActivity[]> {
   const { offset = 0, limit = 20 } = options
 
   const response = await fetch(
-    `${ME_API}/tokens/${mint.toBase58()}/activities?offset=${offset}&limit=${limit}`
+    `${ME_API}/tokens/${mint.toBase58()}/activities?offset=${offset}&limit=${limit}`,
   )
 
   if (!response.ok) {
@@ -143,12 +142,12 @@ export async function getNFTOffers(mint: PublicKey): Promise<NFTOffer[]> {
  * Get popular collections
  */
 export async function getPopularCollections(
-  options: { window?: '1d' | '7d' | '30d'; limit?: number } = {}
-): Promise<Array<{ symbol: string; name: string; image: string; floorPrice: number; volume: number }>> {
+  options: { window?: '1d' | '7d' | '30d', limit?: number } = {},
+): Promise<Array<{ symbol: string, name: string, image: string, floorPrice: number, volume: number }>> {
   const { window = '1d', limit = 20 } = options
 
   const response = await fetch(
-    `${ME_API}/marketplace/popular_collections?window=${window}&limit=${limit}`
+    `${ME_API}/marketplace/popular_collections?window=${window}&limit=${limit}`,
   )
 
   if (!response.ok) {
@@ -162,8 +161,8 @@ export async function getPopularCollections(
  * Search collections
  */
 export async function searchCollections(
-  query: string
-): Promise<Array<{ symbol: string; name: string; image: string }>> {
+  query: string,
+): Promise<Array<{ symbol: string, name: string, image: string }>> {
   const response = await fetch(`${ME_API}/collections?q=${encodeURIComponent(query)}`)
 
   if (!response.ok) {

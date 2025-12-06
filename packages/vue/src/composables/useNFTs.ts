@@ -4,9 +4,10 @@
  * Fetch all NFTs owned by an address.
  */
 
-import { ref, watch, onMounted, type Ref } from 'vue'
-import { useConfig } from './useConnection'
+import type { Ref } from 'vue'
 import type { NFTDisplayInfo } from '../types'
+import { onMounted, ref, watch } from 'vue'
+import { useConfig } from './useConnection'
 
 /**
  * NFTs return type
@@ -47,7 +48,8 @@ export function useNFTs(owner: Ref<string> | string): UseNFTsReturn {
           let offChain: any = null
           try {
             offChain = await fetchOffChainMetadata(m.uri)
-          } catch {
+          }
+          catch {
             // Ignore off-chain fetch errors
           }
 
@@ -60,13 +62,15 @@ export function useNFTs(owner: Ref<string> | string): UseNFTsReturn {
             description: offChain?.description,
             attributes: offChain?.attributes,
           }
-        })
+        }),
       )
 
       nfts.value = nftList
-    } catch (err) {
+    }
+    catch (err) {
       error.value = err as Error
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }

@@ -2,8 +2,8 @@
  * Holder Analytics
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
-import type { TokenHolder, HolderDistribution, HolderSnapshot } from './types'
+import type { Connection, PublicKey } from '@solana/web3.js'
+import type { HolderDistribution, HolderSnapshot, TokenHolder } from './types'
 
 /**
  * Get token holder distribution
@@ -11,7 +11,7 @@ import type { TokenHolder, HolderDistribution, HolderSnapshot } from './types'
 export async function getHolderDistribution(
   connection: Connection,
   mint: PublicKey,
-  options: { limit?: number } = {}
+  options: { limit?: number } = {},
 ): Promise<HolderDistribution> {
   const { limit = 100 } = options
 
@@ -81,13 +81,15 @@ export async function getHolderDistribution(
  * 0 = perfect equality, 1 = perfect inequality
  */
 function calculateGiniCoefficient(values: number[]): number {
-  if (values.length === 0) return 0
+  if (values.length === 0)
+    return 0
 
   const sorted = [...values].sort((a, b) => a - b)
   const n = sorted.length
   const sum = sorted.reduce((a, b) => a + b, 0)
 
-  if (sum === 0) return 0
+  if (sum === 0)
+    return 0
 
   let numerator = 0
   for (let i = 0; i < n; i++) {
@@ -102,7 +104,7 @@ function calculateGiniCoefficient(values: number[]): number {
  */
 export async function getHolderSnapshot(
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<HolderSnapshot> {
   const distribution = await getHolderDistribution(connection, mint, { limit: 100 })
 
@@ -135,7 +137,7 @@ export async function getHolderSnapshot(
  */
 export function compareSnapshots(
   before: HolderSnapshot,
-  after: HolderSnapshot
+  after: HolderSnapshot,
 ): {
   holderChange: number
   holderChangePercentage: number
@@ -162,7 +164,7 @@ export function compareSnapshots(
  */
 export function identifyWhales(
   distribution: HolderDistribution,
-  thresholdPercentage: number = 1
+  thresholdPercentage: number = 1,
 ): TokenHolder[] {
   return distribution.holders.filter(h => h.percentage >= thresholdPercentage)
 }
@@ -181,7 +183,7 @@ export function formatHolderDistribution(distribution: HolderDistribution): stri
     '',
     'Top Holders:',
     ...distribution.holders.slice(0, 10).map(h =>
-      `  ${h.rank}. ${h.address.toBase58().slice(0, 8)}... - ${h.percentage.toFixed(2)}%`
+      `  ${h.rank}. ${h.address.toBase58().slice(0, 8)}... - ${h.percentage.toFixed(2)}%`,
     ),
   ]
 
@@ -194,7 +196,7 @@ export function formatHolderDistribution(distribution: HolderDistribution): stri
 export function exportHoldersToCSV(distribution: HolderDistribution): string {
   const headers = 'Rank,Address,Balance,Percentage'
   const rows = distribution.holders.map(h =>
-    `${h.rank},${h.address.toBase58()},${h.balance},${h.percentage}`
+    `${h.rank},${h.address.toBase58()},${h.balance},${h.percentage}`,
   )
 
   return [headers, ...rows].join('\n')

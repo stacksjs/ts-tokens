@@ -32,7 +32,7 @@ export interface BatchTransferResult {
   failed: number
   total: number
   signatures: string[]
-  errors: Array<{ recipient: string; error: string }>
+  errors: Array<{ recipient: string, error: string }>
 }
 
 /**
@@ -63,7 +63,7 @@ export interface BatchMintResult {
   failed: number
   total: number
   signatures: string[]
-  errors: Array<{ recipient: string; error: string }>
+  errors: Array<{ recipient: string, error: string }>
 }
 
 /**
@@ -97,7 +97,7 @@ export interface BatchNFTMintResult {
   failed: number
   total: number
   mints: string[]
-  errors: Array<{ item: BatchNFTMintItem; error: string }>
+  errors: Array<{ item: BatchNFTMintItem, error: string }>
 }
 
 /**
@@ -117,5 +117,5 @@ export interface BatchJob<T> {
   startedAt: Date
   completedAt?: Date
   results: T[]
-  errors: Array<{ index: number; error: string }>
+  errors: Array<{ index: number, error: string }>
 }

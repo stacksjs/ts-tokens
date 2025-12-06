@@ -5,7 +5,7 @@ Mint NFTs from a Candy Machine.
 ## Quick Start
 
 ```typescript
-import { mintFromCandyMachine, getConfig } from 'ts-tokens'
+import { getConfig, mintFromCandyMachine } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -19,11 +19,11 @@ console.log('Minted NFT:', nft.mint)
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `candyMachine` | string | Candy Machine address |
-| `config` | TokenConfig | Configuration object |
-| `options` | MintOptions | Optional mint options |
+| Parameter      | Type        | Description           |
+| -------------- | ----------- | --------------------- |
+| `candyMachine` | string      | Candy Machine address |
+| `config`       | TokenConfig | Configuration object  |
+| `options`      | MintOptions | Optional mint options |
 
 ## Mint Options
 
@@ -84,11 +84,11 @@ for (let i = 0; i < count; i++) {
 
 ```typescript
 interface MintResult {
-  mint: string           // NFT mint address
-  metadata: string       // Metadata account address
-  masterEdition: string  // Master edition address
-  tokenAccount: string   // Token account address
-  signature: string      // Transaction signature
+  mint: string // NFT mint address
+  metadata: string // Metadata account address
+  masterEdition: string // Master edition address
+  tokenAccount: string // Token account address
+  signature: string // Transaction signature
 }
 ```
 
@@ -97,16 +97,21 @@ interface MintResult {
 ```typescript
 try {
   const nft = await mintFromCandyMachine(candyMachine, config)
-} catch (error) {
+}
+catch (error) {
   if (error.message.includes('NotLiveYet')) {
     console.log('Minting has not started yet')
-  } else if (error.message.includes('SoldOut')) {
+  }
+  else if (error.message.includes('SoldOut')) {
     console.log('Candy Machine is sold out')
-  } else if (error.message.includes('MintLimitReached')) {
+  }
+  else if (error.message.includes('MintLimitReached')) {
     console.log('You have reached your mint limit')
-  } else if (error.message.includes('NotAllowed')) {
+  }
+  else if (error.message.includes('NotAllowed')) {
     console.log('You are not on the allowlist')
-  } else {
+  }
+  else {
     console.error('Mint failed:', error.message)
   }
 }
@@ -126,7 +131,8 @@ const eligibility = await canMint(candyMachine, config)
 if (eligibility.canMint) {
   console.log('Ready to mint!')
   console.log('Price:', eligibility.price, 'SOL')
-} else {
+}
+else {
   console.log('Cannot mint:', eligibility.reason)
 }
 ```

@@ -1,13 +1,16 @@
-import React from 'react'
 import type { NFTProps } from '../types'
+import React from 'react'
 import { useNFT } from '../hooks'
 
 export function NFTCard({ mint, showDetails = false, className, style }: NFTProps): JSX.Element {
   const { nft, loading, error } = useNFT(mint)
 
-  if (loading) return <div className={className} style={style}>Loading...</div>
-  if (error) return <div className={className} style={style}>Error loading NFT</div>
-  if (!nft) return <div className={className} style={style}>NFT not found</div>
+  if (loading)
+    return <div className={className} style={style}>Loading...</div>
+  if (error)
+    return <div className={className} style={style}>Error loading NFT</div>
+  if (!nft)
+    return <div className={className} style={style}>NFT not found</div>
 
   return (
     <div className={className} style={{ border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden', ...style }}>

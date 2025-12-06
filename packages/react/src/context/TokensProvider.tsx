@@ -4,9 +4,10 @@
  * Context provider for token operations.
  */
 
-import React, { createContext, useContext, useMemo, type ReactNode } from 'react'
-import { Connection } from '@solana/web3.js'
+import type { ReactNode } from 'react'
 import type { TokenConfig } from 'ts-tokens'
+import { Connection } from '@solana/web3.js'
+import React, { createContext, useContext, useMemo } from 'react'
 
 /**
  * Tokens context value
@@ -49,7 +50,7 @@ export function TokensProvider({
         ...config,
       } as TokenConfig,
     }),
-    [connection, endpoint, config]
+    [connection, endpoint, config],
   )
 
   return (

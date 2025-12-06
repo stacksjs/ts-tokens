@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = withDefaults(defineProps<{
   address: string
@@ -15,12 +15,14 @@ const props = withDefaults(defineProps<{
 const copied = ref(false)
 
 const displayAddress = computed(() => {
-  if (!props.truncate) return props.address
+  if (!props.truncate)
+    return props.address
   return `${props.address.slice(0, props.chars)}...${props.address.slice(-props.chars)}`
 })
 
-const handleCopy = async () => {
-  if (!props.copyable) return
+async function handleCopy() {
+  if (!props.copyable)
+    return
   await navigator.clipboard.writeText(props.address)
   copied.value = true
   setTimeout(() => { copied.value = false }, 2000)
@@ -30,8 +32,8 @@ const handleCopy = async () => {
 <template>
   <span
     :style="{ cursor: copyable ? 'pointer' : 'default', fontFamily: 'monospace' }"
-    @click="handleCopy"
     :title="address"
+    @click="handleCopy"
   >
     {{ displayAddress }} <template v-if="copied">✓</template>
   </span>

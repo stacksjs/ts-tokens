@@ -4,8 +4,9 @@
  * AMM and liquidity pool helpers.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
-import type { LiquidityPool, CreatePoolOptions, AddLiquidityOptions, RemoveLiquidityOptions } from './types'
+import type { Connection } from '@solana/web3.js'
+import type { LiquidityPool } from './types'
+import { PublicKey } from '@solana/web3.js'
 
 const RAYDIUM_API = 'https://api.raydium.io/v2'
 
@@ -14,7 +15,7 @@ const RAYDIUM_API = 'https://api.raydium.io/v2'
  */
 export async function getPoolInfo(
   connection: Connection,
-  poolAddress: PublicKey
+  poolAddress: PublicKey,
 ): Promise<LiquidityPool | null> {
   try {
     const response = await fetch(`${RAYDIUM_API}/main/pool/${poolAddress.toBase58()}`)
@@ -37,7 +38,8 @@ export async function getPoolInfo(
       fee: data.fee ?? 0.0025, // 0.25% default
       apy: data.apy,
     }
-  } catch {
+  }
+  catch {
     return null
   }
 }
@@ -46,7 +48,7 @@ export async function getPoolInfo(
  * Get all pools for a token
  */
 export async function getPoolsForToken(
-  tokenMint: PublicKey
+  tokenMint: PublicKey,
 ): Promise<LiquidityPool[]> {
   try {
     const response = await fetch(`${RAYDIUM_API}/main/pairs`)
@@ -59,8 +61,8 @@ export async function getPoolsForToken(
     const mintAddress = tokenMint.toBase58()
 
     return data
-      .filter((pool: { baseMint: string; quoteMint: string }) =>
-        pool.baseMint === mintAddress || pool.quoteMint === mintAddress
+      .filter((pool: { baseMint: string, quoteMint: string }) =>
+        pool.baseMint === mintAddress || pool.quoteMint === mintAddress,
       )
       .map((pool: {
         ammId: string
@@ -84,7 +86,8 @@ export async function getPoolsForToken(
         fee: pool.fee ?? 0.0025,
         apy: pool.apy,
       }))
-  } catch {
+  }
+  catch {
     return []
   }
 }
@@ -93,7 +96,8 @@ export async function getPoolsForToken(
  * Calculate pool price
  */
 export function calculatePoolPrice(pool: LiquidityPool): number {
-  if (pool.reserveA === 0n) return 0
+  if (pool.reserveA === 0n)
+    return 0
   return Number(pool.reserveB) / Number(pool.reserveA)
 }
 
@@ -104,9 +108,10 @@ export function calculateLPValue(
   pool: LiquidityPool,
   lpAmount: bigint,
   priceA: number,
-  priceB: number
+  priceB: number,
 ): number {
-  if (pool.lpSupply === 0n) return 0
+  if (pool.lpSupply === 0n)
+    return 0
 
   const shareA = (Number(pool.reserveA) * Number(lpAmount)) / Number(pool.lpSupply)
   const shareB = (Number(pool.reserveB) * Number(lpAmount)) / Number(pool.lpSupply)
@@ -121,7 +126,7 @@ export function calculateSwapOutput(
   inputAmount: bigint,
   inputReserve: bigint,
   outputReserve: bigint,
-  feeBps: number = 25
+  feeBps: number = 25,
 ): bigint {
   const inputWithFee = inputAmount * BigInt(10000 - feeBps)
   const numerator = inputWithFee * outputReserve
@@ -137,7 +142,7 @@ export function calculateSwapInput(
   outputAmount: bigint,
   inputReserve: bigint,
   outputReserve: bigint,
-  feeBps: number = 25
+  feeBps: number = 25,
 ): bigint {
   const numerator = inputReserve * outputAmount * 10000n
   const denominator = (outputReserve - outputAmount) * BigInt(10000 - feeBps)
@@ -152,7 +157,7 @@ export function calculatePriceImpact(
   inputAmount: bigint,
   outputAmount: bigint,
   inputReserve: bigint,
-  outputReserve: bigint
+  outputReserve: bigint,
 ): number {
   const spotPrice = Number(outputReserve) / Number(inputReserve)
   const executionPrice = Number(outputAmount) / Number(inputAmount)
@@ -165,8 +170,8 @@ export function calculatePriceImpact(
  */
 export function calculateOptimalLPAmounts(
   pool: LiquidityPool,
-  amountA: bigint
-): { amountA: bigint; amountB: bigint } {
+  amountA: bigint,
+): { amountA: bigint, amountB: bigint } {
   if (pool.reserveA === 0n || pool.reserveB === 0n) {
     return { amountA, amountB: amountA }
   }
@@ -182,7 +187,7 @@ export function calculateOptimalLPAmounts(
 export function calculateLPTokens(
   pool: LiquidityPool,
   amountA: bigint,
-  amountB: bigint
+  amountB: bigint,
 ): bigint {
   if (pool.lpSupply === 0n) {
     // Initial liquidity
@@ -208,8 +213,8 @@ export function calculateLPTokens(
  */
 export function calculateRemoveLiquidity(
   pool: LiquidityPool,
-  lpAmount: bigint
-): { amountA: bigint; amountB: bigint } {
+  lpAmount: bigint,
+): { amountA: bigint, amountB: bigint } {
   if (pool.lpSupply === 0n) {
     return { amountA: 0n, amountB: 0n }
   }

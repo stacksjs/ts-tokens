@@ -2,7 +2,7 @@
  * i18n Tests
  */
 
-import { describe, test, expect } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 
 describe('Translations', () => {
   test('should interpolate values', () => {
@@ -110,10 +110,14 @@ describe('Duration Formatting', () => {
       const secs = seconds % 60
 
       const parts: string[] = []
-      if (days > 0) parts.push(`${days}d`)
-      if (hours > 0) parts.push(`${hours}h`)
-      if (minutes > 0) parts.push(`${minutes}m`)
-      if (secs > 0 || parts.length === 0) parts.push(`${secs}s`)
+      if (days > 0)
+        parts.push(`${days}d`)
+      if (hours > 0)
+        parts.push(`${hours}h`)
+      if (minutes > 0)
+        parts.push(`${minutes}m`)
+      if (secs > 0 || parts.length === 0)
+        parts.push(`${secs}s`)
 
       return parts.join(' ')
     }

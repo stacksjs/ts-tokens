@@ -5,10 +5,10 @@
  * Reduces plutocracy by making additional votes increasingly expensive.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
-  VotingPower,
   QuadraticVotingConfig,
+  VotingPower,
 } from './types'
 
 /**
@@ -16,7 +16,8 @@ import type {
  * Vote weight = √(token balance)
  */
 export function calculateQuadraticPower(tokenBalance: bigint): bigint {
-  if (tokenBalance <= 0n) return 0n
+  if (tokenBalance <= 0n)
+    return 0n
 
   // Integer square root using Newton's method
   let x = tokenBalance
@@ -36,7 +37,7 @@ export function calculateQuadraticPower(tokenBalance: bigint): bigint {
 export async function getQuadraticVotingPower(
   connection: Connection,
   voter: PublicKey,
-  config: QuadraticVotingConfig
+  config: QuadraticVotingConfig,
 ): Promise<VotingPower> {
   // Get token balance
   const tokenAccounts = await connection.getTokenAccountsByOwner(voter, {
@@ -91,8 +92,8 @@ export function calculateTokensNeeded(votes: bigint): bigint {
  * Simulate quadratic voting distribution
  */
 export function simulateQuadraticDistribution(
-  balances: bigint[]
-): { voter: number; balance: bigint; votes: bigint; percentage: number }[] {
+  balances: bigint[],
+): { voter: number, balance: bigint, votes: bigint, percentage: number }[] {
   const results = balances.map((balance, i) => ({
     voter: i,
     balance,
@@ -111,8 +112,8 @@ export function simulateQuadraticDistribution(
  * Compare linear vs quadratic voting power
  */
 export function compareVotingMechanisms(balances: bigint[]): {
-  linear: { gini: number; top10Percentage: number }
-  quadratic: { gini: number; top10Percentage: number }
+  linear: { gini: number, top10Percentage: number }
+  quadratic: { gini: number, top10Percentage: number }
 } {
   const sorted = [...balances].sort((a, b) => Number(b - a))
   const totalLinear = sorted.reduce((a, b) => a + b, 0n)
@@ -140,13 +141,15 @@ export function compareVotingMechanisms(balances: bigint[]): {
  * Calculate Gini coefficient
  */
 function calculateGini(values: number[]): number {
-  if (values.length === 0) return 0
+  if (values.length === 0)
+    return 0
 
   const sorted = [...values].sort((a, b) => a - b)
   const n = sorted.length
   const sum = sorted.reduce((a, b) => a + b, 0)
 
-  if (sum === 0) return 0
+  if (sum === 0)
+    return 0
 
   let numerator = 0
   for (let i = 0; i < n; i++) {
@@ -161,9 +164,9 @@ function calculateGini(values: number[]): number {
  */
 export function formatQuadraticPower(
   tokenBalance: bigint,
-  decimals: number = 9
+  decimals: number = 9,
 ): string {
-  const tokens = Number(tokenBalance) / Math.pow(10, decimals)
+  const tokens = Number(tokenBalance) / 10 ** decimals
   const votes = calculateQuadraticPower(tokenBalance)
 
   return [

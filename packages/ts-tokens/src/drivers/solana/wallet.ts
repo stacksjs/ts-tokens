@@ -4,12 +4,13 @@
  * Handles keypair loading, signing, and wallet adapter integration.
  */
 
-import { Keypair, PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js'
-import type { TokenConfig, Wallet, WalletAdapter } from '../../types'
-import { decode as decodeBase58 } from '../../utils/base58'
+import type { VersionedTransaction } from '@solana/web3.js'
+import type { TokenConfig, Wallet } from '../../types'
 import * as fs from 'node:fs'
-import * as path from 'node:path'
 import * as os from 'node:os'
+import * as path from 'node:path'
+import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
+import { decode as decodeBase58 } from '../../utils/base58'
 
 /**
  * Current wallet instance
@@ -54,12 +55,14 @@ export function loadKeypairFromEnv(envVar: string = 'TOKENS_KEYPAIR'): Keypair {
   try {
     const secretKey = new Uint8Array(JSON.parse(value))
     return Keypair.fromSecretKey(secretKey)
-  } catch {
+  }
+  catch {
     // Try as base58 encoded string
     try {
       const secretKey = decodeBase58(value)
       return Keypair.fromSecretKey(secretKey)
-    } catch {
+    }
+    catch {
       throw new Error(`Invalid keypair format in ${envVar}. Expected JSON array or base58 string.`)
     }
   }
@@ -112,8 +115,8 @@ export function loadWallet(config: TokenConfig): Keypair {
   }
 
   throw new Error(
-    'No wallet configured. Set wallet.keypairPath in config, ' +
-    'TOKENS_KEYPAIR environment variable, or create ~/.config/solana/id.json'
+    'No wallet configured. Set wallet.keypairPath in config, '
+    + 'TOKENS_KEYPAIR environment variable, or create ~/.config/solana/id.json',
   )
 }
 
@@ -153,13 +156,14 @@ export function getPublicKey(config: TokenConfig): string {
  */
 export function signTransaction<T extends Transaction | VersionedTransaction>(
   transaction: T,
-  config: TokenConfig
+  config: TokenConfig,
 ): T {
   const wallet = loadWallet(config)
 
   if (transaction instanceof Transaction) {
     transaction.partialSign(wallet)
-  } else {
+  }
+  else {
     transaction.sign([wallet])
   }
 
@@ -175,7 +179,7 @@ export function signTransaction<T extends Transaction | VersionedTransaction>(
  */
 export function signAllTransactions<T extends Transaction | VersionedTransaction>(
   transactions: T[],
-  config: TokenConfig
+  config: TokenConfig,
 ): T[] {
   return transactions.map(tx => signTransaction(tx, config))
 }
@@ -250,7 +254,8 @@ export function isValidPublicKey(address: string): boolean {
   try {
     new PublicKey(address)
     return true
-  } catch {
+  }
+  catch {
     return false
   }
 }

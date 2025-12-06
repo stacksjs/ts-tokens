@@ -2,18 +2,17 @@
  * Multi-Signature Signing
  */
 
-import {
+import type {
   Connection,
   PublicKey,
-  Keypair,
-  Transaction,
   TransactionInstruction,
 } from '@solana/web3.js'
+
 import type {
+  ExecuteMultisigOptions,
   MultisigTransaction,
   PendingSignature,
   SignTransactionOptions,
-  ExecuteMultisigOptions,
 } from './types'
 import { getMultisig } from './create'
 
@@ -27,7 +26,7 @@ export async function createMultisigTransaction(
   connection: Connection,
   multisig: PublicKey,
   instruction: TransactionInstruction,
-  description?: string
+  description?: string,
 ): Promise<MultisigTransaction> {
   const multisigAccount = await getMultisig(connection, multisig)
 
@@ -57,8 +56,8 @@ export async function createMultisigTransaction(
  */
 export async function signMultisigTransaction(
   connection: Connection,
-  options: SignTransactionOptions
-): Promise<{ signed: boolean; remainingSignatures: number }> {
+  options: SignTransactionOptions,
+): Promise<{ signed: boolean, remainingSignatures: number }> {
   const { transactionId, signer } = options
 
   const transaction = pendingTransactions.get(transactionId)
@@ -102,7 +101,7 @@ export async function signMultisigTransaction(
  */
 export async function executeMultisigTransaction(
   connection: Connection,
-  options: ExecuteMultisigOptions
+  options: ExecuteMultisigOptions,
 ): Promise<{ signature: string }> {
   const { transactionId } = options
 
@@ -125,7 +124,7 @@ export async function executeMultisigTransaction(
   // Check if enough signatures
   if (transaction.signatures.size < multisigAccount.m) {
     throw new Error(
-      `Not enough signatures: ${transaction.signatures.size}/${multisigAccount.m}`
+      `Not enough signatures: ${transaction.signatures.size}/${multisigAccount.m}`,
     )
   }
 
@@ -143,7 +142,7 @@ export async function executeMultisigTransaction(
  */
 export async function getPendingSignatures(
   connection: Connection,
-  multisig: PublicKey
+  multisig: PublicKey,
 ): Promise<PendingSignature[]> {
   const multisigAccount = await getMultisig(connection, multisig)
 
@@ -196,8 +195,8 @@ export function cancelMultisigTransaction(transactionId: string): boolean {
  */
 export async function canExecute(
   connection: Connection,
-  transactionId: string
-): Promise<{ canExecute: boolean; reason?: string }> {
+  transactionId: string,
+): Promise<{ canExecute: boolean, reason?: string }> {
   const transaction = pendingTransactions.get(transactionId)
 
   if (!transaction) {

@@ -60,7 +60,7 @@ const config = await getConfig()
 
 // Parse CSV
 const csv = readFileSync('./recipients.csv', 'utf-8')
-const recipients = csv.split('\n').slice(1).map(line => {
+const recipients = csv.split('\n').slice(1).map((line) => {
   const [address, amount] = line.split(',')
   return { address, amount: BigInt(amount) }
 })
@@ -120,7 +120,7 @@ const config = await getConfig()
 const cost = await estimateBatchTransferCost(
   config.connection,
   100, // recipient count
-  50   // recipients needing ATA creation
+  50 // recipients needing ATA creation
 )
 
 console.log('Estimated cost:', cost.sol, 'SOL')
@@ -164,12 +164,12 @@ tokens batch:estimate --file ./recipients.csv
 
 ## Batch Size Guidelines
 
-| Operation | Recommended Batch Size |
-|-----------|------------------------|
-| Token transfers | 5-10 per transaction |
-| Token mints | 10-20 per transaction |
-| NFT mints | 1 per transaction |
-| Metadata updates | 5-10 per transaction |
+| Operation        | Recommended Batch Size |
+| ---------------- | ---------------------- |
+| Token transfers  | 5-10 per transaction   |
+| Token mints      | 10-20 per transaction  |
+| NFT mints        | 1 per transaction      |
+| Metadata updates | 5-10 per transaction   |
 
 ## Error Recovery
 

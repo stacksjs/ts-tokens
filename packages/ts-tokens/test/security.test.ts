@@ -2,8 +2,8 @@
  * Security Tests
  */
 
-import { describe, test, expect } from 'bun:test'
 import { Keypair, PublicKey } from '@solana/web3.js'
+import { describe, expect, test } from 'bun:test'
 
 describe('Address Validation', () => {
   test('should validate correct Solana address', () => {
@@ -168,7 +168,7 @@ describe('Security Risk Scoring', () => {
 
     const riskScore = Math.min(
       findings.critical * 40 + findings.high * 20 + findings.medium * 10,
-      100
+      100,
     )
     expect(riskScore).toBe(100)
   })

@@ -4,8 +4,8 @@
  * Generic DAS API helpers that work with any DAS-compatible RPC.
  */
 
-import { PublicKey } from '@solana/web3.js'
-import type { DASAsset, DASSearchResult, DASSearchOptions } from './types'
+import type { PublicKey } from '@solana/web3.js'
+import type { DASAsset, DASSearchOptions, DASSearchResult } from './types'
 
 /**
  * DAS RPC client
@@ -69,9 +69,9 @@ export class DASClient {
     options: {
       page?: number
       limit?: number
-      sortBy?: { sortBy: 'created' | 'updated'; sortDirection: 'asc' | 'desc' }
-      displayOptions?: { showFungible?: boolean; showNativeBalance?: boolean }
-    } = {}
+      sortBy?: { sortBy: 'created' | 'updated', sortDirection: 'asc' | 'desc' }
+      displayOptions?: { showFungible?: boolean, showNativeBalance?: boolean }
+    } = {},
   ): Promise<DASSearchResult> {
     const ownerAddress = typeof owner === 'string' ? owner : owner.toBase58()
     return this.request('getAssetsByOwner', {
@@ -89,7 +89,7 @@ export class DASClient {
   async getAssetsByGroup(
     groupKey: 'collection',
     groupValue: string | PublicKey,
-    options: { page?: number; limit?: number } = {}
+    options: { page?: number, limit?: number } = {},
   ): Promise<DASSearchResult> {
     const value = typeof groupValue === 'string' ? groupValue : groupValue.toBase58()
     return this.request('getAssetsByGroup', {
@@ -105,7 +105,7 @@ export class DASClient {
    */
   async getAssetsByCreator(
     creator: string | PublicKey,
-    options: { onlyVerified?: boolean; page?: number; limit?: number } = {}
+    options: { onlyVerified?: boolean, page?: number, limit?: number } = {},
   ): Promise<DASSearchResult> {
     const creatorAddress = typeof creator === 'string' ? creator : creator.toBase58()
     return this.request('getAssetsByCreator', {
@@ -121,7 +121,7 @@ export class DASClient {
    */
   async getAssetsByAuthority(
     authority: string | PublicKey,
-    options: { page?: number; limit?: number } = {}
+    options: { page?: number, limit?: number } = {},
   ): Promise<DASSearchResult> {
     const authorityAddress = typeof authority === 'string' ? authority : authority.toBase58()
     return this.request('getAssetsByAuthority', {
@@ -157,8 +157,8 @@ export class DASClient {
    */
   async getSignaturesForAsset(
     id: string | PublicKey,
-    options: { page?: number; limit?: number } = {}
-  ): Promise<{ items: Array<{ signature: string; slot: number }> }> {
+    options: { page?: number, limit?: number } = {},
+  ): Promise<{ items: Array<{ signature: string, slot: number }> }> {
     const assetId = typeof id === 'string' ? id : id.toBase58()
     return this.request('getSignaturesForAsset', {
       id: assetId,
@@ -181,7 +181,7 @@ export function createDASClient(rpcUrl: string): DASClient {
 export async function getAllNFTsByOwner(
   client: DASClient,
   owner: string | PublicKey,
-  options: { onlyCompressed?: boolean } = {}
+  options: { onlyCompressed?: boolean } = {},
 ): Promise<DASAsset[]> {
   const allAssets: DASAsset[] = []
   let page = 1
@@ -210,7 +210,7 @@ export async function getAllNFTsByOwner(
  */
 export async function getAllNFTsInCollection(
   client: DASClient,
-  collection: string | PublicKey
+  collection: string | PublicKey,
 ): Promise<DASAsset[]> {
   const allAssets: DASAsset[] = []
   let page = 1

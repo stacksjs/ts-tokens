@@ -125,15 +125,15 @@ export interface CreateToken2022Options {
 /**
  * Extension configuration for creation
  */
-export type ExtensionConfig =
-  | { type: 'transferFee'; feeBasisPoints: number; maxFee: bigint; feeAuthority: PublicKey; withdrawAuthority: PublicKey }
-  | { type: 'interestBearing'; rate: number; rateAuthority: PublicKey }
-  | { type: 'permanentDelegate'; delegate: PublicKey }
-  | { type: 'transferHook'; programId: PublicKey; authority?: PublicKey }
-  | { type: 'metadataPointer'; metadataAddress: PublicKey; authority?: PublicKey }
-  | { type: 'mintCloseAuthority'; closeAuthority: PublicKey }
-  | { type: 'defaultAccountState'; state: AccountState }
-  | { type: 'nonTransferable' }
-  | { type: 'immutableOwner' }
-  | { type: 'memoTransfer' }
-  | { type: 'cpiGuard' }
+export type ExtensionConfig
+  = | { type: 'transferFee', feeBasisPoints: number, maxFee: bigint, feeAuthority: PublicKey, withdrawAuthority: PublicKey }
+    | { type: 'interestBearing', rate: number, rateAuthority: PublicKey }
+    | { type: 'permanentDelegate', delegate: PublicKey }
+    | { type: 'transferHook', programId: PublicKey, authority?: PublicKey }
+    | { type: 'metadataPointer', metadataAddress: PublicKey, authority?: PublicKey }
+    | { type: 'mintCloseAuthority', closeAuthority: PublicKey }
+    | { type: 'defaultAccountState', state: AccountState }
+    | { type: 'nonTransferable' }
+    | { type: 'immutableOwner' }
+    | { type: 'memoTransfer' }
+    | { type: 'cpiGuard' }

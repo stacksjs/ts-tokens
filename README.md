@@ -3,6 +3,7 @@
 [![npm version][npm-version-src]][npm-version-href]
 [![GitHub Actions][github-actions-src]][github-actions-href]
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+
 <!-- [![npm downloads][npm-downloads-src]][npm-downloads-href] -->
 <!-- [![Codecov][codecov-src]][codecov-href] -->
 
@@ -144,12 +145,12 @@ export default defineConfig({
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
-| `ts-tokens` | Core library and CLI |
-| `@ts-tokens/react` | React components and hooks |
-| `@ts-tokens/vue` | Vue 3 components and composables |
-| `ts-governance` | DAO governance and voting |
+| Package            | Description                      |
+| ------------------ | -------------------------------- |
+| `ts-tokens`        | Core library and CLI             |
+| `@ts-tokens/react` | React components and hooks       |
+| `@ts-tokens/vue`   | Vue 3 components and composables |
+| `ts-governance`    | DAO governance and voting        |
 
 ## Documentation
 
@@ -221,6 +222,7 @@ The MIT License (MIT). Please see [LICENSE](LICENSE.md) for more information.
 Made with 💙
 
 <!-- Badges -->
+
 [npm-version-src]: https://img.shields.io/npm/v/ts-tokens?style=flat-square
 [npm-version-href]: https://npmjs.com/package/ts-tokens
 [github-actions-src]: https://img.shields.io/github/actions/workflow/status/stacksjs/ts-tokens/ci.yml?style=flat-square&branch=main

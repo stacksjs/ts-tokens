@@ -2,7 +2,7 @@
  * Fluent API Types
  */
 
-import type { PublicKey, TransactionInstruction, Keypair } from '@solana/web3.js'
+import type { PublicKey, TransactionInstruction } from '@solana/web3.js'
 
 /**
  * Operation in the chain
@@ -20,7 +20,7 @@ export interface ExecutionResult {
   success: boolean
   signatures: string[]
   operations: ChainedOperation[]
-  errors: Array<{ operation: string; error: string }>
+  errors: Array<{ operation: string, error: string }>
 }
 
 /**
@@ -86,7 +86,7 @@ export interface NFTCreationParams {
   symbol: string
   uri: string
   sellerFeeBasisPoints?: number
-  creators?: Array<{ address: PublicKey; share: number }>
+  creators?: Array<{ address: PublicKey, share: number }>
   collection?: PublicKey
 }
 

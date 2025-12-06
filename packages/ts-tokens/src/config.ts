@@ -1,6 +1,6 @@
-import type { TokenConfig, TokenOptions, SolanaNetwork } from './types'
+import type { SolanaNetwork, TokenConfig, TokenOptions } from './types'
 import { loadConfig } from 'bunfig'
-import { DEFAULT_RPC_ENDPOINTS, DEFAULT_EXPLORER_URLS } from './types'
+import { DEFAULT_EXPLORER_URLS, DEFAULT_RPC_ENDPOINTS } from './types'
 
 /**
  * Default configuration values

@@ -1,5 +1,5 @@
-import React from 'react'
 import type { CommonProps } from '../types'
+import React from 'react'
 
 export interface WalletAddressProps extends CommonProps {
   address: string

@@ -35,7 +35,7 @@ function getIntlLocale(locale?: Locale): string {
 export function formatNumber(
   value: number | bigint,
   options?: Intl.NumberFormatOptions,
-  locale?: Locale
+  locale?: Locale,
 ): string {
   const num = typeof value === 'bigint' ? Number(value) : value
   return new Intl.NumberFormat(getIntlLocale(locale), options).format(num)
@@ -47,7 +47,7 @@ export function formatNumber(
 export function formatCurrency(
   value: number,
   currency: string = 'USD',
-  locale?: Locale
+  locale?: Locale,
 ): string {
   return new Intl.NumberFormat(getIntlLocale(locale), {
     style: 'currency',
@@ -70,9 +70,9 @@ export function formatTokenAmount(
   amount: bigint | number,
   decimals: number,
   symbol?: string,
-  locale?: Locale
+  locale?: Locale,
 ): string {
-  const value = Number(amount) / Math.pow(10, decimals)
+  const value = Number(amount) / 10 ** decimals
   const formatted = formatNumber(value, {
     maximumFractionDigits: decimals,
   }, locale)
@@ -86,7 +86,7 @@ export function formatTokenAmount(
 export function formatPercent(
   value: number,
   decimals: number = 2,
-  locale?: Locale
+  locale?: Locale,
 ): string {
   return new Intl.NumberFormat(getIntlLocale(locale), {
     style: 'percent',
@@ -101,7 +101,7 @@ export function formatPercent(
 export function formatDate(
   date: Date | number,
   options?: Intl.DateTimeFormatOptions,
-  locale?: Locale
+  locale?: Locale,
 ): string {
   const d = typeof date === 'number' ? new Date(date) : date
   return new Intl.DateTimeFormat(getIntlLocale(locale), options).format(d)
@@ -147,7 +147,7 @@ export function formatDateTime(date: Date | number, locale?: Locale): string {
  */
 export function formatRelativeTime(
   date: Date | number,
-  locale?: Locale
+  locale?: Locale,
 ): string {
   const d = typeof date === 'number' ? new Date(date) : date
   const now = new Date()
@@ -161,11 +161,16 @@ export function formatRelativeTime(
     numeric: 'auto',
   })
 
-  if (diffSec < 60) return rtf.format(-diffSec, 'second')
-  if (diffMin < 60) return rtf.format(-diffMin, 'minute')
-  if (diffHour < 24) return rtf.format(-diffHour, 'hour')
-  if (diffDay < 30) return rtf.format(-diffDay, 'day')
-  if (diffDay < 365) return rtf.format(-Math.floor(diffDay / 30), 'month')
+  if (diffSec < 60)
+    return rtf.format(-diffSec, 'second')
+  if (diffMin < 60)
+    return rtf.format(-diffMin, 'minute')
+  if (diffHour < 24)
+    return rtf.format(-diffHour, 'hour')
+  if (diffDay < 30)
+    return rtf.format(-diffDay, 'day')
+  if (diffDay < 365)
+    return rtf.format(-Math.floor(diffDay / 30), 'month')
   return rtf.format(-Math.floor(diffDay / 365), 'year')
 }
 
@@ -180,10 +185,14 @@ export function formatDuration(seconds: number, locale?: Locale): string {
 
   const parts: string[] = []
 
-  if (days > 0) parts.push(`${days}d`)
-  if (hours > 0) parts.push(`${hours}h`)
-  if (minutes > 0) parts.push(`${minutes}m`)
-  if (secs > 0 || parts.length === 0) parts.push(`${secs}s`)
+  if (days > 0)
+    parts.push(`${days}d`)
+  if (hours > 0)
+    parts.push(`${hours}h`)
+  if (minutes > 0)
+    parts.push(`${minutes}m`)
+  if (secs > 0 || parts.length === 0)
+    parts.push(`${secs}s`)
 
   return parts.join(' ')
 }
@@ -192,7 +201,8 @@ export function formatDuration(seconds: number, locale?: Locale): string {
  * Format address (truncate middle)
  */
 export function formatAddress(address: string, chars: number = 4): string {
-  if (address.length <= chars * 2 + 3) return address
+  if (address.length <= chars * 2 + 3)
+    return address
   return `${address.slice(0, chars)}...${address.slice(-chars)}`
 }
 

@@ -2,8 +2,8 @@
  * Utility Function Tests
  */
 
-import { describe, test, expect } from 'bun:test'
-import { Keypair, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { describe, expect, test } from 'bun:test'
 
 describe('Address Utilities', () => {
   test('should generate valid keypair', () => {

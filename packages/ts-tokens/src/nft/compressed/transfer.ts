@@ -4,15 +4,16 @@
  * Transfer compressed NFTs between wallets.
  */
 
-import {
-  Connection,
-  PublicKey,
+import type {
   TransactionInstruction,
 } from '@solana/web3.js'
-import type { TokenConfig, TransactionResult, TransactionOptions } from '../../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../../drivers/solana/transaction'
-import { loadWallet } from '../../drivers/solana/wallet'
+import type { TokenConfig, TransactionOptions, TransactionResult } from '../../types'
+import {
+  PublicKey,
+} from '@solana/web3.js'
 import { createConnection } from '../../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../../drivers/solana/transaction'
+import { loadWallet } from '../../drivers/solana/wallet'
 
 /**
  * Bubblegum Program ID
@@ -58,7 +59,7 @@ export interface TransferCompressedNFTOptions {
  */
 export async function transferCompressedNFT(
   transferOptions: TransferCompressedNFTOptions,
-  tokenConfig: TokenConfig
+  tokenConfig: TokenConfig,
 ): Promise<TransactionResult> {
   const connection = createConnection(tokenConfig)
   const payer = loadWallet(tokenConfig)
@@ -75,7 +76,7 @@ export async function transferCompressedNFT(
   // Get tree authority PDA
   const [treeAuthority] = PublicKey.findProgramAddressSync(
     [treePubkey.toBuffer()],
-    BUBBLEGUM_PROGRAM_ID
+    BUBBLEGUM_PROGRAM_ID,
   )
 
   // Build transfer instruction
@@ -145,7 +146,7 @@ export async function transferCompressedNFT(
     connection,
     [instruction],
     payer.publicKey,
-    transferOptions.options
+    transferOptions.options,
   )
 
   transaction.partialSign(payer)
@@ -159,7 +160,7 @@ export async function transferCompressedNFT(
  */
 export async function getAssetProof(
   assetId: string,
-  tokenConfig: TokenConfig
+  tokenConfig: TokenConfig,
 ): Promise<AssetProof> {
   const connection = createConnection(tokenConfig)
 
@@ -185,7 +186,7 @@ export async function getAssetProof(
  */
 export async function getAsset(
   assetId: string,
-  tokenConfig: TokenConfig
+  tokenConfig: TokenConfig,
 ): Promise<{
   id: string
   owner: string
@@ -240,7 +241,7 @@ export async function burnCompressedNFT(
   tree: string,
   proof: AssetProof,
   tokenConfig: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(tokenConfig)
   const payer = loadWallet(tokenConfig)
@@ -250,7 +251,7 @@ export async function burnCompressedNFT(
   // Get tree authority PDA
   const [treeAuthority] = PublicKey.findProgramAddressSync(
     [treePubkey.toBuffer()],
-    BUBBLEGUM_PROGRAM_ID
+    BUBBLEGUM_PROGRAM_ID,
   )
 
   // Serialize burn data (similar to transfer)
@@ -305,7 +306,7 @@ export async function burnCompressedNFT(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)

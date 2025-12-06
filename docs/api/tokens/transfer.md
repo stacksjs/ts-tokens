@@ -5,13 +5,13 @@ Transfer tokens between wallets.
 ## Quick Start
 
 ```typescript
-import { transferTokens, getConfig } from 'ts-tokens'
+import { getConfig, transferTokens } from 'ts-tokens'
 
 const config = await getConfig()
 
 const result = await transferTokens(
   'TokenMintAddress...',
-  1000000,  // amount
+  1000000, // amount
   'RecipientAddress...',
   config
 )
@@ -21,13 +21,13 @@ console.log('Transferred:', result.signature)
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `mint` | string | Token mint address |
-| `amount` | number | Amount to transfer (in base units) |
-| `recipient` | string | Recipient wallet address |
-| `config` | TokenConfig | Configuration object |
-| `options` | TransactionOptions | Optional transaction settings |
+| Parameter   | Type               | Description                        |
+| ----------- | ------------------ | ---------------------------------- |
+| `mint`      | string             | Token mint address                 |
+| `amount`    | number             | Amount to transfer (in base units) |
+| `recipient` | string             | Recipient wallet address           |
+| `config`    | TokenConfig        | Configuration object               |
+| `options`   | TransactionOptions | Optional transaction settings      |
 
 ## Examples
 

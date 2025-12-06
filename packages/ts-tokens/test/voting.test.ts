@@ -2,8 +2,7 @@
  * Voting Mechanism Tests
  */
 
-import { describe, test, expect } from 'bun:test'
-import { Keypair } from '@solana/web3.js'
+import { describe, expect, test } from 'bun:test'
 
 describe('Token-Weighted Voting', () => {
   test('should calculate 1:1 voting power', () => {
@@ -26,7 +25,8 @@ describe('Quadratic Voting', () => {
   test('should calculate square root voting power', () => {
     // Integer square root
     const sqrt = (n: bigint): bigint => {
-      if (n <= 0n) return 0n
+      if (n <= 0n)
+        return 0n
       let x = n
       let y = (x + 1n) / 2n
       while (y < x) {
@@ -43,7 +43,8 @@ describe('Quadratic Voting', () => {
 
   test('should reduce whale influence', () => {
     const sqrt = (n: bigint): bigint => {
-      if (n <= 0n) return 0n
+      if (n <= 0n)
+        return 0n
       let x = n
       let y = (x + 1n) / 2n
       while (y < x) {
@@ -73,7 +74,8 @@ describe('Quadratic Voting', () => {
 
   test('should calculate votes from tokens', () => {
     const sqrt = (n: bigint): bigint => {
-      if (n <= 0n) return 0n
+      if (n <= 0n)
+        return 0n
       let x = n
       let y = (x + 1n) / 2n
       while (y < x) {

@@ -4,8 +4,8 @@
  * Comprehensive security auditing for tokens, NFTs, and collections.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
-import type { SecurityCheckResult } from './checks'
+import type { Connection } from '@solana/web3.js'
+import { PublicKey } from '@solana/web3.js'
 
 export interface AuditReport {
   timestamp: Date
@@ -30,7 +30,7 @@ export interface AuditFinding {
  */
 export async function auditToken(
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<AuditReport> {
   const findings: AuditFinding[] = []
   const recommendations: string[] = []
@@ -95,8 +95,8 @@ export async function auditToken(
       title: 'Token supply information',
       description: 'Review the current supply and decimal configuration',
     })
-
-  } catch (error) {
+  }
+  catch (error) {
     findings.push({
       severity: 'critical',
       category: 'error',
@@ -122,7 +122,7 @@ export async function auditToken(
  */
 export async function auditCollection(
   connection: Connection,
-  collectionMint: PublicKey
+  collectionMint: PublicKey,
 ): Promise<AuditReport> {
   const findings: AuditFinding[] = []
   const recommendations: string[] = []
@@ -158,8 +158,8 @@ export async function auditCollection(
 
     recommendations.push('Verify all NFTs in collection are properly verified')
     recommendations.push('Consider making collection immutable after launch')
-
-  } catch (error) {
+  }
+  catch (error) {
     findings.push({
       severity: 'critical',
       category: 'error',
@@ -185,7 +185,7 @@ export async function auditCollection(
  */
 export async function auditWallet(
   connection: Connection,
-  wallet: PublicKey
+  wallet: PublicKey,
 ): Promise<AuditReport> {
   const findings: AuditFinding[] = []
   const recommendations: string[] = []
@@ -229,8 +229,8 @@ export async function auditWallet(
       title: 'Wallet overview',
       description: `Balance: ${balance / 1e9} SOL, Token accounts: ${tokenAccounts.value.length}`,
     })
-
-  } catch (error) {
+  }
+  catch (error) {
     findings.push({
       severity: 'critical',
       category: 'error',

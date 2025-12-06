@@ -4,18 +4,19 @@
  * Burn NFTs to remove them from circulation.
  */
 
-import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js'
+import type { TransactionInstruction } from '@solana/web3.js'
+import type { TokenConfig, TransactionOptions, TransactionResult } from '../types'
 import {
   createBurnInstruction,
   createCloseAccountInstruction,
-  getAssociatedTokenAddress,
   getAccount,
+  getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
-import type { TokenConfig, TransactionResult, TransactionOptions } from '../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
-import { loadWallet } from '../drivers/solana/wallet'
+import { PublicKey } from '@solana/web3.js'
 import { createConnection } from '../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Token Metadata Program ID
@@ -32,7 +33,7 @@ function getMetadataAddress(mint: PublicKey): PublicKey {
       TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
   return address
 }
@@ -48,7 +49,7 @@ function getMasterEditionAddress(mint: PublicKey): PublicKey {
       mint.toBuffer(),
       Buffer.from('edition'),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
   return address
 }
@@ -62,7 +63,7 @@ function getMasterEditionAddress(mint: PublicKey): PublicKey {
 export async function burnNFT(
   mint: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -86,8 +87,8 @@ export async function burnNFT(
       ata,
       mintPubkey,
       payer.publicKey,
-      1n
-    )
+      1n,
+    ),
   )
 
   // 2. Close the token account to reclaim SOL
@@ -95,8 +96,8 @@ export async function burnNFT(
     createCloseAccountInstruction(
       ata,
       payer.publicKey,
-      payer.publicKey
-    )
+      payer.publicKey,
+    ),
   )
 
   // Build and send transaction
@@ -104,7 +105,7 @@ export async function burnNFT(
     connection,
     instructions,
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -120,7 +121,7 @@ export async function burnNFT(
 export async function burnNFTFull(
   mint: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -140,8 +141,8 @@ export async function burnNFTFull(
       ata,
       mintPubkey,
       payer.publicKey,
-      1n
-    )
+      1n,
+    ),
   )
 
   // 2. Close the token account
@@ -149,8 +150,8 @@ export async function burnNFTFull(
     createCloseAccountInstruction(
       ata,
       payer.publicKey,
-      payer.publicKey
-    )
+      payer.publicKey,
+    ),
   )
 
   // 3. Burn NFT instruction (closes metadata and edition)
@@ -176,7 +177,7 @@ export async function burnNFTFull(
     connection,
     instructions,
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -190,7 +191,7 @@ export async function burnNFTFull(
 export async function burnNFTs(
   mints: string[],
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -207,8 +208,8 @@ export async function burnNFTs(
         ata,
         mintPubkey,
         payer.publicKey,
-        1n
-      )
+        1n,
+      ),
     )
 
     // Close account
@@ -216,8 +217,8 @@ export async function burnNFTs(
       createCloseAccountInstruction(
         ata,
         payer.publicKey,
-        payer.publicKey
-      )
+        payer.publicKey,
+      ),
     )
   }
 
@@ -226,7 +227,7 @@ export async function burnNFTs(
     connection,
     instructions,
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)

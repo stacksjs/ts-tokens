@@ -38,7 +38,7 @@ console.log('Treasury:', dao.treasury)
 ## Create a Proposal
 
 ```typescript
-import { createProposal, treasuryActions, getConfig } from 'ts-tokens'
+import { createProposal, getConfig, treasuryActions } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -80,8 +80,9 @@ const config = await getConfig()
 
 await delegateVotingPower(
   delegateAddress,
-  1000_000_000_000n // Optional: specific amount
-, config)
+  1000_000_000_000n, // Optional: specific amount
+  config
+)
 ```
 
 ## Execute a Proposal
@@ -100,7 +101,7 @@ await executeProposal({
 ## Get DAO Info
 
 ```typescript
-import { getDAO, getTreasuryBalance, getConfig } from 'ts-tokens'
+import { getConfig, getDAO, getTreasuryBalance } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -115,7 +116,7 @@ console.log('Treasury tokens:', treasury.tokens)
 ## Get Proposal Status
 
 ```typescript
-import { getProposal, calculateVoteBreakdown, getConfig } from 'ts-tokens'
+import { calculateVoteBreakdown, getConfig, getProposal } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -208,13 +209,13 @@ tokens dao:proposal <proposal>
 
 ## Governance Parameters
 
-| Parameter | Description | Recommended |
-|-----------|-------------|-------------|
-| `votingPeriod` | How long voting lasts | 3-7 days |
-| `quorum` | Min % of tokens that must vote | 5-15% |
-| `approvalThreshold` | % of votes needed to pass | 50-66% |
-| `executionDelay` | Delay after passing | 1-3 days |
-| `minProposalThreshold` | Min tokens to propose | 0.1-1% of supply |
+| Parameter              | Description                    | Recommended      |
+| ---------------------- | ------------------------------ | ---------------- |
+| `votingPeriod`         | How long voting lasts          | 3-7 days         |
+| `quorum`               | Min % of tokens that must vote | 5-15%            |
+| `approvalThreshold`    | % of votes needed to pass      | 50-66%           |
+| `executionDelay`       | Delay after passing            | 1-3 days         |
+| `minProposalThreshold` | Min tokens to propose          | 0.1-1% of supply |
 
 ## Related
 

@@ -4,7 +4,6 @@
  * Access Solana connection and config.
  */
 
-import { computed } from 'vue'
 import type { Connection } from '@solana/web3.js'
 import type { TokenConfig } from 'ts-tokens'
 import { useTokens } from '../plugin'

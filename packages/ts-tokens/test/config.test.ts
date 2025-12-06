@@ -4,7 +4,7 @@
  * Unit tests for configuration loading and validation.
  */
 
-import { describe, test, expect } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 
 describe('Network Configuration', () => {
   test('should validate network names', () => {
@@ -18,11 +18,11 @@ describe('Network Configuration', () => {
   test('should get correct RPC URL for network', () => {
     const networkUrls: Record<string, string> = {
       'mainnet-beta': 'https://api.mainnet-beta.solana.com',
-      devnet: 'https://api.devnet.solana.com',
-      testnet: 'https://api.testnet.solana.com',
+      'devnet': 'https://api.devnet.solana.com',
+      'testnet': 'https://api.testnet.solana.com',
     }
 
-    expect(networkUrls['devnet']).toBe('https://api.devnet.solana.com')
+    expect(networkUrls.devnet).toBe('https://api.devnet.solana.com')
     expect(networkUrls['mainnet-beta']).toBe('https://api.mainnet-beta.solana.com')
   })
 })

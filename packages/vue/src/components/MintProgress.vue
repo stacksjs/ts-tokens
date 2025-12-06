@@ -9,7 +9,8 @@ const props = defineProps<{
 const { candyMachine: cm, loading } = useCandyMachine(props.candyMachine)
 
 const progress = computed(() => {
-  if (!cm.value) return 0
+  if (!cm.value)
+    return 0
   return (cm.value.itemsMinted / cm.value.itemsAvailable) * 100
 })
 </script>

@@ -16,22 +16,22 @@ tokens cm:create \
 
 ### Required Options
 
-| Option | Description |
-|--------|-------------|
-| `--collection` | Collection mint address |
-| `--items` | Number of items available |
-| `--price` | Price in SOL |
-| `--symbol` | NFT symbol |
+| Option         | Description               |
+| -------------- | ------------------------- |
+| `--collection` | Collection mint address   |
+| `--items`      | Number of items available |
+| `--price`      | Price in SOL              |
+| `--symbol`     | NFT symbol                |
 
 ### Optional Options
 
-| Option | Description |
-|--------|-------------|
-| `--royalty` | Royalty in basis points |
-| `--go-live` | Go live date (ISO format) |
-| `--end-date` | End date (ISO format) |
-| `--hidden` | Use hidden settings for reveal |
-| `--sequential` | Mint in sequential order |
+| Option         | Description                    |
+| -------------- | ------------------------------ |
+| `--royalty`    | Royalty in basis points        |
+| `--go-live`    | Go live date (ISO format)      |
+| `--end-date`   | End date (ISO format)          |
+| `--hidden`     | Use hidden settings for reveal |
+| `--sequential` | Mint in sequential order       |
 
 ## `tokens cm:upload`
 
@@ -43,11 +43,11 @@ tokens cm:upload <candy-machine> --assets ./assets/
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
-| `--assets`, `-a` | Path to assets directory |
-| `--storage` | Storage provider (arweave, ipfs) |
-| `--batch-size` | Items per batch (default: 10) |
+| Option           | Description                      |
+| ---------------- | -------------------------------- |
+| `--assets`, `-a` | Path to assets directory         |
+| `--storage`      | Storage provider (arweave, ipfs) |
+| `--batch-size`   | Items per batch (default: 10)    |
 
 ### Assets Directory Structure
 
@@ -71,8 +71,8 @@ tokens cm:mint <candy-machine> --count 5
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
+| Option          | Description                 |
+| --------------- | --------------------------- |
 | `--count`, `-c` | Number to mint (default: 1) |
 
 ## `tokens cm:info`
@@ -134,16 +134,16 @@ tokens cm:guards <candy-machine> --add mint-limit --limit 3
 
 ### Available Guards
 
-| Guard | Description |
-|-------|-------------|
-| `sol-payment` | Require SOL payment |
+| Guard           | Description               |
+| --------------- | ------------------------- |
+| `sol-payment`   | Require SOL payment       |
 | `token-payment` | Require SPL token payment |
-| `start-date` | Set start time |
-| `end-date` | Set end time |
-| `mint-limit` | Limit mints per wallet |
-| `allowlist` | Merkle tree allowlist |
-| `nft-gate` | Require NFT ownership |
-| `token-gate` | Require token ownership |
+| `start-date`    | Set start time            |
+| `end-date`      | Set end time              |
+| `mint-limit`    | Limit mints per wallet    |
+| `allowlist`     | Merkle tree allowlist     |
+| `nft-gate`      | Require NFT ownership     |
+| `token-gate`    | Require token ownership   |
 
 ## Related
 

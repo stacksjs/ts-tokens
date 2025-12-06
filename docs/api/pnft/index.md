@@ -14,7 +14,7 @@ Programmable NFTs support:
 ## Create pNFT
 
 ```typescript
-import { pnft, getConfig } from 'ts-tokens'
+import { getConfig, pnft } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -102,7 +102,7 @@ const rule = pnft.createHolderGateRule(
 ## Soulbound Tokens
 
 ```typescript
-import { pnft, getConfig } from 'ts-tokens'
+import { getConfig, pnft } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -133,7 +133,7 @@ await pnft.recoverSoulbound(
 ## Transfer Validation
 
 ```typescript
-import { pnft, getConfig } from 'ts-tokens'
+import { getConfig, pnft } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -148,7 +148,8 @@ const validation = await pnft.canTransfer(
 if (!validation.allowed) {
   console.log('Transfer blocked:', validation.reason)
   console.log('Failed rules:', validation.failedRules)
-} else {
+}
+else {
   console.log('Transfer allowed')
   if (validation.royaltyAmount) {
     console.log('Royalty required:', validation.royaltyAmount)
@@ -159,7 +160,7 @@ if (!validation.allowed) {
 ## Execute Transfer
 
 ```typescript
-import { pnft, getConfig } from 'ts-tokens'
+import { getConfig, pnft } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -182,7 +183,7 @@ console.log('Royalty paid:', royaltyPaid)
 ### Add Rule
 
 ```typescript
-import { pnft, getConfig } from 'ts-tokens'
+import { getConfig, pnft } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -197,7 +198,7 @@ await pnft.addRule(
 ### Remove Rule
 
 ```typescript
-import { pnft, getConfig } from 'ts-tokens'
+import { getConfig, pnft } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -212,7 +213,7 @@ await pnft.removeRule(
 ### Freeze Rules
 
 ```typescript
-import { pnft, getConfig } from 'ts-tokens'
+import { getConfig, pnft } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -223,7 +224,7 @@ await pnft.freezeRules(config.connection, mint, authority)
 ## Rule Sets (Collection-Level)
 
 ```typescript
-import { pnft, getConfig } from 'ts-tokens'
+import { getConfig, pnft } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -252,7 +253,7 @@ await pnft.createPNFT(config.connection, payer, {
 ## State Management
 
 ```typescript
-import { pnft, getConfig } from 'ts-tokens'
+import { getConfig, pnft } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -272,7 +273,7 @@ const state = await pnft.getPNFTState(config.connection, mint)
 ## Estimate Royalty
 
 ```typescript
-import { pnft, getConfig } from 'ts-tokens'
+import { getConfig, pnft } from 'ts-tokens'
 
 const config = await getConfig()
 

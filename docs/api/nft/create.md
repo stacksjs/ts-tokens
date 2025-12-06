@@ -21,15 +21,15 @@ console.log('NFT created:', result.mint)
 
 ## Options
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `name` | string | Yes | NFT name |
-| `symbol` | string | Yes | NFT symbol |
-| `uri` | string | Yes | Metadata URI |
-| `sellerFeeBasisPoints` | number | No | Royalty (100 = 1%) |
-| `creators` | Creator[] | No | Creator list |
-| `collection` | string | No | Collection mint |
-| `isMutable` | boolean | No | Allow metadata updates |
+| Option                 | Type      | Required | Description            |
+| ---------------------- | --------- | -------- | ---------------------- |
+| `name`                 | string    | Yes      | NFT name               |
+| `symbol`               | string    | Yes      | NFT symbol             |
+| `uri`                  | string    | Yes      | Metadata URI           |
+| `sellerFeeBasisPoints` | number    | No       | Royalty (100 = 1%)     |
+| `creators`             | Creator[] | No       | Creator list           |
+| `collection`           | string    | No       | Collection mint        |
+| `isMutable`            | boolean   | No       | Allow metadata updates |
 
 ## Examples
 

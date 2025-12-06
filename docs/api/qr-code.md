@@ -10,9 +10,9 @@ The simplest way to generate a QR code:
 <div id="qr-code"></div>
 
 <script type="text/javascript">
-import { QRCode } from 'ts-tokens'
+  import { QRCode } from 'ts-tokens'
 
-new QRCode(document.getElementById("qr-code"), "https://stacksjs.org")
+  new QRCode(document.getElementById('qr-code'), 'https://stacksjs.org')
 </script>
 ```
 

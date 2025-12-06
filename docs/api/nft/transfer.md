@@ -5,7 +5,7 @@ Transfer NFTs between wallets.
 ## Quick Start
 
 ```typescript
-import { transferNFT, getConfig } from 'ts-tokens'
+import { getConfig, transferNFT } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -20,19 +20,19 @@ console.log('Transferred! Signature:', result.signature)
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `mint` | string | NFT mint address |
-| `recipient` | string | Recipient wallet address |
-| `config` | TokenConfig | Configuration object |
+| Parameter   | Type        | Description              |
+| ----------- | ----------- | ------------------------ |
+| `mint`      | string      | NFT mint address         |
+| `recipient` | string      | Recipient wallet address |
+| `config`    | TokenConfig | Configuration object     |
 
 ## Return Value
 
 ```typescript
 interface TransferResult {
-  signature: string    // Transaction signature
-  fromAta: string      // Source token account
-  toAta: string        // Destination token account
+  signature: string // Transaction signature
+  fromAta: string // Source token account
+  toAta: string // Destination token account
 }
 ```
 
@@ -69,12 +69,15 @@ const result = await transferNFT(nftMint, recipient, config, {
 ```typescript
 try {
   await transferNFT(nftMint, recipient, config)
-} catch (error) {
+}
+catch (error) {
   if (error.message.includes('insufficient funds')) {
     console.log('Not enough SOL for transaction fee')
-  } else if (error.message.includes('not owned')) {
+  }
+  else if (error.message.includes('not owned')) {
     console.log('You do not own this NFT')
-  } else {
+  }
+  else {
     console.error('Transfer failed:', error.message)
   }
 }

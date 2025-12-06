@@ -2,23 +2,23 @@
  * Batch Transfer Operations
  */
 
-import {
+import type {
   Connection,
-  PublicKey,
-  Transaction,
   TransactionInstruction,
 } from '@solana/web3.js'
-import {
-  createTransferInstruction,
-  getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
-  TOKEN_PROGRAM_ID,
-} from '@solana/spl-token'
 import type {
   BatchTransferOptions,
-  BatchTransferResult,
   BatchTransferRecipient,
+  BatchTransferResult,
 } from './types'
+import {
+  createAssociatedTokenAccountInstruction,
+  createTransferInstruction,
+  getAssociatedTokenAddress,
+} from '@solana/spl-token'
+import {
+  PublicKey,
+} from '@solana/web3.js'
 
 /**
  * Execute batch token transfers
@@ -26,7 +26,7 @@ import type {
 export async function batchTransfer(
   connection: Connection,
   payer: PublicKey,
-  options: BatchTransferOptions
+  options: BatchTransferOptions,
 ): Promise<BatchTransferResult> {
   const {
     mint,
@@ -70,8 +70,8 @@ export async function batchTransfer(
               payer,
               destAta,
               recipientPubkey,
-              mint
-            )
+              mint,
+            ),
           )
         }
 
@@ -81,8 +81,8 @@ export async function batchTransfer(
             sourceAta,
             destAta,
             payer,
-            recipient.amount
-          )
+            recipient.amount,
+          ),
         )
       }
 
@@ -96,8 +96,8 @@ export async function batchTransfer(
           : recipient.address.toBase58()
         result.signatures.push(`batch_${i}_${addr}`)
       }
-
-    } catch (error) {
+    }
+    catch (error) {
       result.failed += batch.length
 
       for (const recipient of batch) {
@@ -137,7 +137,7 @@ export async function prepareBatchTransfer(
   connection: Connection,
   payer: PublicKey,
   mint: PublicKey,
-  recipients: BatchTransferRecipient[]
+  recipients: BatchTransferRecipient[],
 ): Promise<TransactionInstruction[]> {
   const instructions: TransactionInstruction[] = []
   const sourceAta = await getAssociatedTokenAddress(mint, payer)
@@ -157,8 +157,8 @@ export async function prepareBatchTransfer(
           payer,
           destAta,
           recipientPubkey,
-          mint
-        )
+          mint,
+        ),
       )
     }
 
@@ -167,8 +167,8 @@ export async function prepareBatchTransfer(
         sourceAta,
         destAta,
         payer,
-        recipient.amount
-      )
+        recipient.amount,
+      ),
     )
   }
 
@@ -181,8 +181,8 @@ export async function prepareBatchTransfer(
 export async function estimateBatchTransferCost(
   connection: Connection,
   recipientCount: number,
-  needsAtaCreation: number
-): Promise<{ lamports: number; sol: number }> {
+  needsAtaCreation: number,
+): Promise<{ lamports: number, sol: number }> {
   const rentExempt = await connection.getMinimumBalanceForRentExemption(165)
   const txFee = 5000 // ~0.000005 SOL per signature
 
@@ -201,8 +201,8 @@ export async function estimateBatchTransferCost(
  * Validate batch transfer recipients
  */
 export function validateBatchRecipients(
-  recipients: BatchTransferRecipient[]
-): { valid: boolean; errors: string[] } {
+  recipients: BatchTransferRecipient[],
+): { valid: boolean, errors: string[] } {
   const errors: string[] = []
 
   if (recipients.length === 0) {
@@ -220,7 +220,8 @@ export function validateBatchRecipients(
       if (typeof r.address === 'string') {
         new PublicKey(r.address)
       }
-    } catch {
+    }
+    catch {
       errors.push(`Invalid address at index ${i}: ${r.address}`)
     }
 

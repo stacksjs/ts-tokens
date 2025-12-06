@@ -4,8 +4,8 @@
  * Rate limiting, failover, and connection management.
  */
 
-import { Connection } from '@solana/web3.js'
 import type { ConnectionConfig } from '@solana/web3.js'
+import { Connection } from '@solana/web3.js'
 
 export interface RpcEndpoint {
   url: string
@@ -32,7 +32,7 @@ export class RpcManager {
   private currentIndex = 0
   private requestQueue: Array<() => Promise<unknown>> = []
   private processing = false
-  private cache = new Map<string, { data: unknown; timestamp: number }>()
+  private cache = new Map<string, { data: unknown, timestamp: number }>()
   private options: Required<RpcManagerOptions>
 
   constructor(options: RpcManagerOptions) {
@@ -88,7 +88,8 @@ export class RpcManager {
 
       try {
         return await fn(connection)
-      } catch (error) {
+      }
+      catch (error) {
         lastError = error as Error
 
         // Mark endpoint as unhealthy
@@ -110,7 +111,7 @@ export class RpcManager {
    */
   async executeWithCache<T>(
     cacheKey: string,
-    fn: (connection: Connection) => Promise<T>
+    fn: (connection: Connection) => Promise<T>,
   ): Promise<T> {
     if (this.options.cacheEnabled) {
       const cached = this.cache.get(cacheKey)
@@ -144,7 +145,8 @@ export class RpcManager {
         const connection = new Connection(endpoint.url)
         await connection.getSlot()
         endpoint.healthy = true
-      } catch {
+      }
+      catch {
         endpoint.healthy = false
       }
       endpoint.lastCheck = Date.now()
@@ -154,7 +156,7 @@ export class RpcManager {
   /**
    * Get endpoint status
    */
-  getStatus(): Array<{ url: string; healthy: boolean; lastCheck: number }> {
+  getStatus(): Array<{ url: string, healthy: boolean, lastCheck: number }> {
     return this.endpoints.map(e => ({
       url: e.url,
       healthy: e.healthy ?? true,
@@ -172,16 +174,16 @@ export class RpcManager {
  */
 export function createRpcManager(
   network: 'mainnet-beta' | 'devnet' | 'testnet',
-  customEndpoints?: string[]
+  customEndpoints?: string[],
 ): RpcManager {
   const defaultEndpoints: Record<string, RpcEndpoint[]> = {
     'mainnet-beta': [
       { url: 'https://api.mainnet-beta.solana.com', weight: 1 },
     ],
-    devnet: [
+    'devnet': [
       { url: 'https://api.devnet.solana.com', weight: 1 },
     ],
-    testnet: [
+    'testnet': [
       { url: 'https://api.testnet.solana.com', weight: 1 },
     ],
   }
@@ -203,7 +205,7 @@ export async function retryWithBackoff<T>(
     initialDelay?: number
     maxDelay?: number
     factor?: number
-  } = {}
+  } = {},
 ): Promise<T> {
   const {
     maxRetries = 3,
@@ -218,7 +220,8 @@ export async function retryWithBackoff<T>(
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await fn()
-    } catch (error) {
+    }
+    catch (error) {
       lastError = error as Error
 
       if (attempt < maxRetries - 1) {

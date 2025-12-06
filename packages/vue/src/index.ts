@@ -6,14 +6,14 @@
  * @packageDocumentation
  */
 
-// Composables
-export * from './composables'
-
 // Components
 export * from './components'
 
-// Types
-export * from './types'
+// Composables
+export * from './composables'
 
 // Plugin
-export { TokensPlugin, createTokens } from './plugin'
+export { createTokens, TokensPlugin } from './plugin'
+
+// Types
+export * from './types'

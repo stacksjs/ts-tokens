@@ -21,22 +21,22 @@ console.log('Token created:', result.mint)
 
 ## Options
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `name` | string | Yes | Token name |
-| `symbol` | string | Yes | Token symbol (max 10 chars) |
-| `decimals` | number | Yes | Decimal places (0-9) |
-| `initialSupply` | number | No | Initial tokens to mint |
-| `mintAuthority` | string | No | Custom mint authority |
-| `freezeAuthority` | string | No | Custom freeze authority |
+| Option            | Type   | Required | Description                 |
+| ----------------- | ------ | -------- | --------------------------- |
+| `name`            | string | Yes      | Token name                  |
+| `symbol`          | string | Yes      | Token symbol (max 10 chars) |
+| `decimals`        | number | Yes      | Decimal places (0-9)        |
+| `initialSupply`   | number | No       | Initial tokens to mint      |
+| `mintAuthority`   | string | No       | Custom mint authority       |
+| `freezeAuthority` | string | No       | Custom freeze authority     |
 
 ## Return Value
 
 ```typescript
 interface CreateTokenResult {
-  mint: string           // Token mint address
-  signature: string      // Transaction signature
-  ata?: string          // Associated token account (if initialSupply > 0)
+  mint: string // Token mint address
+  signature: string // Transaction signature
+  ata?: string // Associated token account (if initialSupply > 0)
 }
 ```
 

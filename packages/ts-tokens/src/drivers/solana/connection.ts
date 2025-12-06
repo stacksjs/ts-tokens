@@ -4,9 +4,9 @@
  * Handles RPC connection creation, pooling, and health monitoring.
  */
 
-import { Connection } from '@solana/web3.js'
 import type { Commitment } from '@solana/web3.js'
-import type { TokenConfig, SolanaNetwork } from '../../types'
+import type { SolanaNetwork, TokenConfig } from '../../types'
+import { Connection } from '@solana/web3.js'
 import { DEFAULT_RPC_ENDPOINTS } from '../../types'
 import { retry } from '../../utils'
 
@@ -78,7 +78,8 @@ export async function checkConnectionHealth(connection: Connection): Promise<boo
   try {
     const version = await connection.getVersion()
     return version !== null
-  } catch {
+  }
+  catch {
     return false
   }
 }
@@ -92,8 +93,8 @@ export async function checkConnectionHealth(connection: Connection): Promise<boo
  */
 export async function getLatestBlockhash(
   connection: Connection,
-  commitment?: Commitment
-): Promise<{ blockhash: string; lastValidBlockHeight: number }> {
+  commitment?: Commitment,
+): Promise<{ blockhash: string, lastValidBlockHeight: number }> {
   return retry(async () => {
     const result = await connection.getLatestBlockhash(commitment)
     return {
@@ -122,7 +123,7 @@ export async function getSlot(connection: Connection): Promise<number> {
  */
 export async function getMinimumBalanceForRentExemption(
   connection: Connection,
-  dataLength: number
+  dataLength: number,
 ): Promise<number> {
   return retry(() => connection.getMinimumBalanceForRentExemption(dataLength), 3, 500)
 }
@@ -170,7 +171,7 @@ export class SolanaConnection {
   /**
    * Get latest blockhash
    */
-  async getLatestBlockhash(): Promise<{ blockhash: string; lastValidBlockHeight: number }> {
+  async getLatestBlockhash(): Promise<{ blockhash: string, lastValidBlockHeight: number }> {
     return getLatestBlockhash(this.connection, this.commitment)
   }
 
@@ -230,11 +231,12 @@ export class SolanaConnection {
     const accounts = await retry(
       () => this.connection.getMultipleAccountsInfo(pubkeys),
       3,
-      500
+      500,
     )
 
     return accounts.map((info, i) => {
-      if (!info) return null
+      if (!info)
+        return null
       return {
         address: addresses[i],
         lamports: BigInt(info.lamports),

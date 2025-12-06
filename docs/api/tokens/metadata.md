@@ -63,7 +63,7 @@ await addTokenMetadata('TOKEN_MINT_ADDRESS', {
 ## Update Token Metadata
 
 ```typescript
-import { updateTokenMetadata, getConfig } from 'ts-tokens'
+import { getConfig, updateTokenMetadata } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -76,7 +76,7 @@ await updateTokenMetadata('TOKEN_MINT_ADDRESS', {
 ## Get Token Metadata
 
 ```typescript
-import { getTokenMetadata, getConfig } from 'ts-tokens'
+import { getConfig, getTokenMetadata } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -90,7 +90,7 @@ console.log('URI:', metadata.uri)
 ## Upload Metadata
 
 ```typescript
-import { uploadMetadata, getConfig } from 'ts-tokens'
+import { getConfig, uploadMetadata } from 'ts-tokens'
 
 const config = await getConfig()
 

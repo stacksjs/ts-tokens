@@ -4,18 +4,17 @@
  * Transfer NFTs between wallets.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { TokenConfig, TransactionOptions, TransactionResult } from '../types'
 import {
-  createTransferInstruction,
-  getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
+  createTransferInstruction,
   getAccount,
-  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
 } from '@solana/spl-token'
-import type { TokenConfig, TransactionResult, TransactionOptions } from '../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
-import { loadWallet } from '../drivers/solana/wallet'
+import { PublicKey } from '@solana/web3.js'
 import { createConnection } from '../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Transfer an NFT to another wallet
@@ -24,7 +23,7 @@ export async function transferNFT(
   mint: string,
   to: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -43,15 +42,16 @@ export async function transferNFT(
   // Check if destination ATA exists
   try {
     await getAccount(connection, destAta)
-  } catch {
+  }
+  catch {
     // Create destination ATA
     instructions.push(
       createAssociatedTokenAccountInstruction(
         payer.publicKey,
         destAta,
         toPubkey,
-        mintPubkey
-      )
+        mintPubkey,
+      ),
     )
   }
 
@@ -61,8 +61,8 @@ export async function transferNFT(
       sourceAta,
       destAta,
       payer.publicKey,
-      1n
-    )
+      1n,
+    ),
   )
 
   // Build and send transaction
@@ -70,7 +70,7 @@ export async function transferNFT(
     connection,
     instructions,
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -85,7 +85,7 @@ export async function transferNFTs(
   mints: string[],
   to: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -105,14 +105,15 @@ export async function transferNFTs(
     // Check if destination ATA exists
     try {
       await getAccount(connection, destAta)
-    } catch {
+    }
+    catch {
       instructions.push(
         createAssociatedTokenAccountInstruction(
           payer.publicKey,
           destAta,
           toPubkey,
-          mintPubkey
-        )
+          mintPubkey,
+        ),
       )
     }
 
@@ -122,8 +123,8 @@ export async function transferNFTs(
         sourceAta,
         destAta,
         payer.publicKey,
-        1n
-      )
+        1n,
+      ),
     )
   }
 
@@ -132,7 +133,7 @@ export async function transferNFTs(
     connection,
     instructions,
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -148,7 +149,7 @@ export async function transferNFTFrom(
   from: string,
   to: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -168,14 +169,15 @@ export async function transferNFTFrom(
   // Check if destination ATA exists
   try {
     await getAccount(connection, destAta)
-  } catch {
+  }
+  catch {
     instructions.push(
       createAssociatedTokenAccountInstruction(
         payer.publicKey,
         destAta,
         toPubkey,
-        mintPubkey
-      )
+        mintPubkey,
+      ),
     )
   }
 
@@ -185,15 +187,15 @@ export async function transferNFTFrom(
       sourceAta,
       destAta,
       payer.publicKey, // Authority
-      1n
-    )
+      1n,
+    ),
   )
 
   const transaction = await buildTransaction(
     connection,
     instructions,
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)

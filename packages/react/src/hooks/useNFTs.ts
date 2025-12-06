@@ -4,9 +4,9 @@
  * Fetch all NFTs owned by an address.
  */
 
-import { useState, useEffect, useCallback } from 'react'
-import { useConnection, useConfig } from '../context'
 import type { NFTDisplayInfo } from '../types'
+import { useCallback, useEffect, useState } from 'react'
+import { useConfig, useConnection } from '../context'
 
 /**
  * NFTs state
@@ -42,7 +42,8 @@ export function useNFTs(owner: string): NFTsState {
           let offChain: any = null
           try {
             offChain = await fetchOffChainMetadata(m.uri)
-          } catch {
+          }
+          catch {
             // Ignore off-chain fetch errors
           }
 
@@ -55,13 +56,15 @@ export function useNFTs(owner: string): NFTsState {
             description: offChain?.description,
             attributes: offChain?.attributes,
           }
-        })
+        }),
       )
 
       setNFTs(nftList)
-    } catch (err) {
+    }
+    catch (err) {
       setError(err as Error)
-    } finally {
+    }
+    finally {
       setLoading(false)
     }
   }, [connection, config, owner])

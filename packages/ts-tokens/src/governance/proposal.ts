@@ -2,17 +2,18 @@
  * Proposal Management
  */
 
-import { Connection, PublicKey, Keypair, SystemProgram } from '@solana/web3.js'
+import type { Connection } from '@solana/web3.js'
 import type {
-  Proposal,
-  ProposalStatus,
-  ProposalAction,
   CreateProposalOptions,
   ExecuteProposalOptions,
-  TreasuryActions,
   GovernanceActions,
+  Proposal,
+  ProposalAction,
+  ProposalStatus,
   TokenActions,
+  TreasuryActions,
 } from './types'
+import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js'
 import { getDAO } from './dao'
 
 /**
@@ -21,8 +22,8 @@ import { getDAO } from './dao'
 export async function createProposal(
   connection: Connection,
   proposer: Keypair,
-  options: CreateProposalOptions
-): Promise<{ proposal: Proposal; signature: string }> {
+  options: CreateProposalOptions,
+): Promise<{ proposal: Proposal, signature: string }> {
   const { dao, title, description, actions } = options
 
   // Validate
@@ -70,7 +71,7 @@ export async function createProposal(
  */
 export async function getProposal(
   connection: Connection,
-  address: PublicKey
+  address: PublicKey,
 ): Promise<Proposal | null> {
   const accountInfo = await connection.getAccountInfo(address)
 
@@ -88,7 +89,7 @@ export async function getProposal(
 export async function getProposals(
   connection: Connection,
   dao: PublicKey,
-  status?: ProposalStatus
+  status?: ProposalStatus,
 ): Promise<Proposal[]> {
   // In production, would use getProgramAccounts with filters
   return []
@@ -100,7 +101,7 @@ export async function getProposals(
 export async function cancelProposal(
   connection: Connection,
   proposal: PublicKey,
-  authority: Keypair
+  authority: Keypair,
 ): Promise<{ signature: string }> {
   return {
     signature: `proposal_cancelled_${proposal.toBase58().slice(0, 8)}`,
@@ -112,8 +113,8 @@ export async function cancelProposal(
  */
 export async function queueProposal(
   connection: Connection,
-  proposal: PublicKey
-): Promise<{ signature: string; executionTime: bigint }> {
+  proposal: PublicKey,
+): Promise<{ signature: string, executionTime: bigint }> {
   const currentTime = BigInt(Math.floor(Date.now() / 1000))
   const executionDelay = 86400n // 1 day
 
@@ -128,7 +129,7 @@ export async function queueProposal(
  */
 export async function executeProposal(
   connection: Connection,
-  options: ExecuteProposalOptions
+  options: ExecuteProposalOptions,
 ): Promise<{ signature: string }> {
   const { proposal } = options
 
@@ -165,8 +166,8 @@ export function calculateProposalResult(
   proposal: Proposal,
   quorum: number,
   approvalThreshold: number,
-  totalVotingPower: bigint
-): { passed: boolean; reason: string } {
+  totalVotingPower: bigint,
+): { passed: boolean, reason: string } {
   const totalVotes = proposal.forVotes + proposal.againstVotes + proposal.abstainVotes
 
   // Check quorum

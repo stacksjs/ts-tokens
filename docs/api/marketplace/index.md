@@ -15,7 +15,7 @@ ts-tokens provides helpers for:
 ### Get Collection Listings
 
 ```typescript
-import { magiceden, getConfig } from 'ts-tokens'
+import { getConfig, magiceden } from 'ts-tokens'
 
 const listings = await magiceden.getCollectionListings('degods', {
   offset: 0,

@@ -34,7 +34,7 @@ const pool = await createStakingPool({
 ### Stake Tokens
 
 ```typescript
-import { stake, getConfig } from 'ts-tokens'
+import { getConfig, stake } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -48,7 +48,7 @@ await stake({
 ### Check Rewards
 
 ```typescript
-import { getStakeRewards, getConfig } from 'ts-tokens'
+import { getConfig, getStakeRewards } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -72,7 +72,7 @@ await claimRewards({ pool: poolAddress }, config)
 ### Unstake
 
 ```typescript
-import { unstake, getConfig } from 'ts-tokens'
+import { getConfig, unstake } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -101,7 +101,7 @@ const pool = await createNFTStakingPool({
 ### Stake NFT
 
 ```typescript
-import { stakeNFT, getConfig } from 'ts-tokens'
+import { getConfig, stakeNFT } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -114,7 +114,7 @@ await stakeNFT({
 ### Check NFT Staking Points
 
 ```typescript
-import { getNFTStakeInfo, getConfig } from 'ts-tokens'
+import { getConfig, getNFTStakeInfo } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -127,7 +127,7 @@ console.log('Staked at:', new Date(Number(info.stakedAt) * 1000))
 ### Unstake NFT
 
 ```typescript
-import { unstakeNFT, getConfig } from 'ts-tokens'
+import { getConfig, unstakeNFT } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -140,7 +140,7 @@ await unstakeNFT({
 ## Pool Statistics
 
 ```typescript
-import { getPoolStats, getConfig } from 'ts-tokens'
+import { getConfig, getPoolStats } from 'ts-tokens'
 
 const config = await getConfig()
 

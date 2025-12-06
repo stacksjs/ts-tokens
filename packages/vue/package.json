@@ -52,16 +52,16 @@
     "test": "bun test",
     "typecheck": "bun --bun tsc --noEmit"
   },
+  "peerDependencies": {
+    "@solana/web3.js": ">=1.87.0",
+    "vue": ">=3.3.0"
+  },
   "dependencies": {
     "ts-tokens": "workspace:*"
   },
-  "peerDependencies": {
-    "vue": ">=3.3.0",
-    "@solana/web3.js": ">=1.87.0"
-  },
   "devDependencies": {
-    "vue": "^3.4.0",
-    "better-dx": "^0.2.5"
+    "better-dx": "^0.2.5",
+    "vue": "^3.4.0"
   },
   "lint-staged": {
     "*.{js,ts,vue}": "bunx --bun eslint . --fix"

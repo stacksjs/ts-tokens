@@ -27,7 +27,7 @@ export class InsufficientBalanceError extends TokensError {
     super(
       `Insufficient ${currency} balance: need ${required}, have ${available}`,
       'INSUFFICIENT_BALANCE',
-      { required, available, currency }
+      { required, available, currency },
     )
     this.name = 'InsufficientBalanceError'
   }
@@ -41,7 +41,7 @@ export class InvalidAddressError extends TokensError {
     super(
       `Invalid address: ${address}${reason ? ` (${reason})` : ''}`,
       'INVALID_ADDRESS',
-      { address, reason }
+      { address, reason },
     )
     this.name = 'InvalidAddressError'
   }

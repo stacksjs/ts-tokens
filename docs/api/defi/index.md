@@ -16,7 +16,7 @@ ts-tokens provides helpers for:
 ### Get Swap Quote
 
 ```typescript
-import { getSwapQuote, getConfig } from 'ts-tokens'
+import { getConfig, getSwapQuote } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -66,7 +66,7 @@ const prices = await getTokenPrices([mint1, mint2, mint3])
 ### Get Pool Info
 
 ```typescript
-import { getPoolInfo, getConfig } from 'ts-tokens'
+import { getConfig, getPoolInfo } from 'ts-tokens'
 
 const config = await getConfig()
 

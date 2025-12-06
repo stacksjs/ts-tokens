@@ -4,17 +4,18 @@
  * Create and configure Candy Machines for NFT drops.
  */
 
+import type {
+  TransactionInstruction,
+} from '@solana/web3.js'
+import type { TokenConfig, TransactionOptions, TransactionResult } from '../../types'
 import {
-  Connection,
   Keypair,
   PublicKey,
   SystemProgram,
-  TransactionInstruction,
 } from '@solana/web3.js'
-import type { TokenConfig, TransactionResult, TransactionOptions } from '../../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../../drivers/solana/transaction'
-import { loadWallet } from '../../drivers/solana/wallet'
 import { createConnection } from '../../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../../drivers/solana/transaction'
+import { loadWallet } from '../../drivers/solana/wallet'
 
 /**
  * Candy Machine Program ID (Metaplex Candy Machine v3)
@@ -30,7 +31,7 @@ export interface CandyMachineConfig {
   symbol: string
   maxEditionSupply: number
   isMutable: boolean
-  creators: Array<{ address: string; share: number }>
+  creators: Array<{ address: string, share: number }>
   collection: string
   configLineSettings?: {
     prefixName: string
@@ -51,23 +52,23 @@ export interface CandyMachineConfig {
  * Candy Guard configuration
  */
 export interface CandyGuardConfig {
-  botTax?: { lamports: bigint; lastInstruction: boolean }
-  solPayment?: { lamports: bigint; destination: string }
-  tokenPayment?: { amount: bigint; mint: string; destinationAta: string }
+  botTax?: { lamports: bigint, lastInstruction: boolean }
+  solPayment?: { lamports: bigint, destination: string }
+  tokenPayment?: { amount: bigint, mint: string, destinationAta: string }
   startDate?: { date: number }
   endDate?: { date: number }
-  mintLimit?: { id: number; limit: number }
-  nftPayment?: { requiredCollection: string; destination: string }
+  mintLimit?: { id: number, limit: number }
+  nftPayment?: { requiredCollection: string, destination: string }
   redeemedAmount?: { maximum: number }
   addressGate?: { address: string }
   nftGate?: { requiredCollection: string }
   nftBurn?: { requiredCollection: string }
-  tokenBurn?: { amount: bigint; mint: string }
-  freezeSolPayment?: { lamports: bigint; destination: string }
-  freezeTokenPayment?: { amount: bigint; mint: string; destinationAta: string }
+  tokenBurn?: { amount: bigint, mint: string }
+  freezeSolPayment?: { lamports: bigint, destination: string }
+  freezeTokenPayment?: { amount: bigint, mint: string, destinationAta: string }
   programGate?: { additional: string[] }
-  allocation?: { id: number; limit: number }
-  tokenGate?: { amount: bigint; mint: string }
+  allocation?: { id: number, limit: number }
+  tokenGate?: { amount: bigint, mint: string }
   allowList?: { merkleRoot: Uint8Array }
 }
 
@@ -86,7 +87,7 @@ export interface CandyMachineResult {
 export async function createCandyMachine(
   config: CandyMachineConfig,
   tokenConfig: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<CandyMachineResult> {
   const connection = createConnection(tokenConfig)
   const payer = loadWallet(tokenConfig)
@@ -109,7 +110,7 @@ export async function createCandyMachine(
       space,
       lamports,
       programId: CANDY_MACHINE_PROGRAM_ID,
-    })
+    }),
   )
 
   // Initialize candy machine instruction
@@ -131,7 +132,7 @@ export async function createCandyMachine(
     connection,
     instructions,
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(candyMachineKeypair)
@@ -150,41 +151,41 @@ export async function createCandyMachine(
  * Calculate space needed for candy machine account
  */
 function calculateCandyMachineSpace(config: CandyMachineConfig): number {
-  let space = 8 + // discriminator
-    32 + // authority
-    32 + // mint authority
-    32 + // collection mint
-    8 + // items redeemed
-    1 + // items available option
-    8 + // items available
-    1 + // config line settings option
-    1 + // hidden settings option
-    2 + // seller fee basis points
-    4 + // symbol length
-    10 + // symbol
-    1 + // max edition supply option
-    8 + // max edition supply
-    1 + // is mutable
-    1 + // creators option
-    4 // creators length
+  let space = 8 // discriminator
+    + 32 // authority
+    + 32 // mint authority
+    + 32 // collection mint
+    + 8 // items redeemed
+    + 1 // items available option
+    + 8 // items available
+    + 1 // config line settings option
+    + 1 // hidden settings option
+    + 2 // seller fee basis points
+    + 4 // symbol length
+    + 10 // symbol
+    + 1 // max edition supply option
+    + 8 // max edition supply
+    + 1 // is mutable
+    + 1 // creators option
+    + 4 // creators length
 
   // Add space for creators
   space += config.creators.length * (32 + 1 + 1) // pubkey + verified + share
 
   // Add space for config line settings if present
   if (config.configLineSettings) {
-    space += 4 + config.configLineSettings.prefixName.length +
-      4 + // name length
-      4 + config.configLineSettings.prefixUri.length +
-      4 + // uri length
-      1 // is sequential
+    space += 4 + config.configLineSettings.prefixName.length
+      + 4 // name length
+      + 4 + config.configLineSettings.prefixUri.length
+      + 4 // uri length
+      + 1 // is sequential
   }
 
   // Add space for hidden settings if present
   if (config.hiddenSettings) {
-    space += 4 + config.hiddenSettings.name.length +
-      4 + config.hiddenSettings.uri.length +
-      32 // hash
+    space += 4 + config.hiddenSettings.name.length
+      + 4 + config.hiddenSettings.uri.length
+      + 32 // hash
   }
 
   return space
@@ -195,7 +196,7 @@ function calculateCandyMachineSpace(config: CandyMachineConfig): number {
  */
 function serializeInitializeCandyMachine(
   config: CandyMachineConfig,
-  authority: PublicKey
+  authority: PublicKey,
 ): Buffer {
   const buffer = Buffer.alloc(512)
   let offset = 0
@@ -259,7 +260,8 @@ function serializeInitializeCandyMachine(
     offset += 4
     buffer.writeUInt8(config.configLineSettings.isSequential ? 1 : 0, offset)
     offset += 1
-  } else {
+  }
+  else {
     buffer.writeUInt8(0, offset) // None
     offset += 1
   }
@@ -280,7 +282,8 @@ function serializeInitializeCandyMachine(
     offset += uriBytes.length
     Buffer.from(config.hiddenSettings.hash).copy(buffer, offset)
     offset += 32
-  } else {
+  }
+  else {
     buffer.writeUInt8(0, offset) // None
     offset += 1
   }
@@ -294,9 +297,9 @@ function serializeInitializeCandyMachine(
 export async function addConfigLines(
   candyMachine: string,
   startIndex: number,
-  configLines: Array<{ name: string; uri: string }>,
+  configLines: Array<{ name: string, uri: string }>,
   tokenConfig: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(tokenConfig)
   const payer = loadWallet(tokenConfig)
@@ -319,7 +322,7 @@ export async function addConfigLines(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -332,7 +335,7 @@ export async function addConfigLines(
  */
 function serializeAddConfigLines(
   startIndex: number,
-  configLines: Array<{ name: string; uri: string }>
+  configLines: Array<{ name: string, uri: string }>,
 ): Buffer {
   const buffer = Buffer.alloc(4096)
   let offset = 0
@@ -372,8 +375,8 @@ function serializeAddConfigLines(
 export async function mintFromCandyMachine(
   candyMachine: string,
   tokenConfig: TokenConfig,
-  options?: TransactionOptions
-): Promise<{ mint: string; signature: string }> {
+  options?: TransactionOptions,
+): Promise<{ mint: string, signature: string }> {
   const connection = createConnection(tokenConfig)
   const payer = loadWallet(tokenConfig)
 
@@ -402,7 +405,7 @@ export async function mintFromCandyMachine(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(mintKeypair)

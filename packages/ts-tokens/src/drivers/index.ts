@@ -4,8 +4,7 @@
  * Manages blockchain driver implementations and provides factory functions.
  */
 
-import type { ChainDriver, DriverFactory, DriverRegistry } from '../types'
-import type { TokenConfig, Chain } from '../types'
+import type { Chain, ChainDriver, DriverFactory, DriverRegistry, TokenConfig } from '../types'
 
 // Export Solana driver
 export * from './solana'
@@ -29,8 +28,8 @@ export function getDriver(chain: Chain, config: TokenConfig): ChainDriver {
   const factory = drivers.get(chain)
   if (!factory) {
     throw new Error(
-      `No driver registered for chain "${chain}". ` +
-      `Available chains: ${Array.from(drivers.keys()).join(', ') || 'none'}`
+      `No driver registered for chain "${chain}". `
+      + `Available chains: ${Array.from(drivers.keys()).join(', ') || 'none'}`,
     )
   }
   return factory(config)

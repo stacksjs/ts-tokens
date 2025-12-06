@@ -13,7 +13,7 @@ const CANDY_GUARD_PROGRAM_ID = new PublicKey('Guard1JwRhJkVH6XZhzoYxeBVQe872VH6Q
 export function findCandyMachineAuthorityPda(candyMachine: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from('candy_machine'), candyMachine.toBuffer()],
-    CANDY_MACHINE_PROGRAM_ID
+    CANDY_MACHINE_PROGRAM_ID,
   )
 }
 
@@ -23,7 +23,7 @@ export function findCandyMachineAuthorityPda(candyMachine: PublicKey): [PublicKe
 export function findCandyGuardPda(base: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from('candy_guard'), base.toBuffer()],
-    CANDY_GUARD_PROGRAM_ID
+    CANDY_GUARD_PROGRAM_ID,
   )
 }
 
@@ -34,7 +34,7 @@ export function findMintLimitPda(
   id: number,
   user: PublicKey,
   candyGuard: PublicKey,
-  candyMachine: PublicKey
+  candyMachine: PublicKey,
 ): [PublicKey, number] {
   const idBuffer = Buffer.alloc(1)
   idBuffer.writeUInt8(id)
@@ -47,7 +47,7 @@ export function findMintLimitPda(
       candyGuard.toBuffer(),
       candyMachine.toBuffer(),
     ],
-    CANDY_GUARD_PROGRAM_ID
+    CANDY_GUARD_PROGRAM_ID,
   )
 }
 
@@ -57,7 +57,7 @@ export function findMintLimitPda(
 export function findAllocationTrackerPda(
   id: number,
   candyGuard: PublicKey,
-  candyMachine: PublicKey
+  candyMachine: PublicKey,
 ): [PublicKey, number] {
   const idBuffer = Buffer.alloc(1)
   idBuffer.writeUInt8(id)
@@ -69,7 +69,7 @@ export function findAllocationTrackerPda(
       candyGuard.toBuffer(),
       candyMachine.toBuffer(),
     ],
-    CANDY_GUARD_PROGRAM_ID
+    CANDY_GUARD_PROGRAM_ID,
   )
 }
 
@@ -79,7 +79,7 @@ export function findAllocationTrackerPda(
 export function findFreezeEscrowPda(
   destination: PublicKey,
   candyGuard: PublicKey,
-  candyMachine: PublicKey
+  candyMachine: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [
@@ -88,6 +88,6 @@ export function findFreezeEscrowPda(
       candyGuard.toBuffer(),
       candyMachine.toBuffer(),
     ],
-    CANDY_GUARD_PROGRAM_ID
+    CANDY_GUARD_PROGRAM_ID,
   )
 }

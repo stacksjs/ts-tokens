@@ -4,13 +4,12 @@
  * Real-time event streaming via WebSocket.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
-  TokenEvent,
   EventCallback,
   EventFilter,
   ListenerOptions,
-  EventType,
+  TokenEvent,
 } from './types'
 
 /**
@@ -18,7 +17,7 @@ import type {
  */
 export class EventListener {
   private connection: Connection
-  private subscriptions: Map<number, { callback: EventCallback; filter?: EventFilter }> = new Map()
+  private subscriptions: Map<number, { callback: EventCallback, filter?: EventFilter }> = new Map()
   private nextId = 1
 
   constructor(connection: Connection) {
@@ -78,7 +77,7 @@ export class EventListener {
       (logs) => {
         this.processLogs(logs)
       },
-      commitment
+      commitment,
     )
   }
 
@@ -92,12 +91,14 @@ export class EventListener {
   /**
    * Process logs and emit events
    */
-  private processLogs(logs: { signature: string; logs: string[]; err: unknown }): void {
-    if (logs.err) return
+  private processLogs(logs: { signature: string, logs: string[], err: unknown }): void {
+    if (logs.err)
+      return
 
     // Parse logs to determine event type
     const event = this.parseLogsToEvent(logs)
-    if (!event) return
+    if (!event)
+      return
 
     // Emit to all matching subscribers
     for (const [, sub] of this.subscriptions) {
@@ -110,7 +111,7 @@ export class EventListener {
   /**
    * Parse logs to event
    */
-  private parseLogsToEvent(logs: { signature: string; logs: string[] }): TokenEvent | null {
+  private parseLogsToEvent(logs: { signature: string, logs: string[] }): TokenEvent | null {
     // In production, would parse program logs to determine event type
     // This is a simplified placeholder
     return null
@@ -120,7 +121,8 @@ export class EventListener {
    * Check if event matches filter
    */
   private matchesFilter(event: TokenEvent, filter?: EventFilter): boolean {
-    if (!filter) return true
+    if (!filter)
+      return true
 
     // Check event type
     if (filter.types && !filter.types.includes(event.type)) {
@@ -175,7 +177,7 @@ export function createEventListener(connection: Connection): EventListener {
 export function onTokenTransfer(
   connection: Connection,
   mint: PublicKey,
-  callback: (event: TokenEvent) => void
+  callback: (event: TokenEvent) => void,
 ): () => void {
   const listener = new EventListener(connection)
 
@@ -195,7 +197,7 @@ export function onTokenTransfer(
 export function onNFTSale(
   connection: Connection,
   collection: PublicKey,
-  callback: (event: TokenEvent) => void
+  callback: (event: TokenEvent) => void,
 ): () => void {
   const listener = new EventListener(connection)
 
@@ -215,7 +217,7 @@ export function onNFTSale(
 export function onStake(
   connection: Connection,
   pool: PublicKey,
-  callback: (event: TokenEvent) => void
+  callback: (event: TokenEvent) => void,
 ): () => void {
   const listener = new EventListener(connection)
 
@@ -239,12 +241,12 @@ export async function pollEvents(
     interval?: number
     onEvent: EventCallback
     onError?: (error: Error) => void
-  }
+  },
 ): Promise<{ stop: () => void }> {
   const { interval = 5000, onEvent, onError } = options
 
   let running = true
-  let lastSignatures: Map<string, string> = new Map()
+  const lastSignatures: Map<string, string> = new Map()
 
   const poll = async (): Promise<void> => {
     while (running) {
@@ -257,7 +259,8 @@ export async function pollEvents(
           const lastSig = lastSignatures.get(account.toBase58())
 
           for (const sig of signatures) {
-            if (sig.signature === lastSig) break
+            if (sig.signature === lastSig)
+              break
 
             // Would parse transaction and emit event
           }
@@ -266,7 +269,8 @@ export async function pollEvents(
             lastSignatures.set(account.toBase58(), signatures[0].signature)
           }
         }
-      } catch (error) {
+      }
+      catch (error) {
         onError?.(error as Error)
       }
 

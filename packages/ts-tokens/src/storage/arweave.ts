@@ -4,7 +4,7 @@
  * Direct Arweave HTTP API implementation without external SDKs.
  */
 
-import type { StorageAdapter, UploadResult, UploadOptions, UploadProgress, BatchUploadResult } from '../types'
+import type { BatchUploadResult, StorageAdapter, UploadOptions, UploadProgress, UploadResult } from '../types'
 
 /**
  * Arweave configuration
@@ -29,7 +29,7 @@ interface ArweaveTransaction {
   id: string
   last_tx: string
   owner: string
-  tags: Array<{ name: string; value: string }>
+  tags: Array<{ name: string, value: string }>
   target: string
   quantity: string
   data: string
@@ -47,7 +47,7 @@ interface ArweaveTransaction {
 export class ArweaveStorageAdapter implements StorageAdapter {
   readonly name = 'arweave' as const
   private config: ArweaveConfig
-  private wallet: { publicKey: string; secretKey: Uint8Array } | null = null
+  private wallet: { publicKey: string, secretKey: Uint8Array } | null = null
 
   constructor(config: Partial<ArweaveConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
@@ -56,7 +56,7 @@ export class ArweaveStorageAdapter implements StorageAdapter {
   /**
    * Set the wallet for signing transactions
    */
-  setWallet(wallet: { publicKey: string; secretKey: Uint8Array }): void {
+  setWallet(wallet: { publicKey: string, secretKey: Uint8Array }): void {
     this.wallet = wallet
   }
 
@@ -65,7 +65,7 @@ export class ArweaveStorageAdapter implements StorageAdapter {
    */
   async upload(
     data: Uint8Array | string,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<UploadResult> {
     const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
     const contentType = options?.contentType || 'application/octet-stream'
@@ -113,11 +113,11 @@ export class ArweaveStorageAdapter implements StorageAdapter {
    * Upload multiple files
    */
   async uploadBatch(
-    files: Array<{ path: string; name?: string }>,
-    options?: UploadOptions
+    files: Array<{ path: string, name?: string }>,
+    options?: UploadOptions,
   ): Promise<BatchUploadResult> {
     const results: UploadResult[] = []
-    const failed: Array<{ file: string; error: string }> = []
+    const failed: Array<{ file: string, error: string }> = []
     let totalCost = 0n
 
     for (const file of files) {
@@ -127,7 +127,8 @@ export class ArweaveStorageAdapter implements StorageAdapter {
         if (result.cost) {
           totalCost += result.cost
         }
-      } catch (error) {
+      }
+      catch (error) {
         failed.push({
           file: file.path,
           error: error instanceof Error ? error.message : String(error),
@@ -147,7 +148,7 @@ export class ArweaveStorageAdapter implements StorageAdapter {
    */
   async uploadJson(
     data: Record<string, unknown>,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<UploadResult> {
     const json = JSON.stringify(data)
     return this.upload(json, {
@@ -191,7 +192,8 @@ export class ArweaveStorageAdapter implements StorageAdapter {
         signal: AbortSignal.timeout(this.config.timeout),
       })
       return response.ok
-    } catch {
+    }
+    catch {
       return false
     }
   }
@@ -212,7 +214,8 @@ export class ArweaveStorageAdapter implements StorageAdapter {
 
       const price = await response.text()
       return BigInt(price)
-    } catch {
+    }
+    catch {
       // Return a rough estimate if API fails
       // ~0.0001 AR per KB
       return BigInt(Math.ceil(size / 1024) * 100000000)
@@ -243,7 +246,8 @@ export class ArweaveStorageAdapter implements StorageAdapter {
         blockHeight: status.block_height,
         blockHash: status.block_indep_hash,
       }
-    } catch {
+    }
+    catch {
       return { confirmed: false }
     }
   }
@@ -255,8 +259,8 @@ export class ArweaveStorageAdapter implements StorageAdapter {
    */
   private async submitData(
     data: Uint8Array,
-    tags: Array<{ name: string; value: string }>,
-    onProgress?: (progress: UploadProgress) => void
+    tags: Array<{ name: string, value: string }>,
+    onProgress?: (progress: UploadProgress) => void,
   ): Promise<string> {
     // For large files, use chunked upload
     if (data.length > 100 * 1024) {
@@ -278,14 +282,14 @@ export class ArweaveStorageAdapter implements StorageAdapter {
     // For now, we'll throw an error indicating this needs wallet setup
     if (!this.wallet) {
       throw new Error(
-        'Arweave upload requires a wallet. Use setWallet() or consider using Bundlr/Irys for Solana wallet support.'
+        'Arweave upload requires a wallet. Use setWallet() or consider using Bundlr/Irys for Solana wallet support.',
       )
     }
 
     // Placeholder for actual transaction submission
     // This would need proper Arweave transaction signing
     throw new Error(
-      'Direct Arweave uploads not yet implemented. Use uploadViaGateway() or Bundlr/Irys integration.'
+      'Direct Arweave uploads not yet implemented. Use uploadViaGateway() or Bundlr/Irys integration.',
     )
   }
 
@@ -294,8 +298,8 @@ export class ArweaveStorageAdapter implements StorageAdapter {
    */
   private async submitChunkedData(
     data: Uint8Array,
-    tags: Array<{ name: string; value: string }>,
-    onProgress?: (progress: UploadProgress) => void
+    tags: Array<{ name: string, value: string }>,
+    onProgress?: (progress: UploadProgress) => void,
   ): Promise<string> {
     const CHUNK_SIZE = 256 * 1024 // 256KB chunks
     const chunks: Uint8Array[] = []
@@ -312,7 +316,7 @@ export class ArweaveStorageAdapter implements StorageAdapter {
     // In a real implementation, each chunk would be uploaded separately
     // and then combined into a final transaction
     throw new Error(
-      'Chunked Arweave uploads not yet implemented. Consider using Bundlr/Irys for large files.'
+      'Chunked Arweave uploads not yet implemented. Consider using Bundlr/Irys for large files.',
     )
   }
 

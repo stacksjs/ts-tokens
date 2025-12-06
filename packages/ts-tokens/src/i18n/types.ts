@@ -10,45 +10,45 @@ export type Locale = 'en' | 'es' | 'zh' | 'ja' | 'ko' | 'fr' | 'de' | 'pt' | 'ru
 /**
  * Translation keys
  */
-export type TranslationKey =
+export type TranslationKey
   // Common
-  | 'common.success'
-  | 'common.error'
-  | 'common.loading'
-  | 'common.confirm'
-  | 'common.cancel'
-  | 'common.retry'
+  = | 'common.success'
+    | 'common.error'
+    | 'common.loading'
+    | 'common.confirm'
+    | 'common.cancel'
+    | 'common.retry'
   // Tokens
-  | 'token.created'
-  | 'token.minted'
-  | 'token.transferred'
-  | 'token.burned'
-  | 'token.frozen'
-  | 'token.thawed'
+    | 'token.created'
+    | 'token.minted'
+    | 'token.transferred'
+    | 'token.burned'
+    | 'token.frozen'
+    | 'token.thawed'
   // NFTs
-  | 'nft.created'
-  | 'nft.minted'
-  | 'nft.transferred'
-  | 'nft.burned'
-  | 'nft.listed'
-  | 'nft.sold'
+    | 'nft.created'
+    | 'nft.minted'
+    | 'nft.transferred'
+    | 'nft.burned'
+    | 'nft.listed'
+    | 'nft.sold'
   // Errors
-  | 'error.insufficientBalance'
-  | 'error.invalidAddress'
-  | 'error.transactionFailed'
-  | 'error.networkError'
-  | 'error.unauthorized'
-  | 'error.notFound'
+    | 'error.insufficientBalance'
+    | 'error.invalidAddress'
+    | 'error.transactionFailed'
+    | 'error.networkError'
+    | 'error.unauthorized'
+    | 'error.notFound'
   // Governance
-  | 'governance.proposalCreated'
-  | 'governance.voteCast'
-  | 'governance.proposalPassed'
-  | 'governance.proposalFailed'
-  | 'governance.proposalExecuted'
+    | 'governance.proposalCreated'
+    | 'governance.voteCast'
+    | 'governance.proposalPassed'
+    | 'governance.proposalFailed'
+    | 'governance.proposalExecuted'
   // Staking
-  | 'staking.staked'
-  | 'staking.unstaked'
-  | 'staking.rewardsClaimed'
+    | 'staking.staked'
+    | 'staking.unstaked'
+    | 'staking.rewardsClaimed'
 
 /**
  * Translation dictionary

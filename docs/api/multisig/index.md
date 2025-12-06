@@ -29,7 +29,7 @@ console.log('Multi-sig address:', address)
 ## Set Multi-Sig as Token Authority
 
 ```typescript
-import { setMintAuthority, getConfig } from 'ts-tokens'
+import { getConfig, setMintAuthority } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -60,7 +60,7 @@ console.log('Transaction ID:', transaction.id)
 ## Sign a Transaction
 
 ```typescript
-import { signMultisigTransaction, getConfig } from 'ts-tokens'
+import { getConfig, signMultisigTransaction } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -75,7 +75,7 @@ console.log('Remaining signatures needed:', remainingSignatures)
 ## Execute a Transaction
 
 ```typescript
-import { executeMultisigTransaction, canExecute, getConfig } from 'ts-tokens'
+import { canExecute, executeMultisigTransaction, getConfig } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -92,7 +92,7 @@ if (ready) {
 ## Get Pending Transactions
 
 ```typescript
-import { getPendingSignatures, getConfig } from 'ts-tokens'
+import { getConfig, getPendingSignatures } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -106,7 +106,7 @@ for (const tx of pending) {
 ## Get Multi-Sig Info
 
 ```typescript
-import { getMultisig, getConfig } from 'ts-tokens'
+import { getConfig, getMultisig } from 'ts-tokens'
 
 const config = await getConfig()
 

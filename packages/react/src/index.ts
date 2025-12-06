@@ -9,11 +9,11 @@
 // Components
 export * from './components'
 
-// Hooks
-export * from './hooks'
-
 // Context
 export * from './context'
+
+// Hooks
+export * from './hooks'
 
 // Types
 export * from './types'

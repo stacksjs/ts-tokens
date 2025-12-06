@@ -4,7 +4,7 @@
  * Tools for debugging transactions, accounts, and operations.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 
 /**
  * Transaction analysis result
@@ -42,7 +42,7 @@ export interface InstructionInfo {
  */
 export async function analyzeTransaction(
   connection: Connection,
-  signature: string
+  signature: string,
 ): Promise<TransactionAnalysis | null> {
   const tx = await connection.getParsedTransaction(signature, {
     maxSupportedTransactionVersion: 0,
@@ -126,7 +126,7 @@ export interface AccountState {
  */
 export async function inspectAccount(
   connection: Connection,
-  address: PublicKey
+  address: PublicKey,
 ): Promise<AccountState | null> {
   const info = await connection.getAccountInfo(address)
 
@@ -152,10 +152,10 @@ export async function simulateInstruction(
   connection: Connection,
   instruction: {
     programId: PublicKey
-    keys: Array<{ pubkey: PublicKey; isSigner: boolean; isWritable: boolean }>
+    keys: Array<{ pubkey: PublicKey, isSigner: boolean, isWritable: boolean }>
     data: Buffer
   },
-  payer: PublicKey
+  payer: PublicKey,
 ): Promise<{
   success: boolean
   logs: string[]
@@ -175,7 +175,7 @@ export async function simulateInstruction(
  */
 export function formatLogs(logs: string[]): string {
   return logs
-    .map(log => {
+    .map((log) => {
       if (log.startsWith('Program log:')) {
         return `  📝 ${log.replace('Program log: ', '')}`
       }
@@ -237,7 +237,7 @@ export class Logger {
   private level: LogLevel
   private json: boolean
 
-  constructor(options: { level?: LogLevel; json?: boolean } = {}) {
+  constructor(options: { level?: LogLevel, json?: boolean } = {}) {
     this.level = options.level ?? 'info'
     this.json = options.json ?? false
   }
@@ -248,11 +248,13 @@ export class Logger {
   }
 
   private log(level: LogLevel, message: string, data?: Record<string, unknown>) {
-    if (!this.shouldLog(level)) return
+    if (!this.shouldLog(level))
+      return
 
     if (this.json) {
       console.log(JSON.stringify({ level, message, ...data, timestamp: new Date().toISOString() }))
-    } else {
+    }
+    else {
       const prefix = { debug: '🔍', info: 'ℹ️', warn: '⚠️', error: '❌' }[level]
       console.log(`${prefix} [${level.toUpperCase()}] ${message}`, data ?? '')
     }

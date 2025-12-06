@@ -13,7 +13,8 @@ export function isValidAddress(address: string): boolean {
   try {
     new PublicKey(address)
     return true
-  } catch {
+  }
+  catch {
     return false
   }
 }
@@ -21,7 +22,7 @@ export function isValidAddress(address: string): boolean {
 /**
  * Validate token name
  */
-export function isValidTokenName(name: string): { valid: boolean; error?: string } {
+export function isValidTokenName(name: string): { valid: boolean, error?: string } {
   if (!name || name.length === 0) {
     return { valid: false, error: 'Name is required' }
   }
@@ -34,7 +35,7 @@ export function isValidTokenName(name: string): { valid: boolean; error?: string
 /**
  * Validate token symbol
  */
-export function isValidTokenSymbol(symbol: string): { valid: boolean; error?: string } {
+export function isValidTokenSymbol(symbol: string): { valid: boolean, error?: string } {
   if (!symbol || symbol.length === 0) {
     return { valid: false, error: 'Symbol is required' }
   }
@@ -47,7 +48,7 @@ export function isValidTokenSymbol(symbol: string): { valid: boolean; error?: st
 /**
  * Validate decimals
  */
-export function isValidDecimals(decimals: number): { valid: boolean; error?: string } {
+export function isValidDecimals(decimals: number): { valid: boolean, error?: string } {
   if (decimals < 0 || decimals > 9) {
     return { valid: false, error: 'Decimals must be between 0 and 9' }
   }
@@ -60,7 +61,7 @@ export function isValidDecimals(decimals: number): { valid: boolean; error?: str
 /**
  * Validate basis points (royalty)
  */
-export function isValidBasisPoints(bps: number): { valid: boolean; error?: string } {
+export function isValidBasisPoints(bps: number): { valid: boolean, error?: string } {
   if (bps < 0 || bps > 10000) {
     return { valid: false, error: 'Basis points must be between 0 and 10000' }
   }
@@ -73,7 +74,7 @@ export function isValidBasisPoints(bps: number): { valid: boolean; error?: strin
 /**
  * Validate creator shares sum to 100
  */
-export function isValidCreatorShares(shares: number[]): { valid: boolean; error?: string } {
+export function isValidCreatorShares(shares: number[]): { valid: boolean, error?: string } {
   const total = shares.reduce((sum, share) => sum + share, 0)
   if (total !== 100) {
     return { valid: false, error: `Creator shares must sum to 100, got ${total}` }
@@ -89,7 +90,7 @@ export function isValidCreatorShares(shares: number[]): { valid: boolean; error?
 /**
  * Validate URI format
  */
-export function isValidUri(uri: string): { valid: boolean; error?: string } {
+export function isValidUri(uri: string): { valid: boolean, error?: string } {
   if (!uri || uri.length === 0) {
     return { valid: false, error: 'URI is required' }
   }
@@ -99,7 +100,8 @@ export function isValidUri(uri: string): { valid: boolean; error?: string } {
       return { valid: false, error: 'URI must use http, https, ipfs, or ar protocol' }
     }
     return { valid: true }
-  } catch {
+  }
+  catch {
     return { valid: false, error: 'Invalid URI format' }
   }
 }
@@ -107,7 +109,7 @@ export function isValidUri(uri: string): { valid: boolean; error?: string } {
 /**
  * Validate amount is positive
  */
-export function isValidAmount(amount: bigint | number): { valid: boolean; error?: string } {
+export function isValidAmount(amount: bigint | number): { valid: boolean, error?: string } {
   const value = typeof amount === 'bigint' ? amount : BigInt(amount)
   if (value <= 0n) {
     return { valid: false, error: 'Amount must be greater than 0' }
@@ -118,7 +120,7 @@ export function isValidAmount(amount: bigint | number): { valid: boolean; error?
 /**
  * Validate metadata JSON structure
  */
-export function isValidMetadataJson(metadata: unknown): { valid: boolean; errors: string[] } {
+export function isValidMetadataJson(metadata: unknown): { valid: boolean, errors: string[] } {
   const errors: string[] = []
 
   if (typeof metadata !== 'object' || metadata === null) {

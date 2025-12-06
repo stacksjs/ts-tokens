@@ -4,9 +4,10 @@
  * Fetch Candy Machine state and info.
  */
 
-import { ref, onMounted, type Ref } from 'vue'
-import { useConnection } from './useConnection'
+import type { Ref } from 'vue'
 import type { CandyMachineDisplayInfo } from '../types'
+import { onMounted, ref } from 'vue'
+import { useConnection } from './useConnection'
 
 /**
  * Candy Machine return type
@@ -54,9 +55,11 @@ export function useCandyMachine(address: string): UseCandyMachineReturn {
         isActive: true,
         isSoldOut: itemsMinted >= itemsAvailable,
       }
-    } catch (err) {
+    }
+    catch (err) {
       error.value = err as Error
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }

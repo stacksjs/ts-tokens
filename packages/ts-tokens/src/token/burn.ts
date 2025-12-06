@@ -4,20 +4,19 @@
  * Burn tokens to reduce supply.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { BurnOptions, TokenConfig, TransactionResult } from '../types'
 import {
-  createBurnInstruction,
   createBurnCheckedInstruction,
-  getAssociatedTokenAddress,
   getAccount,
+  getAssociatedTokenAddress,
   getMint,
-  TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
-import type { TokenConfig, BurnOptions, TransactionResult } from '../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
-import { loadWallet } from '../drivers/solana/wallet'
+import { PublicKey } from '@solana/web3.js'
 import { createConnection } from '../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Burn tokens from an account
@@ -28,7 +27,7 @@ import { createConnection } from '../drivers/solana/connection'
  */
 export async function burnTokens(
   options: BurnOptions,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -49,7 +48,8 @@ export async function burnTokens(
   let tokenAccount: PublicKey
   if (options.from) {
     tokenAccount = new PublicKey(options.from)
-  } else {
+  }
+  else {
     // Use associated token account
     tokenAccount = await getAssociatedTokenAddress(mint, owner, false, programId)
   }
@@ -58,7 +58,7 @@ export async function burnTokens(
   const accountInfo = await getAccount(connection, tokenAccount, undefined, programId)
   if (accountInfo.amount < amount) {
     throw new Error(
-      `Insufficient balance. Account has ${accountInfo.amount} but trying to burn ${amount}`
+      `Insufficient balance. Account has ${accountInfo.amount} but trying to burn ${amount}`,
     )
   }
 
@@ -70,7 +70,7 @@ export async function burnTokens(
     amount,
     mintInfo.decimals,
     [],
-    programId
+    programId,
   )
 
   // Build and send transaction
@@ -78,7 +78,7 @@ export async function burnTokens(
     connection,
     [instruction],
     payer.publicKey,
-    options.options
+    options.options,
   )
 
   transaction.partialSign(payer)
@@ -95,7 +95,7 @@ export async function burnTokens(
  */
 export async function burnAll(
   mint: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -124,7 +124,7 @@ export async function burnAll(
       mint,
       amount,
     },
-    config
+    config,
   )
 }
 
@@ -134,13 +134,13 @@ export async function burnAll(
 export async function burn(
   mint: string,
   amount: bigint | number,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<TransactionResult> {
   return burnTokens(
     {
       mint,
       amount,
     },
-    config
+    config,
   )
 }

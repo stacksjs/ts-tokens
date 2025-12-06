@@ -4,9 +4,9 @@
 
 export {
   TokensProvider,
-  useTokensContext,
-  useConnection,
   useConfig,
+  useConnection,
+  useTokensContext,
 } from './TokensProvider'
 
 export type {

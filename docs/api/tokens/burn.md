@@ -11,7 +11,7 @@ const config = await getConfig()
 
 const result = await burnTokens(
   'TokenMintAddress...',
-  1000000,  // amount to burn
+  1000000, // amount to burn
   config
 )
 
@@ -20,12 +20,12 @@ console.log('Burned:', result.signature)
 
 ## Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `mint` | string | Token mint address |
-| `amount` | number | Amount to burn (in base units) |
-| `config` | TokenConfig | Configuration object |
-| `options` | TransactionOptions | Optional transaction settings |
+| Parameter | Type               | Description                    |
+| --------- | ------------------ | ------------------------------ |
+| `mint`    | string             | Token mint address             |
+| `amount`  | number             | Amount to burn (in base units) |
+| `config`  | TokenConfig        | Configuration object           |
+| `options` | TransactionOptions | Optional transaction settings  |
 
 ## Examples
 
