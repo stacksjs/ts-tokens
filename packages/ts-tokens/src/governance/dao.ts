@@ -2,17 +2,20 @@
  * DAO Management
  */
 
-import { Connection, PublicKey, Keypair } from '@solana/web3.js'
-import type { DAO, DAOConfig, CreateDAOOptions } from './types'
+import type { Connection } from '@solana/web3.js'
+import type { CreateDAOOptions, DAO, DAOConfig } from './types'
+import { Keypair, PublicKey } from '@solana/web3.js'
 
 /**
  * Parse duration string to seconds
  */
 function parseDuration(duration: string | bigint): bigint {
-  if (typeof duration === 'bigint') return duration
+  if (typeof duration === 'bigint')
+    return duration
 
   const match = duration.match(/^(\d+)\s*(second|minute|hour|day|week)s?$/i)
-  if (!match) throw new Error(`Invalid duration: ${duration}`)
+  if (!match)
+    throw new Error(`Invalid duration: ${duration}`)
 
   const value = BigInt(match[1])
   const unit = match[2].toLowerCase()
@@ -34,8 +37,8 @@ function parseDuration(duration: string | bigint): bigint {
 export async function createDAO(
   connection: Connection,
   payer: Keypair,
-  options: CreateDAOOptions
-): Promise<{ dao: DAO; signature: string }> {
+  options: CreateDAOOptions,
+): Promise<{ dao: DAO, signature: string }> {
   const { name, governanceToken, config } = options
 
   // Parse durations
@@ -88,7 +91,7 @@ export async function createDAO(
  */
 export async function getDAO(
   connection: Connection,
-  address: PublicKey
+  address: PublicKey,
 ): Promise<DAO | null> {
   const accountInfo = await connection.getAccountInfo(address)
 
@@ -108,7 +111,7 @@ export async function updateDAOConfig(
   connection: Connection,
   dao: PublicKey,
   authority: Keypair,
-  newConfig: Partial<DAOConfig>
+  newConfig: Partial<DAOConfig>,
 ): Promise<{ signature: string }> {
   // In production, would update on-chain
   return {
@@ -121,8 +124,8 @@ export async function updateDAOConfig(
  */
 export async function getTreasuryBalance(
   connection: Connection,
-  dao: DAO
-): Promise<{ sol: number; tokens: Array<{ mint: string; amount: bigint }> }> {
+  dao: DAO,
+): Promise<{ sol: number, tokens: Array<{ mint: string, amount: bigint }> }> {
   const solBalance = await connection.getBalance(dao.treasury)
 
   // Get token accounts
@@ -146,7 +149,7 @@ export async function getTreasuryBalance(
  */
 export async function getTotalVotingPower(
   connection: Connection,
-  governanceToken: PublicKey
+  governanceToken: PublicKey,
 ): Promise<bigint> {
   // Get token supply
   const supply = await connection.getTokenSupply(governanceToken)
@@ -173,7 +176,8 @@ export function validateDAOConfig(config: CreateDAOOptions['config']): string[] 
 
   try {
     parseDuration(config.votingPeriod)
-  } catch {
+  }
+  catch {
     errors.push('Invalid voting period format')
   }
 

@@ -4,11 +4,12 @@
  * Update and fetch NFT metadata.
  */
 
-import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js'
-import type { TokenConfig, TransactionResult, TransactionOptions, NFTMetadata } from '../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
-import { loadWallet } from '../drivers/solana/wallet'
+import type { TransactionInstruction } from '@solana/web3.js'
+import type { NFTMetadata, TokenConfig, TransactionOptions, TransactionResult } from '../types'
+import { PublicKey } from '@solana/web3.js'
 import { createConnection } from '../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Token Metadata Program ID
@@ -25,7 +26,7 @@ function getMetadataAddress(mint: PublicKey): PublicKey {
       TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
   return address
 }
@@ -40,12 +41,12 @@ export async function updateNFTMetadata(
     symbol?: string
     uri?: string
     sellerFeeBasisPoints?: number
-    creators?: Array<{ address: string; share: number }>
+    creators?: Array<{ address: string, share: number }>
     primarySaleHappened?: boolean
     isMutable?: boolean
   },
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -70,7 +71,7 @@ export async function updateNFTMetadata(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -87,11 +88,11 @@ function serializeUpdateMetadataV2(
     symbol?: string
     uri?: string
     sellerFeeBasisPoints?: number
-    creators?: Array<{ address: string; share: number }>
+    creators?: Array<{ address: string, share: number }>
     primarySaleHappened?: boolean
     isMutable?: boolean
   },
-  updateAuthority: PublicKey
+  updateAuthority: PublicKey,
 ): Buffer {
   // This is a simplified version - full implementation would handle all fields
   const buffer = Buffer.alloc(512)
@@ -112,7 +113,8 @@ function serializeUpdateMetadataV2(
     offset += 4
     nameBytes.copy(buffer, offset)
     offset += nameBytes.length
-  } else {
+  }
+  else {
     buffer.writeUInt32LE(0, offset)
     offset += 4
   }
@@ -124,7 +126,8 @@ function serializeUpdateMetadataV2(
     offset += 4
     symbolBytes.copy(buffer, offset)
     offset += symbolBytes.length
-  } else {
+  }
+  else {
     buffer.writeUInt32LE(0, offset)
     offset += 4
   }
@@ -136,7 +139,8 @@ function serializeUpdateMetadataV2(
     offset += 4
     uriBytes.copy(buffer, offset)
     offset += uriBytes.length
-  } else {
+  }
+  else {
     buffer.writeUInt32LE(0, offset)
     offset += 4
   }
@@ -167,7 +171,8 @@ function serializeUpdateMetadataV2(
     offset += 1
     buffer.writeUInt8(updates.primarySaleHappened ? 1 : 0, offset)
     offset += 1
-  } else {
+  }
+  else {
     buffer.writeUInt8(0, offset) // None
     offset += 1
   }
@@ -178,7 +183,8 @@ function serializeUpdateMetadataV2(
     offset += 1
     buffer.writeUInt8(updates.isMutable ? 1 : 0, offset)
     offset += 1
-  } else {
+  }
+  else {
     buffer.writeUInt8(0, offset) // None
     offset += 1
   }
@@ -191,7 +197,7 @@ function serializeUpdateMetadataV2(
  */
 export async function getNFTMetadata(
   mint: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<NFTMetadata | null> {
   const connection = createConnection(config)
   const mintPubkey = new PublicKey(mint)
@@ -212,7 +218,7 @@ export async function getNFTMetadata(
 function parseMetadataAccount(
   data: Buffer,
   mint: string,
-  metadataAddress: string
+  metadataAddress: string,
 ): NFTMetadata {
   let offset = 1 // Skip key byte
 
@@ -249,7 +255,7 @@ function parseMetadataAccount(
   const hasCreators = data.readUInt8(offset) === 1
   offset += 1
 
-  const creators: Array<{ address: string; verified: boolean; share: number }> = []
+  const creators: Array<{ address: string, verified: boolean, share: number }> = []
   if (hasCreators) {
     const creatorsLength = data.readUInt32LE(offset)
     offset += 4
@@ -290,7 +296,7 @@ function parseMetadataAccount(
  * Fetch off-chain metadata from URI
  */
 export async function fetchOffChainMetadata(
-  uri: string
+  uri: string,
 ): Promise<Record<string, unknown> | null> {
   try {
     const response = await fetch(uri, {
@@ -302,7 +308,8 @@ export async function fetchOffChainMetadata(
     }
 
     return await response.json()
-  } catch {
+  }
+  catch {
     return null
   }
 }
@@ -312,7 +319,7 @@ export async function fetchOffChainMetadata(
  */
 export async function getFullNFTData(
   mint: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<{
   onChain: NFTMetadata
   offChain: Record<string, unknown> | null
@@ -333,7 +340,7 @@ export async function getFullNFTData(
 export async function verifyCreator(
   mint: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -358,7 +365,7 @@ export async function verifyCreator(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -372,7 +379,7 @@ export async function verifyCreator(
 export async function unverifyCreator(
   mint: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -397,7 +404,7 @@ export async function unverifyCreator(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -412,7 +419,7 @@ export async function setAndVerifyCollection(
   mint: string,
   collection: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -430,7 +437,7 @@ export async function setAndVerifyCollection(
       collectionPubkey.toBuffer(),
       Buffer.from('edition'),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
 
   // SetAndVerifyCollection instruction - discriminator: 25
@@ -455,7 +462,7 @@ export async function setAndVerifyCollection(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)

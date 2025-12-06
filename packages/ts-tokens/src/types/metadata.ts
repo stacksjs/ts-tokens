@@ -147,13 +147,13 @@ export interface OnChainMetadata {
 /**
  * Token standard types
  */
-export type TokenStandard =
-  | 'NonFungible'
-  | 'FungibleAsset'
-  | 'Fungible'
-  | 'NonFungibleEdition'
-  | 'ProgrammableNonFungible'
-  | 'ProgrammableNonFungibleEdition'
+export type TokenStandard
+  = | 'NonFungible'
+    | 'FungibleAsset'
+    | 'Fungible'
+    | 'NonFungibleEdition'
+    | 'ProgrammableNonFungible'
+    | 'ProgrammableNonFungibleEdition'
 
 /**
  * Collection details for sized collections

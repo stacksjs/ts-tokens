@@ -4,15 +4,15 @@ Manage mint and freeze authorities for tokens.
 
 ## Authority Types
 
-| Authority | Description |
-|-----------|-------------|
-| Mint Authority | Can mint new tokens |
+| Authority        | Description                    |
+| ---------------- | ------------------------------ |
+| Mint Authority   | Can mint new tokens            |
 | Freeze Authority | Can freeze/thaw token accounts |
 
 ## Get Current Authorities
 
 ```typescript
-import { getTokenInfo, getConfig } from 'ts-tokens'
+import { getConfig, getTokenInfo } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -25,7 +25,7 @@ console.log('Freeze Authority:', info.freezeAuthority || 'None')
 ## Transfer Mint Authority
 
 ```typescript
-import { setMintAuthority, getConfig } from 'ts-tokens'
+import { getConfig, setMintAuthority } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -41,7 +41,7 @@ await setMintAuthority(
 Permanently disable minting:
 
 ```typescript
-import { revokeMintAuthority, getConfig } from 'ts-tokens'
+import { getConfig, revokeMintAuthority } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -53,7 +53,7 @@ await revokeMintAuthority('TOKEN_MINT_ADDRESS', config)
 ## Transfer Freeze Authority
 
 ```typescript
-import { setFreezeAuthority, getConfig } from 'ts-tokens'
+import { getConfig, setFreezeAuthority } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -69,7 +69,7 @@ await setFreezeAuthority(
 Permanently disable freezing:
 
 ```typescript
-import { revokeFreezeAuthority, getConfig } from 'ts-tokens'
+import { getConfig, revokeFreezeAuthority } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -97,7 +97,7 @@ await freezeAccount(
 Unfreeze a token account:
 
 ```typescript
-import { thawAccount, getConfig } from 'ts-tokens'
+import { getConfig, thawAccount } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -145,7 +145,7 @@ tokens token:thaw <token-account> --mint <mint>
 For enhanced security, use a multisig as authority:
 
 ```typescript
-import { createMultisig, setMintAuthority, getConfig } from 'ts-tokens'
+import { createMultisig, getConfig, setMintAuthority } from 'ts-tokens'
 
 const config = await getConfig()
 

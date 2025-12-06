@@ -4,8 +4,8 @@
  * Type definitions for NFT and collection operations.
  */
 
+import type { Creator, MasterEditionInfo, OffChainMetadata, OnChainMetadata, TokenStandard } from './metadata'
 import type { TransactionOptions } from './transaction'
-import type { Creator, OnChainMetadata, OffChainMetadata, MasterEditionInfo, TokenStandard } from './metadata'
 
 /**
  * Collection creation options
@@ -310,25 +310,25 @@ export interface CandyMachineConfig {
 /**
  * Candy Machine guard types
  */
-export type CandyGuardType =
-  | 'solPayment'
-  | 'tokenPayment'
-  | 'nftPayment'
-  | 'startDate'
-  | 'endDate'
-  | 'mintLimit'
-  | 'allowList'
-  | 'nftGate'
-  | 'tokenGate'
-  | 'redeemedAmount'
-  | 'addressGate'
-  | 'freezeSolPayment'
-  | 'freezeTokenPayment'
-  | 'programGate'
-  | 'allocation'
-  | 'token2022Payment'
-  | 'botTax'
-  | 'gatekeeper'
+export type CandyGuardType
+  = | 'solPayment'
+    | 'tokenPayment'
+    | 'nftPayment'
+    | 'startDate'
+    | 'endDate'
+    | 'mintLimit'
+    | 'allowList'
+    | 'nftGate'
+    | 'tokenGate'
+    | 'redeemedAmount'
+    | 'addressGate'
+    | 'freezeSolPayment'
+    | 'freezeTokenPayment'
+    | 'programGate'
+    | 'allocation'
+    | 'token2022Payment'
+    | 'botTax'
+    | 'gatekeeper'
 
 /**
  * Candy Machine guard configuration

@@ -4,8 +4,8 @@
  * Unit tests for NFT operations.
  */
 
-import { describe, test, expect } from 'bun:test'
 import { Keypair, PublicKey } from '@solana/web3.js'
+import { describe, expect, test } from 'bun:test'
 
 describe('NFT Metadata Validation', () => {
   test('should validate NFT name', () => {

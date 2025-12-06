@@ -31,17 +31,17 @@ export interface Wallet {
   /**
    * Sign a single transaction
    */
-  signTransaction<T>(transaction: T): Promise<T>
+  signTransaction: <T>(transaction: T) => Promise<T>
 
   /**
    * Sign multiple transactions
    */
-  signAllTransactions<T>(transactions: T[]): Promise<T[]>
+  signAllTransactions: <T>(transactions: T[]) => Promise<T[]>
 
   /**
    * Sign a message
    */
-  signMessage?(message: Uint8Array): Promise<Uint8Array>
+  signMessage?: (message: Uint8Array) => Promise<Uint8Array>
 }
 
 /**
@@ -71,29 +71,29 @@ export interface WalletAdapter extends Wallet {
   /**
    * Connect to wallet
    */
-  connect(): Promise<void>
+  connect: () => Promise<void>
 
   /**
    * Disconnect from wallet
    */
-  disconnect(): Promise<void>
+  disconnect: () => Promise<void>
 
   /**
    * Event listeners
    */
-  on(event: 'connect' | 'disconnect' | 'error', callback: (arg?: unknown) => void): void
-  off(event: 'connect' | 'disconnect' | 'error', callback: (arg?: unknown) => void): void
+  on: (event: 'connect' | 'disconnect' | 'error', callback: (arg?: unknown) => void) => void
+  off: (event: 'connect' | 'disconnect' | 'error', callback: (arg?: unknown) => void) => void
 }
 
 /**
  * Wallet connection status
  */
-export type WalletStatus =
-  | 'disconnected'
-  | 'connecting'
-  | 'connected'
-  | 'disconnecting'
-  | 'error'
+export type WalletStatus
+  = | 'disconnected'
+    | 'connecting'
+    | 'connected'
+    | 'disconnecting'
+    | 'error'
 
 /**
  * Wallet info for display
@@ -128,14 +128,14 @@ export interface WalletInfo {
 /**
  * Wallet features
  */
-export type WalletFeature =
-  | 'standard:connect'
-  | 'standard:disconnect'
-  | 'standard:events'
-  | 'solana:signTransaction'
-  | 'solana:signAllTransactions'
-  | 'solana:signMessage'
-  | 'solana:signAndSendTransaction'
+export type WalletFeature
+  = | 'standard:connect'
+    | 'standard:disconnect'
+    | 'standard:events'
+    | 'solana:signTransaction'
+    | 'solana:signAllTransactions'
+    | 'solana:signMessage'
+    | 'solana:signAndSendTransaction'
 
 /**
  * Hardware wallet types

@@ -4,9 +4,9 @@
  * Send and track transactions.
  */
 
-import { useState, useCallback } from 'react'
-import { useConnection } from '../context'
 import type { TransactionState } from '../types'
+import { useCallback, useState } from 'react'
+import { useConnection } from '../context'
 
 /**
  * Transaction hook return type
@@ -44,10 +44,12 @@ export function useTransaction(): UseTransactionReturn {
 
       setConfirmed(true)
       return sig
-    } catch (err) {
+    }
+    catch (err) {
       setError(err as Error)
       throw err
-    } finally {
+    }
+    finally {
       setPending(false)
     }
   }, [connection])

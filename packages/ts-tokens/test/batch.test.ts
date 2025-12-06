@@ -2,8 +2,8 @@
  * Batch Operations Tests
  */
 
-import { describe, test, expect } from 'bun:test'
 import { Keypair, PublicKey } from '@solana/web3.js'
+import { describe, expect, test } from 'bun:test'
 
 describe('Batch Transfer Validation', () => {
   test('should validate recipient addresses', () => {
@@ -151,7 +151,8 @@ describe('Batch Error Handling', () => {
 
     try {
       throw new Error('Test error')
-    } catch (e) {
+    }
+    catch (e) {
       errors.push((e as Error).message)
     }
 
@@ -165,9 +166,11 @@ describe('Batch Error Handling', () => {
 
     for (const item of items) {
       try {
-        if (item === 3) throw new Error('Skip')
+        if (item === 3)
+          throw new Error('Skip')
         completed++
-      } catch {
+      }
+      catch {
         // Continue
       }
     }

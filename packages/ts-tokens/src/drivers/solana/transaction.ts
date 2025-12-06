@@ -4,21 +4,16 @@
  * Handles transaction building, sending, and confirmation.
  */
 
+import type { Connection, PublicKey, SendOptions, TransactionInstruction, TransactionSignature } from '@solana/web3.js'
+import type { SimulationResult, TransactionOptions, TransactionResult } from '../../types'
 import {
-  Connection,
-  Transaction,
-  TransactionInstruction,
-  PublicKey,
-  Keypair,
   ComputeBudgetProgram,
-  VersionedTransaction,
+  Transaction,
   TransactionMessage,
+  VersionedTransaction,
 } from '@solana/web3.js'
-import type { SendOptions, TransactionSignature } from '@solana/web3.js'
-import type { TokenConfig, TransactionResult, TransactionOptions, SimulationResult } from '../../types'
 import { retry, sleep } from '../../utils'
 import { getLatestBlockhash } from './connection'
-import { loadWallet } from './wallet'
 
 /**
  * Build a transaction from instructions
@@ -33,7 +28,7 @@ export async function buildTransaction(
   connection: Connection,
   instructions: TransactionInstruction[],
   payer: PublicKey,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<Transaction> {
   const { blockhash, lastValidBlockHeight } = await getLatestBlockhash(connection)
 
@@ -48,7 +43,7 @@ export async function buildTransaction(
     transaction.add(
       ComputeBudgetProgram.setComputeUnitLimit({
         units: options.computeUnits,
-      })
+      }),
     )
   }
 
@@ -56,7 +51,7 @@ export async function buildTransaction(
     transaction.add(
       ComputeBudgetProgram.setComputeUnitPrice({
         microLamports: options.priorityFee,
-      })
+      }),
     )
   }
 
@@ -79,7 +74,7 @@ export async function buildTransaction(
 export async function sendAndConfirmTransaction(
   connection: Connection,
   transaction: Transaction | VersionedTransaction,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const sendOptions: SendOptions = {
     skipPreflight: options?.skipPreflight ?? false,
@@ -93,15 +88,17 @@ export async function sendAndConfirmTransaction(
     if (transaction instanceof Transaction) {
       signature = await connection.sendRawTransaction(
         transaction.serialize(),
-        sendOptions
-      )
-    } else {
-      signature = await connection.sendRawTransaction(
-        transaction.serialize(),
-        sendOptions
+        sendOptions,
       )
     }
-  } catch (error) {
+    else {
+      signature = await connection.sendRawTransaction(
+        transaction.serialize(),
+        sendOptions,
+      )
+    }
+  }
+  catch (error) {
     return {
       signature: '',
       confirmed: false,
@@ -121,7 +118,7 @@ export async function sendAndConfirmTransaction(
           ? transaction.lastValidBlockHeight!
           : 0,
       },
-      options?.commitment ?? 'confirmed'
+      options?.commitment ?? 'confirmed',
     )
 
     if (confirmation.value.err) {
@@ -147,7 +144,8 @@ export async function sendAndConfirmTransaction(
       fee: txInfo?.meta?.fee,
       logs: txInfo?.meta?.logMessages ?? undefined,
     }
-  } catch (error) {
+  }
+  catch (error) {
     return {
       signature,
       confirmed: false,
@@ -167,14 +165,14 @@ export async function sendAndConfirmTransaction(
 export async function sendTransactionWithRetry(
   connection: Connection,
   transaction: Transaction | VersionedTransaction,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const maxRetries = options?.maxRetries ?? 3
 
   return retry(
     () => sendAndConfirmTransaction(connection, transaction, options),
     maxRetries,
-    1000
+    1000,
   )
 }
 
@@ -187,14 +185,15 @@ export async function sendTransactionWithRetry(
  */
 export async function simulateTransaction(
   connection: Connection,
-  transaction: Transaction | VersionedTransaction
+  transaction: Transaction | VersionedTransaction,
 ): Promise<SimulationResult> {
   try {
     let result
 
     if (transaction instanceof Transaction) {
       result = await connection.simulateTransaction(transaction)
-    } else {
+    }
+    else {
       result = await connection.simulateTransaction(transaction)
     }
 
@@ -204,7 +203,8 @@ export async function simulateTransaction(
       logs: result.value.logs ?? [],
       unitsConsumed: result.value.unitsConsumed ?? 0,
     }
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),
@@ -223,8 +223,8 @@ export async function simulateTransaction(
  */
 export async function getTransactionStatus(
   connection: Connection,
-  signature: string
-): Promise<{ confirmed: boolean; slot?: number; error?: string }> {
+  signature: string,
+): Promise<{ confirmed: boolean, slot?: number, error?: string }> {
   try {
     const status = await connection.getSignatureStatus(signature)
 
@@ -240,11 +240,12 @@ export async function getTransactionStatus(
     }
 
     return {
-      confirmed: status.value.confirmationStatus === 'confirmed' ||
-                 status.value.confirmationStatus === 'finalized',
+      confirmed: status.value.confirmationStatus === 'confirmed'
+        || status.value.confirmationStatus === 'finalized',
       slot: status.value.slot,
     }
-  } catch (error) {
+  }
+  catch (error) {
     return {
       confirmed: false,
       error: error instanceof Error ? error.message : String(error),
@@ -263,7 +264,7 @@ export async function getTransactionStatus(
 export async function waitForConfirmation(
   connection: Connection,
   signature: string,
-  timeout: number = 30000
+  timeout: number = 30000,
 ): Promise<boolean> {
   const startTime = Date.now()
 
@@ -291,8 +292,8 @@ export async function waitForConfirmation(
  * @returns Priority fee estimates in microlamports
  */
 export async function estimatePriorityFee(
-  connection: Connection
-): Promise<{ min: number; low: number; medium: number; high: number; veryHigh: number }> {
+  connection: Connection,
+): Promise<{ min: number, low: number, medium: number, high: number, veryHigh: number }> {
   try {
     const recentFees = await connection.getRecentPrioritizationFees()
 
@@ -316,7 +317,8 @@ export async function estimatePriorityFee(
       high: fees[Math.floor(len * 0.75)],
       veryHigh: fees[Math.floor(len * 0.95)],
     }
-  } catch {
+  }
+  catch {
     return {
       min: 0,
       low: 1000,
@@ -340,7 +342,7 @@ export async function createVersionedTransaction(
   connection: Connection,
   instructions: TransactionInstruction[],
   payer: PublicKey,
-  lookupTables?: PublicKey[]
+  lookupTables?: PublicKey[],
 ): Promise<VersionedTransaction> {
   const { blockhash } = await getLatestBlockhash(connection)
 
@@ -350,7 +352,7 @@ export async function createVersionedTransaction(
         lookupTables.map(async (address) => {
           const account = await connection.getAddressLookupTable(address)
           return account.value
-        })
+        }),
       )
     : []
 

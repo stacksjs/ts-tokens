@@ -4,14 +4,14 @@
  * Fluent API for token operations.
  */
 
-import { PublicKey, TransactionInstruction } from '@solana/web3.js'
-import { BaseBuilder } from './builder'
+import type { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import type {
-  TokenCreationParams,
-  MintParams,
-  TransferParams,
   BurnParams,
+  MintParams,
+  TokenCreationParams,
+  TransferParams,
 } from './types'
+import { BaseBuilder } from './builder'
 
 /**
  * Fluent token builder
@@ -82,7 +82,7 @@ export class TokenBuilder extends BaseBuilder<TokenBuilder> {
   /**
    * Transfer to multiple recipients
    */
-  transferToMany(recipients: Array<{ to: PublicKey; amount: bigint }>): TokenBuilder {
+  transferToMany(recipients: Array<{ to: PublicKey, amount: bigint }>): TokenBuilder {
     return this.addOperation('transferToMany', {
       recipients: recipients.map(r => ({
         to: r.to.toBase58(),

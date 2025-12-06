@@ -7,24 +7,24 @@ import type { PublicKey } from '@solana/web3.js'
 /**
  * Event types
  */
-export type EventType =
-  | 'token_transfer'
-  | 'token_mint'
-  | 'token_burn'
-  | 'nft_transfer'
-  | 'nft_mint'
-  | 'nft_burn'
-  | 'nft_sale'
-  | 'nft_listing'
-  | 'nft_offer'
-  | 'nft_cancel_listing'
-  | 'stake'
-  | 'unstake'
-  | 'claim_rewards'
-  | 'proposal_created'
-  | 'vote_cast'
-  | 'proposal_executed'
-  | 'account_change'
+export type EventType
+  = | 'token_transfer'
+    | 'token_mint'
+    | 'token_burn'
+    | 'nft_transfer'
+    | 'nft_mint'
+    | 'nft_burn'
+    | 'nft_sale'
+    | 'nft_listing'
+    | 'nft_offer'
+    | 'nft_cancel_listing'
+    | 'stake'
+    | 'unstake'
+    | 'claim_rewards'
+    | 'proposal_created'
+    | 'vote_cast'
+    | 'proposal_executed'
+    | 'account_change'
 
 /**
  * Base event
@@ -143,16 +143,16 @@ export interface UnstakeEvent extends BaseEvent {
 /**
  * Union of all events
  */
-export type TokenEvent =
-  | TokenTransferEvent
-  | TokenMintEvent
-  | TokenBurnEvent
-  | NFTTransferEvent
-  | NFTMintEvent
-  | NFTSaleEvent
-  | NFTListingEvent
-  | StakeEvent
-  | UnstakeEvent
+export type TokenEvent
+  = | TokenTransferEvent
+    | TokenMintEvent
+    | TokenBurnEvent
+    | NFTTransferEvent
+    | NFTMintEvent
+    | NFTSaleEvent
+    | NFTListingEvent
+    | StakeEvent
+    | UnstakeEvent
 
 /**
  * Event filter

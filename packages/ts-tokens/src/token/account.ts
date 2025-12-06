@@ -4,21 +4,21 @@
  * Manage token accounts (ATAs, creation, closing).
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { TokenAccountInfo, TokenConfig, TransactionResult } from '../types'
 import {
-  getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
-  getAccount,
-  getMint,
-  createCloseAccountInstruction,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  createCloseAccountInstruction,
+  getAccount,
+  getAssociatedTokenAddress,
+  getMint,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
-import type { TokenConfig, TransactionResult, TokenAccountInfo } from '../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
-import { loadWallet } from '../drivers/solana/wallet'
+import { PublicKey } from '@solana/web3.js'
 import { createConnection } from '../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Get or create an associated token account
@@ -31,8 +31,8 @@ import { createConnection } from '../drivers/solana/connection'
 export async function getOrCreateAssociatedTokenAccount(
   owner: string,
   mint: string,
-  config: TokenConfig
-): Promise<{ address: string; created: boolean; signature?: string }> {
+  config: TokenConfig,
+): Promise<{ address: string, created: boolean, signature?: string }> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
 
@@ -51,14 +51,15 @@ export async function getOrCreateAssociatedTokenAccount(
     ownerPubkey,
     false,
     programId,
-    ASSOCIATED_TOKEN_PROGRAM_ID
+    ASSOCIATED_TOKEN_PROGRAM_ID,
   )
 
   // Check if it exists
   try {
     await getAccount(connection, ata, undefined, programId)
     return { address: ata.toBase58(), created: false }
-  } catch {
+  }
+  catch {
     // Create the account
     const instruction = createAssociatedTokenAccountInstruction(
       payer.publicKey,
@@ -66,13 +67,13 @@ export async function getOrCreateAssociatedTokenAccount(
       ownerPubkey,
       mintPubkey,
       programId,
-      ASSOCIATED_TOKEN_PROGRAM_ID
+      ASSOCIATED_TOKEN_PROGRAM_ID,
     )
 
     const transaction = await buildTransaction(
       connection,
       [instruction],
-      payer.publicKey
+      payer.publicKey,
     )
 
     transaction.partialSign(payer)
@@ -98,7 +99,7 @@ export async function getOrCreateAssociatedTokenAccount(
 export async function createTokenAccount(
   owner: string,
   mint: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<TransactionResult & { address: string }> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -118,14 +119,15 @@ export async function createTokenAccount(
     ownerPubkey,
     false,
     programId,
-    ASSOCIATED_TOKEN_PROGRAM_ID
+    ASSOCIATED_TOKEN_PROGRAM_ID,
   )
 
   // Check if it already exists
   try {
     await getAccount(connection, ata, undefined, programId)
     throw new Error(`Token account ${ata.toBase58()} already exists`)
-  } catch (error) {
+  }
+  catch (error) {
     if (error instanceof Error && error.message.includes('already exists')) {
       throw error
     }
@@ -138,13 +140,13 @@ export async function createTokenAccount(
     ownerPubkey,
     mintPubkey,
     programId,
-    ASSOCIATED_TOKEN_PROGRAM_ID
+    ASSOCIATED_TOKEN_PROGRAM_ID,
   )
 
   const transaction = await buildTransaction(
     connection,
     [instruction],
-    payer.publicKey
+    payer.publicKey,
   )
 
   transaction.partialSign(payer)
@@ -166,7 +168,7 @@ export async function createTokenAccount(
  */
 export async function closeTokenAccount(
   account: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -178,16 +180,16 @@ export async function closeTokenAccount(
 
   if (accountInfo.amount > 0n) {
     throw new Error(
-      `Cannot close account with balance. Current balance: ${accountInfo.amount}. ` +
-      `Transfer or burn tokens first.`
+      `Cannot close account with balance. Current balance: ${accountInfo.amount}. `
+      + `Transfer or burn tokens first.`,
     )
   }
 
   // Verify owner
   if (accountInfo.owner.toBase58() !== payer.publicKey.toBase58()) {
     throw new Error(
-      `Current wallet is not the account owner. ` +
-      `Expected: ${accountInfo.owner.toBase58()}, Got: ${payer.publicKey.toBase58()}`
+      `Current wallet is not the account owner. `
+      + `Expected: ${accountInfo.owner.toBase58()}, Got: ${payer.publicKey.toBase58()}`,
     )
   }
 
@@ -202,13 +204,13 @@ export async function closeTokenAccount(
     payer.publicKey, // Destination for reclaimed SOL
     payer.publicKey, // Owner
     [],
-    programId
+    programId,
   )
 
   const transaction = await buildTransaction(
     connection,
     [instruction],
-    payer.publicKey
+    payer.publicKey,
   )
 
   transaction.partialSign(payer)
@@ -225,7 +227,7 @@ export async function closeTokenAccount(
  */
 export async function getTokenAccountInfo(
   account: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<TokenAccountInfo> {
   const connection = createConnection(config)
   const accountPubkey = new PublicKey(account)
@@ -256,7 +258,7 @@ export async function getTokenAccountInfo(
 export async function getAssociatedTokenAccountAddress(
   owner: string,
   mint: string,
-  allowOwnerOffCurve: boolean = false
+  allowOwnerOffCurve: boolean = false,
 ): Promise<string> {
   const ownerPubkey = new PublicKey(owner)
   const mintPubkey = new PublicKey(mint)
@@ -264,7 +266,7 @@ export async function getAssociatedTokenAccountAddress(
   const ata = await getAssociatedTokenAddress(
     mintPubkey,
     ownerPubkey,
-    allowOwnerOffCurve
+    allowOwnerOffCurve,
   )
 
   return ata.toBase58()
@@ -279,7 +281,7 @@ export async function getAssociatedTokenAccountAddress(
  */
 export async function tokenAccountExists(
   account: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<boolean> {
   const connection = createConnection(config)
   const accountPubkey = new PublicKey(account)
@@ -287,7 +289,8 @@ export async function tokenAccountExists(
   try {
     await getAccount(connection, accountPubkey)
     return true
-  } catch {
+  }
+  catch {
     return false
   }
 }

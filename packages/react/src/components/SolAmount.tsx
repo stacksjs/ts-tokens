@@ -1,5 +1,5 @@
-import React from 'react'
 import type { CommonProps } from '../types'
+import React from 'react'
 
 export interface SolAmountProps extends CommonProps {
   amount: number | bigint
@@ -12,7 +12,9 @@ export function SolAmount({ amount, decimals = 4, showSymbol = true, className, 
 
   return (
     <span className={className} style={style}>
-      {value.toFixed(decimals)} {showSymbol && 'SOL'}
+      {value.toFixed(decimals)}
+      {' '}
+      {showSymbol && 'SOL'}
     </span>
   )
 }

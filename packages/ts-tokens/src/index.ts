@@ -7,192 +7,192 @@
  * @packageDocumentation
  */
 
-// Types (export first to avoid conflicts)
-export * from './types'
+// Analytics
+export * as analytics from './analytics'
+
+// Batch operations
+export * as batch from './batch'
 
 // Configuration (some functions may shadow type exports)
 export {
+  config,
   defaults,
   getConfig,
-  setConfig,
-  resetConfig,
   getCurrentConfig,
   mergeConfig,
-  config,
+  resetConfig,
+  setConfig,
 } from './config'
 
-// Utilities
-export * from './utils'
+// Debugging Tools
+export * as debug from './debug'
+
+// DeFi integrations
+export * as defi from './defi'
 
 // Drivers (export specific items to avoid conflicts)
 export {
-  registerDriver,
-  getDriver,
-  hasDriver,
-  listDrivers,
+  buildTransaction,
   createDriverRegistry,
-  driverRegistry,
-  // Solana driver exports
-  SolanaConnection,
   createSolanaConnection,
   createWallet,
-  loadWallet,
-  generateKeypair,
-  buildTransaction,
-  sendAndConfirmTransaction,
-  simulateTransaction,
+  driverRegistry,
   estimatePriorityFee,
+  generateKeypair,
   // Account utilities
   getAccountInfo,
-  getMultipleAccounts,
   getBalance,
-  getTokenBalance,
-  getTokenAccounts,
-  getNFTAccounts,
-  getMintInfo,
+  getDriver,
   getLargestTokenHolders,
+  getMintInfo,
+  getMultipleAccounts,
+  getNFTAccounts,
+  getTokenAccounts,
+  getTokenBalance,
+  hasDriver,
+  listDrivers,
+  loadWallet,
+  registerDriver,
+  sendAndConfirmTransaction,
+  simulateTransaction,
+  // Solana driver exports
+  SolanaConnection,
 } from './drivers'
 
-// Token operations
-export {
-  createToken,
-  createSimpleToken,
-  mintTokens,
-  mintTokensToMany,
-  transferTokens,
-  transferTokensToMany,
-  transfer,
-  burnTokens,
-  burnAll,
-  burn,
-  setMintAuthority,
-  revokeMintAuthority,
-  setFreezeAuthority,
-  revokeFreezeAuthority,
-  freezeAccount,
-  thawAccount,
-  getOrCreateAssociatedTokenAccount,
-  createTokenAccount,
-  closeTokenAccount,
-  getTokenAccountInfo,
-} from './token'
+// Events & Webhooks
+export * as events from './events'
+
+// Fluent API
+export * as fluent from './fluent'
+
+export { candyMachine, CandyMachineBuilder, NFTBuilder, nfts } from './fluent/nft-builder'
+
+export { TokenBuilder, tokens } from './fluent/token-builder'
+
+// Governance
+export * as governance from './governance'
+
+// Internationalization
+export * as i18n from './i18n'
+
+// Indexer / DAS API
+export * as indexer from './indexer'
+
+// Marketplace integrations
+export * as marketplace from './marketplace'
+
+// Multi-sig
+export * as multisig from './multisig'
 
 // NFT operations
 export {
-  createNFT,
-  createCollection,
-  mintNFT,
-  transferNFT,
-  transferNFTs,
-  transferNFTFrom,
+  addConfigLines,
+  burnCompressedNFT,
   burnNFT,
   burnNFTFull,
   burnNFTs,
-  // Metadata
-  updateNFTMetadata,
-  getNFTMetadata,
-  fetchOffChainMetadata,
-  getFullNFTData,
-  verifyCreator,
-  unverifyCreator,
-  setAndVerifyCollection,
-  // Queries
-  getNFTsByOwner,
-  getNFTsByCollection,
-  getNFTsByCreator,
-  getCollectionInfo,
-  isInCollection,
-  getNFTHolder,
-  getNFTHistory,
   // Candy Machine
   createCandyMachine,
-  addConfigLines,
-  mintFromCandyMachine,
-  // Compressed NFTs
-  createMerkleTree,
-  getMerkleTreeInfo,
-  getTreeCapacity,
-  mintCompressedNFT,
-  mintCompressedNFTBatch,
-  transferCompressedNFT,
-  getAssetProof,
-  getAsset,
-  burnCompressedNFT,
+  createCollection,
   // Editions
   createMasterEdition,
-  printEdition,
+  // Compressed NFTs
+  createMerkleTree,
+  createNFT,
+  fetchOffChainMetadata,
+  getAsset,
+  getAssetProof,
+  getCollectionInfo,
   getEditionInfo,
   getEditionsByMaster,
+  getFullNFTData,
+  getMerkleTreeInfo,
+  getNFTHistory,
+  getNFTHolder,
+  getNFTMetadata,
+  getNFTsByCollection,
+  getNFTsByCreator,
+  // Queries
+  getNFTsByOwner,
+  getTreeCapacity,
+  isInCollection,
+  mintCompressedNFT,
+  mintCompressedNFTBatch,
+  mintFromCandyMachine,
+  mintNFT,
+  printEdition,
+  setAndVerifyCollection,
+  transferCompressedNFT,
+  transferNFT,
+  transferNFTFrom,
+  transferNFTs,
+  unverifyCreator,
+  // Metadata
+  updateNFTMetadata,
+  verifyCreator,
 } from './nft'
 
-// Storage adapters
-export {
-  getStorageAdapter,
-  clearStorageAdapters,
-  createArweaveAdapter,
-  createIPFSAdapter,
-  createShadowDriveAdapter,
-  createLocalAdapter,
-  ArweaveStorageAdapter,
-  IPFSStorageAdapter,
-  ShadowDriveStorageAdapter,
-} from './storage'
+// Programmable NFTs
+export * as pnft from './pnft'
 
 // Programs (namespace exports to avoid conflicts)
 export * as programs from './programs'
 
 // Security
 export * as security from './security'
-
+// Simple NFT Standard
+export * as simpleNFT from './simple-nft'
 // Staking
 export * as staking from './staking'
 
-// Batch operations
-export * as batch from './batch'
+// Storage adapters
+export {
+  ArweaveStorageAdapter,
+  clearStorageAdapters,
+  createArweaveAdapter,
+  createIPFSAdapter,
+  createLocalAdapter,
+  createShadowDriveAdapter,
+  getStorageAdapter,
+  IPFSStorageAdapter,
+  ShadowDriveStorageAdapter,
+} from './storage'
 
-// Multi-sig
-export * as multisig from './multisig'
-
-// Governance
-export * as governance from './governance'
-
-// DeFi integrations
-export * as defi from './defi'
-
-// Marketplace integrations
-export * as marketplace from './marketplace'
-
-// Indexer / DAS API
-export * as indexer from './indexer'
-
-// Wallet adapters
-export * as wallets from './wallets'
-
-// Analytics
-export * as analytics from './analytics'
-
-// Fluent API
-export * as fluent from './fluent'
-export { TokenBuilder, tokens } from './fluent/token-builder'
-export { NFTBuilder, nfts, CandyMachineBuilder, candyMachine } from './fluent/nft-builder'
-
-// Simple NFT Standard
-export * as simpleNFT from './simple-nft'
-
-// Programmable NFTs
-export * as pnft from './pnft'
-
-// Events & Webhooks
-export * as events from './events'
+// Token operations
+export {
+  burn,
+  burnAll,
+  burnTokens,
+  closeTokenAccount,
+  createSimpleToken,
+  createToken,
+  createTokenAccount,
+  freezeAccount,
+  getOrCreateAssociatedTokenAccount,
+  getTokenAccountInfo,
+  mintTokens,
+  mintTokensToMany,
+  revokeFreezeAuthority,
+  revokeMintAuthority,
+  setFreezeAuthority,
+  setMintAuthority,
+  thawAccount,
+  transfer,
+  transferTokens,
+  transferTokensToMany,
+} from './token'
 
 // Treasury
 export * as treasury from './treasury'
 
+// Types (export first to avoid conflicts)
+export * from './types'
+
+// Utilities
+export * from './utils'
+
 // Voting Mechanisms
 export * as voting from './voting'
 
-// Internationalization
-export * as i18n from './i18n'
-
-// Debugging Tools
-export * as debug from './debug'
+// Wallet adapters
+export * as wallets from './wallets'

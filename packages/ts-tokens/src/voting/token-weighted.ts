@@ -4,10 +4,10 @@
  * 1 token = 1 vote
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
-  VotingPower,
   TokenWeightedConfig,
+  VotingPower,
   VotingSnapshot,
 } from './types'
 
@@ -18,14 +18,15 @@ export async function calculateTokenWeightedPower(
   connection: Connection,
   voter: PublicKey,
   config: TokenWeightedConfig,
-  snapshot?: VotingSnapshot
+  snapshot?: VotingSnapshot,
 ): Promise<VotingPower> {
   let ownPower = 0n
 
   if (snapshot) {
     // Use snapshot balance
     ownPower = snapshot.holders.get(voter.toBase58()) ?? 0n
-  } else {
+  }
+  else {
     // Get current balance
     const tokenAccounts = await connection.getTokenAccountsByOwner(voter, {
       mint: config.token,
@@ -53,7 +54,7 @@ export async function calculateTokenWeightedPower(
 export async function createSnapshot(
   connection: Connection,
   proposal: PublicKey,
-  token: PublicKey
+  token: PublicKey,
 ): Promise<VotingSnapshot> {
   const slot = await connection.getSlot()
 
@@ -85,8 +86,8 @@ export async function checkDoubleVoting(
   connection: Connection,
   voter: PublicKey,
   proposal: PublicKey,
-  snapshot: VotingSnapshot
-): Promise<{ hasVoted: boolean; transferred: boolean }> {
+  snapshot: VotingSnapshot,
+): Promise<{ hasVoted: boolean, transferred: boolean }> {
   // In production, would:
   // 1. Check if voter has already voted
   // 2. Check if tokens were transferred after snapshot
@@ -104,7 +105,7 @@ export async function getHistoricalVotingPower(
   connection: Connection,
   voter: PublicKey,
   token: PublicKey,
-  slot: number
+  slot: number,
 ): Promise<bigint> {
   // In production, would query historical balance
   // This requires archive node access
@@ -116,8 +117,8 @@ export async function getHistoricalVotingPower(
  */
 export function validateTokenWeightedVote(
   votingPower: VotingPower,
-  minPower: bigint = 0n
-): { valid: boolean; reason?: string } {
+  minPower: bigint = 0n,
+): { valid: boolean, reason?: string } {
   if (votingPower.total === 0n) {
     return { valid: false, reason: 'No voting power' }
   }
@@ -133,9 +134,9 @@ export function validateTokenWeightedVote(
  * Format voting power for display
  */
 export function formatTokenWeightedPower(power: VotingPower, decimals: number = 9): string {
-  const own = Number(power.own) / Math.pow(10, decimals)
-  const delegated = Number(power.delegated) / Math.pow(10, decimals)
-  const total = Number(power.total) / Math.pow(10, decimals)
+  const own = Number(power.own) / 10 ** decimals
+  const delegated = Number(power.delegated) / 10 ** decimals
+  const total = Number(power.total) / 10 ** decimals
 
   return [
     `Own: ${own.toLocaleString()}`,

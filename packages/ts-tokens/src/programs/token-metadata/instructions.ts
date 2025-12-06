@@ -4,22 +4,22 @@
  * Raw instruction builders for the Token Metadata Program.
  */
 
+import type {
+  CreateMasterEditionV3Options,
+  CreateMetadataAccountV3Options,
+  Creator,
+  DataV2,
+  UpdateMetadataAccountV2Options,
+  VerifyCollectionOptions,
+} from './types'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   PublicKey,
-  TransactionInstruction,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
+  TransactionInstruction,
 } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { findMetadataPda, findMasterEditionPda } from './pda'
-import type {
-  CreateMetadataAccountV3Options,
-  UpdateMetadataAccountV2Options,
-  CreateMasterEditionV3Options,
-  VerifyCollectionOptions,
-  DataV2,
-  Creator,
-} from './types'
+import { findMasterEditionPda, findMetadataPda } from './pda'
 
 const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
 
@@ -39,7 +39,7 @@ enum MetadataInstruction {
  * Create a CreateMetadataAccountV3 instruction
  */
 export function createMetadataAccountV3(
-  options: CreateMetadataAccountV3Options
+  options: CreateMetadataAccountV3Options,
 ): TransactionInstruction {
   const [metadata] = findMetadataPda(options.mint)
 
@@ -66,7 +66,7 @@ export function createMetadataAccountV3(
  * Create an UpdateMetadataAccountV2 instruction
  */
 export function updateMetadataAccountV2(
-  options: UpdateMetadataAccountV2Options
+  options: UpdateMetadataAccountV2Options,
 ): TransactionInstruction {
   const keys = [
     { pubkey: options.metadata, isSigner: false, isWritable: true },
@@ -86,7 +86,7 @@ export function updateMetadataAccountV2(
  * Create a CreateMasterEditionV3 instruction
  */
 export function createMasterEditionV3(
-  options: CreateMasterEditionV3Options
+  options: CreateMasterEditionV3Options,
 ): TransactionInstruction {
   const [metadata] = findMetadataPda(options.mint)
   const [masterEdition] = findMasterEditionPda(options.mint)
@@ -183,7 +183,7 @@ export function setAndVerifyCollection(options: VerifyCollectionOptions): Transa
  */
 export function verifyCreator(
   metadata: PublicKey,
-  creator: PublicKey
+  creator: PublicKey,
 ): TransactionInstruction {
   const keys = [
     { pubkey: metadata, isSigner: false, isWritable: true },
@@ -208,7 +208,7 @@ export function burnNft(
   mint: PublicKey,
   tokenAccount: PublicKey,
   masterEdition: PublicKey,
-  collectionMetadata?: PublicKey
+  collectionMetadata?: PublicKey,
 ): TransactionInstruction {
   const keys = [
     { pubkey: metadata, isSigner: false, isWritable: true },
@@ -244,7 +244,8 @@ function serializeCreateMetadataV3(options: CreateMetadataAccountV3Options): Buf
     const sizeBuffer = Buffer.alloc(8)
     sizeBuffer.writeBigUInt64LE(options.collectionDetails.size)
     collectionDetailsBuffer = Buffer.concat([Buffer.from([1, 0]), sizeBuffer]) // Some(V1 { size })
-  } else {
+  }
+  else {
     collectionDetailsBuffer = Buffer.from([0]) // None
   }
 
@@ -263,7 +264,8 @@ function serializeUpdateMetadataV2(options: UpdateMetadataAccountV2Options): Buf
   if (options.data) {
     parts.push(Buffer.from([1])) // Some
     parts.push(serializeDataV2(options.data))
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0])) // None
   }
 
@@ -271,7 +273,8 @@ function serializeUpdateMetadataV2(options: UpdateMetadataAccountV2Options): Buf
   if (options.newUpdateAuthority) {
     parts.push(Buffer.from([1])) // Some
     parts.push(options.newUpdateAuthority.toBuffer())
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0])) // None
   }
 
@@ -279,7 +282,8 @@ function serializeUpdateMetadataV2(options: UpdateMetadataAccountV2Options): Buf
   if (options.primarySaleHappened !== null) {
     parts.push(Buffer.from([1])) // Some
     parts.push(Buffer.from([options.primarySaleHappened ? 1 : 0]))
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0])) // None
   }
 
@@ -287,7 +291,8 @@ function serializeUpdateMetadataV2(options: UpdateMetadataAccountV2Options): Buf
   if (options.isMutable !== null) {
     parts.push(Buffer.from([1])) // Some
     parts.push(Buffer.from([options.isMutable ? 1 : 0]))
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0])) // None
   }
 
@@ -303,7 +308,8 @@ function serializeCreateMasterEditionV3(options: CreateMasterEditionV3Options): 
     const maxSupplyBuffer = Buffer.alloc(8)
     maxSupplyBuffer.writeBigUInt64LE(options.maxSupply)
     parts.push(maxSupplyBuffer)
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0])) // None
   }
 
@@ -345,7 +351,8 @@ function serializeDataV2(data: DataV2): Buffer {
     for (const creator of data.creators) {
       parts.push(serializeCreator(creator))
     }
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0])) // None
   }
 
@@ -354,7 +361,8 @@ function serializeDataV2(data: DataV2): Buffer {
     parts.push(Buffer.from([1])) // Some
     parts.push(Buffer.from([data.collection.verified ? 1 : 0]))
     parts.push(data.collection.key.toBuffer())
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0])) // None
   }
 
@@ -368,7 +376,8 @@ function serializeDataV2(data: DataV2): Buffer {
     const totalBuffer = Buffer.alloc(8)
     totalBuffer.writeBigUInt64LE(data.uses.total)
     parts.push(totalBuffer)
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0])) // None
   }
 

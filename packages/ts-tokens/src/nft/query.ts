@@ -4,9 +4,9 @@
  * Query NFTs by owner, collection, creator, etc.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { NFTMetadata, TokenConfig } from '../types'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import type { TokenConfig, NFTMetadata } from '../types'
+import { PublicKey } from '@solana/web3.js'
 import { createConnection } from '../drivers/solana/connection'
 import { getNFTMetadata } from './metadata'
 
@@ -20,7 +20,7 @@ const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzj
  */
 export async function getNFTsByOwner(
   owner: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<NFTMetadata[]> {
   const connection = createConnection(config)
   const ownerPubkey = new PublicKey(owner)
@@ -28,7 +28,7 @@ export async function getNFTsByOwner(
   // Get all token accounts for owner
   const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
     ownerPubkey,
-    { programId: TOKEN_PROGRAM_ID }
+    { programId: TOKEN_PROGRAM_ID },
   )
 
   const nfts: NFTMetadata[] = []
@@ -39,15 +39,16 @@ export async function getNFTsByOwner(
 
     // NFTs have 0 decimals and amount of 1
     if (
-      info.tokenAmount.decimals === 0 &&
-      info.tokenAmount.uiAmount === 1
+      info.tokenAmount.decimals === 0
+      && info.tokenAmount.uiAmount === 1
     ) {
       try {
         const metadata = await getNFTMetadata(info.mint, config)
         if (metadata) {
           nfts.push(metadata)
         }
-      } catch {
+      }
+      catch {
         // Skip if metadata fetch fails
       }
     }
@@ -62,7 +63,7 @@ export async function getNFTsByOwner(
 export async function getNFTsByCollection(
   collection: string,
   config: TokenConfig,
-  limit: number = 100
+  limit: number = 100,
 ): Promise<NFTMetadata[]> {
   const connection = createConnection(config)
   const collectionPubkey = new PublicKey(collection)
@@ -81,7 +82,7 @@ export async function getNFTsByCollection(
           },
         },
       ],
-    }
+    },
   )
 
   const nfts: NFTMetadata[] = []
@@ -96,7 +97,8 @@ export async function getNFTsByCollection(
       if (metadata) {
         nfts.push(metadata)
       }
-    } catch {
+    }
+    catch {
       // Skip if parsing fails
     }
   }
@@ -110,7 +112,7 @@ export async function getNFTsByCollection(
 export async function getNFTsByCreator(
   creator: string,
   config: TokenConfig,
-  limit: number = 100
+  limit: number = 100,
 ): Promise<NFTMetadata[]> {
   const connection = createConnection(config)
   const creatorPubkey = new PublicKey(creator)
@@ -129,7 +131,7 @@ export async function getNFTsByCreator(
           },
         },
       ],
-    }
+    },
   )
 
   const nfts: NFTMetadata[] = []
@@ -143,7 +145,8 @@ export async function getNFTsByCreator(
       if (metadata) {
         nfts.push(metadata)
       }
-    } catch {
+    }
+    catch {
       // Skip if parsing fails
     }
   }
@@ -156,7 +159,7 @@ export async function getNFTsByCreator(
  */
 export async function getCollectionInfo(
   collection: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<{
   metadata: NFTMetadata | null
   size: number
@@ -180,7 +183,7 @@ export async function getCollectionInfo(
         },
       ],
       dataSlice: { offset: 0, length: 0 }, // Don't fetch data, just count
-    }
+    },
   )
 
   return {
@@ -195,7 +198,7 @@ export async function getCollectionInfo(
 export async function isInCollection(
   mint: string,
   collection: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<boolean> {
   const metadata = await getNFTMetadata(mint, config)
   if (!metadata) {
@@ -214,7 +217,7 @@ export async function isInCollection(
       TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mintPubkey.toBuffer(),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
 
   const accountInfo = await connection.getAccountInfo(metadataAddress)
@@ -237,7 +240,7 @@ export async function isInCollection(
  */
 export async function getNFTHolder(
   mint: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<string | null> {
   const connection = createConnection(config)
   const mintPubkey = new PublicKey(mint)
@@ -263,7 +266,7 @@ export async function getNFTHolder(
 export async function getNFTHistory(
   mint: string,
   config: TokenConfig,
-  limit: number = 20
+  limit: number = 20,
 ): Promise<Array<{
   signature: string
   slot: number
@@ -275,7 +278,7 @@ export async function getNFTHistory(
 
   const signatures = await connection.getSignaturesForAddress(
     mintPubkey,
-    { limit }
+    { limit },
   )
 
   return signatures.map(sig => ({

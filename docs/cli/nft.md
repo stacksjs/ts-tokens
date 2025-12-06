@@ -13,20 +13,20 @@ tokens nft:create --name "My NFT" --symbol MNFT --uri https://... --collection <
 
 ### Required Options
 
-| Option | Description |
-|--------|-------------|
-| `--name`, `-n` | NFT name |
-| `--symbol`, `-s` | NFT symbol |
-| `--uri`, `-u` | Metadata URI |
+| Option           | Description  |
+| ---------------- | ------------ |
+| `--name`, `-n`   | NFT name     |
+| `--symbol`, `-s` | NFT symbol   |
+| `--uri`, `-u`    | Metadata URI |
 
 ### Optional Options
 
-| Option | Description |
-|--------|-------------|
-| `--collection` | Collection mint address |
-| `--royalty` | Royalty in basis points (500 = 5%) |
-| `--creators` | Creator addresses and shares |
-| `--mutable` | Allow metadata updates (default: true) |
+| Option         | Description                            |
+| -------------- | -------------------------------------- |
+| `--collection` | Collection mint address                |
+| `--royalty`    | Royalty in basis points (500 = 5%)     |
+| `--creators`   | Creator addresses and shares           |
+| `--mutable`    | Allow metadata updates (default: true) |
 
 ### Example
 
@@ -105,18 +105,18 @@ tokens collection:create --name "My Collection" --symbol MCOL --uri https://...
 
 ### Required Options
 
-| Option | Description |
-|--------|-------------|
-| `--name`, `-n` | Collection name |
-| `--symbol`, `-s` | Collection symbol |
-| `--uri`, `-u` | Collection metadata URI |
+| Option           | Description             |
+| ---------------- | ----------------------- |
+| `--name`, `-n`   | Collection name         |
+| `--symbol`, `-s` | Collection symbol       |
+| `--uri`, `-u`    | Collection metadata URI |
 
 ### Optional Options
 
-| Option | Description |
-|--------|-------------|
+| Option      | Description               |
+| ----------- | ------------------------- |
 | `--royalty` | Default royalty for items |
-| `--size` | Expected collection size |
+| `--size`    | Expected collection size  |
 
 ## `tokens collection:verify`
 

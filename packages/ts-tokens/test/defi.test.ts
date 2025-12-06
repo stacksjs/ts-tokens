@@ -2,8 +2,8 @@
  * DeFi Integration Tests
  */
 
-import { describe, test, expect } from 'bun:test'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
+import { describe, expect, test } from 'bun:test'
 
 describe('Swap Calculations', () => {
   test('should calculate output amount with fee', () => {
@@ -107,7 +107,7 @@ describe('Price Formatting', () => {
   test('should format with decimals', () => {
     const amount = 1234567890n
     const decimals = 6
-    const formatted = Number(amount) / Math.pow(10, decimals)
+    const formatted = Number(amount) / 10 ** decimals
 
     expect(formatted).toBe(1234.56789)
   })

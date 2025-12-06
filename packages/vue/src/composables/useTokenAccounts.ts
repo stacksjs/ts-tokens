@@ -4,11 +4,12 @@
  * Fetch all token accounts for an owner.
  */
 
-import { ref, watch, onMounted, type Ref } from 'vue'
-import { PublicKey } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { useConnection } from './useConnection'
+import type { Ref } from 'vue'
 import type { TokenDisplayInfo } from '../types'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { PublicKey } from '@solana/web3.js'
+import { onMounted, ref, watch } from 'vue'
+import { useConnection } from './useConnection'
 
 /**
  * Token accounts return type
@@ -44,7 +45,7 @@ export function useTokenAccounts(owner: Ref<string> | string): UseTokenAccountsR
 
       const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
         ownerPubkey,
-        { programId: TOKEN_PROGRAM_ID }
+        { programId: TOKEN_PROGRAM_ID },
       )
 
       const tokens: TokenDisplayInfo[] = tokenAccounts.value
@@ -65,9 +66,11 @@ export function useTokenAccounts(owner: Ref<string> | string): UseTokenAccountsR
         })
 
       accounts.value = tokens
-    } catch (err) {
+    }
+    catch (err) {
       error.value = err as Error
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }

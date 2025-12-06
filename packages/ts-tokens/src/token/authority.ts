@@ -4,21 +4,21 @@
  * Manage mint, freeze, and other token authorities.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { TokenConfig, TransactionOptions, TransactionResult } from '../types'
 import {
-  createSetAuthorityInstruction,
   AuthorityType,
-  getMint,
-  getAccount,
   createFreezeAccountInstruction,
+  createSetAuthorityInstruction,
   createThawAccountInstruction,
-  TOKEN_PROGRAM_ID,
+  getAccount,
+  getMint,
   TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
-import type { TokenConfig, TransactionResult, TransactionOptions } from '../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
-import { loadWallet } from '../drivers/solana/wallet'
+import { PublicKey } from '@solana/web3.js'
 import { createConnection } from '../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Set mint authority for a token
@@ -32,7 +32,7 @@ export async function setMintAuthority(
   mint: string,
   newAuthority: string | null,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -53,8 +53,8 @@ export async function setMintAuthority(
 
   if (mintInfo.mintAuthority.toBase58() !== payer.publicKey.toBase58()) {
     throw new Error(
-      `Current wallet is not the mint authority. ` +
-      `Expected: ${mintInfo.mintAuthority.toBase58()}, Got: ${payer.publicKey.toBase58()}`
+      `Current wallet is not the mint authority. `
+      + `Expected: ${mintInfo.mintAuthority.toBase58()}, Got: ${payer.publicKey.toBase58()}`,
     )
   }
 
@@ -64,14 +64,14 @@ export async function setMintAuthority(
     AuthorityType.MintTokens,
     newAuthorityPubkey,
     [],
-    programId
+    programId,
   )
 
   const transaction = await buildTransaction(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -89,7 +89,7 @@ export async function setMintAuthority(
 export async function revokeMintAuthority(
   mint: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   return setMintAuthority(mint, null, config, options)
 }
@@ -106,7 +106,7 @@ export async function setFreezeAuthority(
   mint: string,
   newAuthority: string | null,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -127,8 +127,8 @@ export async function setFreezeAuthority(
 
   if (mintInfo.freezeAuthority.toBase58() !== payer.publicKey.toBase58()) {
     throw new Error(
-      `Current wallet is not the freeze authority. ` +
-      `Expected: ${mintInfo.freezeAuthority.toBase58()}, Got: ${payer.publicKey.toBase58()}`
+      `Current wallet is not the freeze authority. `
+      + `Expected: ${mintInfo.freezeAuthority.toBase58()}, Got: ${payer.publicKey.toBase58()}`,
     )
   }
 
@@ -138,14 +138,14 @@ export async function setFreezeAuthority(
     AuthorityType.FreezeAccount,
     newAuthorityPubkey,
     [],
-    programId
+    programId,
   )
 
   const transaction = await buildTransaction(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -163,7 +163,7 @@ export async function setFreezeAuthority(
 export async function revokeFreezeAuthority(
   mint: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   return setFreezeAuthority(mint, null, config, options)
 }
@@ -180,7 +180,7 @@ export async function freezeAccount(
   mint: string,
   account: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -201,8 +201,8 @@ export async function freezeAccount(
 
   if (mintInfo.freezeAuthority.toBase58() !== payer.publicKey.toBase58()) {
     throw new Error(
-      `Current wallet is not the freeze authority. ` +
-      `Expected: ${mintInfo.freezeAuthority.toBase58()}, Got: ${payer.publicKey.toBase58()}`
+      `Current wallet is not the freeze authority. `
+      + `Expected: ${mintInfo.freezeAuthority.toBase58()}, Got: ${payer.publicKey.toBase58()}`,
     )
   }
 
@@ -217,14 +217,14 @@ export async function freezeAccount(
     mintPubkey,
     payer.publicKey,
     [],
-    programId
+    programId,
   )
 
   const transaction = await buildTransaction(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -244,7 +244,7 @@ export async function thawAccount(
   mint: string,
   account: string,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -265,8 +265,8 @@ export async function thawAccount(
 
   if (mintInfo.freezeAuthority.toBase58() !== payer.publicKey.toBase58()) {
     throw new Error(
-      `Current wallet is not the freeze authority. ` +
-      `Expected: ${mintInfo.freezeAuthority.toBase58()}, Got: ${payer.publicKey.toBase58()}`
+      `Current wallet is not the freeze authority. `
+      + `Expected: ${mintInfo.freezeAuthority.toBase58()}, Got: ${payer.publicKey.toBase58()}`,
     )
   }
 
@@ -281,14 +281,14 @@ export async function thawAccount(
     mintPubkey,
     payer.publicKey,
     [],
-    programId
+    programId,
   )
 
   const transaction = await buildTransaction(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)

@@ -4,9 +4,10 @@
  * Fetch NFT metadata and display info.
  */
 
-import { ref, onMounted, type Ref } from 'vue'
-import { useConnection, useConfig } from './useConnection'
+import type { Ref } from 'vue'
 import type { NFTDisplayInfo } from '../types'
+import { onMounted, ref } from 'vue'
+import { useConfig } from './useConnection'
 
 /**
  * NFT return type
@@ -50,9 +51,11 @@ export function useNFT(mint: string): UseNFTReturn {
         description: (offChain as any)?.description,
         attributes: (offChain as any)?.attributes,
       }
-    } catch (err) {
+    }
+    catch (err) {
       error.value = err as Error
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }

@@ -168,7 +168,8 @@ export function isValidSolanaAddress(address: string): boolean {
   try {
     const decoded = decode(address)
     return decoded.length === 32
-  } catch {
+  }
+  catch {
     return false
   }
 }

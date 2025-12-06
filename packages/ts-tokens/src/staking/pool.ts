@@ -2,21 +2,20 @@
  * Staking Pool Management
  */
 
-import { Connection, PublicKey, Keypair, Transaction } from '@solana/web3.js'
+import type { Connection } from '@solana/web3.js'
 import type {
-  StakingPool,
-  NFTStakingPool,
   CreatePoolOptions,
-  CreateNFTPoolOptions,
   PoolStats,
+  StakingPool,
 } from './types'
+import { PublicKey } from '@solana/web3.js'
 
 /**
  * Get staking pool info
  */
 export async function getPool(
   connection: Connection,
-  poolAddress: PublicKey
+  poolAddress: PublicKey,
 ): Promise<StakingPool | null> {
   const accountInfo = await connection.getAccountInfo(poolAddress)
 
@@ -48,7 +47,7 @@ export async function getPool(
  */
 export async function getPoolStats(
   connection: Connection,
-  poolAddress: PublicKey
+  poolAddress: PublicKey,
 ): Promise<PoolStats | null> {
   const pool = await getPool(connection, poolAddress)
 
@@ -86,7 +85,7 @@ export function calculatePendingRewards(
   pool: StakingPool,
   stakedAmount: bigint,
   rewardDebt: bigint,
-  currentTime: bigint
+  currentTime: bigint,
 ): bigint {
   if (pool.totalStaked === 0n) {
     return 0n
@@ -106,7 +105,7 @@ export function calculateAPR(
   rewardRate: bigint,
   totalStaked: bigint,
   rewardDecimals: number,
-  stakeDecimals: number
+  stakeDecimals: number,
 ): number {
   if (totalStaked === 0n) {
     return 0
@@ -114,8 +113,8 @@ export function calculateAPR(
 
   const yearInSeconds = 365 * 24 * 60 * 60
   const rewardsPerYear = Number(rewardRate) * yearInSeconds
-  const rewardsPerYearNormalized = rewardsPerYear / Math.pow(10, rewardDecimals)
-  const totalStakedNormalized = Number(totalStaked) / Math.pow(10, stakeDecimals)
+  const rewardsPerYearNormalized = rewardsPerYear / 10 ** rewardDecimals
+  const totalStakedNormalized = Number(totalStaked) / 10 ** stakeDecimals
 
   return (rewardsPerYearNormalized / totalStakedNormalized) * 100
 }
@@ -128,7 +127,7 @@ export function calculatePenalty(
   penaltyBps: number,
   stakedAt: bigint,
   minDuration: bigint,
-  currentTime: bigint
+  currentTime: bigint,
 ): bigint {
   const stakeDuration = currentTime - stakedAt
 

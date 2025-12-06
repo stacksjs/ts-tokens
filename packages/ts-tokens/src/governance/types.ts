@@ -33,15 +33,15 @@ export interface DAO {
 /**
  * Proposal status
  */
-export type ProposalStatus =
-  | 'draft'
-  | 'active'
-  | 'succeeded'
-  | 'defeated'
-  | 'queued'
-  | 'executed'
-  | 'cancelled'
-  | 'expired'
+export type ProposalStatus
+  = | 'draft'
+    | 'active'
+    | 'succeeded'
+    | 'defeated'
+    | 'queued'
+    | 'executed'
+    | 'cancelled'
+    | 'expired'
 
 /**
  * Proposal

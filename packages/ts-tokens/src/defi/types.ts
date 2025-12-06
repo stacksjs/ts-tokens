@@ -143,12 +143,12 @@ export interface BorrowOptions {
 /**
  * Supported DeFi protocols
  */
-export type DeFiProtocol =
-  | 'jupiter'
-  | 'raydium'
-  | 'orca'
-  | 'marinade'
-  | 'solend'
-  | 'mango'
-  | 'drift'
-  | 'kamino'
+export type DeFiProtocol
+  = | 'jupiter'
+    | 'raydium'
+    | 'orca'
+    | 'marinade'
+    | 'solend'
+    | 'mango'
+    | 'drift'
+    | 'kamino'

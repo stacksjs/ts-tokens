@@ -444,8 +444,8 @@ watch([
   cursor: pointer;
 }
 
-input[type="text"],
-input[type="number"],
+input[type='text'],
+input[type='number'],
 select {
   width: 100%;
   padding: 8px;
@@ -454,7 +454,7 @@ select {
   background-color: white;
 }
 
-input[type="color"] {
+input[type='color'] {
   width: 100%;
   padding: 2px;
   border: 1px solid #ddd;
@@ -464,7 +464,7 @@ input[type="color"] {
   cursor: pointer;
 }
 
-input[type="checkbox"] {
+input[type='checkbox'] {
   margin-right: 8px;
   cursor: pointer;
 }

@@ -134,7 +134,7 @@ export class MemoryCache<T = unknown> {
   /**
    * Get cache stats
    */
-  getStats(): { size: number; maxSize: number; hitRate: number } {
+  getStats(): { size: number, maxSize: number, hitRate: number } {
     return {
       size: this.cache.size,
       maxSize: this.config.maxSize,

@@ -4,9 +4,9 @@
  * Fetch and track token balance for an address.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token'
 import { PublicKey } from '@solana/web3.js'
-import { getAssociatedTokenAddress, getAccount } from '@solana/spl-token'
+import { useCallback, useEffect, useState } from 'react'
 import { useConnection } from '../context'
 
 /**
@@ -26,7 +26,7 @@ export interface TokenBalanceState {
  */
 export function useTokenBalance(
   mint: string,
-  owner?: string
+  owner?: string,
 ): TokenBalanceState {
   const connection = useConnection()
   const [balance, setBalance] = useState<bigint>(0n)
@@ -62,14 +62,17 @@ export function useTokenBalance(
           setDecimals(data.decimals)
         }
       }
-    } catch (err) {
+    }
+    catch (err) {
       if ((err as Error).message?.includes('could not find account')) {
         // Account doesn't exist, balance is 0
         setBalance(0n)
-      } else {
+      }
+      else {
         setError(err as Error)
       }
-    } finally {
+    }
+    finally {
       setLoading(false)
     }
   }, [connection, mint, owner])
@@ -78,7 +81,7 @@ export function useTokenBalance(
     fetchBalance()
   }, [fetchBalance])
 
-  const uiBalance = Number(balance) / Math.pow(10, decimals)
+  const uiBalance = Number(balance) / 10 ** decimals
 
   return {
     balance,

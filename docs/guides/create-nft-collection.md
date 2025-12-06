@@ -40,7 +40,7 @@ And for each NFT:
 ## Step 2: Upload Metadata
 
 ```typescript
-import { uploadMetadata, getConfig } from 'ts-tokens'
+import { getConfig, uploadMetadata } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -112,7 +112,7 @@ for (let i = 1; i <= 10; i++) {
 NFTs are automatically verified when minted with the `collection` option. To verify existing NFTs:
 
 ```typescript
-import { verifyCollection, getConfig } from 'ts-tokens'
+import { getConfig, verifyCollection } from 'ts-tokens'
 
 const config = await getConfig()
 

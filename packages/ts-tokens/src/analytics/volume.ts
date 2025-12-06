@@ -2,7 +2,7 @@
  * Volume Analytics
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type { TradingVolume, WhaleActivity, WhaleWatchConfig } from './types'
 
 /**
@@ -11,7 +11,7 @@ import type { TradingVolume, WhaleActivity, WhaleWatchConfig } from './types'
 export async function getTradingVolume(
   connection: Connection,
   mint: PublicKey,
-  period: '1h' | '24h' | '7d' | '30d' = '24h'
+  period: '1h' | '24h' | '7d' | '30d' = '24h',
 ): Promise<TradingVolume> {
   // Calculate time range
   const now = Date.now()
@@ -31,7 +31,7 @@ export async function getTradingVolume(
 
   // Filter by time
   const relevantSigs = signatures.filter(sig =>
-    sig.blockTime && sig.blockTime * 1000 >= startTime
+    sig.blockTime && sig.blockTime * 1000 >= startTime,
   )
 
   // In production, would parse transactions to extract volume
@@ -60,12 +60,12 @@ export async function getTradingVolume(
 export async function getVolumeBreakdown(
   connection: Connection,
   mint: PublicKey,
-  intervals: number = 24
-): Promise<Array<{ timestamp: number; volume: bigint; trades: number }>> {
+  intervals: number = 24,
+): Promise<Array<{ timestamp: number, volume: bigint, trades: number }>> {
   const now = Date.now()
   const intervalMs = (24 * 60 * 60 * 1000) / intervals
 
-  const breakdown: Array<{ timestamp: number; volume: bigint; trades: number }> = []
+  const breakdown: Array<{ timestamp: number, volume: bigint, trades: number }> = []
 
   for (let i = 0; i < intervals; i++) {
     const timestamp = now - (intervals - i) * intervalMs
@@ -84,8 +84,8 @@ export async function getVolumeBreakdown(
  */
 export function createWhaleWatcher(
   connection: Connection,
-  config: WhaleWatchConfig
-): { start: () => void; stop: () => void } {
+  config: WhaleWatchConfig,
+): { start: () => void, stop: () => void } {
   let subscriptionId: number | null = null
 
   const start = (): void => {
@@ -99,7 +99,7 @@ export function createWhaleWatcher(
           // This is a simplified version
         }
       },
-      'confirmed'
+      'confirmed',
     )
   }
 
@@ -120,7 +120,7 @@ export async function getWhaleActivity(
   connection: Connection,
   mint: PublicKey,
   minAmount: bigint,
-  limit: number = 20
+  limit: number = 20,
 ): Promise<WhaleActivity[]> {
   const signatures = await connection.getSignaturesForAddress(mint, { limit: 100 })
 
@@ -197,11 +197,11 @@ export function formatVolume(volume: TradingVolume): string {
  * Export volume data to CSV
  */
 export function exportVolumeToCSV(
-  breakdown: Array<{ timestamp: number; volume: bigint; trades: number }>
+  breakdown: Array<{ timestamp: number, volume: bigint, trades: number }>,
 ): string {
   const headers = 'Timestamp,DateTime,Volume,Trades'
   const rows = breakdown.map(b =>
-    `${b.timestamp},${new Date(b.timestamp).toISOString()},${b.volume},${b.trades}`
+    `${b.timestamp},${new Date(b.timestamp).toISOString()},${b.volume},${b.trades}`,
   )
 
   return [headers, ...rows].join('\n')

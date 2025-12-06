@@ -2,8 +2,6 @@
  * Indexer Types
  */
 
-import type { PublicKey } from '@solana/web3.js'
-
 /**
  * DAS Asset
  */
@@ -13,12 +11,12 @@ export interface DASAsset {
   content: {
     $schema: string
     json_uri: string
-    files?: Array<{ uri: string; mime: string }>
+    files?: Array<{ uri: string, mime: string }>
     metadata: {
       name: string
       symbol: string
       description?: string
-      attributes?: Array<{ trait_type: string; value: string | number }>
+      attributes?: Array<{ trait_type: string, value: string | number }>
     }
     links?: {
       image?: string
@@ -26,7 +24,7 @@ export interface DASAsset {
       animation_url?: string
     }
   }
-  authorities: Array<{ address: string; scopes: string[] }>
+  authorities: Array<{ address: string, scopes: string[] }>
   compression?: {
     eligible: boolean
     compressed: boolean
@@ -37,7 +35,7 @@ export interface DASAsset {
     seq: number
     leaf_id: number
   }
-  grouping: Array<{ group_key: string; group_value: string }>
+  grouping: Array<{ group_key: string, group_value: string }>
   royalty: {
     royalty_model: string
     target: string | null
@@ -46,7 +44,7 @@ export interface DASAsset {
     primary_sale_happened: boolean
     locked: boolean
   }
-  creators: Array<{ address: string; share: number; verified: boolean }>
+  creators: Array<{ address: string, share: number, verified: boolean }>
   ownership: {
     frozen: boolean
     delegated: boolean
@@ -71,7 +69,7 @@ export interface DASSearchOptions {
   creatorAddress?: string
   creatorVerified?: boolean
   authorityAddress?: string
-  grouping?: { group_key: string; group_value: string }[]
+  grouping?: { group_key: string, group_value: string }[]
   delegate?: string
   frozen?: boolean
   supply?: { print_max_supply: number }
@@ -82,7 +80,7 @@ export interface DASSearchOptions {
   royaltyTarget?: string
   royaltyAmount?: number
   burnt?: boolean
-  sortBy?: { sortBy: 'created' | 'updated' | 'recent_action'; sortDirection: 'asc' | 'desc' }
+  sortBy?: { sortBy: 'created' | 'updated' | 'recent_action', sortDirection: 'asc' | 'desc' }
   limit?: number
   page?: number
   before?: string
@@ -153,7 +151,7 @@ export interface TransactionHistoryItem {
     nativeBalanceChange: number
     tokenBalanceChanges: Array<{
       mint: string
-      rawTokenAmount: { tokenAmount: string; decimals: number }
+      rawTokenAmount: { tokenAmount: string, decimals: number }
       userAccount: string
     }>
   }>
@@ -172,7 +170,7 @@ export interface TransactionHistoryItem {
       buyer: string
       seller: string
       staker: string
-      nfts: Array<{ mint: string; tokenStandard: string }>
+      nfts: Array<{ mint: string, tokenStandard: string }>
     }
   }
 }
@@ -180,15 +178,15 @@ export interface TransactionHistoryItem {
 /**
  * Webhook event types
  */
-export type WebhookEventType =
-  | 'NFT_SALE'
-  | 'NFT_LISTING'
-  | 'NFT_BID'
-  | 'NFT_CANCEL_LISTING'
-  | 'NFT_CANCEL_BID'
-  | 'NFT_MINT'
-  | 'TOKEN_TRANSFER'
-  | 'ACCOUNT_CHANGE'
+export type WebhookEventType
+  = | 'NFT_SALE'
+    | 'NFT_LISTING'
+    | 'NFT_BID'
+    | 'NFT_CANCEL_LISTING'
+    | 'NFT_CANCEL_BID'
+    | 'NFT_MINT'
+    | 'TOKEN_TRANSFER'
+    | 'ACCOUNT_CHANGE'
 
 /**
  * Webhook configuration

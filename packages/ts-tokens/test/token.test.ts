@@ -4,8 +4,8 @@
  * Unit tests for fungible token operations.
  */
 
-import { describe, test, expect, beforeAll } from 'bun:test'
-import { Keypair, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { describe, expect, test } from 'bun:test'
 
 // Mock config for testing
 const testConfig = {
@@ -78,14 +78,14 @@ describe('Token Amount Calculations', () => {
   test('should calculate UI amount from base units', () => {
     const baseUnits = 1_000_000_000n
     const decimals = 9
-    const uiAmount = Number(baseUnits) / Math.pow(10, decimals)
+    const uiAmount = Number(baseUnits) / 10 ** decimals
     expect(uiAmount).toBe(1)
   })
 
   test('should calculate base units from UI amount', () => {
     const uiAmount = 1
     const decimals = 9
-    const baseUnits = BigInt(uiAmount * Math.pow(10, decimals))
+    const baseUnits = BigInt(uiAmount * 10 ** decimals)
     expect(baseUnits).toBe(1_000_000_000n)
   })
 
@@ -97,7 +97,7 @@ describe('Token Amount Calculations', () => {
     ]
 
     for (const { decimals, uiAmount, baseUnits } of testCases) {
-      const calculated = BigInt(uiAmount * Math.pow(10, decimals))
+      const calculated = BigInt(uiAmount * 10 ** decimals)
       expect(calculated).toBe(baseUnits)
     }
   })

@@ -4,33 +4,32 @@
  * Create single NFTs and collections using raw Solana program instructions.
  */
 
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  Transaction,
+import type {
   TransactionInstruction,
 } from '@solana/web3.js'
+import type {
+  CollectionResult,
+  CreateCollectionOptions,
+  CreateNFTOptions,
+  NFTResult,
+  TokenConfig,
+} from '../types'
 import {
+  createAssociatedTokenAccountInstruction,
   createInitializeMintInstruction,
   createMintToInstruction,
   getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
   getMintLen,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
-import type {
-  TokenConfig,
-  CreateNFTOptions,
-  CreateCollectionOptions,
-  NFTResult,
-  CollectionResult,
-  TransactionOptions,
-} from '../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
-import { loadWallet } from '../drivers/solana/wallet'
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+} from '@solana/web3.js'
 import { createConnection } from '../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { loadWallet } from '../drivers/solana/wallet'
 import { getStorageAdapter } from '../storage'
 
 /**
@@ -48,7 +47,7 @@ function getMetadataAddress(mint: PublicKey): PublicKey {
       TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
   return address
 }
@@ -64,7 +63,7 @@ function getMasterEditionAddress(mint: PublicKey): PublicKey {
       mint.toBuffer(),
       Buffer.from('edition'),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
   return address
 }
@@ -74,7 +73,7 @@ function getMasterEditionAddress(mint: PublicKey): PublicKey {
  */
 function getCollectionAuthorityRecordAddress(
   mint: PublicKey,
-  authority: PublicKey
+  authority: PublicKey,
 ): PublicKey {
   const [address] = PublicKey.findProgramAddressSync(
     [
@@ -84,7 +83,7 @@ function getCollectionAuthorityRecordAddress(
       Buffer.from('collection_authority'),
       authority.toBuffer(),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
   return address
 }
@@ -102,9 +101,9 @@ function createMetadataInstruction(
   symbol: string,
   uri: string,
   sellerFeeBasisPoints: number,
-  creators: Array<{ address: PublicKey; verified: boolean; share: number }> | null,
-  collection: { key: PublicKey; verified: boolean } | null,
-  isMutable: boolean
+  creators: Array<{ address: PublicKey, verified: boolean, share: number }> | null,
+  collection: { key: PublicKey, verified: boolean } | null,
+  isMutable: boolean,
 ): TransactionInstruction {
   // CreateMetadataAccountV3 instruction
   const data = serializeCreateMetadataV3({
@@ -143,7 +142,7 @@ function createMasterEditionInstruction(
   mintAuthority: PublicKey,
   payer: PublicKey,
   metadata: PublicKey,
-  maxSupply: bigint | null
+  maxSupply: bigint | null,
 ): TransactionInstruction {
   // CreateMasterEditionV3 instruction discriminator: 17
   const data = Buffer.alloc(10)
@@ -153,7 +152,8 @@ function createMasterEditionInstruction(
   if (maxSupply !== null) {
     data.writeUInt8(1, 1) // Some
     data.writeBigUInt64LE(maxSupply, 2)
-  } else {
+  }
+  else {
     data.writeUInt8(0, 1) // None
   }
 
@@ -181,8 +181,8 @@ function serializeCreateMetadataV3(params: {
   symbol: string
   uri: string
   sellerFeeBasisPoints: number
-  creators: Array<{ address: PublicKey; verified: boolean; share: number }> | null
-  collection: { key: PublicKey; verified: boolean } | null
+  creators: Array<{ address: PublicKey, verified: boolean, share: number }> | null
+  collection: { key: PublicKey, verified: boolean } | null
   uses: null
   isMutable: boolean
   collectionDetails: null
@@ -192,16 +192,16 @@ function serializeCreateMetadataV3(params: {
   const uriBytes = Buffer.from(params.uri.slice(0, 200))
 
   // Calculate size
-  let size = 1 + // discriminator
-    4 + nameBytes.length +
-    4 + symbolBytes.length +
-    4 + uriBytes.length +
-    2 + // seller fee
-    1 + // creators option
-    1 + // collection option
-    1 + // uses option
-    1 + // is_mutable
-    1   // collection_details option
+  let size = 1 // discriminator
+    + 4 + nameBytes.length
+    + 4 + symbolBytes.length
+    + 4 + uriBytes.length
+    + 2 // seller fee
+    + 1 // creators option
+    + 1 // collection option
+    + 1 // uses option
+    + 1 // is_mutable
+    + 1 // collection_details option
 
   if (params.creators) {
     size += 4 + params.creators.length * 34 // vec length + (pubkey + verified + share)
@@ -253,7 +253,8 @@ function serializeCreateMetadataV3(params: {
       buffer.writeUInt8(creator.share, offset)
       offset += 1
     }
-  } else {
+  }
+  else {
     buffer.writeUInt8(0, offset) // None
     offset += 1
   }
@@ -266,7 +267,8 @@ function serializeCreateMetadataV3(params: {
     offset += 32
     buffer.writeUInt8(params.collection.verified ? 1 : 0, offset)
     offset += 1
-  } else {
+  }
+  else {
     buffer.writeUInt8(0, offset) // None
     offset += 1
   }
@@ -290,7 +292,7 @@ function serializeCreateMetadataV3(params: {
  */
 export async function createNFT(
   options: CreateNFTOptions,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<NFTResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -330,7 +332,7 @@ export async function createNFT(
       space: mintLen,
       lamports,
       programId: TOKEN_PROGRAM_ID,
-    })
+    }),
   )
 
   // 2. Initialize mint (0 decimals for NFT)
@@ -340,8 +342,8 @@ export async function createNFT(
       0, // NFTs have 0 decimals
       payer.publicKey,
       payer.publicKey,
-      TOKEN_PROGRAM_ID
-    )
+      TOKEN_PROGRAM_ID,
+    ),
   )
 
   // 3. Create ATA
@@ -350,8 +352,8 @@ export async function createNFT(
       payer.publicKey,
       ata,
       payer.publicKey,
-      mint
-    )
+      mint,
+    ),
   )
 
   // 4. Mint 1 token
@@ -360,8 +362,8 @@ export async function createNFT(
       mint,
       ata,
       payer.publicKey,
-      1n
-    )
+      1n,
+    ),
   )
 
   // 5. Create metadata
@@ -388,8 +390,8 @@ export async function createNFT(
       options.sellerFeeBasisPoints || 0,
       creators,
       collection,
-      options.isMutable ?? true
-    )
+      options.isMutable ?? true,
+    ),
   )
 
   // 6. Create master edition
@@ -401,8 +403,8 @@ export async function createNFT(
       payer.publicKey,
       payer.publicKey,
       metadataAddress,
-      options.maxSupply !== undefined ? BigInt(options.maxSupply) : 0n
-    )
+      options.maxSupply !== undefined ? BigInt(options.maxSupply) : 0n,
+    ),
   )
 
   // Build and send transaction
@@ -410,7 +412,7 @@ export async function createNFT(
     connection,
     instructions,
     payer.publicKey,
-    options.options
+    options.options,
   )
 
   transaction.partialSign(mintKeypair)
@@ -432,7 +434,7 @@ export async function createNFT(
  */
 export async function createCollection(
   options: CreateCollectionOptions,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<CollectionResult> {
   // A collection is just an NFT with collection details
   const result = await createNFT(
@@ -447,7 +449,7 @@ export async function createCollection(
       maxSupply: 0, // Collections have 0 max supply
       options: options.options,
     },
-    config
+    config,
   )
 
   return {
@@ -465,7 +467,7 @@ export async function createCollection(
 export async function mintNFT(
   name: string,
   uri: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<NFTResult> {
   return createNFT({ name, uri }, config)
 }

@@ -13,10 +13,10 @@ tokens wallet:generate --output ./my-wallet.json
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
-| `--output`, `-o` | Output file path |
-| `--force` | Overwrite existing file |
+| Option           | Description             |
+| ---------------- | ----------------------- |
+| `--output`, `-o` | Output file path        |
+| `--force`        | Overwrite existing file |
 
 ### Output
 
@@ -56,8 +56,8 @@ tokens wallet:balance --address <address>
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
+| Option            | Description                       |
+| ----------------- | --------------------------------- |
 | `--address`, `-a` | Check balance of specific address |
 
 ### Output
@@ -77,8 +77,8 @@ tokens wallet:airdrop --amount 2
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
+| Option           | Description                           |
+| ---------------- | ------------------------------------- |
 | `--amount`, `-a` | Amount of SOL to request (default: 1) |
 
 ### Output
@@ -106,9 +106,9 @@ tokens wallet:transfer --to <address> --amount 1
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
-| `--to`, `-t` | Recipient address |
+| Option           | Description               |
+| ---------------- | ------------------------- |
+| `--to`, `-t`     | Recipient address         |
 | `--amount`, `-a` | Amount of SOL to transfer |
 
 ### Output
@@ -130,8 +130,8 @@ tokens wallet:history --limit 20
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
+| Option          | Description                    |
+| --------------- | ------------------------------ |
 | `--limit`, `-l` | Number of transactions to show |
 
 ## Related

@@ -2,10 +2,10 @@
  * Vue Composables for Solana Tokens
  */
 
-export { useConnection, useConfig } from './useConnection'
-export { useTokenBalance } from './useTokenBalance'
+export { useCandyMachine } from './useCandyMachine'
+export { useConfig, useConnection } from './useConnection'
 export { useNFT } from './useNFT'
 export { useNFTs } from './useNFTs'
-export { useTransaction } from './useTransaction'
 export { useTokenAccounts } from './useTokenAccounts'
-export { useCandyMachine } from './useCandyMachine'
+export { useTokenBalance } from './useTokenBalance'
+export { useTransaction } from './useTransaction'

@@ -2,20 +2,20 @@
  * Token Metadata Program Account Deserializers
  */
 
-import { PublicKey } from '@solana/web3.js'
 import type {
-  Metadata,
-  MasterEditionV2,
-  Edition,
-  DataV2,
-  Creator,
   Collection,
-  Uses,
-  TokenStandard,
   CollectionDetails,
+  Creator,
+  DataV2,
+  Edition,
+  MasterEditionV2,
+  Metadata,
   ProgrammableConfig,
+  TokenStandard,
   UseMethod,
+  Uses,
 } from './types'
+import { PublicKey } from '@solana/web3.js'
 
 // Account discriminators
 const METADATA_KEY = 4
@@ -55,13 +55,15 @@ export function deserializeMetadata(data: Buffer): Metadata {
   const hasEditionNonce = data.readUInt8(offset) === 1
   offset += 1
   const editionNonce = hasEditionNonce ? data.readUInt8(offset) : null
-  if (hasEditionNonce) offset += 1
+  if (hasEditionNonce)
+    offset += 1
 
   // Token standard (optional)
   const hasTokenStandard = data.readUInt8(offset) === 1
   offset += 1
   const tokenStandard = hasTokenStandard ? (data.readUInt8(offset) as TokenStandard) : null
-  if (hasTokenStandard) offset += 1
+  if (hasTokenStandard)
+    offset += 1
 
   // Collection (optional)
   const hasCollection = data.readUInt8(offset) === 1
@@ -173,7 +175,7 @@ export function deserializeEdition(data: Buffer): Edition {
 /**
  * Parse DataV2 struct from buffer
  */
-function parseDataV2(data: Buffer, offset: number): { data: DataV2; offset: number } {
+function parseDataV2(data: Buffer, offset: number): { data: DataV2, offset: number } {
   // Name (string with length prefix)
   const nameLen = data.readUInt32LE(offset)
   offset += 4

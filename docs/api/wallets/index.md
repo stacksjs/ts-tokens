@@ -58,7 +58,8 @@ const adapter = wallets.createWalletAdapter('phantom')
 try {
   await adapter?.connect()
   console.log('Connected!')
-} catch (error) {
+}
+catch (error) {
   console.error('Connection failed:', error)
 }
 ```
@@ -140,7 +141,8 @@ if (wallets.isMobile()) {
   // Use deep links
   const link = wallets.generateDeepLink('phantom', 'connect', config)
   wallets.openWallet('phantom', link)
-} else {
+}
+else {
   // Use browser extension
   const adapter = wallets.createWalletAdapter('phantom')
   await adapter?.connect()
@@ -169,18 +171,18 @@ const recommended = wallets.getRecommendedWallet()
 
 All supported wallets with metadata:
 
-| Wallet | Extension | Mobile | Hardware |
-|--------|-----------|--------|----------|
-| Phantom | ✅ | ✅ | ❌ |
-| Solflare | ✅ | ✅ | ❌ |
-| Backpack | ✅ | ✅ | ❌ |
-| Ledger | ❌ | ❌ | ✅ |
-| Trezor | ❌ | ❌ | ✅ |
-| Coinbase | ✅ | ✅ | ❌ |
-| Trust | ✅ | ✅ | ❌ |
-| Exodus | ✅ | ✅ | ❌ |
-| Brave | ✅ | ✅ | ❌ |
-| Glow | ✅ | ✅ | ❌ |
+| Wallet   | Extension | Mobile | Hardware |
+| -------- | --------- | ------ | -------- |
+| Phantom  | ✅        | ✅     | ❌       |
+| Solflare | ✅        | ✅     | ❌       |
+| Backpack | ✅        | ✅     | ❌       |
+| Ledger   | ❌        | ❌     | ✅       |
+| Trezor   | ❌        | ❌     | ✅       |
+| Coinbase | ✅        | ✅     | ❌       |
+| Trust    | ✅        | ✅     | ❌       |
+| Exodus   | ✅        | ✅     | ❌       |
+| Brave    | ✅        | ✅     | ❌       |
+| Glow     | ✅        | ✅     | ❌       |
 
 ## Related
 

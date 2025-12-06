@@ -13,7 +13,7 @@ const ACCOUNT_COMPRESSION_PROGRAM_ID = new PublicKey('cmtDvXumGCrqC1Age74AVPhSRV
 export function findTreeAuthorityPda(merkleTree: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [merkleTree.toBuffer()],
-    BUBBLEGUM_PROGRAM_ID
+    BUBBLEGUM_PROGRAM_ID,
   )
 }
 
@@ -30,7 +30,7 @@ export function findVoucherPda(merkleTree: PublicKey, nonce: bigint): [PublicKey
       merkleTree.toBuffer(),
       nonceBuffer,
     ],
-    BUBBLEGUM_PROGRAM_ID
+    BUBBLEGUM_PROGRAM_ID,
   )
 }
 
@@ -47,7 +47,7 @@ export function findAssetId(merkleTree: PublicKey, leafIndex: bigint): [PublicKe
       merkleTree.toBuffer(),
       indexBuffer,
     ],
-    BUBBLEGUM_PROGRAM_ID
+    BUBBLEGUM_PROGRAM_ID,
   )
 }
 
@@ -57,7 +57,7 @@ export function findAssetId(merkleTree: PublicKey, leafIndex: bigint): [PublicKe
 export function findTreeConfigPda(merkleTree: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [merkleTree.toBuffer()],
-    ACCOUNT_COMPRESSION_PROGRAM_ID
+    ACCOUNT_COMPRESSION_PROGRAM_ID,
   )
 }
 
@@ -67,6 +67,6 @@ export function findTreeConfigPda(merkleTree: PublicKey): [PublicKey, number] {
 export function findBubblegumSignerPda(): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from('collection_cpi')],
-    BUBBLEGUM_PROGRAM_ID
+    BUBBLEGUM_PROGRAM_ID,
   )
 }

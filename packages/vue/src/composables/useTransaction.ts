@@ -4,7 +4,8 @@
  * Send and track transactions.
  */
 
-import { ref, type Ref } from 'vue'
+import type { Ref } from 'vue'
+import { ref } from 'vue'
 import { useConnection } from './useConnection'
 
 /**
@@ -46,10 +47,12 @@ export function useTransaction(): UseTransactionReturn {
 
       confirmed.value = true
       return sig
-    } catch (err) {
+    }
+    catch (err) {
       error.value = err as Error
       throw err
-    } finally {
+    }
+    finally {
       pending.value = false
     }
   }

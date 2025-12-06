@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useConfig } from '../composables'
 
 const props = defineProps<{
@@ -16,7 +16,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-if="!info">Loading...</div>
+  <div v-if="!info">
+    Loading...
+  </div>
   <div v-else>
     <div><strong>Mint:</strong> {{ mint }}</div>
     <div><strong>Supply:</strong> {{ info.supply?.toString() }}</div>

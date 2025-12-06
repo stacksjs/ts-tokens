@@ -66,7 +66,7 @@ All components are backed by composables you can use directly:
 
 ```vue
 <script setup>
-import { useTokenBalance, useNFT, useTransaction } from 'vue-tokens'
+import { useNFT, useTokenBalance, useTransaction } from 'vue-tokens'
 
 const { balance, loading } = useTokenBalance(mint, owner)
 const { nft } = useNFT(mintAddress)
@@ -76,23 +76,23 @@ const { send, pending } = useTransaction()
 
 ### Available Composables
 
-| Composable | Description |
-|------------|-------------|
-| `useConnection()` | Get Solana connection |
-| `useConfig()` | Get token config |
-| `useTokenBalance(mint, owner)` | Token balance |
-| `useTokenAccounts(owner)` | All token accounts |
-| `useNFT(mint)` | Single NFT data |
-| `useNFTs(owner)` | All NFTs for owner |
-| `useCandyMachine(address)` | Candy Machine state |
-| `useTransaction()` | Send transactions |
+| Composable                     | Description           |
+| ------------------------------ | --------------------- |
+| `useConnection()`              | Get Solana connection |
+| `useConfig()`                  | Get token config      |
+| `useTokenBalance(mint, owner)` | Token balance         |
+| `useTokenAccounts(owner)`      | All token accounts    |
+| `useNFT(mint)`                 | Single NFT data       |
+| `useNFTs(owner)`               | All NFTs for owner    |
+| `useCandyMachine(address)`     | Candy Machine state   |
+| `useTransaction()`             | Send transactions     |
 
 ## Example Usage
 
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue'
-import { TokenBalance, NFTGrid, useTokens } from 'vue-tokens'
+import { NFTGrid, TokenBalance, useTokens } from 'vue-tokens'
 
 const ownerAddress = ref('ABC123...')
 const { connection } = useTokens()
@@ -118,5 +118,5 @@ const { connection } = useTokens()
 Full TypeScript support included:
 
 ```typescript
-import type { TokenDisplayInfo, NFTDisplayInfo } from 'vue-tokens'
+import type { NFTDisplayInfo, TokenDisplayInfo } from 'vue-tokens'
 ```

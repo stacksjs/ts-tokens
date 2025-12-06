@@ -2,24 +2,24 @@
  * Candy Machine v3 Instructions
  */
 
-import {
-  PublicKey,
-  TransactionInstruction,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-  SYSVAR_SLOT_HASHES_PUBKEY,
-} from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import type {
-  InitializeCandyMachineOptions,
   AddConfigLinesOptions,
+  CandyMachineData,
+  ConfigLine,
+  Creator,
+  InitializeCandyMachineOptions,
   MintFromCandyMachineOptions,
   UpdateCandyMachineOptions,
   WithdrawOptions,
-  CandyMachineData,
-  Creator,
-  ConfigLine,
 } from './types'
+import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import {
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  SYSVAR_SLOT_HASHES_PUBKEY,
+  TransactionInstruction,
+} from '@solana/web3.js'
 
 const CANDY_MACHINE_PROGRAM_ID = new PublicKey('CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR')
 const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
@@ -36,7 +36,7 @@ const SET_AUTHORITY_DISCRIMINATOR = Buffer.from([133, 250, 37, 21, 110, 163, 26,
  * Create an Initialize Candy Machine instruction
  */
 export function initializeCandyMachine(
-  options: InitializeCandyMachineOptions
+  options: InitializeCandyMachineOptions,
 ): TransactionInstruction {
   const keys = [
     { pubkey: options.candyMachine, isSigner: false, isWritable: true },
@@ -92,7 +92,7 @@ export function addConfigLines(options: AddConfigLinesOptions): TransactionInstr
  * Create a Mint instruction
  */
 export function mintFromCandyMachine(
-  options: MintFromCandyMachineOptions
+  options: MintFromCandyMachineOptions,
 ): TransactionInstruction {
   const keys = [
     { pubkey: options.candyMachine, isSigner: false, isWritable: true },
@@ -149,7 +149,7 @@ export function updateCandyMachine(options: UpdateCandyMachineOptions): Transact
 export function setCandyMachineAuthority(
   candyMachine: PublicKey,
   authority: PublicKey,
-  newAuthority: PublicKey
+  newAuthority: PublicKey,
 ): TransactionInstruction {
   const keys = [
     { pubkey: candyMachine, isSigner: false, isWritable: true },
@@ -225,7 +225,8 @@ function serializeCandyMachineData(data: CandyMachineData): Buffer {
   if (data.configLineSettings) {
     parts.push(Buffer.from([1])) // Some
     parts.push(serializeConfigLineSettings(data.configLineSettings))
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0])) // None
   }
 
@@ -233,7 +234,8 @@ function serializeCandyMachineData(data: CandyMachineData): Buffer {
   if (data.hiddenSettings) {
     parts.push(Buffer.from([1])) // Some
     parts.push(serializeHiddenSettings(data.hiddenSettings))
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0])) // None
   }
 

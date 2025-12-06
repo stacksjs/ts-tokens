@@ -14,7 +14,7 @@ ts-tokens provides comprehensive treasury management:
 ## Create Treasury
 
 ```typescript
-import { treasury, getConfig } from 'ts-tokens'
+import { getConfig, treasury } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -31,7 +31,7 @@ const { address, signature } = await treasury.createTreasury(
 ## Deposit Tokens
 
 ```typescript
-import { treasury, getConfig } from 'ts-tokens'
+import { getConfig, treasury } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -47,7 +47,7 @@ await treasury.deposit(config.connection, {
 ## Get Treasury Info
 
 ```typescript
-import { treasury, getConfig } from 'ts-tokens'
+import { getConfig, treasury } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -64,7 +64,7 @@ for (const balance of info.balances) {
 ## Get Balances
 
 ```typescript
-import { treasury, getConfig } from 'ts-tokens'
+import { getConfig, treasury } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -87,7 +87,7 @@ const usdcBalance = await treasury.getTreasuryBalance(
 ### Create Proposal
 
 ```typescript
-import { treasury, getConfig } from 'ts-tokens'
+import { getConfig, treasury } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -104,7 +104,7 @@ const { proposalId } = await treasury.createSpendingProposal(
 ### Execute Approved Proposal
 
 ```typescript
-import { treasury, getConfig } from 'ts-tokens'
+import { getConfig, treasury } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -115,7 +115,7 @@ await treasury.executeSpendingProposal(config.connection, proposalId)
 ## Spending Limits
 
 ```typescript
-import { treasury, getConfig } from 'ts-tokens'
+import { getConfig, treasury } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -148,7 +148,7 @@ if (!check.allowed) {
 ## Transaction History
 
 ```typescript
-import { treasury, getConfig } from 'ts-tokens'
+import { getConfig, treasury } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -166,7 +166,7 @@ for (const tx of history) {
 ## Treasury Stats
 
 ```typescript
-import { treasury, getConfig } from 'ts-tokens'
+import { getConfig, treasury } from 'ts-tokens'
 
 const config = await getConfig()
 

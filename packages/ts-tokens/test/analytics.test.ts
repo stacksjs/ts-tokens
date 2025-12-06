@@ -2,8 +2,7 @@
  * Analytics Tests
  */
 
-import { describe, test, expect } from 'bun:test'
-import { Keypair } from '@solana/web3.js'
+import { describe, expect, test } from 'bun:test'
 
 describe('Holder Distribution', () => {
   test('should calculate percentage correctly', () => {
@@ -116,8 +115,10 @@ describe('Price History', () => {
       const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length
       const change = (secondAvg - firstAvg) / firstAvg
 
-      if (change > 0.05) return 'bullish'
-      if (change < -0.05) return 'bearish'
+      if (change > 0.05)
+        return 'bullish'
+      if (change < -0.05)
+        return 'bearish'
       return 'neutral'
     }
 

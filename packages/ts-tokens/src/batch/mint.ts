@@ -2,24 +2,26 @@
  * Batch Mint Operations
  */
 
-import {
+import type {
   Connection,
-  PublicKey,
   TransactionInstruction,
 } from '@solana/web3.js'
-import {
-  createMintToInstruction,
-  getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
-} from '@solana/spl-token'
 import type {
   BatchMintOptions,
-  BatchMintResult,
   BatchMintRecipient,
+  BatchMintResult,
+  BatchNFTMintItem,
   BatchNFTMintOptions,
   BatchNFTMintResult,
-  BatchNFTMintItem,
 } from './types'
+import {
+  createAssociatedTokenAccountInstruction,
+  createMintToInstruction,
+  getAssociatedTokenAddress,
+} from '@solana/spl-token'
+import {
+  PublicKey,
+} from '@solana/web3.js'
 
 /**
  * Execute batch token minting
@@ -28,7 +30,7 @@ export async function batchMint(
   connection: Connection,
   payer: PublicKey,
   mintAuthority: PublicKey,
-  options: BatchMintOptions
+  options: BatchMintOptions,
 ): Promise<BatchMintResult> {
   const {
     mint,
@@ -69,8 +71,8 @@ export async function batchMint(
               payer,
               destAta,
               recipientPubkey,
-              mint
-            )
+              mint,
+            ),
           )
         }
 
@@ -80,8 +82,8 @@ export async function batchMint(
             mint,
             destAta,
             mintAuthority,
-            recipient.amount
-          )
+            recipient.amount,
+          ),
         )
       }
 
@@ -94,8 +96,8 @@ export async function batchMint(
           : recipient.address.toBase58()
         result.signatures.push(`mint_${i}_${addr}`)
       }
-
-    } catch (error) {
+    }
+    catch (error) {
       result.failed += batch.length
 
       for (const recipient of batch) {
@@ -134,7 +136,7 @@ export async function batchMint(
 export async function batchMintNFTs(
   connection: Connection,
   payer: PublicKey,
-  options: BatchNFTMintOptions
+  options: BatchNFTMintOptions,
 ): Promise<BatchNFTMintResult> {
   const {
     collection,
@@ -168,8 +170,8 @@ export async function batchMintNFTs(
       if (onProgress) {
         onProgress(i + 1, items.length, mockMint)
       }
-
-    } catch (error) {
+    }
+    catch (error) {
       result.failed++
       result.errors.push({
         item,
@@ -198,7 +200,7 @@ export async function prepareBatchMint(
   payer: PublicKey,
   mint: PublicKey,
   mintAuthority: PublicKey,
-  recipients: BatchMintRecipient[]
+  recipients: BatchMintRecipient[],
 ): Promise<TransactionInstruction[]> {
   const instructions: TransactionInstruction[] = []
 
@@ -217,8 +219,8 @@ export async function prepareBatchMint(
           payer,
           destAta,
           recipientPubkey,
-          mint
-        )
+          mint,
+        ),
       )
     }
 
@@ -227,8 +229,8 @@ export async function prepareBatchMint(
         mint,
         destAta,
         mintAuthority,
-        recipient.amount
-      )
+        recipient.amount,
+      ),
     )
   }
 
@@ -246,8 +248,8 @@ export function calculateTotalMintAmount(recipients: BatchMintRecipient[]): bigi
  * Validate batch mint recipients
  */
 export function validateBatchMintRecipients(
-  recipients: BatchMintRecipient[]
-): { valid: boolean; errors: string[] } {
+  recipients: BatchMintRecipient[],
+): { valid: boolean, errors: string[] } {
   const errors: string[] = []
 
   if (recipients.length === 0) {
@@ -261,7 +263,8 @@ export function validateBatchMintRecipients(
       if (typeof r.address === 'string') {
         new PublicKey(r.address)
       }
-    } catch {
+    }
+    catch {
       errors.push(`Invalid address at index ${i}`)
     }
 
@@ -280,8 +283,8 @@ export function validateBatchMintRecipients(
  * Validate batch NFT mint items
  */
 export function validateBatchNFTItems(
-  items: BatchNFTMintItem[]
-): { valid: boolean; errors: string[] } {
+  items: BatchNFTMintItem[],
+): { valid: boolean, errors: string[] } {
   const errors: string[] = []
 
   if (items.length === 0) {
@@ -316,7 +319,8 @@ export function validateBatchNFTItems(
         if (typeof item.recipient === 'string') {
           new PublicKey(item.recipient)
         }
-      } catch {
+      }
+      catch {
         errors.push(`Invalid recipient address at index ${i}`)
       }
     }

@@ -2,20 +2,22 @@
  * Multi-Signature Creation
  */
 
-import {
-  Connection,
-  PublicKey,
-  Keypair,
-  Transaction,
-  SystemProgram,
-  TransactionInstruction,
-} from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import type {
-  MultisigAccount,
+  Connection,
+} from '@solana/web3.js'
+import type {
   CreateMultisigOptions,
+  MultisigAccount,
   MultisigConfig,
 } from './types'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js'
 
 // Multisig account size: 1 + 1 + 1 + (32 * 11) = 355 bytes
 const MULTISIG_SIZE = 355
@@ -26,8 +28,8 @@ const MULTISIG_SIZE = 355
 export async function createMultisig(
   connection: Connection,
   payer: Keypair,
-  options: CreateMultisigOptions
-): Promise<{ address: PublicKey; signature: string }> {
+  options: CreateMultisigOptions,
+): Promise<{ address: PublicKey, signature: string }> {
   const { signers, threshold } = options
 
   if (threshold > signers.length) {
@@ -60,7 +62,7 @@ export async function createMultisig(
   const initMultisigIx = createInitializeMultisigInstruction(
     multisigAccount.publicKey,
     signers,
-    threshold
+    threshold,
   )
 
   const transaction = new Transaction().add(createAccountIx, initMultisigIx)
@@ -80,7 +82,7 @@ export async function createMultisig(
 function createInitializeMultisigInstruction(
   multisig: PublicKey,
   signers: PublicKey[],
-  m: number
+  m: number,
 ): TransactionInstruction {
   const keys = [
     { pubkey: multisig, isSigner: false, isWritable: true },
@@ -104,7 +106,7 @@ function createInitializeMultisigInstruction(
  */
 export async function getMultisig(
   connection: Connection,
-  address: PublicKey
+  address: PublicKey,
 ): Promise<MultisigAccount | null> {
   const accountInfo = await connection.getAccountInfo(address)
 
@@ -171,7 +173,7 @@ export function validateMultisigConfig(config: CreateMultisigOptions): string[] 
 export function createMultisigConfig(
   address: PublicKey,
   threshold: number,
-  signers: PublicKey[]
+  signers: PublicKey[],
 ): MultisigConfig {
   return {
     address,
@@ -185,7 +187,7 @@ export function createMultisigConfig(
  */
 export async function isMultisig(
   connection: Connection,
-  address: PublicKey
+  address: PublicKey,
 ): Promise<boolean> {
   const accountInfo = await connection.getAccountInfo(address)
 

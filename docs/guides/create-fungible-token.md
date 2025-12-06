@@ -57,7 +57,7 @@ main()
 ## Step 4: Mint More Tokens
 
 ```typescript
-import { mintTokens, getConfig } from 'ts-tokens'
+import { getConfig, mintTokens } from 'ts-tokens'
 
 async function mintMore() {
   const config = await getConfig()
@@ -76,7 +76,7 @@ async function mintMore() {
 ## Step 5: Transfer Tokens
 
 ```typescript
-import { transferTokens, getConfig } from 'ts-tokens'
+import { getConfig, transferTokens } from 'ts-tokens'
 
 async function transfer() {
   const config = await getConfig()
@@ -119,8 +119,9 @@ Solana tokens use base units. With 9 decimals:
 
 ```typescript
 // Helper to convert
-const toBaseUnits = (amount: number, decimals: number) =>
-  BigInt(amount * Math.pow(10, decimals))
+function toBaseUnits(amount: number, decimals: number) {
+  return BigInt(amount * 10 ** decimals)
+}
 
 const supply = toBaseUnits(1000, 9) // 1000 tokens
 ```

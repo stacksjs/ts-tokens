@@ -62,7 +62,7 @@ export interface UploadOptions {
   /**
    * Custom tags (for Arweave)
    */
-  tags?: Array<{ name: string; value: string }>
+  tags?: Array<{ name: string, value: string }>
 
   /**
    * Pin content (for IPFS)
@@ -144,52 +144,52 @@ export interface StorageAdapter {
   /**
    * Upload a file
    */
-  upload(data: Uint8Array | string, options?: UploadOptions): Promise<UploadResult>
+  upload: (data: Uint8Array | string, options?: UploadOptions) => Promise<UploadResult>
 
   /**
    * Upload a file from path
    */
-  uploadFile(path: string, options?: UploadOptions): Promise<UploadResult>
+  uploadFile: (path: string, options?: UploadOptions) => Promise<UploadResult>
 
   /**
    * Upload multiple files
    */
-  uploadBatch(files: Array<{ path: string; name?: string }>, options?: UploadOptions): Promise<BatchUploadResult>
+  uploadBatch: (files: Array<{ path: string, name?: string }>, options?: UploadOptions) => Promise<BatchUploadResult>
 
   /**
    * Upload JSON data
    */
-  uploadJson(data: Record<string, unknown>, options?: UploadOptions): Promise<UploadResult>
+  uploadJson: (data: Record<string, unknown>, options?: UploadOptions) => Promise<UploadResult>
 
   /**
    * Download content
    */
-  download(id: string): Promise<Uint8Array>
+  download: (id: string) => Promise<Uint8Array>
 
   /**
    * Get public URL for content
    */
-  getUrl(id: string): string
+  getUrl: (id: string) => string
 
   /**
    * Check if content exists
    */
-  exists(id: string): Promise<boolean>
+  exists: (id: string) => Promise<boolean>
 
   /**
    * Get upload cost estimate
    */
-  estimateCost(size: number): Promise<bigint>
+  estimateCost: (size: number) => Promise<bigint>
 
   /**
    * Get current balance (for paid storage)
    */
-  getBalance?(): Promise<bigint>
+  getBalance?: () => Promise<bigint>
 
   /**
    * Fund storage account
    */
-  fund?(amount: bigint): Promise<string>
+  fund?: (amount: bigint) => Promise<string>
 }
 
 /**

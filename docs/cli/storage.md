@@ -14,11 +14,11 @@ tokens storage:upload ./assets/ --provider ipfs
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
+| Option             | Description                                    |
+| ------------------ | ---------------------------------------------- |
 | `--provider`, `-p` | Storage provider (arweave, ipfs, shadow-drive) |
-| `--batch-size` | Files per batch (default: 10) |
-| `--concurrent` | Concurrent uploads (default: 5) |
+| `--batch-size`     | Files per batch (default: 10)                  |
+| `--concurrent`     | Concurrent uploads (default: 5)                |
 
 ### Example Output
 
@@ -131,12 +131,12 @@ tokens storage:config --nft-storage-key YOUR_KEY
 
 ## Provider Comparison
 
-| Provider | Permanence | Cost | Speed |
-|----------|------------|------|-------|
-| Arweave | Permanent | One-time | Medium |
-| IPFS (Pinata) | Requires pinning | Monthly | Fast |
-| IPFS (NFT.Storage) | Free tier | Free | Fast |
-| Shadow Drive | Permanent | One-time | Fast |
+| Provider           | Permanence       | Cost     | Speed  |
+| ------------------ | ---------------- | -------- | ------ |
+| Arweave            | Permanent        | One-time | Medium |
+| IPFS (Pinata)      | Requires pinning | Monthly  | Fast   |
+| IPFS (NFT.Storage) | Free tier        | Free     | Fast   |
+| Shadow Drive       | Permanent        | One-time | Fast   |
 
 ## Environment Variables
 

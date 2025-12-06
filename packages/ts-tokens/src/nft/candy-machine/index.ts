@@ -7,13 +7,13 @@
 export * from './create'
 
 export {
-  createCandyMachine,
   addConfigLines,
+  createCandyMachine,
   mintFromCandyMachine,
 } from './create'
 
 export type {
-  CandyMachineConfig,
   CandyGuardConfig,
+  CandyMachineConfig,
   CandyMachineResult,
 } from './create'

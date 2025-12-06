@@ -2,13 +2,12 @@
  * Token-2022 Instructions
  */
 
+import type { AccountState, ExtensionType } from './types'
 import {
   PublicKey,
-  TransactionInstruction,
   SystemProgram,
-  SYSVAR_RENT_PUBKEY,
+  TransactionInstruction,
 } from '@solana/web3.js'
-import { ExtensionType, AccountState } from './types'
 import { getMintSize } from './extensions'
 
 const TOKEN_2022_PROGRAM_ID = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb')

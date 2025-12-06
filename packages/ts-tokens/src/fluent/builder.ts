@@ -4,13 +4,14 @@
  * Foundation for fluent API builders.
  */
 
-import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js'
+import type { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js'
 import type {
-  ChainedOperation,
-  ExecutionResult,
-  DryRunResult,
   BuilderOptions,
+  ChainedOperation,
+  DryRunResult,
+  ExecutionResult,
 } from './types'
+import { Transaction } from '@solana/web3.js'
 
 /**
  * Base builder class
@@ -121,7 +122,7 @@ export abstract class BaseBuilder<T extends BaseBuilder<T>> {
       throw new Error('Payer not set')
     }
 
-    const errors: Array<{ operation: string; error: string }> = []
+    const errors: Array<{ operation: string, error: string }> = []
     const signatures: string[] = []
 
     try {
@@ -130,8 +131,8 @@ export abstract class BaseBuilder<T extends BaseBuilder<T>> {
       // In production, would sign and send transaction
       // This is a simplified version
       signatures.push(`executed_${Date.now()}`)
-
-    } catch (error) {
+    }
+    catch (error) {
       errors.push({
         operation: 'execute',
         error: (error as Error).message,
@@ -153,7 +154,7 @@ export abstract class BaseBuilder<T extends BaseBuilder<T>> {
 export async function createTransaction(
   connection: Connection,
   instructions: TransactionInstruction[],
-  payer: PublicKey
+  payer: PublicKey,
 ): Promise<Transaction> {
   const transaction = new Transaction()
   transaction.add(...instructions)
@@ -170,7 +171,7 @@ export async function createTransaction(
  */
 export function batchInstructions(
   instructions: TransactionInstruction[],
-  maxPerTx: number = 10
+  maxPerTx: number = 10,
 ): TransactionInstruction[][] {
   const batches: TransactionInstruction[][] = []
 

@@ -5,7 +5,7 @@ Create and manage NFT collections.
 ## Quick Start
 
 ```typescript
-import { createCollection, mintNFT, getConfig } from 'ts-tokens'
+import { createCollection, getConfig, mintNFT } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -64,7 +64,7 @@ await setAndVerifyCollection(
 ## Querying Collections
 
 ```typescript
-import { getNFTsByCollection, getCollectionInfo } from 'ts-tokens'
+import { getCollectionInfo, getNFTsByCollection } from 'ts-tokens'
 
 // Get collection info
 const info = await getCollectionInfo(collectionMint, config)

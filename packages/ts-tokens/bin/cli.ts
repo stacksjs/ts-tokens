@@ -1,7 +1,7 @@
+import type { SolanaNetwork } from '../src/types'
 import { CLI } from '@stacksjs/clapp'
 import { version } from '../package.json'
 import { getConfig, setConfig } from '../src/config'
-import type { SolanaNetwork } from '../src/types'
 
 const cli = new CLI('tokens', {
   description: 'A CLI for managing fungible and non-fungible tokens on Solana',
@@ -58,7 +58,8 @@ cli
     if (options.output) {
       saveKeypair(keypair, options.output)
       console.log(`  Saved to: ${options.output}`)
-    } else {
+    }
+    else {
       console.log(`\nTo save this keypair, use --output <path>`)
     }
   })
@@ -71,7 +72,8 @@ cli
     try {
       const pubkey = getPublicKey(config)
       console.log(`Wallet: ${pubkey}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('No wallet configured. Run `tokens wallet:generate` or set wallet.keypairPath in config.')
     }
   })
@@ -90,7 +92,8 @@ cli
       const balance = await connection.getBalance(pubkey)
       console.log(`Wallet: ${pubkey}`)
       console.log(`Balance: ${lamportsToSol(balance)} SOL`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
     }
   })
@@ -121,7 +124,8 @@ cli
 
       const balance = await connection.getBalance(pubkey)
       console.log(`New balance: ${lamportsToSol(balance)} SOL`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Airdrop failed:', error instanceof Error ? error.message : error)
     }
   })
@@ -136,7 +140,7 @@ cli
   .option('--symbol <symbol>', 'Token symbol')
   .option('--decimals <decimals>', 'Decimal places', '9')
   .option('--supply <supply>', 'Initial supply')
-  .action(async (options: { name?: string; symbol?: string; decimals?: string; supply?: string }) => {
+  .action(async (options: { name?: string, symbol?: string, decimals?: string, supply?: string }) => {
     if (!options.name || !options.symbol) {
       console.error('Error: --name and --symbol are required')
       process.exit(1)
@@ -150,7 +154,7 @@ cli
       const result = await createToken({
         name: options.name,
         symbol: options.symbol,
-        decimals: parseInt(options.decimals || '9'),
+        decimals: Number.parseInt(options.decimals || '9'),
         initialSupply: options.supply ? BigInt(options.supply) : undefined,
       }, config)
 
@@ -160,7 +164,8 @@ cli
       if (result.metadataAddress) {
         console.log(`  Metadata: ${result.metadataAddress}`)
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }
@@ -183,7 +188,8 @@ cli
 
       console.log('\n✓ Tokens minted successfully!')
       console.log(`  Signature: ${result.signature}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }
@@ -201,7 +207,8 @@ cli
 
       console.log('\n✓ Transfer successful!')
       console.log(`  Signature: ${result.signature}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }
@@ -219,7 +226,8 @@ cli
 
       console.log('\n✓ Tokens burned successfully!')
       console.log(`  Signature: ${result.signature}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }
@@ -239,7 +247,8 @@ cli
       console.log(`  Decimals: ${info.decimals}`)
       console.log(`  Mint Authority: ${info.mintAuthority || 'None (fixed supply)'}`)
       console.log(`  Freeze Authority: ${info.freezeAuthority || 'None'}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }
@@ -257,7 +266,8 @@ cli
       const balance = await getTokenBalance(owner, mint, config)
       console.log(`Token: ${mint}`)
       console.log(`Balance: ${balance}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }
@@ -273,7 +283,7 @@ cli
   .option('--uri <uri>', 'Metadata URI')
   .option('--collection <address>', 'Collection address')
   .option('--royalty <bps>', 'Royalty in basis points (e.g., 500 = 5%)')
-  .action(async (options: { name?: string; uri?: string; collection?: string; royalty?: string }) => {
+  .action(async (options: { name?: string, uri?: string, collection?: string, royalty?: string }) => {
     if (!options.name || !options.uri) {
       console.error('Error: --name and --uri are required')
       process.exit(1)
@@ -288,7 +298,7 @@ cli
         name: options.name,
         uri: options.uri,
         collection: options.collection,
-        sellerFeeBasisPoints: options.royalty ? parseInt(options.royalty) : 0,
+        sellerFeeBasisPoints: options.royalty ? Number.parseInt(options.royalty) : 0,
       }, config)
 
       console.log('\n✓ NFT created successfully!')
@@ -296,7 +306,8 @@ cli
       console.log(`  Metadata: ${result.metadata}`)
       console.log(`  Master Edition: ${result.masterEdition}`)
       console.log(`  Signature: ${result.signature}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }
@@ -314,7 +325,8 @@ cli
 
       console.log('\n✓ NFT transferred successfully!')
       console.log(`  Signature: ${result.signature}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }
@@ -332,7 +344,8 @@ cli
 
       console.log('\n✓ NFT burned successfully!')
       console.log(`  Signature: ${result.signature}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }
@@ -374,7 +387,8 @@ cli
         console.log(`  Description: ${(offChain as any).description || 'N/A'}`)
         console.log(`  Image: ${(offChain as any).image || 'N/A'}`)
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }
@@ -385,7 +399,7 @@ cli
   .option('--name <name>', 'Collection name')
   .option('--symbol <symbol>', 'Collection symbol')
   .option('--uri <uri>', 'Metadata URI')
-  .action(async (options: { name?: string; symbol?: string; uri?: string }) => {
+  .action(async (options: { name?: string, symbol?: string, uri?: string }) => {
     if (!options.name || !options.uri) {
       console.error('Error: --name and --uri are required')
       process.exit(1)
@@ -406,7 +420,8 @@ cli
       console.log(`  Mint: ${result.mint}`)
       console.log(`  Metadata: ${result.metadata}`)
       console.log(`  Signature: ${result.signature}`)
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }
@@ -437,7 +452,8 @@ cli
         console.log(`    Symbol: ${nft.symbol}`)
         console.log('')
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)
     }

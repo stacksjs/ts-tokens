@@ -4,7 +4,8 @@
  * Pre-transaction and pre-operation security checks.
  */
 
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import type { Connection } from '@solana/web3.js'
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 
 export interface SecurityCheckResult {
   safe: boolean
@@ -23,7 +24,8 @@ export async function checkAddressReputation(address: string): Promise<SecurityC
   // Basic validation
   try {
     new PublicKey(address)
-  } catch {
+  }
+  catch {
     return {
       safe: false,
       warnings: ['Invalid Solana address format'],
@@ -46,7 +48,7 @@ export async function checkAddressReputation(address: string): Promise<SecurityC
 export async function checkSufficientBalance(
   connection: Connection,
   address: PublicKey,
-  requiredLamports: number
+  requiredLamports: number,
 ): Promise<SecurityCheckResult> {
   const warnings: string[] = []
   const recommendations: string[] = []
@@ -83,7 +85,7 @@ export async function checkSufficientBalance(
 export function checkUnusualAmount(
   amount: bigint,
   totalSupply: bigint,
-  decimals: number
+  decimals: number,
 ): SecurityCheckResult {
   const warnings: string[] = []
   const recommendations: string[] = []
@@ -95,7 +97,7 @@ export function checkUnusualAmount(
   }
 
   // Warn if amount seems like a decimal mistake
-  const uiAmount = Number(amount) / Math.pow(10, decimals)
+  const uiAmount = Number(amount) / 10 ** decimals
   if (uiAmount > 1_000_000_000) {
     warnings.push('This is a very large amount')
     recommendations.push('Double-check the decimal places')
@@ -115,7 +117,7 @@ export async function checkAuthority(
   connection: Connection,
   mint: PublicKey,
   expectedAuthority: PublicKey,
-  authorityType: 'mint' | 'freeze' | 'update'
+  authorityType: 'mint' | 'freeze' | 'update',
 ): Promise<SecurityCheckResult> {
   const warnings: string[] = []
   const recommendations: string[] = []
@@ -148,7 +150,7 @@ export async function preTransactionCheck(options: {
   const balanceCheck = await checkSufficientBalance(
     options.connection,
     options.payer,
-    options.estimatedFee
+    options.estimatedFee,
   )
   warnings.push(...balanceCheck.warnings)
   recommendations.push(...balanceCheck.recommendations)
@@ -249,7 +251,7 @@ export function checkCollectionSecurity(options: {
   }
 
   return {
-    safe: warnings.filter(w => w.includes("don't sum")).length === 0,
+    safe: warnings.filter(w => w.includes('don\'t sum')).length === 0,
     warnings,
     recommendations,
   }

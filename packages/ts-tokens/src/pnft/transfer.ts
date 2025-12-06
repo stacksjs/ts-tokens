@@ -2,12 +2,12 @@
  * Programmable NFT Transfers
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
+  PNFTTransferOptions,
   ProgrammableNFT,
   TransferRule,
   TransferValidation,
-  PNFTTransferOptions,
 } from './types'
 import { getPNFT } from './create'
 import { getAllRules } from './rules'
@@ -19,7 +19,7 @@ export async function canTransfer(
   connection: Connection,
   mint: PublicKey,
   from: PublicKey,
-  to: PublicKey
+  to: PublicKey,
 ): Promise<TransferValidation> {
   const pnft = await getPNFT(connection, mint)
 
@@ -32,7 +32,8 @@ export async function canTransfer(
   let royaltyAmount: bigint | undefined
 
   for (const rule of rules) {
-    if (!rule.enabled) continue
+    if (!rule.enabled)
+      continue
 
     const result = await validateRule(connection, rule, pnft, from, to)
     if (!result.allowed) {
@@ -63,8 +64,8 @@ async function validateRule(
   rule: TransferRule,
   pnft: ProgrammableNFT,
   from: PublicKey,
-  to: PublicKey
-): Promise<{ allowed: boolean; royaltyAmount?: bigint }> {
+  to: PublicKey,
+): Promise<{ allowed: boolean, royaltyAmount?: bigint }> {
   switch (rule.type) {
     case 'soulbound':
       return { allowed: false }
@@ -115,7 +116,7 @@ async function validateRule(
  */
 function getFailureReason(
   failedRules: TransferValidation['failedRules'],
-  pnft: ProgrammableNFT
+  pnft: ProgrammableNFT,
 ): string {
   const reasons: string[] = []
 
@@ -164,9 +165,12 @@ function getFailureReason(
  * Format duration in seconds to human readable
  */
 function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`
+  if (seconds < 60)
+    return `${seconds}s`
+  if (seconds < 3600)
+    return `${Math.floor(seconds / 60)}m`
+  if (seconds < 86400)
+    return `${Math.floor(seconds / 3600)}h`
   return `${Math.floor(seconds / 86400)}d`
 }
 
@@ -175,8 +179,8 @@ function formatDuration(seconds: number): string {
  */
 export async function transferPNFT(
   connection: Connection,
-  options: PNFTTransferOptions
-): Promise<{ signature: string; royaltyPaid?: bigint }> {
+  options: PNFTTransferOptions,
+): Promise<{ signature: string, royaltyPaid?: bigint }> {
   const { mint, from, to, payRoyalty = true } = options
 
   // Validate transfer
@@ -205,7 +209,7 @@ export async function delegateTransfer(
   connection: Connection,
   mint: PublicKey,
   owner: PublicKey,
-  delegate: PublicKey
+  delegate: PublicKey,
 ): Promise<string> {
   // In production, would set delegate on pNFT account
   return `delegate_set_${Date.now()}`
@@ -217,7 +221,7 @@ export async function delegateTransfer(
 export async function revokeDelegate(
   connection: Connection,
   mint: PublicKey,
-  owner: PublicKey
+  owner: PublicKey,
 ): Promise<string> {
   // In production, would clear delegate on pNFT account
   return `delegate_revoked_${Date.now()}`
@@ -229,7 +233,7 @@ export async function revokeDelegate(
 export async function getTransferHistory(
   connection: Connection,
   mint: PublicKey,
-  limit: number = 20
+  limit: number = 20,
 ): Promise<Array<{
   from: PublicKey
   to: PublicKey
@@ -247,8 +251,8 @@ export async function getTransferHistory(
 export async function estimateRoyalty(
   connection: Connection,
   mint: PublicKey,
-  salePrice: bigint
-): Promise<{ amount: bigint; recipients: Array<{ address: PublicKey; amount: bigint }> }> {
+  salePrice: bigint,
+): Promise<{ amount: bigint, recipients: Array<{ address: PublicKey, amount: bigint }> }> {
   const pnft = await getPNFT(connection, mint)
 
   if (!pnft) {

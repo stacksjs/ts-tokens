@@ -13,20 +13,20 @@ tokens token:create --name "My Token" --symbol MTK --decimals 9 --supply 1000000
 
 ### Required Options
 
-| Option | Description |
-|--------|-------------|
-| `--name`, `-n` | Token name |
-| `--symbol`, `-s` | Token symbol (max 10 chars) |
-| `--decimals`, `-d` | Decimal places (0-9) |
+| Option             | Description                 |
+| ------------------ | --------------------------- |
+| `--name`, `-n`     | Token name                  |
+| `--symbol`, `-s`   | Token symbol (max 10 chars) |
+| `--decimals`, `-d` | Decimal places (0-9)        |
 
 ### Optional Options
 
-| Option | Description |
-|--------|-------------|
-| `--supply` | Initial supply to mint |
-| `--mint-authority` | Custom mint authority |
+| Option               | Description             |
+| -------------------- | ----------------------- |
+| `--supply`           | Initial supply to mint  |
+| `--mint-authority`   | Custom mint authority   |
 | `--freeze-authority` | Custom freeze authority |
-| `--metadata-uri` | URI for token metadata |
+| `--metadata-uri`     | URI for token metadata  |
 
 ### Example Output
 
@@ -50,10 +50,10 @@ tokens token:mint <mint> --amount 1000000 --to <recipient>
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
-| `--amount`, `-a` | Amount to mint (in base units) |
-| `--to`, `-t` | Recipient address (default: self) |
+| Option           | Description                       |
+| ---------------- | --------------------------------- |
+| `--amount`, `-a` | Amount to mint (in base units)    |
+| `--to`, `-t`     | Recipient address (default: self) |
 
 ## `tokens token:transfer`
 
@@ -65,11 +65,11 @@ tokens token:transfer <mint> --amount 1000 --to <recipient>
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
+| Option           | Description        |
+| ---------------- | ------------------ |
 | `--amount`, `-a` | Amount to transfer |
-| `--to`, `-t` | Recipient address |
-| `--memo` | Optional memo |
+| `--to`, `-t`     | Recipient address  |
+| `--memo`         | Optional memo      |
 
 ## `tokens token:burn`
 
@@ -82,10 +82,10 @@ tokens token:burn <mint> --all
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
-| `--amount`, `-a` | Amount to burn |
-| `--all` | Burn all tokens |
+| Option           | Description     |
+| ---------------- | --------------- |
+| `--amount`, `-a` | Amount to burn  |
+| `--all`          | Burn all tokens |
 
 ## `tokens token:info`
 
@@ -119,8 +119,8 @@ tokens token:balance <mint> --address <owner>
 
 ### Options
 
-| Option | Description |
-|--------|-------------|
+| Option            | Description            |
+| ----------------- | ---------------------- |
 | `--address`, `-a` | Owner address to check |
 
 ## `tokens token:accounts`

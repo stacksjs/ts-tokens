@@ -4,8 +4,8 @@
  * Unit tests for Candy Machine operations.
  */
 
-import { describe, test, expect } from 'bun:test'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
+import { describe, expect, test } from 'bun:test'
 
 describe('Candy Machine Configuration', () => {
   test('should validate items available', () => {

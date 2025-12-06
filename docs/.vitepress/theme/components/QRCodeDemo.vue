@@ -100,7 +100,7 @@ watch([text, errorLevel, useSVG], () => {
   font-weight: 500;
 }
 
-input[type="text"] {
+input[type='text'] {
   width: 100%;
   padding: 8px;
   border: 1px solid #ddd;

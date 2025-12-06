@@ -4,8 +4,9 @@
  * Swap aggregator integration for token swaps.
  */
 
-import { Connection, PublicKey, Transaction } from '@solana/web3.js'
-import type { SwapQuote, SwapOptions, TokenPrice } from './types'
+import type { Connection } from '@solana/web3.js'
+import type { SwapOptions, SwapQuote, TokenPrice } from './types'
+import { PublicKey, Transaction } from '@solana/web3.js'
 
 const JUPITER_API = 'https://quote-api.jup.ag/v6'
 
@@ -44,7 +45,7 @@ export async function getSwapQuote(options: SwapOptions): Promise<SwapQuote> {
     outputAmount: BigInt(data.outAmount),
     priceImpact: data.priceImpactPct,
     fee: BigInt(data.platformFee?.amount ?? 0),
-    route: data.routePlan?.map((leg: { swapInfo: { ammKey: string; inputMint: string; outputMint: string; inAmount: string; outAmount: string }; label: string }) => ({
+    route: data.routePlan?.map((leg: { swapInfo: { ammKey: string, inputMint: string, outputMint: string, inAmount: string, outAmount: string }, label: string }) => ({
       protocol: leg.label,
       inputMint: new PublicKey(leg.swapInfo.inputMint),
       outputMint: new PublicKey(leg.swapInfo.outputMint),
@@ -61,7 +62,7 @@ export async function getSwapQuote(options: SwapOptions): Promise<SwapQuote> {
  */
 export async function buildSwapTransaction(
   quote: SwapQuote,
-  userPublicKey: PublicKey
+  userPublicKey: PublicKey,
 ): Promise<Transaction> {
   const response = await fetch(`${JUPITER_API}/swap`, {
     method: 'POST',
@@ -95,8 +96,8 @@ export async function buildSwapTransaction(
 export async function executeSwap(
   connection: Connection,
   options: SwapOptions,
-  userPublicKey: PublicKey
-): Promise<{ quote: SwapQuote; transaction: Transaction }> {
+  userPublicKey: PublicKey,
+): Promise<{ quote: SwapQuote, transaction: Transaction }> {
   const quote = await getSwapQuote(options)
   const transaction = await buildSwapTransaction(quote, userPublicKey)
 
@@ -108,7 +109,7 @@ export async function executeSwap(
  */
 export async function getTokenPrice(mint: PublicKey): Promise<TokenPrice> {
   const response = await fetch(
-    `https://price.jup.ag/v4/price?ids=${mint.toBase58()}`
+    `https://price.jup.ag/v4/price?ids=${mint.toBase58()}`,
   )
 
   if (!response.ok) {
@@ -189,7 +190,7 @@ export async function getSupportedTokens(): Promise<Array<{
  */
 export function calculateMinOutput(
   outputAmount: bigint,
-  slippageBps: number
+  slippageBps: number,
 ): bigint {
   return outputAmount - (outputAmount * BigInt(slippageBps)) / 10000n
 }
@@ -198,8 +199,8 @@ export function calculateMinOutput(
  * Format swap quote for display
  */
 export function formatSwapQuote(quote: SwapQuote, inputDecimals: number, outputDecimals: number): string {
-  const inputAmount = Number(quote.inputAmount) / Math.pow(10, inputDecimals)
-  const outputAmount = Number(quote.outputAmount) / Math.pow(10, outputDecimals)
+  const inputAmount = Number(quote.inputAmount) / 10 ** inputDecimals
+  const outputAmount = Number(quote.outputAmount) / 10 ** outputDecimals
   const rate = outputAmount / inputAmount
 
   return [

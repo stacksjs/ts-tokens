@@ -2,8 +2,8 @@
  * Governance Tests
  */
 
-import { describe, test, expect } from 'bun:test'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
+import { describe, expect, test } from 'bun:test'
 
 describe('DAO Configuration', () => {
   test('should validate quorum range', () => {

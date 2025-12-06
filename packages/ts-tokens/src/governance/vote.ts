@@ -2,13 +2,12 @@
  * Voting
  */
 
-import { Connection, PublicKey, Keypair } from '@solana/web3.js'
+import type { Connection, Keypair, PublicKey } from '@solana/web3.js'
 import type {
-  VoteRecord,
-  VoteType,
-  VoteOptions,
-  Proposal,
   Delegation,
+  Proposal,
+  VoteOptions,
+  VoteRecord,
   VotingPowerSnapshot,
 } from './types'
 
@@ -18,8 +17,8 @@ import type {
 export async function castVote(
   connection: Connection,
   voter: Keypair,
-  options: VoteOptions
-): Promise<{ voteRecord: VoteRecord; signature: string }> {
+  options: VoteOptions,
+): Promise<{ voteRecord: VoteRecord, signature: string }> {
   const { proposal, voteType } = options
 
   // Get voter's voting power
@@ -49,7 +48,7 @@ export async function castVote(
 export async function getVotingPower(
   connection: Connection,
   voter: PublicKey,
-  proposal: PublicKey
+  proposal: PublicKey,
 ): Promise<bigint> {
   // In production, would:
   // 1. Get token balance at proposal start time (snapshot)
@@ -68,7 +67,7 @@ export async function getVotingPowerSnapshot(
   connection: Connection,
   voter: PublicKey,
   governanceToken: PublicKey,
-  snapshotTime: bigint
+  snapshotTime: bigint,
 ): Promise<VotingPowerSnapshot> {
   // In production, would query historical balance
   const tokenAccounts = await connection.getParsedTokenAccountsByOwner(voter, {
@@ -99,8 +98,8 @@ export async function delegateVotingPower(
   connection: Connection,
   delegator: Keypair,
   delegate: PublicKey,
-  amount?: bigint // If not specified, delegate all
-): Promise<{ delegation: Delegation; signature: string }> {
+  amount?: bigint, // If not specified, delegate all
+): Promise<{ delegation: Delegation, signature: string }> {
   const delegation: Delegation = {
     delegator: delegator.publicKey,
     delegate,
@@ -120,7 +119,7 @@ export async function delegateVotingPower(
 export async function revokeDelegation(
   connection: Connection,
   delegator: Keypair,
-  delegate: PublicKey
+  delegate: PublicKey,
 ): Promise<{ signature: string }> {
   return {
     signature: `delegation_revoked_${delegate.toBase58().slice(0, 8)}`,
@@ -132,8 +131,8 @@ export async function revokeDelegation(
  */
 export async function getDelegations(
   connection: Connection,
-  address: PublicKey
-): Promise<{ delegatedTo: Delegation[]; delegatedFrom: Delegation[] }> {
+  address: PublicKey,
+): Promise<{ delegatedTo: Delegation[], delegatedFrom: Delegation[] }> {
   // In production, would query delegation accounts
   return {
     delegatedTo: [],
@@ -147,7 +146,7 @@ export async function getDelegations(
 export async function getVoteRecord(
   connection: Connection,
   proposal: PublicKey,
-  voter: PublicKey
+  voter: PublicKey,
 ): Promise<VoteRecord | null> {
   // In production, would query vote record account
   return null
@@ -158,7 +157,7 @@ export async function getVoteRecord(
  */
 export async function getProposalVotes(
   connection: Connection,
-  proposal: PublicKey
+  proposal: PublicKey,
 ): Promise<VoteRecord[]> {
   // In production, would use getProgramAccounts
   return []
@@ -170,7 +169,7 @@ export async function getProposalVotes(
 export async function hasVoted(
   connection: Connection,
   proposal: PublicKey,
-  voter: PublicKey
+  voter: PublicKey,
 ): Promise<boolean> {
   const record = await getVoteRecord(connection, proposal, voter)
   return record !== null
@@ -210,9 +209,9 @@ export function calculateVoteBreakdown(proposal: Proposal): {
 export function isVotingOpen(proposal: Proposal): boolean {
   const currentTime = BigInt(Math.floor(Date.now() / 1000))
   return (
-    proposal.status === 'active' &&
-    currentTime >= proposal.startTime &&
-    currentTime <= proposal.endTime
+    proposal.status === 'active'
+    && currentTime >= proposal.startTime
+    && currentTime <= proposal.endTime
   )
 }
 
@@ -237,9 +236,12 @@ export function getVotingTimeRemaining(proposal: Proposal): {
   const minutes = (remaining % 3600n) / 60n
 
   let formatted = ''
-  if (days > 0n) formatted += `${days}d `
-  if (hours > 0n) formatted += `${hours}h `
-  if (minutes > 0n) formatted += `${minutes}m`
+  if (days > 0n)
+    formatted += `${days}d `
+  if (hours > 0n)
+    formatted += `${hours}h `
+  if (minutes > 0n)
+    formatted += `${minutes}m`
 
   return {
     seconds: remaining,

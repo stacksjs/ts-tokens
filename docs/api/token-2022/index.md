@@ -6,16 +6,16 @@ Create tokens with advanced features using Token-2022.
 
 Token-2022 is the next-generation SPL Token program with powerful extensions:
 
-| Extension | Description |
-|-----------|-------------|
-| Transfer Fees | Automatic fee collection on transfers |
-| Interest-Bearing | Tokens that accrue interest over time |
-| Non-Transferable | Soulbound tokens |
-| Permanent Delegate | Delegate that can't be revoked |
-| Transfer Hook | Custom logic on transfers |
-| Metadata Pointer | On-chain metadata |
-| Confidential Transfers | Private balances |
-| Default Account State | Frozen by default |
+| Extension              | Description                           |
+| ---------------------- | ------------------------------------- |
+| Transfer Fees          | Automatic fee collection on transfers |
+| Interest-Bearing       | Tokens that accrue interest over time |
+| Non-Transferable       | Soulbound tokens                      |
+| Permanent Delegate     | Delegate that can't be revoked        |
+| Transfer Hook          | Custom logic on transfers             |
+| Metadata Pointer       | On-chain metadata                     |
+| Confidential Transfers | Private balances                      |
+| Default Account State  | Frozen by default                     |
 
 ## Quick Start
 
@@ -119,7 +119,7 @@ const token = await createToken2022({
     {
       type: 'transferHook',
       programId: hookProgramId,
-      authority: authority,
+      authority,
     },
   ],
 })
@@ -136,7 +136,7 @@ const token = await createToken2022({
     {
       type: 'metadataPointer',
       metadataAddress: metadataAccount,
-      authority: authority,
+      authority,
     },
   ],
 })

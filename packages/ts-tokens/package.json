@@ -59,16 +59,17 @@
     "test": "bun test",
     "typecheck": "bun --bun tsc --noEmit"
   },
+  "peerDependencies": {
+    "bunfig": "^0.5.0"
+  },
   "dependencies": {
+    "@solana/spl-token": "^0.4.0",
     "@solana/web3.js": "^1.95.0",
-    "@solana/spl-token": "^0.4.0"
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "better-dx": "^0.2.5"
-  },
-  "peerDependencies": {
-    "bunfig": "^0.5.0"
   },
   "lint-staged": {
     "*.{js,ts}": "bunx --bun eslint --flag unstable_ts_config . --fix"

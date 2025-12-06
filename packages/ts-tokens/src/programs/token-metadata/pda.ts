@@ -18,7 +18,7 @@ export function findMetadataPda(mint: PublicKey): [PublicKey, number] {
       TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
 }
 
@@ -33,7 +33,7 @@ export function findMasterEditionPda(mint: PublicKey): [PublicKey, number] {
       mint.toBuffer(),
       Buffer.from(EDITION_PREFIX),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
 }
 
@@ -57,7 +57,7 @@ export function findEditionMarkerPda(mint: PublicKey, edition: bigint): [PublicK
       Buffer.from(EDITION_PREFIX),
       Buffer.from(editionNumber.toString()),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
 }
 
@@ -66,7 +66,7 @@ export function findEditionMarkerPda(mint: PublicKey, edition: bigint): [PublicK
  */
 export function findCollectionAuthorityPda(
   mint: PublicKey,
-  authority: PublicKey
+  authority: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [
@@ -76,7 +76,7 @@ export function findCollectionAuthorityPda(
       Buffer.from('collection_authority'),
       authority.toBuffer(),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
 }
 
@@ -85,7 +85,7 @@ export function findCollectionAuthorityPda(
  */
 export function findUseAuthorityPda(
   mint: PublicKey,
-  authority: PublicKey
+  authority: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [
@@ -95,7 +95,7 @@ export function findUseAuthorityPda(
       Buffer.from('user'),
       authority.toBuffer(),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
 }
 
@@ -104,7 +104,7 @@ export function findUseAuthorityPda(
  */
 export function findTokenRecordPda(
   mint: PublicKey,
-  token: PublicKey
+  token: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [
@@ -114,6 +114,6 @@ export function findTokenRecordPda(
       Buffer.from('token_record'),
       token.toBuffer(),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
 }

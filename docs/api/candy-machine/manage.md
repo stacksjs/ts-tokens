@@ -19,7 +19,7 @@ console.log('Items Remaining:', cm.itemsAvailable - cm.itemsRedeemed)
 ## Update Candy Machine
 
 ```typescript
-import { updateCandyMachine, getConfig } from 'ts-tokens'
+import { getConfig, updateCandyMachine } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -32,13 +32,13 @@ await updateCandyMachine('CANDY_MACHINE_ADDRESS', {
 
 ### Updatable Fields
 
-| Field | Description |
-|-------|-------------|
-| `symbol` | NFT symbol |
-| `sellerFeeBasisPoints` | Royalty percentage |
-| `isMutable` | Allow metadata updates |
-| `creators` | Creator list |
-| `hiddenSettings` | Hidden/reveal settings |
+| Field                  | Description            |
+| ---------------------- | ---------------------- |
+| `symbol`               | NFT symbol             |
+| `sellerFeeBasisPoints` | Royalty percentage     |
+| `isMutable`            | Allow metadata updates |
+| `creators`             | Creator list           |
+| `hiddenSettings`       | Hidden/reveal settings |
 
 ## Add Config Lines
 
@@ -66,7 +66,7 @@ await addConfigLines(
 Withdraw SOL from the Candy Machine:
 
 ```typescript
-import { withdrawFromCandyMachine, getConfig } from 'ts-tokens'
+import { getConfig, withdrawFromCandyMachine } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -83,7 +83,7 @@ console.log('Withdrawn! Signature:', result.signature)
 Transfer Candy Machine authority to another wallet:
 
 ```typescript
-import { setCandyMachineAuthority, getConfig } from 'ts-tokens'
+import { getConfig, setCandyMachineAuthority } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -113,7 +113,7 @@ await deleteCandyMachine('CANDY_MACHINE_ADDRESS', config)
 After minting completes, reveal the NFTs:
 
 ```typescript
-import { revealCandyMachine, getConfig } from 'ts-tokens'
+import { getConfig, revealCandyMachine } from 'ts-tokens'
 
 const config = await getConfig()
 

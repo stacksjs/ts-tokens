@@ -2,13 +2,14 @@
  * Treasury Creation
  */
 
-import { Connection, PublicKey, Keypair } from '@solana/web3.js'
+import type { Connection } from '@solana/web3.js'
 import type {
-  Treasury,
   CreateTreasuryOptions,
+  Treasury,
   TreasuryBalance,
   TreasuryStats,
 } from './types'
+import { Keypair, PublicKey } from '@solana/web3.js'
 
 /**
  * Create a new treasury for a DAO
@@ -16,8 +17,8 @@ import type {
 export async function createTreasury(
   connection: Connection,
   payer: PublicKey,
-  options: CreateTreasuryOptions
-): Promise<{ address: PublicKey; signature: string }> {
+  options: CreateTreasuryOptions,
+): Promise<{ address: PublicKey, signature: string }> {
   const treasuryKeypair = Keypair.generate()
 
   // In production, would:
@@ -36,7 +37,7 @@ export async function createTreasury(
  */
 export async function getTreasury(
   connection: Connection,
-  address: PublicKey
+  address: PublicKey,
 ): Promise<Treasury | null> {
   // In production, would fetch and parse treasury account
   return null
@@ -47,7 +48,7 @@ export async function getTreasury(
  */
 export async function getTreasuryBalances(
   connection: Connection,
-  treasury: PublicKey
+  treasury: PublicKey,
 ): Promise<TreasuryBalance[]> {
   // In production, would fetch all token accounts owned by treasury
   return []
@@ -59,7 +60,7 @@ export async function getTreasuryBalances(
 export async function getTreasuryBalance(
   connection: Connection,
   treasury: PublicKey,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<TreasuryBalance | null> {
   const balances = await getTreasuryBalances(connection, treasury)
   return balances.find(b => b.mint.equals(mint)) ?? null
@@ -70,7 +71,7 @@ export async function getTreasuryBalance(
  */
 export async function getTreasuryStats(
   connection: Connection,
-  treasury: PublicKey
+  treasury: PublicKey,
 ): Promise<TreasuryStats> {
   // In production, would calculate from transaction history
   return {
@@ -87,7 +88,7 @@ export async function getTreasuryStats(
  */
 export async function isTreasury(
   connection: Connection,
-  address: PublicKey
+  address: PublicKey,
 ): Promise<boolean> {
   const treasury = await getTreasury(connection, address)
   return treasury !== null
@@ -98,7 +99,7 @@ export async function isTreasury(
  */
 export async function getTreasuryByDAO(
   connection: Connection,
-  dao: PublicKey
+  dao: PublicKey,
 ): Promise<Treasury | null> {
   // In production, would derive treasury PDA from DAO
   return null
@@ -109,11 +110,11 @@ export async function getTreasuryByDAO(
  */
 export function deriveTreasuryAddress(
   dao: PublicKey,
-  programId: PublicKey
+  programId: PublicKey,
 ): PublicKey {
   const [treasury] = PublicKey.findProgramAddressSync(
     [Buffer.from('treasury'), dao.toBuffer()],
-    programId
+    programId,
   )
   return treasury
 }
@@ -131,7 +132,7 @@ export function formatTreasury(treasury: Treasury): string {
   ]
 
   for (const balance of treasury.balances) {
-    const amount = Number(balance.amount) / Math.pow(10, balance.decimals)
+    const amount = Number(balance.amount) / 10 ** balance.decimals
     lines.push(`  ${balance.mint.toBase58().slice(0, 8)}...: ${amount.toLocaleString()}`)
   }
 

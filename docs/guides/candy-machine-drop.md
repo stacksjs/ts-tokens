@@ -49,7 +49,7 @@ Metadata format:
 ## Step 2: Upload Assets
 
 ```typescript
-import { uploadAssets, getConfig } from 'ts-tokens'
+import { getConfig, uploadAssets } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -118,7 +118,7 @@ await addConfigLines(
 Guards control who can mint and when:
 
 ```typescript
-import { setCandyGuard, getConfig } from 'ts-tokens'
+import { getConfig, setCandyGuard } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -145,7 +145,7 @@ await setCandyGuard('CANDY_MACHINE_ADDRESS', {
 ## Step 6: Mint from Candy Machine
 
 ```typescript
-import { mintFromCandyMachine, getConfig } from 'ts-tokens'
+import { getConfig, mintFromCandyMachine } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -180,17 +180,17 @@ tokens cm:mint <candy-machine>
 
 ## Guard Types
 
-| Guard | Description |
-|-------|-------------|
-| `solPayment` | Require SOL payment |
-| `tokenPayment` | Require SPL token payment |
-| `startDate` | Minting starts at date |
-| `endDate` | Minting ends at date |
-| `mintLimit` | Max mints per wallet |
-| `allowList` | Merkle tree allowlist |
-| `nftGate` | Require NFT ownership |
-| `tokenGate` | Require token ownership |
-| `redeemedAmount` | Max total mints |
+| Guard            | Description               |
+| ---------------- | ------------------------- |
+| `solPayment`     | Require SOL payment       |
+| `tokenPayment`   | Require SPL token payment |
+| `startDate`      | Minting starts at date    |
+| `endDate`        | Minting ends at date      |
+| `mintLimit`      | Max mints per wallet      |
+| `allowList`      | Merkle tree allowlist     |
+| `nftGate`        | Require NFT ownership     |
+| `tokenGate`      | Require token ownership   |
+| `redeemedAmount` | Max total mints           |
 
 ## Hidden Settings (Reveal)
 
@@ -212,7 +212,7 @@ After mint completes, reveal by updating metadata.
 ## Withdraw Funds
 
 ```typescript
-import { withdrawFromCandyMachine, getConfig } from 'ts-tokens'
+import { getConfig, withdrawFromCandyMachine } from 'ts-tokens'
 
 const config = await getConfig()
 

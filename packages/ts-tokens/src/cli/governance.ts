@@ -186,8 +186,10 @@ function formatDuration(seconds: bigint): string {
   const days = Number(seconds / 86400n)
   const hours = Number((seconds % 86400n) / 3600n)
 
-  if (days > 0) return `${days} day${days > 1 ? 's' : ''}`
-  if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''}`
+  if (days > 0)
+    return `${days} day${days > 1 ? 's' : ''}`
+  if (hours > 0)
+    return `${hours} hour${hours > 1 ? 's' : ''}`
   return `${seconds} seconds`
 }
 
@@ -203,9 +205,12 @@ function formatTimestamp(timestamp: bigint): string {
  */
 export function parseVoteType(vote: string): 'for' | 'against' | 'abstain' {
   const normalized = vote.toLowerCase()
-  if (normalized === 'for' || normalized === 'yes' || normalized === 'y') return 'for'
-  if (normalized === 'against' || normalized === 'no' || normalized === 'n') return 'against'
-  if (normalized === 'abstain' || normalized === 'skip') return 'abstain'
+  if (normalized === 'for' || normalized === 'yes' || normalized === 'y')
+    return 'for'
+  if (normalized === 'against' || normalized === 'no' || normalized === 'n')
+    return 'against'
+  if (normalized === 'abstain' || normalized === 'skip')
+    return 'abstain'
   throw new Error(`Invalid vote type: ${vote}. Use 'for', 'against', or 'abstain'`)
 }
 
@@ -215,7 +220,8 @@ export function parseVoteType(vote: string): 'for' | 'against' | 'abstain' {
 export function validateDAOAddress(address: string): PublicKey {
   try {
     return new PublicKey(address)
-  } catch {
+  }
+  catch {
     throw new Error(`Invalid DAO address: ${address}`)
   }
 }

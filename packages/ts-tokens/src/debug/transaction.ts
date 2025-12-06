@@ -2,13 +2,12 @@
  * Transaction Debugging
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
-  TransactionAnalysis,
   AccountChange,
-  InstructionInfo,
   DebugOptions,
-  KNOWN_PROGRAMS,
+  InstructionInfo,
+  TransactionAnalysis,
 } from './types'
 
 /**
@@ -17,7 +16,7 @@ import type {
 export async function analyzeTransaction(
   connection: Connection,
   signature: string,
-  options: DebugOptions = {}
+  options: DebugOptions = {},
 ): Promise<TransactionAnalysis> {
   const tx = await connection.getTransaction(signature, {
     maxSupportedTransactionVersion: 0,
@@ -152,7 +151,7 @@ export function formatTransactionAnalysis(analysis: TransactionAnalysis): string
 export async function getTransactionHistory(
   connection: Connection,
   address: PublicKey,
-  limit: number = 10
+  limit: number = 10,
 ): Promise<TransactionAnalysis[]> {
   const signatures = await connection.getSignaturesForAddress(address, { limit })
 
@@ -161,7 +160,8 @@ export async function getTransactionHistory(
     try {
       const analysis = await analyzeTransaction(connection, sig.signature)
       analyses.push(analysis)
-    } catch {
+    }
+    catch {
       // Skip failed fetches
     }
   }
@@ -174,13 +174,13 @@ export async function getTransactionHistory(
  */
 export function compareTransactions(
   tx1: TransactionAnalysis,
-  tx2: TransactionAnalysis
+  tx2: TransactionAnalysis,
 ): {
   feeDiff: number
   computeDiff: number
-  accountDiffs: Array<{ address: string; diff1: bigint; diff2: bigint }>
+  accountDiffs: Array<{ address: string, diff1: bigint, diff2: bigint }>
 } {
-  const accountDiffs: Array<{ address: string; diff1: bigint; diff2: bigint }> = []
+  const accountDiffs: Array<{ address: string, diff1: bigint, diff2: bigint }> = []
 
   const tx1Accounts = new Map(tx1.accounts.map(a => [a.address.toBase58(), a.change]))
   const tx2Accounts = new Map(tx2.accounts.map(a => [a.address.toBase58(), a.change]))

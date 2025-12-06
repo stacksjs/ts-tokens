@@ -4,9 +4,9 @@
  * Fetch Candy Machine state and info.
  */
 
-import { useState, useEffect, useCallback } from 'react'
-import { useConnection, useConfig } from '../context'
 import type { CandyMachineDisplayInfo } from '../types'
+import { useCallback, useEffect, useState } from 'react'
+import { useConfig, useConnection } from '../context'
 
 /**
  * Candy Machine state
@@ -58,9 +58,11 @@ export function useCandyMachine(address: string): CandyMachineState {
         isActive: true,
         isSoldOut: itemsMinted >= itemsAvailable,
       })
-    } catch (err) {
+    }
+    catch (err) {
       setError(err as Error)
-    } finally {
+    }
+    finally {
       setLoading(false)
     }
   }, [connection, address])

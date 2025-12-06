@@ -4,17 +4,17 @@
  * Mint compressed NFTs to Merkle trees.
  */
 
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
+import type {
   TransactionInstruction,
 } from '@solana/web3.js'
-import type { TokenConfig, TransactionResult, TransactionOptions } from '../../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../../drivers/solana/transaction'
-import { loadWallet } from '../../drivers/solana/wallet'
+import type { TokenConfig, TransactionOptions } from '../../types'
+import {
+  PublicKey,
+  SystemProgram,
+} from '@solana/web3.js'
 import { createConnection } from '../../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../../drivers/solana/transaction'
+import { loadWallet } from '../../drivers/solana/wallet'
 
 /**
  * Bubblegum Program ID
@@ -44,8 +44,8 @@ export interface CompressedNFTMetadata {
   symbol: string
   uri: string
   sellerFeeBasisPoints: number
-  creators?: Array<{ address: string; verified: boolean; share: number }>
-  collection?: { key: string; verified: boolean }
+  creators?: Array<{ address: string, verified: boolean, share: number }>
+  collection?: { key: string, verified: boolean }
   isMutable?: boolean
 }
 
@@ -74,7 +74,7 @@ export interface CompressedNFTResult {
  */
 export async function mintCompressedNFT(
   mintOptions: MintCompressedNFTOptions,
-  tokenConfig: TokenConfig
+  tokenConfig: TokenConfig,
 ): Promise<CompressedNFTResult> {
   const connection = createConnection(tokenConfig)
   const payer = loadWallet(tokenConfig)
@@ -90,13 +90,13 @@ export async function mintCompressedNFT(
   // Get tree authority PDA
   const [treeAuthority] = PublicKey.findProgramAddressSync(
     [treePubkey.toBuffer()],
-    BUBBLEGUM_PROGRAM_ID
+    BUBBLEGUM_PROGRAM_ID,
   )
 
   // Get bubblegum signer PDA
   const [bubblegumSigner] = PublicKey.findProgramAddressSync(
     [Buffer.from('collection_cpi')],
-    BUBBLEGUM_PROGRAM_ID
+    BUBBLEGUM_PROGRAM_ID,
   )
 
   // Serialize metadata
@@ -128,7 +128,7 @@ export async function mintCompressedNFT(
         TOKEN_METADATA_PROGRAM_ID.toBuffer(),
         collectionMint.toBuffer(),
       ],
-      TOKEN_METADATA_PROGRAM_ID
+      TOKEN_METADATA_PROGRAM_ID,
     )
     const [collectionEdition] = PublicKey.findProgramAddressSync(
       [
@@ -137,7 +137,7 @@ export async function mintCompressedNFT(
         collectionMint.toBuffer(),
         Buffer.from('edition'),
       ],
-      TOKEN_METADATA_PROGRAM_ID
+      TOKEN_METADATA_PROGRAM_ID,
     )
 
     keys.push(
@@ -145,7 +145,7 @@ export async function mintCompressedNFT(
       { pubkey: collectionMint, isSigner: false, isWritable: false },
       { pubkey: collectionEdition, isSigner: false, isWritable: false },
       { pubkey: bubblegumSigner, isSigner: false, isWritable: false },
-      { pubkey: TOKEN_METADATA_PROGRAM_ID, isSigner: false, isWritable: false }
+      { pubkey: TOKEN_METADATA_PROGRAM_ID, isSigner: false, isWritable: false },
     )
   }
 
@@ -160,7 +160,7 @@ export async function mintCompressedNFT(
     connection,
     [instruction],
     payer.publicKey,
-    mintOptions.options
+    mintOptions.options,
   )
 
   transaction.partialSign(payer)
@@ -188,8 +188,8 @@ export async function mintCompressedNFTBatch(
   tree: string,
   items: CompressedNFTMetadata[],
   tokenConfig: TokenConfig,
-  options?: TransactionOptions
-): Promise<{ signatures: string[]; count: number }> {
+  options?: TransactionOptions,
+): Promise<{ signatures: string[], count: number }> {
   const signatures: string[] = []
 
   // Mint in batches to avoid transaction size limits
@@ -201,7 +201,7 @@ export async function mintCompressedNFTBatch(
     for (const metadata of batch) {
       const result = await mintCompressedNFT(
         { tree, metadata, options },
-        tokenConfig
+        tokenConfig,
       )
       signatures.push(result.signature)
     }
@@ -223,7 +223,7 @@ async function getAssetId(tree: PublicKey, leafIndex: number): Promise<PublicKey
       tree.toBuffer(),
       Buffer.from(new Uint8Array(new BigUint64Array([BigInt(leafIndex)]).buffer)),
     ],
-    BUBBLEGUM_PROGRAM_ID
+    BUBBLEGUM_PROGRAM_ID,
   )
   return assetId
 }
@@ -237,18 +237,18 @@ function serializeMetadataArgs(metadata: CompressedNFTMetadata): Buffer {
   const uriBytes = Buffer.from(metadata.uri.slice(0, 200))
 
   // Calculate size
-  let size = 4 + nameBytes.length +
-    4 + symbolBytes.length +
-    4 + uriBytes.length +
-    2 + // seller fee
-    1 + // primary sale happened
-    1 + // is mutable
-    1 + // edition nonce option
-    1 + // token standard option
-    1 + // collection option
-    1 + // uses option
-    1 + // token program version
-    1   // creators option
+  let size = 4 + nameBytes.length
+    + 4 + symbolBytes.length
+    + 4 + uriBytes.length
+    + 2 // seller fee
+    + 1 // primary sale happened
+    + 1 // is mutable
+    + 1 // edition nonce option
+    + 1 // token standard option
+    + 1 // collection option
+    + 1 // uses option
+    + 1 // token program version
+    + 1 // creators option
 
   if (metadata.creators) {
     size += 4 + metadata.creators.length * 34
@@ -306,7 +306,8 @@ function serializeMetadataArgs(metadata: CompressedNFTMetadata): Buffer {
     offset += 32
     buffer.writeUInt8(metadata.collection.verified ? 1 : 0, offset)
     offset += 1
-  } else {
+  }
+  else {
     buffer.writeUInt8(0, offset) // None
     offset += 1
   }
@@ -333,7 +334,8 @@ function serializeMetadataArgs(metadata: CompressedNFTMetadata): Buffer {
       buffer.writeUInt8(creator.share, offset)
       offset += 1
     }
-  } else {
+  }
+  else {
     buffer.writeUInt8(0, offset) // None
     offset += 1
   }

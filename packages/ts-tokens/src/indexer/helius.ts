@@ -4,7 +4,6 @@
  * Helius DAS API and enhanced RPC.
  */
 
-import { PublicKey } from '@solana/web3.js'
 import type {
   DASAsset,
   DASSearchOptions,
@@ -67,7 +66,7 @@ export class HeliusClient {
    */
   async getAssetsByOwner(
     owner: string,
-    options: { page?: number; limit?: number; sortBy?: object; before?: string; after?: string } = {}
+    options: { page?: number, limit?: number, sortBy?: object, before?: string, after?: string } = {},
   ): Promise<DASSearchResult> {
     return this.rpc('getAssetsByOwner', [{
       ownerAddress: owner,
@@ -85,7 +84,7 @@ export class HeliusClient {
   async getAssetsByGroup(
     groupKey: string,
     groupValue: string,
-    options: { page?: number; limit?: number; sortBy?: object } = {}
+    options: { page?: number, limit?: number, sortBy?: object } = {},
   ): Promise<DASSearchResult> {
     return this.rpc('getAssetsByGroup', [{
       groupKey,
@@ -101,7 +100,7 @@ export class HeliusClient {
    */
   async getAssetsByCreator(
     creator: string,
-    options: { onlyVerified?: boolean; page?: number; limit?: number } = {}
+    options: { onlyVerified?: boolean, page?: number, limit?: number } = {},
   ): Promise<DASSearchResult> {
     return this.rpc('getAssetsByCreator', [{
       creatorAddress: creator,
@@ -149,15 +148,19 @@ export class HeliusClient {
    */
   async getTransactionHistory(
     address: string,
-    options: { before?: string; until?: string; limit?: number; type?: string } = {}
+    options: { before?: string, until?: string, limit?: number, type?: string } = {},
   ): Promise<TransactionHistoryItem[]> {
     const apiUrl = `https://api.helius.xyz/v0/addresses/${address}/transactions?api-key=${this.apiKey}`
 
     const params = new URLSearchParams()
-    if (options.before) params.set('before', options.before)
-    if (options.until) params.set('until', options.until)
-    if (options.limit) params.set('limit', options.limit.toString())
-    if (options.type) params.set('type', options.type)
+    if (options.before)
+      params.set('before', options.before)
+    if (options.until)
+      params.set('until', options.until)
+    if (options.limit)
+      params.set('limit', options.limit.toString())
+    if (options.type)
+      params.set('type', options.type)
 
     const response = await fetch(`${apiUrl}&${params}`)
 
@@ -193,7 +196,7 @@ export class HeliusClient {
    */
   async getNFTEvents(
     accounts: string[],
-    options: { types?: string[]; startSlot?: number; endSlot?: number; limit?: number } = {}
+    options: { types?: string[], startSlot?: number, endSlot?: number, limit?: number } = {},
   ): Promise<TransactionHistoryItem[]> {
     const apiUrl = `https://api.helius.xyz/v1/nft-events?api-key=${this.apiKey}`
 
@@ -281,7 +284,7 @@ export class HeliusClient {
  */
 export function createHeliusClient(
   apiKey: string,
-  cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta'
+  cluster: 'mainnet-beta' | 'devnet' = 'mainnet-beta',
 ): HeliusClient {
   return new HeliusClient(apiKey, cluster)
 }

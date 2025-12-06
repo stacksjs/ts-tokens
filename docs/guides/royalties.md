@@ -15,11 +15,11 @@ Royalties are fees paid to creators when NFTs are resold on secondary markets. O
 ### Basis Points
 
 | Basis Points | Percentage |
-|--------------|------------|
-| 100 | 1% |
-| 250 | 2.5% |
-| 500 | 5% |
-| 1000 | 10% |
+| ------------ | ---------- |
+| 100          | 1%         |
+| 250          | 2.5%       |
+| 500          | 5%         |
+| 1000         | 10%        |
 
 ### Single Creator
 
@@ -46,9 +46,9 @@ const nft = await createNFT({
   uri: 'https://...',
   sellerFeeBasisPoints: 1000, // 10% total royalty
   creators: [
-    { address: 'Artist...', share: 70 },      // Gets 7%
-    { address: 'Developer...', share: 20 },   // Gets 2%
-    { address: 'Marketer...', share: 10 },    // Gets 1%
+    { address: 'Artist...', share: 70 }, // Gets 7%
+    { address: 'Developer...', share: 20 }, // Gets 2%
+    { address: 'Marketer...', share: 10 }, // Gets 1%
   ],
 }, config)
 ```
@@ -78,7 +78,7 @@ function calculateRoyalty(
 Creators must verify their address to receive royalties:
 
 ```typescript
-import { verifyCreator, getConfig } from 'ts-tokens'
+import { getConfig, verifyCreator } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -97,7 +97,7 @@ tokens nft:verify-creator <mint>
 If the NFT is mutable, you can update royalties:
 
 ```typescript
-import { updateNFTMetadata, getConfig } from 'ts-tokens'
+import { getConfig, updateNFTMetadata } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -161,10 +161,10 @@ const nft = await createProgrammableNFT({
 Major marketplaces and their royalty policies:
 
 | Marketplace | Enforced | Optional |
-|-------------|----------|----------|
-| Magic Eden | ✓ | - |
-| Tensor | - | ✓ |
-| OpenSea | ✓ | - |
+| ----------- | -------- | -------- |
+| Magic Eden  | ✓        | -        |
+| Tensor      | -        | ✓        |
+| OpenSea     | ✓        | -        |
 
 ## Tax Considerations
 

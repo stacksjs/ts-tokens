@@ -2,15 +2,15 @@
  * Price History Analytics
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
-import type { PriceHistory, PricePoint, TokenMetrics, CollectionMetrics, ExportOptions } from './types'
+import type { Connection, PublicKey } from '@solana/web3.js'
+import type { CollectionMetrics, ExportOptions, PriceHistory, PricePoint, TokenMetrics } from './types'
 
 /**
  * Get price history for a token
  */
 export async function getPriceHistory(
   mint: PublicKey,
-  period: '1h' | '24h' | '7d' | '30d' | '90d' | '1y' | 'all' = '7d'
+  period: '1h' | '24h' | '7d' | '30d' | '90d' | '1y' | 'all' = '7d',
 ): Promise<PriceHistory> {
   // In production, would fetch from price API (Jupiter, Birdeye, etc.)
   // This is a placeholder showing the structure
@@ -83,7 +83,7 @@ export async function getPriceHistory(
  */
 export async function getTokenMetrics(
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<TokenMetrics> {
   // Get supply info
   const supplyInfo = await connection.getTokenSupply(mint)
@@ -111,7 +111,7 @@ export async function getTokenMetrics(
  * Get NFT collection metrics
  */
 export async function getCollectionMetrics(
-  collection: PublicKey
+  collection: PublicKey,
 ): Promise<CollectionMetrics> {
   // In production, would fetch from marketplace APIs
   return {
@@ -136,7 +136,7 @@ export async function getCollectionMetrics(
  */
 export function calculateMovingAverage(
   dataPoints: PricePoint[],
-  period: number
+  period: number,
 ): number[] {
   const result: number[] = []
 
@@ -181,7 +181,8 @@ export function calculateRSI(dataPoints: PricePoint[], period: number = 14): num
 
     if (avgLoss === 0) {
       result.push(100)
-    } else {
+    }
+    else {
       const rs = avgGain / avgLoss
       result.push(100 - 100 / (1 + rs))
     }
@@ -194,9 +195,10 @@ export function calculateRSI(dataPoints: PricePoint[], period: number = 14): num
  * Detect price trends
  */
 export function detectTrend(
-  dataPoints: PricePoint[]
+  dataPoints: PricePoint[],
 ): 'bullish' | 'bearish' | 'neutral' {
-  if (dataPoints.length < 2) return 'neutral'
+  if (dataPoints.length < 2)
+    return 'neutral'
 
   const prices = dataPoints.map(p => p.price)
   const firstHalf = prices.slice(0, Math.floor(prices.length / 2))
@@ -207,8 +209,10 @@ export function detectTrend(
 
   const change = (secondAvg - firstAvg) / firstAvg
 
-  if (change > 0.05) return 'bullish'
-  if (change < -0.05) return 'bearish'
+  if (change > 0.05)
+    return 'bullish'
+  if (change < -0.05)
+    return 'bearish'
   return 'neutral'
 }
 
@@ -234,7 +238,7 @@ export function formatPriceHistory(history: PriceHistory): string {
 export function exportPriceHistoryToCSV(history: PriceHistory): string {
   const headers = 'Timestamp,DateTime,Open,High,Low,Close,Volume'
   const rows = history.dataPoints.map(p =>
-    `${p.timestamp},${new Date(p.timestamp).toISOString()},${p.open},${p.high},${p.low},${p.close},${p.volume}`
+    `${p.timestamp},${new Date(p.timestamp).toISOString()},${p.open},${p.high},${p.low},${p.close},${p.volume}`,
   )
 
   return [headers, ...rows].join('\n')
@@ -245,18 +249,19 @@ export function exportPriceHistoryToCSV(history: PriceHistory): string {
  */
 export function exportData<T extends Record<string, unknown>>(
   data: T[],
-  options: ExportOptions
+  options: ExportOptions,
 ): string {
   if (options.format === 'json') {
     return JSON.stringify(data, null, 2)
   }
 
   if (options.format === 'csv') {
-    if (data.length === 0) return ''
+    if (data.length === 0)
+      return ''
 
     const headers = Object.keys(data[0])
     const rows = data.map(row =>
-      headers.map(h => String(row[h] ?? '')).join(',')
+      headers.map(h => String(row[h] ?? '')).join(','),
     )
 
     if (options.includeHeaders !== false) {

@@ -13,14 +13,18 @@ const url = computed(() => {
   const baseUrl = 'https://explorer.solana.com'
   const clusterParam = props.cluster === 'mainnet-beta' ? '' : `?cluster=${props.cluster}`
 
-  if (props.signature) return `${baseUrl}/tx/${props.signature}${clusterParam}`
-  if (props.address) return `${baseUrl}/address/${props.address}${clusterParam}`
+  if (props.signature)
+    return `${baseUrl}/tx/${props.signature}${clusterParam}`
+  if (props.address)
+    return `${baseUrl}/address/${props.address}${clusterParam}`
   return '#'
 })
 
 const label = computed(() => {
-  if (props.signature) return props.signature.slice(0, 8) + '...'
-  if (props.address) return props.address.slice(0, 8) + '...'
+  if (props.signature)
+    return `${props.signature.slice(0, 8)}...`
+  if (props.address)
+    return `${props.address.slice(0, 8)}...`
   return 'View'
 })
 </script>

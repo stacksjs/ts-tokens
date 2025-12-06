@@ -4,10 +4,9 @@
  * Solana-native decentralized storage using GenesysGo Shadow Drive.
  */
 
-import { Connection, PublicKey, Transaction } from '@solana/web3.js'
-import type { StorageAdapter, UploadResult, UploadOptions, BatchUploadResult, TokenConfig } from '../types'
-import { loadWallet } from '../drivers/solana/wallet'
+import type { BatchUploadResult, StorageAdapter, TokenConfig, UploadOptions, UploadResult } from '../types'
 import { createConnection } from '../drivers/solana/connection'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Shadow Drive configuration
@@ -49,7 +48,7 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
    */
   async upload(
     data: Uint8Array | string,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<UploadResult> {
     if (!this.config.storageAccount) {
       throw new Error('Shadow Drive requires a storage account. Set storageAccount in config.')
@@ -120,17 +119,18 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
    * Upload multiple files
    */
   async uploadBatch(
-    files: Array<{ path: string; name?: string }>,
-    options?: UploadOptions
+    files: Array<{ path: string, name?: string }>,
+    options?: UploadOptions,
   ): Promise<BatchUploadResult> {
     const results: UploadResult[] = []
-    const failed: Array<{ file: string; error: string }> = []
+    const failed: Array<{ file: string, error: string }> = []
 
     for (const file of files) {
       try {
         const result = await this.uploadFile(file.path, options)
         results.push(result)
-      } catch (error) {
+      }
+      catch (error) {
         failed.push({
           file: file.path,
           error: error instanceof Error ? error.message : String(error),
@@ -146,7 +146,7 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
    */
   async uploadJson(
     data: Record<string, unknown>,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<UploadResult> {
     const json = JSON.stringify(data)
     return this.upload(json, {
@@ -187,7 +187,8 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
     try {
       const response = await fetch(url, { method: 'HEAD' })
       return response.ok
-    } catch {
+    }
+    catch {
       return false
     }
   }
@@ -211,7 +212,7 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
   async createStorageAccount(
     name: string,
     size: number, // Size in bytes
-    config: TokenConfig
+    config: TokenConfig,
   ): Promise<string> {
     const wallet = loadWallet(config)
     const connection = createConnection(config)
@@ -219,8 +220,8 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
     // This would require the actual Shadow Drive program interaction
     // For now, throw an informative error
     throw new Error(
-      'Storage account creation requires Shadow Drive SDK integration. ' +
-      'Create an account at https://portal.genesysgo.net and set storageAccount in config.'
+      'Storage account creation requires Shadow Drive SDK integration. '
+      + 'Create an account at https://portal.genesysgo.net and set storageAccount in config.',
     )
   }
 

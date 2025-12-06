@@ -4,7 +4,7 @@
  * Direct IPFS HTTP API implementation without external SDKs.
  */
 
-import type { StorageAdapter, UploadResult, UploadOptions, UploadProgress, BatchUploadResult } from '../types'
+import type { BatchUploadResult, StorageAdapter, UploadOptions, UploadResult } from '../types'
 
 /**
  * IPFS configuration
@@ -44,7 +44,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
    */
   async upload(
     data: Uint8Array | string,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<UploadResult> {
     const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
     const contentType = options?.contentType || 'application/octet-stream'
@@ -53,12 +53,14 @@ export class IPFSStorageAdapter implements StorageAdapter {
 
     if (this.config.pinningService) {
       cid = await this.uploadViaPinningService(bytes, contentType, options)
-    } else if (this.config.apiEndpoint) {
+    }
+    else if (this.config.apiEndpoint) {
       cid = await this.uploadViaLocalNode(bytes, options)
-    } else {
+    }
+    else {
       throw new Error(
-        'IPFS upload requires either a pinning service or local node API endpoint. ' +
-        'Set pinningService and pinningApiKey, or set apiEndpoint.'
+        'IPFS upload requires either a pinning service or local node API endpoint. '
+        + 'Set pinningService and pinningApiKey, or set apiEndpoint.',
       )
     }
 
@@ -77,7 +79,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
   private async uploadViaPinningService(
     data: Uint8Array,
     contentType: string,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<string> {
     switch (this.config.pinningService) {
       case 'pinata':
@@ -99,7 +101,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
   private async uploadToPinata(
     data: Uint8Array,
     contentType: string,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<string> {
     if (!this.config.pinningApiKey) {
       throw new Error('Pinata requires pinningApiKey (JWT token)')
@@ -140,7 +142,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
   private async uploadToNFTStorage(
     data: Uint8Array,
     contentType: string,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<string> {
     if (!this.config.pinningApiKey) {
       throw new Error('NFT.Storage requires pinningApiKey')
@@ -149,7 +151,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
     const response = await fetch('https://api.nft.storage/upload', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${this.config.pinningApiKey}`,
+        'Authorization': `Bearer ${this.config.pinningApiKey}`,
         'Content-Type': contentType,
       },
       body: data,
@@ -171,7 +173,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
   private async uploadToWeb3Storage(
     data: Uint8Array,
     contentType: string,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<string> {
     if (!this.config.pinningApiKey) {
       throw new Error('Web3.Storage requires pinningApiKey')
@@ -180,7 +182,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
     const response = await fetch('https://api.web3.storage/upload', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${this.config.pinningApiKey}`,
+        'Authorization': `Bearer ${this.config.pinningApiKey}`,
         'X-Content-Type': contentType,
       },
       body: data,
@@ -202,7 +204,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
   private async uploadToInfura(
     data: Uint8Array,
     contentType: string,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<string> {
     if (!this.config.pinningApiKey || !this.config.pinningSecret) {
       throw new Error('Infura requires both pinningApiKey (project ID) and pinningSecret')
@@ -237,7 +239,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
    */
   private async uploadViaLocalNode(
     data: Uint8Array,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<string> {
     const formData = new FormData()
     const blob = new Blob([data])
@@ -276,17 +278,18 @@ export class IPFSStorageAdapter implements StorageAdapter {
    * Upload multiple files
    */
   async uploadBatch(
-    files: Array<{ path: string; name?: string }>,
-    options?: UploadOptions
+    files: Array<{ path: string, name?: string }>,
+    options?: UploadOptions,
   ): Promise<BatchUploadResult> {
     const results: UploadResult[] = []
-    const failed: Array<{ file: string; error: string }> = []
+    const failed: Array<{ file: string, error: string }> = []
 
     for (const file of files) {
       try {
         const result = await this.uploadFile(file.path, options)
         results.push(result)
-      } catch (error) {
+      }
+      catch (error) {
         failed.push({
           file: file.path,
           error: error instanceof Error ? error.message : String(error),
@@ -302,7 +305,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
    */
   async uploadJson(
     data: Record<string, unknown>,
-    options?: UploadOptions
+    options?: UploadOptions,
   ): Promise<UploadResult> {
     const json = JSON.stringify(data)
     return this.upload(json, {
@@ -346,7 +349,8 @@ export class IPFSStorageAdapter implements StorageAdapter {
         signal: AbortSignal.timeout(5000),
       })
       return response.ok
-    } catch {
+    }
+    catch {
       return false
     }
   }

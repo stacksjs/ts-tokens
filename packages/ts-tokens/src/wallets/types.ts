@@ -2,22 +2,22 @@
  * Wallet Types
  */
 
-import type { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js'
+import type { PublicKey, Transaction } from '@solana/web3.js'
 
 /**
  * Supported wallet types
  */
-export type WalletType =
-  | 'phantom'
-  | 'solflare'
-  | 'backpack'
-  | 'ledger'
-  | 'trezor'
-  | 'coinbase'
-  | 'trust'
-  | 'exodus'
-  | 'brave'
-  | 'glow'
+export type WalletType
+  = | 'phantom'
+    | 'solflare'
+    | 'backpack'
+    | 'ledger'
+    | 'trezor'
+    | 'coinbase'
+    | 'trust'
+    | 'exodus'
+    | 'brave'
+    | 'glow'
 
 /**
  * Wallet adapter interface
@@ -30,11 +30,11 @@ export interface WalletAdapter {
   connected: boolean
   publicKey: PublicKey | null
 
-  connect(): Promise<void>
-  disconnect(): Promise<void>
-  signTransaction(transaction: Transaction): Promise<Transaction>
-  signAllTransactions(transactions: Transaction[]): Promise<Transaction[]>
-  signMessage(message: Uint8Array): Promise<Uint8Array>
+  connect: () => Promise<void>
+  disconnect: () => Promise<void>
+  signTransaction: (transaction: Transaction) => Promise<Transaction>
+  signAllTransactions: (transactions: Transaction[]) => Promise<Transaction[]>
+  signMessage: (message: Uint8Array) => Promise<Uint8Array>
 }
 
 /**
@@ -67,11 +67,11 @@ export interface SignOptions {
 /**
  * Wallet event types
  */
-export type WalletEvent =
-  | { type: 'connect'; publicKey: PublicKey }
-  | { type: 'disconnect' }
-  | { type: 'error'; error: Error }
-  | { type: 'accountChange'; publicKey: PublicKey }
+export type WalletEvent
+  = | { type: 'connect', publicKey: PublicKey }
+    | { type: 'disconnect' }
+    | { type: 'error', error: Error }
+    | { type: 'accountChange', publicKey: PublicKey }
 
 /**
  * Wallet event listener

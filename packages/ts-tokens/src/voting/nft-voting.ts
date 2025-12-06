@@ -4,10 +4,10 @@
  * 1 NFT = 1 vote, or trait-weighted voting.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
-  VotingPower,
   NFTVotingConfig,
+  VotingPower,
 } from './types'
 
 /**
@@ -16,7 +16,7 @@ import type {
 export async function calculateNFTVotingPower(
   connection: Connection,
   voter: PublicKey,
-  config: NFTVotingConfig
+  config: NFTVotingConfig,
 ): Promise<VotingPower> {
   // Get NFTs owned by voter in collection
   const nfts = await getNFTsInCollection(connection, voter, config.collection)
@@ -26,7 +26,8 @@ export async function calculateNFTVotingPower(
   if (config.oneNftOneVote) {
     // Simple: 1 NFT = 1 vote
     totalPower = BigInt(nfts.length)
-  } else if (config.traitWeights) {
+  }
+  else if (config.traitWeights) {
     // Trait-weighted: sum up trait values
     for (const nft of nfts) {
       totalPower += calculateTraitWeight(nft.traits, config.traitWeights)
@@ -47,8 +48,8 @@ export async function calculateNFTVotingPower(
 async function getNFTsInCollection(
   connection: Connection,
   owner: PublicKey,
-  collection: PublicKey
-): Promise<Array<{ mint: PublicKey; traits: Map<string, string> }>> {
+  collection: PublicKey,
+): Promise<Array<{ mint: PublicKey, traits: Map<string, string> }>> {
   // In production, would use DAS API or on-chain data
   return []
 }
@@ -58,7 +59,7 @@ async function getNFTsInCollection(
  */
 function calculateTraitWeight(
   traits: Map<string, string>,
-  weights: Map<string, Map<string, number>>
+  weights: Map<string, Map<string, number>>,
 ): bigint {
   let totalWeight = 1n // Base weight
 
@@ -81,8 +82,8 @@ function calculateTraitWeight(
 export function createTraitWeights(
   config: Array<{
     traitType: string
-    values: Array<{ value: string; weight: number }>
-  }>
+    values: Array<{ value: string, weight: number }>
+  }>,
 ): Map<string, Map<string, number>> {
   const weights = new Map<string, Map<string, number>>()
 
@@ -121,7 +122,7 @@ export function createRarityWeights(): Map<string, Map<string, number>> {
 export async function isEligibleVoter(
   connection: Connection,
   voter: PublicKey,
-  collection: PublicKey
+  collection: PublicKey,
 ): Promise<boolean> {
   const nfts = await getNFTsInCollection(connection, voter, collection)
   return nfts.length > 0
@@ -132,7 +133,7 @@ export async function isEligibleVoter(
  */
 export async function getCollectionVotingStats(
   connection: Connection,
-  collection: PublicKey
+  collection: PublicKey,
 ): Promise<{
   totalNFTs: number
   totalVotingPower: bigint
@@ -152,8 +153,8 @@ export async function getCollectionVotingStats(
 export async function validateNFTVote(
   connection: Connection,
   voter: PublicKey,
-  config: NFTVotingConfig
-): Promise<{ valid: boolean; reason?: string; nftCount: number }> {
+  config: NFTVotingConfig,
+): Promise<{ valid: boolean, reason?: string, nftCount: number }> {
   const nfts = await getNFTsInCollection(connection, voter, config.collection)
 
   if (nfts.length === 0) {
@@ -176,7 +177,7 @@ export async function validateNFTVote(
 export function formatNFTVotingPower(
   nftCount: number,
   votingPower: bigint,
-  isTraitWeighted: boolean
+  isTraitWeighted: boolean,
 ): string {
   const lines = [
     `NFTs Owned: ${nftCount}`,
@@ -196,8 +197,8 @@ export function formatNFTVotingPower(
  */
 export function simulateTraitWeightedVoting(
   nfts: Array<{ traits: Map<string, string> }>,
-  weights: Map<string, Map<string, number>>
-): Array<{ nftIndex: number; weight: bigint }> {
+  weights: Map<string, Map<string, number>>,
+): Array<{ nftIndex: number, weight: bigint }> {
   return nfts.map((nft, i) => ({
     nftIndex: i,
     weight: calculateTraitWeight(nft.traits, weights),

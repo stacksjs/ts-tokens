@@ -2,14 +2,15 @@
  * Programmable NFT Creation
  */
 
-import { Connection, PublicKey, Keypair } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
-  ProgrammableNFT,
   CreatePNFTOptions,
-  RuleSet,
   CreateRuleSetOptions,
+  ProgrammableNFT,
+  RuleSet,
   TransferRule,
 } from './types'
+import { Keypair } from '@solana/web3.js'
 
 /**
  * Create a programmable NFT
@@ -17,8 +18,8 @@ import type {
 export async function createPNFT(
   connection: Connection,
   payer: PublicKey,
-  options: CreatePNFTOptions
-): Promise<{ mint: PublicKey; signature: string }> {
+  options: CreatePNFTOptions,
+): Promise<{ mint: PublicKey, signature: string }> {
   const mintKeypair = Keypair.generate()
 
   // In production, would:
@@ -41,8 +42,8 @@ export async function createSoulbound(
   payer: PublicKey,
   options: Omit<CreatePNFTOptions, 'rules'> & {
     recoveryAuthority?: PublicKey
-  }
-): Promise<{ mint: PublicKey; signature: string }> {
+  },
+): Promise<{ mint: PublicKey, signature: string }> {
   const soulboundRule: TransferRule = {
     type: 'soulbound',
     enabled: true,
@@ -61,8 +62,8 @@ export async function createSoulbound(
 export async function createRuleSet(
   connection: Connection,
   authority: PublicKey,
-  options: CreateRuleSetOptions
-): Promise<{ address: PublicKey; signature: string }> {
+  options: CreateRuleSetOptions,
+): Promise<{ address: PublicKey, signature: string }> {
   const ruleSetKeypair = Keypair.generate()
 
   // In production, would create rule set account
@@ -77,7 +78,7 @@ export async function createRuleSet(
  */
 export async function getPNFT(
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<ProgrammableNFT | null> {
   // In production, would fetch and parse pNFT account
   return null
@@ -88,7 +89,7 @@ export async function getPNFT(
  */
 export async function getRuleSet(
   connection: Connection,
-  address: PublicKey
+  address: PublicKey,
 ): Promise<RuleSet | null> {
   // In production, would fetch and parse rule set account
   return null
@@ -99,7 +100,7 @@ export async function getRuleSet(
  */
 export async function isProgrammableNFT(
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<boolean> {
   const pnft = await getPNFT(connection, mint)
   return pnft !== null
@@ -110,10 +111,11 @@ export async function isProgrammableNFT(
  */
 export async function isSoulbound(
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<boolean> {
   const pnft = await getPNFT(connection, mint)
-  if (!pnft) return false
+  if (!pnft)
+    return false
 
   return pnft.rules.some(r => r.type === 'soulbound' && r.enabled)
 }
@@ -123,7 +125,7 @@ export async function isSoulbound(
  */
 export async function getPNFTState(
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<'unlocked' | 'listed' | 'staked' | 'frozen' | null> {
   const pnft = await getPNFT(connection, mint)
   return pnft?.state ?? null
@@ -136,7 +138,7 @@ export async function lockPNFT(
   connection: Connection,
   mint: PublicKey,
   owner: PublicKey,
-  state: 'listed' | 'staked'
+  state: 'listed' | 'staked',
 ): Promise<string> {
   // In production, would update pNFT state
   return `locked_${state}_${Date.now()}`
@@ -148,7 +150,7 @@ export async function lockPNFT(
 export async function unlockPNFT(
   connection: Connection,
   mint: PublicKey,
-  owner: PublicKey
+  owner: PublicKey,
 ): Promise<string> {
   // In production, would set state to unlocked
   return `unlocked_${Date.now()}`
@@ -161,7 +163,7 @@ export async function recoverSoulbound(
   connection: Connection,
   mint: PublicKey,
   recoveryAuthority: PublicKey,
-  newOwner: PublicKey
+  newOwner: PublicKey,
 ): Promise<string> {
   // In production, would transfer soulbound to new owner
   return `recovered_${Date.now()}`
@@ -172,7 +174,7 @@ export async function recoverSoulbound(
  */
 export async function getPNFTsByOwner(
   connection: Connection,
-  owner: PublicKey
+  owner: PublicKey,
 ): Promise<ProgrammableNFT[]> {
   // In production, would query pNFT accounts
   return []
@@ -183,7 +185,7 @@ export async function getPNFTsByOwner(
  */
 export async function getPNFTsByRuleSet(
   connection: Connection,
-  ruleSet: PublicKey
+  ruleSet: PublicKey,
 ): Promise<ProgrammableNFT[]> {
   // In production, would query pNFTs using this rule set
   return []

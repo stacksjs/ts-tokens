@@ -4,13 +4,15 @@
  * Optimization, priority fees, and transaction management.
  */
 
-import {
+import type {
+  AddressLookupTableAccount,
   Connection,
   PublicKey,
-  Transaction,
   TransactionInstruction,
+} from '@solana/web3.js'
+import {
   ComputeBudgetProgram,
-  AddressLookupTableAccount,
+  Transaction,
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js'
@@ -49,7 +51,7 @@ export function getPriorityFee(level: PriorityLevel): number {
  */
 export function addPriorityFee(
   instructions: TransactionInstruction[],
-  level: PriorityLevel
+  level: PriorityLevel,
 ): TransactionInstruction[] {
   if (level === 'none') {
     return instructions
@@ -68,7 +70,7 @@ export function addPriorityFee(
  */
 export function addComputeLimit(
   instructions: TransactionInstruction[],
-  units: number
+  units: number,
 ): TransactionInstruction[] {
   const limitIx = ComputeBudgetProgram.setComputeUnitLimit({
     units,
@@ -83,12 +85,13 @@ export function addComputeLimit(
 export async function estimateComputeUnits(
   connection: Connection,
   transaction: Transaction,
-  payer: PublicKey
+  payer: PublicKey,
 ): Promise<number> {
   try {
     const simulation = await connection.simulateTransaction(transaction)
     return simulation.value.unitsConsumed ?? 200000
-  } catch {
+  }
+  catch {
     return 200000 // Default fallback
   }
 }
@@ -97,8 +100,8 @@ export async function estimateComputeUnits(
  * Get recent priority fees from network
  */
 export async function getRecentPriorityFees(
-  connection: Connection
-): Promise<{ min: number; median: number; max: number }> {
+  connection: Connection,
+): Promise<{ min: number, median: number, max: number }> {
   try {
     const fees = await connection.getRecentPrioritizationFees()
 
@@ -112,7 +115,8 @@ export async function getRecentPriorityFees(
     const median = sorted[Math.floor(sorted.length / 2)]
 
     return { min, median, max }
-  } catch {
+  }
+  catch {
     return { min: 0, median: 0, max: 0 }
   }
 }
@@ -124,7 +128,7 @@ export async function createOptimizedTransaction(
   connection: Connection,
   instructions: TransactionInstruction[],
   payer: PublicKey,
-  options: TransactionOptions = {}
+  options: TransactionOptions = {},
 ): Promise<Transaction> {
   let ixs = [...instructions]
 
@@ -155,7 +159,7 @@ export async function createVersionedTransaction(
   connection: Connection,
   instructions: TransactionInstruction[],
   payer: PublicKey,
-  lookupTables: AddressLookupTableAccount[] = []
+  lookupTables: AddressLookupTableAccount[] = [],
 ): Promise<VersionedTransaction> {
   const { blockhash } = await connection.getLatestBlockhash()
 
@@ -173,7 +177,7 @@ export async function createVersionedTransaction(
  */
 export function packInstructions(
   instructions: TransactionInstruction[],
-  maxSize: number = 1232 // Max transaction size
+  maxSize: number = 1232, // Max transaction size
 ): TransactionInstruction[][] {
   const batches: TransactionInstruction[][] = []
   let currentBatch: TransactionInstruction[] = []
@@ -210,7 +214,7 @@ export async function sendWithRetry(
     maxRetries?: number
     retryDelay?: number
     skipPreflight?: boolean
-  } = {}
+  } = {},
 ): Promise<string> {
   const { maxRetries = 3, retryDelay = 1000, skipPreflight = false } = options
 
@@ -220,14 +224,15 @@ export async function sendWithRetry(
     try {
       const signature = await connection.sendRawTransaction(
         transaction.serialize(),
-        { skipPreflight }
+        { skipPreflight },
       )
 
       // Wait for confirmation
       await connection.confirmTransaction(signature)
 
       return signature
-    } catch (error) {
+    }
+    catch (error) {
       lastError = error as Error
 
       // Don't retry if it's a definitive failure
@@ -250,15 +255,15 @@ export async function sendWithRetry(
 export async function waitForConfirmation(
   connection: Connection,
   signature: string,
-  timeout: number = 30000
+  timeout: number = 30000,
 ): Promise<boolean> {
   const start = Date.now()
 
   while (Date.now() - start < timeout) {
     const status = await connection.getSignatureStatus(signature)
 
-    if (status.value?.confirmationStatus === 'confirmed' ||
-        status.value?.confirmationStatus === 'finalized') {
+    if (status.value?.confirmationStatus === 'confirmed'
+      || status.value?.confirmationStatus === 'finalized') {
       return true
     }
 
@@ -277,8 +282,8 @@ export async function waitForConfirmation(
  */
 export async function estimateTransactionCost(
   connection: Connection,
-  transaction: Transaction
-): Promise<{ fee: number; rent: number; total: number }> {
+  transaction: Transaction,
+): Promise<{ fee: number, rent: number, total: number }> {
   const fee = await transaction.getEstimatedFee(connection) ?? 5000
 
   // Estimate rent for new accounts (simplified)

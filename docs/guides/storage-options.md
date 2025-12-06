@@ -4,12 +4,12 @@ Compare storage options for NFT metadata and assets.
 
 ## Overview
 
-| Provider | Permanence | Cost | Speed | Best For |
-|----------|------------|------|-------|----------|
-| Arweave | Permanent | One-time | Medium | Production NFTs |
-| IPFS | Requires pinning | Ongoing | Fast | Development |
-| Shadow Drive | Permanent | One-time | Fast | Solana-native |
-| Local | Temporary | Free | Instant | Testing |
+| Provider     | Permanence       | Cost     | Speed   | Best For        |
+| ------------ | ---------------- | -------- | ------- | --------------- |
+| Arweave      | Permanent        | One-time | Medium  | Production NFTs |
+| IPFS         | Requires pinning | Ongoing  | Fast    | Development     |
+| Shadow Drive | Permanent        | One-time | Fast    | Solana-native   |
+| Local        | Temporary        | Free     | Instant | Testing         |
 
 ## Arweave
 
@@ -31,7 +31,7 @@ Compare storage options for NFT metadata and assets.
 ### Usage
 
 ```typescript
-import { uploadToArweave, getConfig } from 'ts-tokens'
+import { getConfig, uploadToArweave } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -82,17 +82,17 @@ export default defineConfig({
 
 ### Providers
 
-| Provider | Free Tier | Paid Plans |
-|----------|-----------|------------|
-| NFT.Storage | 31GB | N/A |
-| Pinata | 1GB | From $20/mo |
-| Web3.Storage | 5GB | From $10/mo |
-| Infura | 5GB | From $50/mo |
+| Provider     | Free Tier | Paid Plans  |
+| ------------ | --------- | ----------- |
+| NFT.Storage  | 31GB      | N/A         |
+| Pinata       | 1GB       | From $20/mo |
+| Web3.Storage | 5GB       | From $10/mo |
+| Infura       | 5GB       | From $50/mo |
 
 ### Usage
 
 ```typescript
-import { uploadToIPFS, getConfig } from 'ts-tokens'
+import { getConfig, uploadToIPFS } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -145,7 +145,7 @@ export default defineConfig({
 ### Usage
 
 ```typescript
-import { uploadToShadowDrive, getConfig } from 'ts-tokens'
+import { getConfig, uploadToShadowDrive } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -213,7 +213,7 @@ export default defineConfig({
 ### IPFS to Arweave
 
 ```typescript
-import { migrateStorage, getConfig } from 'ts-tokens'
+import { getConfig, migrateStorage } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -227,7 +227,7 @@ await migrateStorage({
 ### Update Metadata URIs
 
 ```typescript
-import { updateMetadataUri, getConfig } from 'ts-tokens'
+import { getConfig, updateMetadataUri } from 'ts-tokens'
 
 const config = await getConfig()
 

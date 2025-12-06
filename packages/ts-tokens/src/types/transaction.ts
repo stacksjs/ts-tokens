@@ -98,13 +98,13 @@ export interface TransactionResult {
 /**
  * Transaction status
  */
-export type TransactionStatus =
-  | 'pending'
-  | 'processing'
-  | 'confirmed'
-  | 'finalized'
-  | 'failed'
-  | 'expired'
+export type TransactionStatus
+  = | 'pending'
+    | 'processing'
+    | 'confirmed'
+    | 'finalized'
+    | 'failed'
+    | 'expired'
 
 /**
  * Detailed transaction info
@@ -276,8 +276,8 @@ export interface SimulationResult {
    */
   accountChanges?: Array<{
     address: string
-    before: { lamports: bigint; data: string }
-    after: { lamports: bigint; data: string }
+    before: { lamports: bigint, data: string }
+    after: { lamports: bigint, data: string }
   }>
 
   /**

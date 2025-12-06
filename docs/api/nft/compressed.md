@@ -9,10 +9,10 @@ Compressed NFTs use Merkle trees to store NFT data off-chain while maintaining o
 ## Cost Comparison
 
 | Collection Size | Regular NFTs | Compressed NFTs |
-|-----------------|--------------|-----------------|
-| 1,000 | ~$2,000 | ~$5 |
-| 10,000 | ~$20,000 | ~$50 |
-| 1,000,000 | ~$2,000,000 | ~$500 |
+| --------------- | ------------ | --------------- |
+| 1,000           | ~$2,000      | ~$5             |
+| 10,000          | ~$20,000     | ~$50            |
+| 1,000,000       | ~$2,000,000  | ~$500           |
 
 ## Create Merkle Tree
 
@@ -24,9 +24,9 @@ import { createMerkleTree, getConfig } from 'ts-tokens'
 const config = await getConfig()
 
 const tree = await createMerkleTree({
-  maxDepth: 14,        // Max 16,384 NFTs
-  maxBufferSize: 64,   // Concurrent updates
-  canopyDepth: 10,     // Proof size reduction
+  maxDepth: 14, // Max 16,384 NFTs
+  maxBufferSize: 64, // Concurrent updates
+  canopyDepth: 10, // Proof size reduction
 }, config)
 
 console.log('Tree address:', tree.address)
@@ -34,16 +34,16 @@ console.log('Tree address:', tree.address)
 
 ### Tree Size Guide
 
-| Max Depth | Max NFTs | Recommended For |
-|-----------|----------|-----------------|
-| 14 | 16,384 | Small collections |
-| 20 | 1,048,576 | Medium collections |
-| 30 | 1,073,741,824 | Large collections |
+| Max Depth | Max NFTs      | Recommended For    |
+| --------- | ------------- | ------------------ |
+| 14        | 16,384        | Small collections  |
+| 20        | 1,048,576     | Medium collections |
+| 30        | 1,073,741,824 | Large collections  |
 
 ## Mint Compressed NFT
 
 ```typescript
-import { mintCompressedNFT, getConfig } from 'ts-tokens'
+import { getConfig, mintCompressedNFT } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -90,7 +90,7 @@ console.log('Minted:', results.length, 'cNFTs')
 ## Transfer Compressed NFT
 
 ```typescript
-import { transferCompressedNFT, getConfig } from 'ts-tokens'
+import { getConfig, transferCompressedNFT } from 'ts-tokens'
 
 const config = await getConfig()
 

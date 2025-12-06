@@ -4,22 +4,20 @@
  * Transfer tokens between addresses.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { TokenConfig, TransactionResult, TransferOptions } from '../types'
 import {
-  createTransferInstruction,
-  createTransferCheckedInstruction,
-  getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
+  createTransferCheckedInstruction,
   getAccount,
+  getAssociatedTokenAddress,
   getMint,
-  TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
-import type { TokenConfig, TransactionResult, TransactionOptions } from '../types'
-import type { TransferOptions } from '../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
-import { loadWallet } from '../drivers/solana/wallet'
+import { PublicKey } from '@solana/web3.js'
 import { createConnection } from '../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Transfer tokens to an address
@@ -30,7 +28,7 @@ import { createConnection } from '../drivers/solana/connection'
  */
 export async function transferTokens(
   options: TransferOptions,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -57,7 +55,8 @@ export async function transferTokens(
   // Check if destination ATA exists
   try {
     await getAccount(connection, destAta, undefined, programId)
-  } catch {
+  }
+  catch {
     // Create destination ATA
     if (config.autoCreateAccounts) {
       instructions.push(
@@ -66,13 +65,14 @@ export async function transferTokens(
           destAta,
           to,
           mint,
-          programId
-        )
+          programId,
+        ),
       )
-    } else {
+    }
+    else {
       throw new Error(
-        `Destination token account ${destAta.toBase58()} does not exist. ` +
-        `Set autoCreateAccounts: true in config to create it automatically.`
+        `Destination token account ${destAta.toBase58()} does not exist. `
+        + `Set autoCreateAccounts: true in config to create it automatically.`,
       )
     }
   }
@@ -87,8 +87,8 @@ export async function transferTokens(
       amount,
       mintInfo.decimals,
       [],
-      programId
-    )
+      programId,
+    ),
   )
 
   // Build and send transaction
@@ -96,7 +96,7 @@ export async function transferTokens(
     connection,
     instructions,
     payer.publicKey,
-    options.options
+    options.options,
   )
 
   transaction.partialSign(payer)
@@ -116,8 +116,8 @@ export async function transferTokens(
 export async function transferTokensToMany(
   mint: string,
   from: string,
-  recipients: Array<{ address: string; amount: bigint | number }>,
-  config: TokenConfig
+  recipients: Array<{ address: string, amount: bigint | number }>,
+  config: TokenConfig,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -143,7 +143,8 @@ export async function transferTokensToMany(
     // Check if destination ATA exists
     try {
       await getAccount(connection, destAta, undefined, programId)
-    } catch {
+    }
+    catch {
       // Create destination ATA
       instructions.push(
         createAssociatedTokenAccountInstruction(
@@ -151,8 +152,8 @@ export async function transferTokensToMany(
           destAta,
           to,
           mintPubkey,
-          programId
-        )
+          programId,
+        ),
       )
     }
 
@@ -166,8 +167,8 @@ export async function transferTokensToMany(
         BigInt(recipient.amount),
         mintInfo.decimals,
         [],
-        programId
-      )
+        programId,
+      ),
     )
   }
 
@@ -175,7 +176,7 @@ export async function transferTokensToMany(
   const transaction = await buildTransaction(
     connection,
     instructions,
-    payer.publicKey
+    payer.publicKey,
   )
 
   transaction.partialSign(payer)
@@ -190,7 +191,7 @@ export async function transfer(
   mint: string,
   to: string,
   amount: bigint | number,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<TransactionResult> {
   const payer = loadWallet(config)
 
@@ -201,6 +202,6 @@ export async function transfer(
       to,
       amount,
     },
-    config
+    config,
   )
 }

@@ -2,24 +2,24 @@
  * Bubblegum Instructions
  */
 
-import {
-  PublicKey,
-  TransactionInstruction,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-} from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { findTreeAuthorityPda, findBubblegumSignerPda } from './pda'
 import type {
-  CreateTreeOptions,
-  MintV1Options,
-  MintToCollectionOptions,
-  TransferOptions,
   BurnOptions,
+  CreateTreeOptions,
+  Creator,
   DecompressOptions,
   MetadataArgs,
-  Creator,
+  MintToCollectionOptions,
+  MintV1Options,
+  TransferOptions,
 } from './types'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import {
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  TransactionInstruction,
+} from '@solana/web3.js'
+import { findBubblegumSignerPda } from './pda'
 
 const BUBBLEGUM_PROGRAM_ID = new PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
 const ACCOUNT_COMPRESSION_PROGRAM_ID = new PublicKey('cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK')
@@ -290,14 +290,16 @@ function serializeMetadataArgs(metadata: MetadataArgs): Buffer {
   // Edition nonce (optional)
   if (metadata.editionNonce !== null) {
     parts.push(Buffer.from([1, metadata.editionNonce]))
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0]))
   }
 
   // Token standard (optional)
   if (metadata.tokenStandard !== null) {
     parts.push(Buffer.from([1, metadata.tokenStandard]))
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0]))
   }
 
@@ -306,7 +308,8 @@ function serializeMetadataArgs(metadata: MetadataArgs): Buffer {
     parts.push(Buffer.from([1]))
     parts.push(Buffer.from([metadata.collection.verified ? 1 : 0]))
     parts.push(metadata.collection.key.toBuffer())
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0]))
   }
 
@@ -320,7 +323,8 @@ function serializeMetadataArgs(metadata: MetadataArgs): Buffer {
     const totalBuffer = Buffer.alloc(8)
     totalBuffer.writeBigUInt64LE(metadata.uses.total)
     parts.push(totalBuffer)
-  } else {
+  }
+  else {
     parts.push(Buffer.from([0]))
   }
 

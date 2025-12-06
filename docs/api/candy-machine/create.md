@@ -24,17 +24,17 @@ console.log('Candy Machine:', cm.address)
 
 ## Options
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `collection` | string | Yes | Collection mint address |
-| `itemsAvailable` | number | Yes | Total items available |
-| `symbol` | string | Yes | NFT symbol |
-| `sellerFeeBasisPoints` | number | Yes | Royalty (500 = 5%) |
-| `creators` | Creator[] | Yes | Creator list |
-| `configLineSettings` | object | No | Config line settings |
-| `hiddenSettings` | object | No | Hidden/reveal settings |
-| `isMutable` | boolean | No | Allow metadata updates |
-| `maxSupply` | number | No | Max editions per NFT |
+| Option                 | Type      | Required | Description             |
+| ---------------------- | --------- | -------- | ----------------------- |
+| `collection`           | string    | Yes      | Collection mint address |
+| `itemsAvailable`       | number    | Yes      | Total items available   |
+| `symbol`               | string    | Yes      | NFT symbol              |
+| `sellerFeeBasisPoints` | number    | Yes      | Royalty (500 = 5%)      |
+| `creators`             | Creator[] | Yes      | Creator list            |
+| `configLineSettings`   | object    | No       | Config line settings    |
+| `hiddenSettings`       | object    | No       | Hidden/reveal settings  |
+| `isMutable`            | boolean   | No       | Allow metadata updates  |
+| `maxSupply`            | number    | No       | Max editions per NFT    |
 
 ## Config Line Settings
 
@@ -53,12 +53,12 @@ const cm = await createCandyMachine({
 }, config)
 ```
 
-| Option | Description |
-|--------|-------------|
-| `prefixName` | Common prefix for all names |
-| `nameLength` | Max length of unique name part |
-| `prefixUri` | Common prefix for all URIs |
-| `uriLength` | Max length of unique URI part |
+| Option         | Description                            |
+| -------------- | -------------------------------------- |
+| `prefixName`   | Common prefix for all names            |
+| `nameLength`   | Max length of unique name part         |
+| `prefixUri`    | Common prefix for all URIs             |
+| `uriLength`    | Max length of unique URI part          |
 | `isSequential` | Mint in order (true) or random (false) |
 
 ## Hidden Settings
@@ -80,8 +80,8 @@ const cm = await createCandyMachine({
 
 ```typescript
 interface CreateCandyMachineResult {
-  address: string      // Candy Machine address
-  signature: string    // Transaction signature
+  address: string // Candy Machine address
+  signature: string // Transaction signature
 }
 ```
 

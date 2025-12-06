@@ -26,18 +26,19 @@ export function sleep(ms: number): Promise<void> {
 export async function retry<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelay: number = 1000
+  baseDelay: number = 1000,
 ): Promise<T> {
   let lastError: Error | undefined
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn()
-    } catch (error) {
+    }
+    catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error))
 
       if (attempt < maxRetries) {
-        const delay = baseDelay * Math.pow(2, attempt)
+        const delay = baseDelay * 2 ** attempt
         await sleep(delay)
       }
     }
@@ -80,7 +81,7 @@ export function solToLamports(sol: number): bigint {
 export function formatTokenAmount(
   amount: bigint | number,
   decimals: number,
-  displayDecimals?: number
+  displayDecimals?: number,
 ): string {
   const value = typeof amount === 'bigint' ? amount : BigInt(amount)
   const divisor = BigInt(10 ** decimals)
@@ -123,7 +124,7 @@ export function parseTokenAmount(amount: string, decimals: number): bigint {
 export function truncateAddress(
   address: string,
   startChars: number = 4,
-  endChars: number = 4
+  endChars: number = 4,
 ): string {
   if (address.length <= startChars + endChars + 3) {
     return address
@@ -140,7 +141,8 @@ export function generateSeed(): Uint8Array {
   const seed = new Uint8Array(32)
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     crypto.getRandomValues(seed)
-  } else {
+  }
+  else {
     // Fallback for Node.js without Web Crypto
     for (let i = 0; i < 32; i++) {
       seed[i] = Math.floor(Math.random() * 256)
@@ -159,7 +161,7 @@ export function hexToBytes(hex: string): Uint8Array {
   const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex
   const bytes = new Uint8Array(cleanHex.length / 2)
   for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(cleanHex.slice(i * 2, i * 2 + 2), 16)
+    bytes[i] = Number.parseInt(cleanHex.slice(i * 2, i * 2 + 2), 16)
   }
   return bytes
 }

@@ -7,17 +7,17 @@ import type { PublicKey } from '@solana/web3.js'
 /**
  * Transfer rule types
  */
-export type TransferRuleType =
-  | 'royalty_enforcement'
-  | 'allow_list'
-  | 'deny_list'
-  | 'program_gate'
-  | 'holder_gate'
-  | 'creator_approval'
-  | 'cooldown_period'
-  | 'max_transfers'
-  | 'soulbound'
-  | 'custom'
+export type TransferRuleType
+  = | 'royalty_enforcement'
+    | 'allow_list'
+    | 'deny_list'
+    | 'program_gate'
+    | 'holder_gate'
+    | 'creator_approval'
+    | 'cooldown_period'
+    | 'max_transfers'
+    | 'soulbound'
+    | 'custom'
 
 /**
  * Base transfer rule
@@ -33,7 +33,7 @@ export interface TransferRuleBase {
 export interface RoyaltyEnforcementRule extends TransferRuleBase {
   type: 'royalty_enforcement'
   royaltyBps: number
-  recipients: Array<{ address: PublicKey; share: number }>
+  recipients: Array<{ address: PublicKey, share: number }>
 }
 
 /**
@@ -113,17 +113,17 @@ export interface CustomRule extends TransferRuleBase {
 /**
  * Union of all transfer rules
  */
-export type TransferRule =
-  | RoyaltyEnforcementRule
-  | AllowListRule
-  | DenyListRule
-  | ProgramGateRule
-  | HolderGateRule
-  | CreatorApprovalRule
-  | CooldownPeriodRule
-  | MaxTransfersRule
-  | SoulboundRule
-  | CustomRule
+export type TransferRule
+  = | RoyaltyEnforcementRule
+    | AllowListRule
+    | DenyListRule
+    | ProgramGateRule
+    | HolderGateRule
+    | CreatorApprovalRule
+    | CooldownPeriodRule
+    | MaxTransfersRule
+    | SoulboundRule
+    | CustomRule
 
 /**
  * NFT state

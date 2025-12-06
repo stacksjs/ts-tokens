@@ -2,17 +2,18 @@
  * Token-2022 Extension Utilities
  */
 
-import { PublicKey } from '@solana/web3.js'
-import { ExtensionType, AccountState } from './types'
 import type {
-  TransferFeeConfig,
-  TransferFee,
+  AccountState,
   InterestBearingConfig,
-  PermanentDelegate,
-  TransferHook,
   MetadataPointer,
+  PermanentDelegate,
   TokenExtension,
+  TransferFee,
+  TransferFeeConfig,
+  TransferHook,
 } from './types'
+import { PublicKey } from '@solana/web3.js'
+import { ExtensionType } from './types'
 
 /**
  * Get the size of an extension

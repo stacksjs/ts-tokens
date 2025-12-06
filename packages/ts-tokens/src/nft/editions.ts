@@ -4,25 +4,26 @@
  * Create master editions and print limited editions.
  */
 
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
+import type {
   TransactionInstruction,
 } from '@solana/web3.js'
+import type { TokenConfig, TransactionOptions, TransactionResult } from '../types'
 import {
+  createAssociatedTokenAccountInstruction,
   createInitializeMintInstruction,
   createMintToInstruction,
   getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
   getMintLen,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
-import type { TokenConfig, TransactionResult, TransactionOptions } from '../types'
-import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
-import { loadWallet } from '../drivers/solana/wallet'
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+} from '@solana/web3.js'
 import { createConnection } from '../drivers/solana/connection'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Token Metadata Program ID
@@ -39,7 +40,7 @@ function getMetadataAddress(mint: PublicKey): PublicKey {
       TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
   return address
 }
@@ -55,7 +56,7 @@ function getMasterEditionAddress(mint: PublicKey): PublicKey {
       mint.toBuffer(),
       Buffer.from('edition'),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
   return address
 }
@@ -71,7 +72,7 @@ function getEditionAddress(mint: PublicKey): PublicKey {
       mint.toBuffer(),
       Buffer.from('edition'),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
   return address
 }
@@ -89,7 +90,7 @@ function getEditionMarkerAddress(masterMint: PublicKey, editionNumber: bigint): 
       Buffer.from('edition'),
       Buffer.from(editionMarker.toString()),
     ],
-    TOKEN_METADATA_PROGRAM_ID
+    TOKEN_METADATA_PROGRAM_ID,
   )
   return address
 }
@@ -133,7 +134,7 @@ export async function createMasterEdition(
   mint: string,
   maxSupply: number | null,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<TransactionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -152,7 +153,8 @@ export async function createMasterEdition(
   if (maxSupply !== null) {
     data.writeUInt8(1, 1) // Some
     data.writeBigUInt64LE(BigInt(maxSupply), 2)
-  } else {
+  }
+  else {
     data.writeUInt8(0, 1) // None
   }
 
@@ -175,7 +177,7 @@ export async function createMasterEdition(
     connection,
     [instruction],
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(payer)
@@ -190,7 +192,7 @@ export async function printEdition(
   masterMint: string,
   editionNumber: number,
   config: TokenConfig,
-  options?: TransactionOptions
+  options?: TransactionOptions,
 ): Promise<PrintEditionResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -225,7 +227,7 @@ export async function printEdition(
       space: mintLen,
       lamports,
       programId: TOKEN_PROGRAM_ID,
-    })
+    }),
   )
 
   // 2. Initialize mint
@@ -235,8 +237,8 @@ export async function printEdition(
       0,
       payer.publicKey,
       payer.publicKey,
-      TOKEN_PROGRAM_ID
-    )
+      TOKEN_PROGRAM_ID,
+    ),
   )
 
   // 3. Create ATA
@@ -245,8 +247,8 @@ export async function printEdition(
       payer.publicKey,
       editionAta,
       payer.publicKey,
-      editionMint
-    )
+      editionMint,
+    ),
   )
 
   // 4. Mint 1 token
@@ -255,8 +257,8 @@ export async function printEdition(
       editionMint,
       editionAta,
       payer.publicKey,
-      1n
-    )
+      1n,
+    ),
   )
 
   // 5. Print edition instruction
@@ -288,7 +290,7 @@ export async function printEdition(
     connection,
     instructions,
     payer.publicKey,
-    options
+    options,
   )
 
   transaction.partialSign(editionMintKeypair)
@@ -310,7 +312,7 @@ export async function printEdition(
  */
 export async function getEditionInfo(
   mint: string,
-  config: TokenConfig
+  config: TokenConfig,
 ): Promise<EditionInfo | null> {
   const connection = createConnection(config)
   const mintPubkey = new PublicKey(mint)
@@ -338,7 +340,8 @@ export async function getEditionInfo(
       maxSupply,
       supply: Number(supply),
     }
-  } else if (key === 2) {
+  }
+  else if (key === 2) {
     // Print edition
     const parent = new PublicKey(data.slice(1, 33)).toBase58()
     const edition = Number(data.readBigUInt64LE(33))
@@ -361,7 +364,7 @@ export async function getEditionInfo(
 export async function getEditionsByMaster(
   masterMint: string,
   config: TokenConfig,
-  limit: number = 100
+  limit: number = 100,
 ): Promise<EditionInfo[]> {
   const connection = createConnection(config)
   const masterMintPubkey = new PublicKey(masterMint)
@@ -385,7 +388,7 @@ export async function getEditionsByMaster(
           },
         },
       ],
-    }
+    },
   )
 
   const editions: EditionInfo[] = []

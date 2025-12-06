@@ -9,7 +9,7 @@ Guards are modular conditions that must be satisfied to mint from a Candy Machin
 ## Setting Guards
 
 ```typescript
-import { setCandyGuard, getConfig } from 'ts-tokens'
+import { getConfig, setCandyGuard } from 'ts-tokens'
 
 const config = await getConfig()
 

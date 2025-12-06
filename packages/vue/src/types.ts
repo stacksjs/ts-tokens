@@ -2,7 +2,6 @@
  * Vue Tokens Types
  */
 
-import type { Connection } from '@solana/web3.js'
 import type { TokenConfig } from 'ts-tokens'
 
 /**
@@ -37,7 +36,7 @@ export interface NFTDisplayInfo {
   image?: string
   description?: string
   collection?: string
-  attributes?: Array<{ trait_type: string; value: string }>
+  attributes?: Array<{ trait_type: string, value: string }>
 }
 
 /**

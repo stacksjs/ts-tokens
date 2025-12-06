@@ -6,8 +6,8 @@
  */
 
 export * from './instructions'
-export * from './types'
 export * from './pda'
+export * from './types'
 
 export const BUBBLEGUM_PROGRAM_ID = 'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY'
 export const ACCOUNT_COMPRESSION_PROGRAM_ID = 'cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'

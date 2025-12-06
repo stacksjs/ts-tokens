@@ -130,7 +130,7 @@ const cm = await createCandyMachine({
 ### Test Minting
 
 ```typescript
-import { mintFromCandyMachine, getConfig } from 'ts-tokens'
+import { getConfig, mintFromCandyMachine } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -146,7 +146,7 @@ for (let i = 0; i < 3; i++) {
 ### Check Transaction Status
 
 ```typescript
-import { getTransactionStatus, getConfig } from 'ts-tokens'
+import { getConfig, getTransactionStatus } from 'ts-tokens'
 
 const config = await getConfig()
 
@@ -166,11 +166,11 @@ open https://explorer.solana.com/tx/${signature}?cluster=devnet
 
 ### Common Errors
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `Insufficient funds` | Not enough SOL | Request airdrop |
-| `Account not found` | Wrong address | Verify mint/account address |
-| `Invalid owner` | Wrong authority | Check wallet configuration |
+| Error                   | Cause                 | Solution                         |
+| ----------------------- | --------------------- | -------------------------------- |
+| `Insufficient funds`    | Not enough SOL        | Request airdrop                  |
+| `Account not found`     | Wrong address         | Verify mint/account address      |
+| `Invalid owner`         | Wrong authority       | Check wallet configuration       |
 | `Transaction too large` | Too many instructions | Split into multiple transactions |
 
 ## Automated Testing
@@ -178,7 +178,7 @@ open https://explorer.solana.com/tx/${signature}?cluster=devnet
 ### Unit Tests
 
 ```typescript
-import { describe, test, expect, beforeAll } from 'bun:test'
+import { beforeAll, describe, expect, test } from 'bun:test'
 import { createToken, getConfig } from 'ts-tokens'
 
 describe('Token Creation', () => {

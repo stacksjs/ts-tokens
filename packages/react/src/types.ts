@@ -2,7 +2,7 @@
  * React Tokens Types
  */
 
-import type { PublicKey, Connection } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 
 /**
  * Token display info
@@ -28,7 +28,7 @@ export interface NFTDisplayInfo {
   image?: string
   description?: string
   collection?: string
-  attributes?: Array<{ trait_type: string; value: string }>
+  attributes?: Array<{ trait_type: string, value: string }>
 }
 
 /**

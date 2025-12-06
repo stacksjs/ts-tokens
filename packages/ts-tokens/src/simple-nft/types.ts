@@ -65,9 +65,9 @@ export interface CreateSimpleNFTOptions {
   symbol?: string
   description?: string
   image: string | Buffer
-  attributes?: Array<{ trait: string; value: string | number }>
+  attributes?: Array<{ trait: string, value: string | number }>
   royalty?: number
-  creators?: Array<{ address: PublicKey; share: number }>
+  creators?: Array<{ address: PublicKey, share: number }>
   collection?: PublicKey
   isMutable?: boolean
   maxEditions?: number
@@ -88,11 +88,11 @@ export interface CreateSimpleCollectionOptions {
 /**
  * Metadata input - flexible input format
  */
-export type MetadataInput =
-  | string // URI
-  | { uri: string } // Object with URI
-  | SimpleMetadataObject // Full metadata object
-  | { file: string } // Local file path
+export type MetadataInput
+  = | string // URI
+    | { uri: string } // Object with URI
+    | SimpleMetadataObject // Full metadata object
+    | { file: string } // Local file path
 
 /**
  * Simple metadata object

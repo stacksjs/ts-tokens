@@ -5,9 +5,9 @@
  */
 
 import type { Commitment, TokenConfig } from './config'
-import type { CreateTokenOptions, MintOptions, BurnOptions, TokenInfo, TokenAccountInfo } from './token'
-import type { CreateCollectionOptions, MintNFTOptions, NFTInfo, CollectionInfo } from './nft'
-import type { TransactionResult, TransactionOptions } from './transaction'
+import type { CollectionInfo, CreateCollectionOptions, MintNFTOptions, NFTInfo } from './nft'
+import type { BurnOptions, CreateTokenOptions, MintOptions, TokenAccountInfo, TokenInfo } from './token'
+import type { TransactionOptions, TransactionResult } from './transaction'
 
 /**
  * Connection interface for blockchain RPC
@@ -26,12 +26,12 @@ export interface ChainConnection {
   /**
    * Check if connection is active
    */
-  isConnected(): boolean
+  isConnected: () => boolean
 
   /**
    * Get the latest blockhash
    */
-  getLatestBlockhash(): Promise<{ blockhash: string; lastValidBlockHeight: number }>
+  getLatestBlockhash: () => Promise<{ blockhash: string, lastValidBlockHeight: number }>
 }
 
 /**
@@ -52,6 +52,11 @@ export interface TokenResult {
    * Metadata account address (if created)
    */
   metadataAddress?: string
+
+  /**
+   * Associated token account (if initialSupply was minted)
+   */
+  ata?: string
 }
 
 /**
@@ -192,22 +197,22 @@ export interface ChainDriver {
   /**
    * Establish connection to the blockchain
    */
-  connect(): Promise<ChainConnection>
+  connect: () => Promise<ChainConnection>
 
   /**
    * Disconnect from the blockchain
    */
-  disconnect(): Promise<void>
+  disconnect: () => Promise<void>
 
   /**
    * Get current connection
    */
-  getConnection(): ChainConnection | null
+  getConnection: () => ChainConnection | null
 
   /**
    * Check if connected
    */
-  isConnected(): boolean
+  isConnected: () => boolean
 
   // ============================================
   // Account Queries
@@ -216,17 +221,17 @@ export interface ChainDriver {
   /**
    * Get native token balance (e.g., SOL)
    */
-  getBalance(address: string): Promise<bigint>
+  getBalance: (address: string) => Promise<bigint>
 
   /**
    * Get token balance for a specific mint
    */
-  getTokenBalance(owner: string, mint: string): Promise<bigint>
+  getTokenBalance: (owner: string, mint: string) => Promise<bigint>
 
   /**
    * Get all token accounts for an owner
    */
-  getTokenAccounts(owner: string): Promise<TokenAccountInfo[]>
+  getTokenAccounts: (owner: string) => Promise<TokenAccountInfo[]>
 
   // ============================================
   // Fungible Token Operations
@@ -235,32 +240,32 @@ export interface ChainDriver {
   /**
    * Create a new fungible token
    */
-  createToken(options: CreateTokenOptions): Promise<TokenResult>
+  createToken: (options: CreateTokenOptions) => Promise<TokenResult>
 
   /**
    * Mint tokens to an address
    */
-  mintTokens(options: MintOptions): Promise<TransactionResult>
+  mintTokens: (options: MintOptions) => Promise<TransactionResult>
 
   /**
    * Transfer tokens
    */
-  transferTokens(options: TransferOptions): Promise<TransactionResult>
+  transferTokens: (options: TransferOptions) => Promise<TransactionResult>
 
   /**
    * Burn tokens
    */
-  burnTokens(options: BurnOptions): Promise<TransactionResult>
+  burnTokens: (options: BurnOptions) => Promise<TransactionResult>
 
   /**
    * Get token information
    */
-  getTokenInfo(mint: string): Promise<TokenInfo>
+  getTokenInfo: (mint: string) => Promise<TokenInfo>
 
   /**
    * Set or revoke token authority
    */
-  setAuthority(options: SetAuthorityOptions): Promise<TransactionResult>
+  setAuthority: (options: SetAuthorityOptions) => Promise<TransactionResult>
 
   // ============================================
   // NFT Operations
@@ -269,47 +274,47 @@ export interface ChainDriver {
   /**
    * Create an NFT collection
    */
-  createCollection(options: CreateCollectionOptions): Promise<CollectionResult>
+  createCollection: (options: CreateCollectionOptions) => Promise<CollectionResult>
 
   /**
    * Mint a single NFT
    */
-  mintNFT(options: MintNFTOptions): Promise<NFTResult>
+  mintNFT: (options: MintNFTOptions) => Promise<NFTResult>
 
   /**
    * Transfer an NFT
    */
-  transferNFT(options: TransferOptions): Promise<TransactionResult>
+  transferNFT: (options: TransferOptions) => Promise<TransactionResult>
 
   /**
    * Burn an NFT
    */
-  burnNFT(mint: string, owner: string): Promise<TransactionResult>
+  burnNFT: (mint: string, owner: string) => Promise<TransactionResult>
 
   /**
    * Get NFT information
    */
-  getNFTInfo(mint: string): Promise<NFTInfo>
+  getNFTInfo: (mint: string) => Promise<NFTInfo>
 
   /**
    * Get collection information
    */
-  getCollectionInfo(mint: string): Promise<CollectionInfo>
+  getCollectionInfo: (mint: string) => Promise<CollectionInfo>
 
   /**
    * Get all NFTs owned by an address
    */
-  getNFTsByOwner(owner: string): Promise<NFTInfo[]>
+  getNFTsByOwner: (owner: string) => Promise<NFTInfo[]>
 
   /**
    * Get all NFTs in a collection
    */
-  getNFTsByCollection(collection: string): Promise<NFTInfo[]>
+  getNFTsByCollection: (collection: string) => Promise<NFTInfo[]>
 
   /**
    * Verify an NFT belongs to a collection
    */
-  verifyCollection(nft: string, collection: string): Promise<TransactionResult>
+  verifyCollection: (nft: string, collection: string) => Promise<TransactionResult>
 
   // ============================================
   // Transaction Utilities
@@ -318,7 +323,7 @@ export interface ChainDriver {
   /**
    * Simulate a transaction without executing
    */
-  simulateTransaction(transaction: unknown): Promise<{
+  simulateTransaction: (transaction: unknown) => Promise<{
     success: boolean
     logs: string[]
     error?: string
@@ -328,7 +333,7 @@ export interface ChainDriver {
   /**
    * Get transaction status
    */
-  getTransactionStatus(signature: string): Promise<{
+  getTransactionStatus: (signature: string) => Promise<{
     confirmed: boolean
     slot?: number
     error?: string
@@ -337,7 +342,7 @@ export interface ChainDriver {
   /**
    * Request airdrop (devnet/testnet only)
    */
-  requestAirdrop(address: string, amount: number): Promise<string>
+  requestAirdrop: (address: string, amount: number) => Promise<string>
 }
 
 /**
@@ -352,20 +357,20 @@ export interface DriverRegistry {
   /**
    * Register a driver factory
    */
-  register(chain: string, factory: DriverFactory): void
+  register: (chain: string, factory: DriverFactory) => void
 
   /**
    * Get a driver instance for a chain
    */
-  get(chain: string, config: TokenConfig): ChainDriver
+  get: (chain: string, config: TokenConfig) => ChainDriver
 
   /**
    * Check if a driver is registered
    */
-  has(chain: string): boolean
+  has: (chain: string) => boolean
 
   /**
    * List all registered chains
    */
-  list(): string[]
+  list: () => string[]
 }
