@@ -56,11 +56,11 @@
     "ts-tokens": "workspace:*"
   },
   "peerDependencies": {
-    "vue": "^3.5.25",
+    "vue": "^3.5.26",
     "@solana/web3.js": ">=1.87.0"
   },
   "devDependencies": {
-    "vue": "^3.5.25",
+    "vue": "^3.5.26",
     "better-dx": "^0.2.5"
   },
   "lint-staged": {
