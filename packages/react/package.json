@@ -62,7 +62,7 @@
     "@solana/web3.js": ">=1.87.0"
   },
   "devDependencies": {
-    "@types/react": "^19.2.8",
+    "@types/react": "^19.2.9",
     "@types/react-dom": "^18.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
