@@ -453,7 +453,57 @@ export interface MetadataValidation {
 }
 
 /**
- * NFT Metadata (alias for OffChainMetadata)
- * Used for fetched/parsed NFT metadata
+ * Parsed on-chain NFT metadata
+ * Returned by getNFTMetadata function
  */
-export type NFTMetadata = OffChainMetadata
+export interface NFTMetadata {
+  /**
+   * Mint address
+   */
+  mint: string
+
+  /**
+   * Metadata account address
+   */
+  metadataAddress: string
+
+  /**
+   * Update authority
+   */
+  updateAuthority: string
+
+  /**
+   * NFT name
+   */
+  name: string
+
+  /**
+   * NFT symbol
+   */
+  symbol: string
+
+  /**
+   * URI to off-chain metadata JSON
+   */
+  uri: string
+
+  /**
+   * Royalty in basis points
+   */
+  sellerFeeBasisPoints: number
+
+  /**
+   * Creators array
+   */
+  creators: Creator[]
+
+  /**
+   * Whether primary sale has happened
+   */
+  primarySaleHappened: boolean
+
+  /**
+   * Whether metadata is mutable
+   */
+  isMutable: boolean
+}

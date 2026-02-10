@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "lib": ["esnext", "dom"],
+    "lib": ["esnext", "dom", "dom.iterable"],
     "moduleDetection": "force",
     "module": "esnext",
     "moduleResolution": "bundler",
+    "jsx": "react-jsx",
     "paths": {
       "ts-tokens": ["./packages/ts-tokens/src/index.ts"]
     },
@@ -13,8 +14,10 @@
     "allowImportingTsExtensions": true,
     "strict": true,
     "strictNullChecks": true,
+    "noImplicitAny": true,
     "noFallthroughCasesInSwitch": true,
     "declaration": true,
+    "removeComments": true,
     "noEmit": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

@@ -6,10 +6,10 @@
  * Run with: bun run examples/create-token/index.ts
  */
 
-import { createToken, mintTokens, transferTokens, getConfig } from 'ts-tokens'
+import { createToken, mintTokens, getConfig } from 'ts-tokens'
 
 async function main() {
-  console.log('🚀 Creating a new fungible token...\n')
+  console.log('Creating a new fungible token...\n')
 
   // Load configuration
   const config = await getConfig()
@@ -25,32 +25,30 @@ async function main() {
     initialSupply: 1_000_000_000_000, // 1000 tokens with 9 decimals
   }, config)
 
-  console.log('✅ Token created!')
+  console.log('Token created!')
   console.log(`   Mint: ${token.mint}`)
-  console.log(`   Signature: ${token.signature}`)
-  console.log(`   ATA: ${token.ata}\n`)
+  console.log(`   Signature: ${token.signature}\n`)
 
   // Mint more tokens
   console.log('Minting additional tokens...')
-  const mintResult = await mintTokens(
-    token.mint,
-    500_000_000_000, // 500 more tokens
-    token.ata!, // To our own ATA
-    config
-  )
-  console.log(`✅ Minted! Signature: ${mintResult.signature}\n`)
+  const mintResult = await mintTokens({
+    mint: token.mint,
+    amount: 500_000_000_000, // 500 more tokens
+  }, config)
+  console.log(`Minted! Signature: ${mintResult.signature}\n`)
 
-  // Transfer tokens (to self for demo)
-  console.log('Transferring tokens...')
-  const transferResult = await transferTokens(
-    token.mint,
-    100_000_000_000, // 100 tokens
-    token.ata!, // To same address for demo
-    config
-  )
-  console.log(`✅ Transferred! Signature: ${transferResult.signature}\n`)
+  // Transfer tokens example (uncomment and replace with real recipient)
+  // console.log('Transferring tokens...')
+  // const recipientAddress = 'RECIPIENT_WALLET_ADDRESS'
+  // const transferResult = await transfer(
+  //   token.mint,
+  //   recipientAddress,
+  //   100_000_000_000, // 100 tokens
+  //   config
+  // )
+  // console.log(`Transferred! Signature: ${transferResult.signature}\n`)
 
-  console.log('🎉 Done! Your token is ready.')
+  console.log('Done! Your token is ready.')
   console.log(`\nView on Solana Explorer:`)
   console.log(`https://explorer.solana.com/address/${token.mint}?cluster=${config.network}`)
 }

@@ -3,7 +3,7 @@ import { version } from '../package.json'
 import { getConfig, setConfig } from '../src/config'
 import type { SolanaNetwork } from '../src/types'
 
-const cli = new CLI('tokens', {
+const cli = new (CLI as any)('tokens', {
   description: 'A CLI for managing fungible and non-fungible tokens on Solana',
 })
 
@@ -71,7 +71,7 @@ cli
     try {
       const pubkey = getPublicKey(config)
       console.log(`Wallet: ${pubkey}`)
-    } catch (error) {
+    } catch {
       console.error('No wallet configured. Run `tokens wallet:generate` or set wallet.keypairPath in config.')
     }
   })
@@ -230,9 +230,11 @@ cli
   .action(async (mint: string) => {
     const config = await getConfig()
     const { getMintInfo } = await import('../src/drivers/solana/account')
+    const { createConnection } = await import('../src/drivers/solana/connection')
 
     try {
-      const info = await getMintInfo(mint, config)
+      const connection = createConnection(config)
+      const info = await getMintInfo(connection, mint)
       console.log('Token Information:')
       console.log(`  Mint: ${mint}`)
       console.log(`  Supply: ${info.supply}`)
@@ -251,10 +253,12 @@ cli
     const config = await getConfig()
     const { getTokenBalance } = await import('../src/drivers/solana/account')
     const { getPublicKey } = await import('../src/drivers/solana/wallet')
+    const { createConnection } = await import('../src/drivers/solana/connection')
 
     try {
+      const connection = createConnection(config)
       const owner = getPublicKey(config)
-      const balance = await getTokenBalance(owner, mint, config)
+      const balance = await getTokenBalance(connection, owner, mint)
       console.log(`Token: ${mint}`)
       console.log(`Balance: ${balance}`)
     } catch (error) {
@@ -398,7 +402,7 @@ cli
       console.log('Creating collection...')
       const result = await createCollection({
         name: options.name,
-        symbol: options.symbol,
+        symbol: options.symbol || '',
         uri: options.uri,
       }, config)
 

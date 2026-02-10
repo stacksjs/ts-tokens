@@ -4,7 +4,7 @@
  * Install the tokens plugin to provide connection and config globally.
  */
 
-import { shallowRef, provide, inject, type App, type InjectionKey, type ShallowRef } from 'vue'
+import { shallowRef, inject, type App, type InjectionKey, type ShallowRef } from 'vue'
 import { Connection } from '@solana/web3.js'
 import type { TokenConfig } from 'ts-tokens'
 import type { TokensPluginOptions } from './types'
@@ -38,10 +38,17 @@ export function createTokens(options: TokensPluginOptions): TokensContext {
 }
 
 /**
+ * Vue plugin interface
+ */
+export interface TokensPluginType {
+  install(app: App, options: TokensPluginOptions): void
+}
+
+/**
  * Vue plugin for tokens
  */
-export const TokensPlugin = {
-  install(app: App, options: TokensPluginOptions) {
+export const TokensPlugin: TokensPluginType = {
+  install(app: App, options: TokensPluginOptions): void {
     const context = createTokens(options)
     const contextRef = shallowRef(context)
 
@@ -66,4 +73,4 @@ export function useTokens(): TokensContext {
 /**
  * Alias for TokensPlugin (camelCase export)
  */
-export const tokensPlugin = TokensPlugin
+export const tokensPlugin: TokensPluginType = TokensPlugin

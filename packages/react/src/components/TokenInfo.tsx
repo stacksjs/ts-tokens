@@ -6,9 +6,10 @@ export function TokenInfo({ mint, className, style }: TokenProps): JSX.Element {
 
   React.useEffect(() => {
     const fetchInfo = async () => {
-      const { getMintInfo, getConfig } = await import('ts-tokens')
+      const { getMintInfo, getConfig, createSolanaConnection } = await import('ts-tokens')
       const config = await getConfig()
-      const data = await getMintInfo(mint, config)
+      const connection = createSolanaConnection(config).raw
+      const data = await getMintInfo(connection, mint)
       setInfo(data)
     }
     fetchInfo()

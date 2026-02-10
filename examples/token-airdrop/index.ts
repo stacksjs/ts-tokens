@@ -6,7 +6,7 @@
  * Run with: bun run examples/token-airdrop/index.ts
  */
 
-import { mintTokens, transferTokens, getConfig } from 'ts-tokens'
+import { transfer, getConfig } from 'ts-tokens'
 import { readFileSync } from 'fs'
 
 interface AirdropRecipient {
@@ -37,7 +37,7 @@ async function airdrop(
 ) {
   const config = await getConfig()
 
-  console.log(`🚀 Starting airdrop of ${recipients.length} recipients\n`)
+  console.log(`Starting airdrop of ${recipients.length} recipients\n`)
   console.log(`Token: ${mintAddress}`)
   console.log(`Decimals: ${decimals}\n`)
 
@@ -51,17 +51,17 @@ async function airdrop(
     console.log(`[${i + 1}/${recipients.length}] Sending ${amount} tokens to ${address.slice(0, 8)}...`)
 
     try {
-      const result = await transferTokens(
+      const result = await transfer(
         mintAddress,
-        Number(baseUnits),
         address,
+        Number(baseUnits),
         config
       )
 
-      console.log(`   ✅ Success: ${result.signature.slice(0, 20)}...`)
+      console.log(`   Success: ${result.signature.slice(0, 20)}...`)
       successful++
     } catch (error) {
-      console.log(`   ❌ Failed: ${(error as Error).message}`)
+      console.log(`   Failed: ${(error as Error).message}`)
       failed++
     }
 
@@ -69,7 +69,7 @@ async function airdrop(
     await new Promise(resolve => setTimeout(resolve, 500))
   }
 
-  console.log('\n📊 Airdrop Summary:')
+  console.log('\nAirdrop Summary:')
   console.log(`   Successful: ${successful}`)
   console.log(`   Failed: ${failed}`)
   console.log(`   Total: ${recipients.length}`)

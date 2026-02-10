@@ -112,7 +112,7 @@ export const governanceCommands = {
       { name: 'token', type: 'string', description: 'Token mint (for token deposits)' },
     ],
   },
-}
+} as const
 
 /**
  * Format DAO info for display
