@@ -23,8 +23,15 @@ export interface CreateCollectionOptions {
 
   /**
    * Metadata URI (JSON file URL)
+   * Either uri or metadata must be provided
    */
-  uri: string
+  uri?: string
+
+  /**
+   * Metadata object to upload
+   * Will be uploaded to storage provider and URI will be used
+   */
+  metadata?: Record<string, unknown>
 
   /**
    * Royalty in basis points (e.g., 500 = 5%)
@@ -515,6 +522,28 @@ export interface PrintEditionOptions {
    * Transaction options
    */
   options?: TransactionOptions
+}
+
+/**
+ * NFT creation options (extends MintNFTOptions with metadata upload support)
+ */
+export interface CreateNFTOptions extends Omit<MintNFTOptions, 'uri' | 'symbol'> {
+  /**
+   * NFT symbol (optional for simple creation)
+   */
+  symbol?: string
+
+  /**
+   * Metadata URI (JSON file URL)
+   * Either uri or metadata must be provided
+   */
+  uri?: string
+
+  /**
+   * Metadata object to upload
+   * Will be uploaded to storage provider and URI will be used
+   */
+  metadata?: Record<string, unknown>
 }
 
 /**

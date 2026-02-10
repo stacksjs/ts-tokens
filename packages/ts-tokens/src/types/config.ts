@@ -70,6 +70,12 @@ export interface ConfirmOptions {
    * Preflight commitment level
    */
   preflightCommitment?: Commitment
+
+  /**
+   * Confirmation timeout in milliseconds
+   * @default 30000
+   */
+  timeout?: number
 }
 
 /**
@@ -137,9 +143,9 @@ export interface StorageConfig {
     gateway?: string
 
     /**
-     * Pinning service API endpoint
+     * Pinning service to use
      */
-    pinningService?: string
+    pinningService?: 'pinata' | 'nft.storage' | 'web3.storage' | 'infura'
 
     /**
      * Pinning service API key

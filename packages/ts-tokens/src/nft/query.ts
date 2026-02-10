@@ -281,7 +281,7 @@ export async function getNFTHistory(
   return signatures.map(sig => ({
     signature: sig.signature,
     slot: sig.slot,
-    blockTime: sig.blockTime,
+    blockTime: sig.blockTime ?? null,
     type: sig.memo || 'unknown',
   }))
 }

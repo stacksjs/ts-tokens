@@ -6,7 +6,7 @@
 
 import { PublicKey, Transaction } from '@solana/web3.js'
 import type { WalletType } from './types'
-import bs58 from 'bs58'
+import { encode as bs58encode } from '../utils/base58'
 
 /**
  * Deep link configuration
@@ -42,7 +42,7 @@ export function phantomSignTransactionLink(
   config: DeepLinkConfig
 ): string {
   const serialized = transaction.serialize({ requireAllSignatures: false })
-  const encoded = bs58.encode(serialized)
+  const encoded = bs58encode(serialized)
 
   const params = new URLSearchParams({
     transaction: encoded,
@@ -64,7 +64,7 @@ export function phantomSignAndSendLink(
   config: DeepLinkConfig
 ): string {
   const serialized = transaction.serialize({ requireAllSignatures: false })
-  const encoded = bs58.encode(serialized)
+  const encoded = bs58encode(serialized)
 
   const params = new URLSearchParams({
     transaction: encoded,
@@ -102,7 +102,7 @@ export function solflareSignTransactionLink(
   config: DeepLinkConfig
 ): string {
   const serialized = transaction.serialize({ requireAllSignatures: false })
-  const encoded = bs58.encode(serialized)
+  const encoded = bs58encode(serialized)
 
   const params = new URLSearchParams({
     transaction: encoded,

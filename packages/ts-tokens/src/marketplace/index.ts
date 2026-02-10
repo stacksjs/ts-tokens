@@ -5,5 +5,7 @@
  */
 
 export * from './types'
-export * from './magiceden'
-export * from './tensor'
+
+// Re-export with namespaces to avoid conflicts
+export * as magiceden from './magiceden'
+export * as tensor from './tensor'

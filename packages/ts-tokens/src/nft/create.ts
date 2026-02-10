@@ -365,7 +365,7 @@ export async function createNFT(
   )
 
   // 5. Create metadata
-  const creators = options.creators?.map(c => ({
+  const creators = options.creators?.map((c: { address: string; share: number }) => ({
     address: new PublicKey(c.address),
     verified: c.address === payer.publicKey.toBase58(), // Only creator can be verified
     share: c.share,
@@ -401,7 +401,7 @@ export async function createNFT(
       payer.publicKey,
       payer.publicKey,
       metadataAddress,
-      options.maxSupply !== undefined ? BigInt(options.maxSupply) : 0n
+      options.maxSupply != null ? BigInt(options.maxSupply) : 0n
     )
   )
 
@@ -453,7 +453,7 @@ export async function createCollection(
   return {
     mint: result.mint,
     metadata: result.metadata,
-    masterEdition: result.masterEdition,
+    masterEdition: result.masterEdition || '',
     signature: result.signature,
     uri: result.uri,
   }

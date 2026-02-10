@@ -71,12 +71,17 @@ export interface CollectionResult {
   /**
    * Metadata account address
    */
-  metadataAddress: string
+  metadata: string
 
   /**
    * Master edition address
    */
-  masterEditionAddress: string
+  masterEdition: string
+
+  /**
+   * Metadata URI
+   */
+  uri: string
 }
 
 /**
@@ -96,12 +101,17 @@ export interface NFTResult {
   /**
    * Metadata account address
    */
-  metadataAddress: string
+  metadata: string
 
   /**
    * Master edition address (for 1/1 NFTs)
    */
-  masterEditionAddress?: string
+  masterEdition?: string
+
+  /**
+   * Metadata URI
+   */
+  uri: string
 
   /**
    * Edition number (for prints)

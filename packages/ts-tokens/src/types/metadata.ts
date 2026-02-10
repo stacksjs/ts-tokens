@@ -451,3 +451,9 @@ export interface MetadataValidation {
    */
   warnings: string[]
 }
+
+/**
+ * NFT Metadata (alias for OffChainMetadata)
+ * Used for fetched/parsed NFT metadata
+ */
+export type NFTMetadata = OffChainMetadata

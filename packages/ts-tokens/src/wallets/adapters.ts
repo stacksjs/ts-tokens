@@ -197,7 +197,8 @@ export function getAvailableWallets(): WalletType[] {
     return available
   }
 
-  const win = window as unknown as Record<string, unknown>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const win = window as any
 
   if (win.phantom?.solana) available.push('phantom')
   if (win.solflare) available.push('solflare')
