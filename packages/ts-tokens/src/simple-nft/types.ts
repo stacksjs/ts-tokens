@@ -140,3 +140,95 @@ export interface BurnResult {
   mint: PublicKey
   owner: PublicKey
 }
+
+/**
+ * Update simple NFT options
+ */
+export interface UpdateSimpleNFTOptions {
+  name?: string
+  symbol?: string
+  uri?: string
+  royalty?: number
+  creators?: Array<{ address: PublicKey; share: number }>
+  isMutable?: boolean
+}
+
+/**
+ * Batch create options
+ */
+export interface BatchCreateOptions {
+  items: CreateSimpleNFTOptions[]
+  onProgress?: (completed: number, total: number) => void
+}
+
+/**
+ * Batch transfer options
+ */
+export interface BatchTransferOptions {
+  mints: string[]
+  to: string
+  onProgress?: (completed: number, total: number) => void
+}
+
+/**
+ * Simple NFT result (from creation)
+ */
+export interface SimpleNFTResult {
+  mint: string
+  metadata: string
+  masterEdition: string
+  signature: string
+  uri: string
+}
+
+/**
+ * Simple collection result (from creation)
+ */
+export interface SimpleCollectionResult extends SimpleNFTResult {}
+
+/**
+ * Freeze/thaw result
+ */
+export interface FreezeResult {
+  signature: string
+  mint: string
+  account: string
+}
+
+/**
+ * Delegation result
+ */
+export interface DelegateResult {
+  signature: string
+  mint: string
+  delegate: string
+}
+
+/**
+ * Edition result
+ */
+export interface EditionResult {
+  mint: string
+  metadata: string
+  edition: string
+  editionNumber: number
+  signature: string
+}
+
+/**
+ * Master edition result
+ */
+export interface MasterEditionResult {
+  signature: string
+  mint: string
+  masterEdition: string
+}
+
+/**
+ * Batch operation result
+ */
+export interface BatchResult<T> {
+  successful: T[]
+  failed: Array<{ index: number; error: string }>
+  total: number
+}
