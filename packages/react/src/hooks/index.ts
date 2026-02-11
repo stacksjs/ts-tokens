@@ -9,3 +9,15 @@ export { useTransaction } from './useTransaction'
 export { useTokenAccounts } from './useTokenAccounts'
 export { useCandyMachine } from './useCandyMachine'
 export { useWallet } from './useWallet'
+
+// Accessibility utilities
+export {
+  announce,
+  useTransactionAnnouncer,
+  useKeyboardNavigation,
+  usePrefersReducedMotion,
+  usePrefersHighContrast,
+  srOnlyStyle,
+  getLoadingAriaProps,
+  getErrorAriaProps,
+} from '../utils/a11y'

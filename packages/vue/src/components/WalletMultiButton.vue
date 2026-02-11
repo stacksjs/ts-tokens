@@ -34,18 +34,18 @@ const truncatedAddress = () => {
 </script>
 
 <template>
-  <button v-if="!connected" @click="handleConnect" :disabled="connecting">
+  <button v-if="!connected" @click="handleConnect" :disabled="connecting" :aria-label="connecting ? 'Connecting to wallet' : 'Connect wallet'" :aria-busy="connecting">
     {{ connecting ? 'Connecting...' : label }}
   </button>
   <div v-else style="position: relative; display: inline-block">
-    <button @click="showDropdown = !showDropdown">
+    <button @click="showDropdown = !showDropdown" :aria-expanded="showDropdown" aria-haspopup="true" aria-label="Wallet options">
       {{ truncatedAddress() }}
     </button>
     <div v-if="showDropdown" style="position: absolute; top: 100%; right: 0; margin-top: 4px; background: #fff; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 10; min-width: 160px">
       <div style="padding: 8px 12px; font-size: 12px; color: #666; border-bottom: 1px solid #eee">
         {{ publicKey?.toBase58() }}
       </div>
-      <button @click="handleDisconnect" style="display: block; width: 100%; padding: 8px 12px; border: none; background: none; cursor: pointer; text-align: left">
+      <button @click="handleDisconnect" style="display: block; width: 100%; padding: 8px 12px; border: none; background: none; cursor: pointer; text-align: left" aria-label="Disconnect wallet">
         Disconnect
       </button>
     </div>

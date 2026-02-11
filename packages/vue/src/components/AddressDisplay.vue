@@ -31,8 +31,13 @@ const handleCopy = async () => {
   <span
     :style="{ cursor: copyable ? 'pointer' : 'default', fontFamily: 'monospace' }"
     @click="handleCopy"
+    @keydown.enter.prevent="handleCopy"
+    @keydown.space.prevent="handleCopy"
     :title="address"
+    :aria-label="`Address: ${address}${copyable ? '. Click to copy' : ''}`"
+    :role="copyable ? 'button' : undefined"
+    :tabindex="copyable ? 0 : undefined"
   >
-    {{ displayAddress }} <template v-if="copied">✓</template>
+    {{ displayAddress }} <span v-if="copied" aria-live="polite">✓ Copied</span>
   </span>
 </template>

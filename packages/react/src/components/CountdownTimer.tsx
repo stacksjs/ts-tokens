@@ -41,7 +41,7 @@ export function CountdownTimer({ targetDate, onComplete, className, style }: Cou
   }, [targetDate, onComplete])
 
   return (
-    <span className={className} style={{ fontVariantNumeric: 'tabular-nums', ...style }}>
+    <span className={className} style={{ fontVariantNumeric: 'tabular-nums', ...style }} role="timer" aria-live="polite" aria-label={remaining <= 0 ? 'Countdown complete, now live' : `Time remaining: ${formatTime(remaining)}`}>
       {remaining <= 0 ? 'Live!' : formatTime(remaining)}
     </span>
   )

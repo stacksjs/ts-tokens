@@ -243,3 +243,7 @@ export function basisPointsToPercent(basisPoints: number): number {
 export function percentToBasisPoints(percent: number): number {
   return Math.floor(percent * 100)
 }
+
+export * from './batch-rpc'
+export * from './persistent-cache'
+export * from './bundle-optimizer'

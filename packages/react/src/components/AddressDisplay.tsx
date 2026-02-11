@@ -21,8 +21,17 @@ export function AddressDisplay({ address, truncate = true, chars = 4, copyable =
   }
 
   return (
-    <span className={className} style={{ cursor: copyable ? 'pointer' : 'default', fontFamily: 'monospace', ...style }} onClick={handleCopy} title={address}>
-      {displayAddress} {copied && '✓'}
+    <span
+      className={className}
+      style={{ cursor: copyable ? 'pointer' : 'default', fontFamily: 'monospace', ...style }}
+      onClick={handleCopy}
+      onKeyDown={(e) => { if (copyable && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); handleCopy() } }}
+      title={address}
+      aria-label={`Address: ${address}${copyable ? '. Click to copy' : ''}`}
+      role={copyable ? 'button' : undefined}
+      tabIndex={copyable ? 0 : undefined}
+    >
+      {displayAddress} {copied && <span aria-live="polite">✓ Copied</span>}
     </span>
   )
 }

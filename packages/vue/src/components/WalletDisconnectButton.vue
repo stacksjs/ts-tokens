@@ -20,7 +20,7 @@ const handleClick = async () => {
 </script>
 
 <template>
-  <button v-if="connected" @click="handleClick">
+  <button v-if="connected" @click="handleClick" aria-label="Disconnect wallet">
     {{ label }}
   </button>
 </template>

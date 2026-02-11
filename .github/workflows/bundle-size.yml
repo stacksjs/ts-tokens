@@ -1,0 +1,40 @@
+name: Bundle Size Check
+
+on:
+  pull_request:
+    paths:
+      - 'packages/ts-tokens/src/**'
+      - 'packages/react/src/**'
+      - 'packages/vue/src/**'
+
+jobs:
+  bundle-size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('**/bun.lock') }}
+      - run: bun install
+      - run: bun run build
+        working-directory: packages/ts-tokens
+      - name: Check bundle size
+        run: |
+          node -e "
+          const { analyzeBundleSize, checkBundleBudget } = require('./packages/ts-tokens/dist/utils/bundle-optimizer.js');
+          analyzeBundleSize('./packages/ts-tokens/dist').then(report => {
+            console.log('Bundle Size Report:');
+            console.log('Total:', (report.totalSizeBytes / 1024).toFixed(1), 'KB');
+            console.log('Gzip:', (report.totalGzipBytes / 1024).toFixed(1), 'KB');
+            report.entries.sort((a,b) => b.sizeBytes - a.sizeBytes).slice(0,10).forEach(e => {
+              console.log('  ' + e.name + ': ' + (e.sizeBytes / 1024).toFixed(1) + ' KB');
+            });
+            const result = checkBundleBudget(report, { maxTotalBytes: 5 * 1024 * 1024 });
+            if (!result.passed) {
+              console.error('Budget violations:', result.violations);
+              process.exit(1);
+            }
+          });
+          "

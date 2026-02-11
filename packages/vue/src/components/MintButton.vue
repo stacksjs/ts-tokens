@@ -36,5 +36,11 @@ const buttonText = () => {
 </script>
 
 <template>
-  <button @click="handleMint" :disabled="isDisabled()">{{ buttonText() }}</button>
+  <button
+    @click="handleMint"
+    :disabled="isDisabled()"
+    :aria-label="loading ? 'Loading mint status' : minting ? 'Minting in progress' : cm?.isSoldOut ? 'Sold out' : 'Mint NFT'"
+    :aria-busy="loading || minting"
+    :aria-disabled="isDisabled()"
+  >{{ buttonText() }}</button>
 </template>

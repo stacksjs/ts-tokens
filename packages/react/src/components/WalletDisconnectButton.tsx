@@ -17,7 +17,7 @@ export function WalletDisconnectButton({ label, onDisconnect, className, style }
   }
 
   return (
-    <button className={className} style={style} onClick={handleClick}>
+    <button className={className} style={style} onClick={handleClick} aria-label="Disconnect wallet">
       {label ?? 'Disconnect'}
     </button>
   )

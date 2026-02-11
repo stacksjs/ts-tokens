@@ -45,7 +45,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <span style="font-variant-numeric: tabular-nums">
+  <span style="font-variant-numeric: tabular-nums" role="timer" aria-live="polite" :aria-label="remaining <= 0 ? 'Countdown complete, now live' : `Time remaining: ${formatTime(remaining)}`">
     {{ remaining <= 0 ? 'Live!' : formatTime(remaining) }}
   </span>
 </template>

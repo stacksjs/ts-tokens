@@ -24,6 +24,8 @@ export function WalletConnectButton({ label, disabled, onConnect, className, sty
       style={style}
       onClick={handleClick}
       disabled={disabled || connecting || connected}
+      aria-label={connecting ? 'Connecting to wallet' : connected ? 'Wallet connected' : 'Connect wallet'}
+      aria-busy={connecting}
     >
       {buttonText}
     </button>

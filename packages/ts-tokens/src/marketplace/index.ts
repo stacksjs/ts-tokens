@@ -45,3 +45,14 @@ export {
 
 // State Store
 export { loadState, cleanupExpired } from './store'
+
+// OpenSea
+export * as opensea from './opensea'
+
+// Royalty Verification
+export { verifyRoyaltyPayment, generateComplianceReport } from './royalty-verification'
+export type { RoyaltyVerificationResult, RoyaltyComplianceReport } from './royalty-verification'
+
+// Cross-Marketplace Listing
+export { crossListNFT, cancelCrossListings, getBestPrice } from './cross-listing'
+export type { CrossListingOptions, CrossListingResult, CrossListingSummary, SupportedMarketplace } from './cross-listing'

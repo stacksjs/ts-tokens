@@ -24,7 +24,15 @@ export function MintButton({ candyMachine, onMint, disabled, className, style }:
   const isDisabled = disabled || loading || minting || cm?.isSoldOut
 
   return (
-    <button className={className} style={style} onClick={handleMint} disabled={isDisabled}>
+    <button
+      className={className}
+      style={style}
+      onClick={handleMint}
+      disabled={isDisabled}
+      aria-label={loading ? 'Loading mint status' : minting ? 'Minting in progress' : cm?.isSoldOut ? 'Sold out' : 'Mint NFT'}
+      aria-busy={loading || minting}
+      aria-disabled={isDisabled}
+    >
       {loading ? 'Loading...' : minting ? 'Minting...' : cm?.isSoldOut ? 'Sold Out' : 'Mint'}
     </button>
   )

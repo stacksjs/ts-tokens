@@ -34,7 +34,7 @@ export function WalletMultiButton({ label, onConnect, onDisconnect, className, s
 
   if (!connected) {
     return (
-      <button className={className} style={style} onClick={handleConnect} disabled={connecting}>
+      <button className={className} style={style} onClick={handleConnect} disabled={connecting} aria-label={connecting ? 'Connecting to wallet' : 'Connect wallet'} aria-busy={connecting}>
         {connecting ? 'Connecting...' : (label ?? 'Connect Wallet')}
       </button>
     )
@@ -45,7 +45,7 @@ export function WalletMultiButton({ label, onConnect, onDisconnect, className, s
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button className={className} style={style} onClick={() => setShowDropdown(!showDropdown)}>
+      <button className={className} style={style} onClick={() => setShowDropdown(!showDropdown)} aria-expanded={showDropdown} aria-haspopup="true" aria-label="Wallet options">
         {truncated}
       </button>
       {showDropdown && (
@@ -75,6 +75,7 @@ export function WalletMultiButton({ label, onConnect, onDisconnect, className, s
               cursor: 'pointer',
               textAlign: 'left',
             }}
+            aria-label="Disconnect wallet"
           >
             Disconnect
           </button>
