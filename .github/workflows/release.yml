@@ -35,8 +35,25 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
+      - name: Build All Packages
+        run: bun run build
+
+      - name: Compile CLI Binaries
+        run: cd packages/ts-tokens && bun run compile:all
+
+      - name: Zip Binaries
+        run: |
+          cd packages/ts-tokens/bin
+          for f in tokens-linux-x64 tokens-linux-arm64 tokens-darwin-x64 tokens-darwin-arm64; do
+            [ -f "$f" ] && zip "${f}.zip" "$f"
+          done
+          [ -f "tokens-windows-x64.exe" ] && zip "tokens-windows-x64.zip" "tokens-windows-x64.exe"
+
       - name: Publish to npm
-        run: ./scripts/publish.sh
+        run: |
+          cd packages/ts-tokens && bun publish --access public --provenance
+          cd ../react && bun publish --access public --provenance
+          cd ../vue && bun publish --access public --provenance
         env:
           BUN_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
@@ -45,19 +62,10 @@ jobs:
         uses: stacksjs/action-releaser@v1.1.0
         with:
           files: |
-            ./packages/tlsx/bin/tlsx-linux-x64.zip
-            ./packages/tlsx/bin/tlsx-linux-arm64.zip
-            ./packages/tlsx/bin/tlsx-windows-x64.zip
-            ./packages/tlsx/bin/tlsx-darwin-x64.zip
-            ./packages/tlsx/bin/tlsx-darwin-arm64.zip
-          # --- Homebrew tap update support ---
-          # Path to your Homebrew formula template (update this path as needed)
-          # homebrewFormula: .github/homebrew-formula.rb
-          # The owner/repo of your Homebrew tap (update this value as needed)
-          # homebrewRepo: stacksjs/homebrew-tap
-          # Optionally uncomment and set these if you need custom values:
-          # homebrewBranch: main
-          # homebrewPath: Formula
-          # homebrewCommitFormat: "update: {{ formula }} to {{ version }}"
+            ./packages/ts-tokens/bin/tokens-linux-x64.zip
+            ./packages/ts-tokens/bin/tokens-linux-arm64.zip
+            ./packages/ts-tokens/bin/tokens-windows-x64.zip
+            ./packages/ts-tokens/bin/tokens-darwin-x64.zip
+            ./packages/ts-tokens/bin/tokens-darwin-arm64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

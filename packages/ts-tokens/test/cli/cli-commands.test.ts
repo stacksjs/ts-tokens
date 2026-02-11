@@ -20,7 +20,7 @@ describe('Version & Help', () => {
   test('version command outputs version string and exits 0', () => {
     const { stdout, exitCode } = runCLI(['version'])
     expect(exitCode).toBe(0)
-    expect(stdout).toContain('0.0.0')
+    expect(stdout).toMatch(/\d+\.\d+\.\d+/)
   })
 
   test('--help flag shows help text and exits 0', () => {

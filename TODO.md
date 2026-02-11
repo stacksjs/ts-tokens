@@ -1000,41 +1000,41 @@
 
 ### 10.1 Package Preparation
 
-- [ ] Finalize `packages/ts-tokens/package.json`:
-  - [ ] Update version to `0.1.0`
-  - [ ] Update description
-  - [ ] Update keywords for discoverability
-  - [ ] Add proper `peerDependencies`
-  - [ ] Configure `exports` for subpath imports
-- [ ] Finalize `packages/react/package.json`
-- [ ] Finalize `packages/vue/package.json`
-- [ ] Create `packages/cli/package.json` (if separate package)
+- [x] Finalize `packages/ts-tokens/package.json`:
+  - [x] Update version to `0.1.0`
+  - [x] Update description
+  - [x] Update keywords for discoverability
+  - [x] Add proper `peerDependencies`
+  - [x] Configure `exports` for subpath imports (26 subpath exports)
+- [x] Finalize `packages/react/package.json` (version 0.1.0, provenance)
+- [x] Finalize `packages/vue/package.json` (version 0.1.0, provenance)
+- [ ] Create `packages/cli/package.json` (if separate package) — CLI is bundled in ts-tokens
 
 ### 10.2 Build Configuration
 
-- [ ] Configure TypeScript build for all packages
-- [ ] Generate `.d.ts` type definitions
-- [ ] Configure tree-shaking friendly builds
+- [x] Configure TypeScript build for all packages (build.ts with submodule entrypoints)
+- [x] Generate `.d.ts` type definitions (bun-plugin-dtsx)
+- [x] Configure tree-shaking friendly builds (ES modules + subpath exports)
 - [ ] Set up source maps
-- [ ] Configure minification for production
+- [x] Configure minification for production (--minify on CLI compile)
 
 ### 10.3 Binary Distribution
 
-- [ ] Build CLI binaries for all platforms:
-  - [ ] `tokens-linux-x64`
-  - [ ] `tokens-linux-arm64`
-  - [ ] `tokens-darwin-x64`
-  - [ ] `tokens-darwin-arm64`
-  - [ ] `tokens-windows-x64.exe`
+- [x] Build CLI binaries for all platforms:
+  - [x] `tokens-linux-x64`
+  - [x] `tokens-linux-arm64`
+  - [x] `tokens-darwin-x64`
+  - [x] `tokens-darwin-arm64`
+  - [x] `tokens-windows-x64.exe`
 - [ ] Test binaries on each platform
-- [ ] Set up GitHub releases with binaries
+- [x] Set up GitHub releases with binaries (release.yml fixed)
 
 ### 10.4 NPM Publishing
 
 - [ ] Publish `ts-tokens` to npm
 - [ ] Publish `@ts-tokens/react` to npm
 - [ ] Publish `@ts-tokens/vue` to npm
-- [ ] Set up npm provenance
+- [x] Set up npm provenance (--provenance flag in release workflow and package scripts)
 - [ ] Configure npm access and 2FA
 
 ### 10.5 Documentation Deployment

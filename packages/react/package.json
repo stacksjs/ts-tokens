@@ -1,7 +1,7 @@
 {
   "name": "react-tokens",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "React components for Solana tokens and NFTs",
   "author": "Chris Breuer <chris@stacksjs.org>",
   "license": "MIT",
@@ -46,7 +46,7 @@
     "build": "bun build ./src/index.ts --outdir ./dist --target browser",
     "lint": "bunx --bun eslint .",
     "lint:fix": "bunx --bun eslint . --fix",
-    "release": "bun publish --access public",
+    "release": "bun publish --access public --provenance",
     "prepublishOnly": "bun --bun run build",
     "test": "bun test",
     "typecheck": "bun --bun tsc --noEmit"

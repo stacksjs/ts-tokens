@@ -1,7 +1,7 @@
 {
   "name": "ts-tokens",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Generate your own fungible or non-fungible tokens.",
   "author": "Chris Breuer <chris@stacksjs.org>",
