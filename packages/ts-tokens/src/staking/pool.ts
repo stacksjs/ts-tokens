@@ -64,16 +64,41 @@ export async function getPoolStats(
     ? Number((rewardsPerYear * 10000n) / pool.totalStaked) / 100
     : 0
 
-  // Calculate time until rewards empty
-  const rewardBalance = 0n // Would fetch from reward vault
+  // Fetch actual reward vault balance
+  const { getRewardVaultAddress } = await import('./program')
+  const rewardVaultAddress = getRewardVaultAddress(poolAddress)
+  let rewardBalance = 0n
+  try {
+    const vaultBalance = await connection.getTokenAccountBalance(rewardVaultAddress)
+    rewardBalance = BigInt(vaultBalance.value.amount)
+  } catch {
+    // Vault may not exist yet
+  }
+
   const timeUntilEmpty = pool.rewardRate > 0n
     ? rewardBalance / pool.rewardRate
     : 0n
 
+  // Count unique stakers efficiently (zero-length data slice)
+  const { STAKING_PROGRAM_ID } = await import('./program')
+  let totalStakers = 0
+  try {
+    const stakeAccounts = await connection.getProgramAccounts(STAKING_PROGRAM_ID, {
+      filters: [
+        { dataSize: 112 },
+        { memcmp: { offset: 40, bytes: poolAddress.toBase58() } },
+      ],
+      dataSlice: { offset: 0, length: 0 },
+    })
+    totalStakers = stakeAccounts.length
+  } catch {
+    // Program may not be deployed yet
+  }
+
   return {
     totalStaked: pool.totalStaked,
-    totalStakers: 0, // Would need to count stake accounts
-    totalRewardsDistributed: 0n, // Would track separately
+    totalStakers,
+    totalRewardsDistributed: 0n, // TODO: Track via reward vault delta or on-chain counter
     currentApr: apr,
     remainingRewards: rewardBalance,
     timeUntilEmpty,

@@ -2297,7 +2297,7 @@
 ### 18.1 Core Staking Program Design
 
 - [x] Create `src/staking/` directory for staking module
-- [ ] Program ID: Deploy our own staking program
+- [ ] Program ID: Deploy our own staking program (deferred — placeholder like 17.10)
 - [x] Design principles:
   - [x] Flexible lock periods (no lock, fixed, variable)
   - [x] Multiple reward token support
@@ -2347,7 +2347,7 @@
 
 #### Pool Management
 
-- [ ] `create_stake_pool` - Create new staking pool
+- [x] `create_stake_pool` - Create new staking pool
 
   ```ts
   await createStakePool({
@@ -2360,15 +2360,15 @@
   })
   ```
 
-- [ ] `update_stake_pool` - Update pool parameters
-- [ ] `pause_stake_pool` / `resume_stake_pool` - Emergency controls
-- [ ] `fund_rewards` - Add reward tokens to pool
-- [ ] `withdraw_rewards` - Remove unfunded rewards (admin)
-- [ ] `close_stake_pool` - Close pool and return funds
+- [x] `update_stake_pool` - Update pool parameters
+- [x] `pause_stake_pool` / `resume_stake_pool` - Emergency controls
+- [x] `fund_rewards` - Add reward tokens to pool
+- [x] `withdraw_rewards` - Remove unfunded rewards (admin)
+- [x] `close_stake_pool` - Close pool and return funds
 
 #### User Staking
 
-- [ ] `stake` - Stake tokens
+- [x] `stake` - Stake tokens
 
   ```ts
   await stake({
@@ -2378,7 +2378,7 @@
   // Automatically claims pending rewards
   ```
 
-- [ ] `unstake` - Unstake tokens
+- [x] `unstake` - Unstake tokens
 
   ```ts
   await unstake({
@@ -2388,20 +2388,20 @@
   // Applies penalty if before lock_end_time
   ```
 
-- [ ] `claim_rewards` - Claim accumulated rewards
+- [x] `claim_rewards` - Claim accumulated rewards
 
   ```ts
   const rewards = await claimRewards(stakePoolAddress)
   console.log(`Claimed ${rewards} tokens`)
   ```
 
-- [ ] `compound_rewards` - Restake rewards (if same token)
-- [ ] `emergency_unstake` - Force unstake with max penalty
+- [x] `compound_rewards` - Restake rewards (if same token)
+- [x] `emergency_unstake` - Force unstake with max penalty
 
 ### 18.4 NFT Staking
 
-- [ ] Create `src/staking/nft.ts` for NFT-specific staking
-- [ ] `create_nft_stake_pool` - Pool for staking NFTs
+- [x] Create `src/staking/nft.ts` for NFT-specific staking
+- [x] `create_nft_stake_pool` - Pool for staking NFTs
 
   ```ts
   await createNFTStakePool({
@@ -2416,16 +2416,16 @@
   })
   ```
 
-- [ ] `stake_nft` - Stake NFT (transfers to escrow)
-- [ ] `unstake_nft` - Unstake and return NFT
-- [ ] `claim_nft_rewards` - Claim rewards for staked NFTs
-- [ ] Support rarity-based reward multipliers
-- [ ] Support trait-based reward bonuses
+- [x] `stake_nft` - Stake NFT (transfers to escrow)
+- [x] `unstake_nft` - Unstake and return NFT
+- [x] `claim_nft_rewards` - Claim rewards for staked NFTs
+- [x] Support rarity-based reward multipliers
+- [x] Support trait-based reward bonuses
 
 ### 18.5 Token Locking (Vesting)
 
-- [ ] Create `src/locking/` directory
-- [ ] `create_lock` - Lock tokens with vesting schedule
+- [x] Create `src/locking/` directory (covered by existing `src/vesting/` module)
+- [x] `create_lock` - Lock tokens with vesting schedule (via `vesting.createVestingSchedule`)
 
   ```ts
   await createLock({
@@ -2441,19 +2441,19 @@
   })
   ```
 
-- [ ] `claim_vested` - Claim unlocked tokens
-- [ ] `get_vested_amount` - Calculate currently vested amount
+- [x] `claim_vested` - Claim unlocked tokens (via `vesting.claimVestedTokens`)
+- [x] `get_vested_amount` - Calculate currently vested amount (via `vesting.calculateVestedAmount`)
 - [ ] `revoke_lock` - Revoke unvested tokens (if revocable)
-- [ ] Support vesting schedules:
-  - [ ] **Linear** - Continuous unlock over time
-  - [ ] **Cliff** - Nothing until cliff, then linear
+- [x] Support vesting schedules:
+  - [x] **Linear** - Continuous unlock over time
+  - [x] **Cliff** - Nothing until cliff, then linear
   - [ ] **Milestone** - Unlock at specific dates
   - [ ] **Custom** - User-defined unlock points
 
 ### 18.6 Liquid Staking (Advanced)
 
-- [ ] Create `src/staking/liquid.ts`
-- [ ] `create_liquid_stake_pool` - Pool that issues receipt tokens
+- [x] Create `src/staking/liquid.ts`
+- [x] `create_liquid_stake_pool` - Pool that issues receipt tokens
 
   ```ts
   // User stakes SOL/Token, receives stSOL/stToken
@@ -2464,14 +2464,14 @@
   })
   ```
 
-- [ ] Receipt tokens represent staked position
-- [ ] Receipt tokens can be traded/used in DeFi
-- [ ] Exchange rate increases as rewards accrue
-- [ ] `liquid_stake` / `liquid_unstake` operations
+- [x] Receipt tokens represent staked position
+- [x] Receipt tokens can be traded/used in DeFi
+- [x] Exchange rate increases as rewards accrue
+- [x] `liquid_stake` / `liquid_unstake` operations
 
 ### 18.7 TypeScript SDK for Staking
 
-- [ ] Create `src/staking/index.ts` with clean API:
+- [x] Create `src/staking/index.ts` with clean API:
 
   ```ts
   // Create pool
@@ -2494,7 +2494,7 @@
   await tokens.staking.unstake(pool, { amount: 5000 })
   ```
 
-- [ ] Create query functions:
+- [x] Create query functions:
 
   ```ts
   // Get all pools for a token
@@ -2510,25 +2510,25 @@
 
 ### 18.8 CLI Commands for Staking
 
-- [ ] `tokens stake create-pool` - Create staking pool (interactive)
-- [ ] `tokens stake fund <pool> <amount>` - Fund pool with rewards
-- [ ] `tokens stake <pool> <amount>` - Stake tokens
-- [ ] `tokens unstake <pool> [amount]` - Unstake (all if no amount)
-- [ ] `tokens stake claim <pool>` - Claim rewards
-- [ ] `tokens stake compound <pool>` - Compound rewards
-- [ ] `tokens stake info <pool>` - Show pool info
-- [ ] `tokens stake my-stakes` - Show all user stakes
-- [ ] `tokens lock create` - Create token lock/vesting
-- [ ] `tokens lock claim <lock>` - Claim vested tokens
-- [ ] `tokens lock info <lock>` - Show lock info
+- [x] `tokens stake create-pool` - Create staking pool (interactive)
+- [x] `tokens stake fund <pool> <amount>` - Fund pool with rewards
+- [x] `tokens stake <pool> <amount>` - Stake tokens
+- [x] `tokens unstake <pool> [amount]` - Unstake (all if no amount)
+- [x] `tokens stake claim <pool>` - Claim rewards
+- [x] `tokens stake compound <pool>` - Compound rewards
+- [x] `tokens stake info <pool>` - Show pool info
+- [x] `tokens stake my-stakes` - Show all user stakes
+- [x] `tokens lock create` - Create token lock/vesting
+- [x] `tokens lock claim <lock>` - Claim vested tokens
+- [x] `tokens lock info <lock>` - Show lock info
 
 ### 18.9 Staking Analytics
 
-- [ ] APY/APR calculation utilities
-- [ ] Historical reward tracking
-- [ ] Pool performance metrics
-- [ ] User earnings history
-- [ ] Export staking reports
+- [x] APY/APR calculation utilities
+- [x] Historical reward tracking (basic via `getSignaturesForAddress`; full indexer deferred)
+- [x] Pool performance metrics
+- [x] User earnings history
+- [x] Export staking reports
 
 ---
 

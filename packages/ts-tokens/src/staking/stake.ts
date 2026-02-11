@@ -50,9 +50,28 @@ export async function getUserStakes(
   pool: PublicKey,
   owner: PublicKey
 ): Promise<StakeInfo[]> {
-  // In practice, would use getProgramAccounts with filters
-  // This is a simplified placeholder
-  return []
+  const { STAKING_PROGRAM_ID } = await import('./program')
+  try {
+    const accounts = await connection.getProgramAccounts(STAKING_PROGRAM_ID, {
+      filters: [
+        { dataSize: 112 },
+        { memcmp: { offset: 8, bytes: owner.toBase58() } },
+        { memcmp: { offset: 40, bytes: pool.toBase58() } },
+      ],
+    })
+
+    return accounts.map(({ account }) => ({
+      owner: new PublicKey(account.data.subarray(8, 40)),
+      pool: new PublicKey(account.data.subarray(40, 72)),
+      amount: account.data.readBigUInt64LE(72),
+      rewardDebt: account.data.readBigUInt64LE(80),
+      stakedAt: account.data.readBigUInt64LE(88),
+      lastClaimTime: account.data.readBigUInt64LE(96),
+      lockEndTime: account.data.readBigUInt64LE(104),
+    }))
+  } catch {
+    return []
+  }
 }
 
 /**
@@ -196,8 +215,28 @@ export async function getUserStakedNFTs(
   pool: PublicKey,
   owner: PublicKey
 ): Promise<NFTStakeInfo[]> {
-  // In practice, would use getProgramAccounts with filters
-  return []
+  const { STAKING_PROGRAM_ID } = await import('./program')
+  try {
+    const accounts = await connection.getProgramAccounts(STAKING_PROGRAM_ID, {
+      filters: [
+        { dataSize: 136 },
+        { memcmp: { offset: 8, bytes: owner.toBase58() } },
+        { memcmp: { offset: 40, bytes: pool.toBase58() } },
+      ],
+    })
+
+    return accounts.map(({ account }) => ({
+      owner: new PublicKey(account.data.subarray(8, 40)),
+      pool: new PublicKey(account.data.subarray(40, 72)),
+      mint: new PublicKey(account.data.subarray(72, 104)),
+      stakedAt: account.data.readBigUInt64LE(104),
+      lastClaimTime: account.data.readBigUInt64LE(112),
+      lockEndTime: account.data.readBigUInt64LE(120),
+      pointsEarned: account.data.readBigUInt64LE(128),
+    }))
+  } catch {
+    return []
+  }
 }
 
 /**
