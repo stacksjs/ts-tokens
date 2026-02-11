@@ -1,7 +1,7 @@
 {
   "name": "ts-tokens",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A TypeScript library for managing fungible and non-fungible tokens on Solana.",
   "author": "Chris Breuer <chris@stacksjs.org>",
   "license": "MIT",
@@ -30,6 +30,110 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./token": {
+      "types": "./dist/token/index.d.ts",
+      "import": "./dist/token/index.js"
+    },
+    "./nft": {
+      "types": "./dist/nft/index.d.ts",
+      "import": "./dist/nft/index.js"
+    },
+    "./config": {
+      "types": "./dist/config/config.d.ts",
+      "import": "./dist/config/config.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js"
+    },
+    "./drivers": {
+      "types": "./dist/drivers/index.d.ts",
+      "import": "./dist/drivers/index.js"
+    },
+    "./storage": {
+      "types": "./dist/storage/index.d.ts",
+      "import": "./dist/storage/index.js"
+    },
+    "./programs": {
+      "types": "./dist/programs/index.d.ts",
+      "import": "./dist/programs/index.js"
+    },
+    "./security": {
+      "types": "./dist/security/index.d.ts",
+      "import": "./dist/security/index.js"
+    },
+    "./staking": {
+      "types": "./dist/staking/index.d.ts",
+      "import": "./dist/staking/index.js"
+    },
+    "./batch": {
+      "types": "./dist/batch/index.d.ts",
+      "import": "./dist/batch/index.js"
+    },
+    "./multisig": {
+      "types": "./dist/multisig/index.d.ts",
+      "import": "./dist/multisig/index.js"
+    },
+    "./governance": {
+      "types": "./dist/governance/index.d.ts",
+      "import": "./dist/governance/index.js"
+    },
+    "./defi": {
+      "types": "./dist/defi/index.d.ts",
+      "import": "./dist/defi/index.js"
+    },
+    "./marketplace": {
+      "types": "./dist/marketplace/index.d.ts",
+      "import": "./dist/marketplace/index.js"
+    },
+    "./indexer": {
+      "types": "./dist/indexer/index.d.ts",
+      "import": "./dist/indexer/index.js"
+    },
+    "./wallets": {
+      "types": "./dist/wallets/index.d.ts",
+      "import": "./dist/wallets/index.js"
+    },
+    "./analytics": {
+      "types": "./dist/analytics/index.d.ts",
+      "import": "./dist/analytics/index.js"
+    },
+    "./fluent": {
+      "types": "./dist/fluent/index.d.ts",
+      "import": "./dist/fluent/index.js"
+    },
+    "./simple-nft": {
+      "types": "./dist/simple-nft/index.d.ts",
+      "import": "./dist/simple-nft/index.js"
+    },
+    "./pnft": {
+      "types": "./dist/pnft/index.d.ts",
+      "import": "./dist/pnft/index.js"
+    },
+    "./events": {
+      "types": "./dist/events/index.d.ts",
+      "import": "./dist/events/index.js"
+    },
+    "./treasury": {
+      "types": "./dist/treasury/index.d.ts",
+      "import": "./dist/treasury/index.js"
+    },
+    "./voting": {
+      "types": "./dist/voting/index.d.ts",
+      "import": "./dist/voting/index.js"
+    },
+    "./i18n": {
+      "types": "./dist/i18n/index.d.ts",
+      "import": "./dist/i18n/index.js"
+    },
+    "./debug": {
+      "types": "./dist/debug/index.d.ts",
+      "import": "./dist/debug/index.js"
+    },
     "./*": {
       "import": "./dist/*"
     }
@@ -55,7 +159,7 @@
     "lint": "bunx --bun eslint --flag unstable_ts_config .",
     "lint:fix": "bunx --bun eslint --flag unstable_ts_config . --fix",
     "prepublishOnly": "bun --bun run build && bun run compile:all",
-    "release": "bun publish --access public",
+    "release": "bun publish --access public --provenance",
     "test": "bun test",
     "typecheck": "bun --bun tsc --noEmit"
   },
@@ -71,6 +175,6 @@
     "bunfig": "^0.15.6"
   },
   "lint-staged": {
-    "*.{js,ts}": "bunx --bun eslint --flag unstable_ts_config . --fix"
+    "*.{js,ts}": "bunx --bun eslint --flag unstable_ts_config --fix"
   }
 }
