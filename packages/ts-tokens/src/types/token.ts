@@ -101,6 +101,8 @@ export type TokenExtension =
   | { type: 'defaultAccountState'; state: 'initialized' | 'frozen' }
   | { type: 'memoRequired' }
   | { type: 'cpiGuard' }
+  | { type: 'groupPointer'; authority?: string; groupAddress?: string }
+  | { type: 'groupMemberPointer'; authority?: string; memberAddress?: string }
 
 /**
  * Token minting options

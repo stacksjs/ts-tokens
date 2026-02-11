@@ -24,7 +24,14 @@ import {
   createInitializeInterestBearingMintInstruction,
   createInitializeNonTransferableMintInstruction,
   createInitializePermanentDelegateInstruction,
+  createInitializeDefaultAccountStateInstruction,
+  createInitializeTransferHookInstruction,
+  createInitializeMetadataPointerInstruction,
+  createInitializeGroupPointerInstruction,
+  createInitializeGroupMemberPointerInstruction,
+  AccountState as SplAccountState,
 } from '@solana/spl-token'
+import { initializeConfidentialTransferMint } from '../programs/token-2022/instructions'
 import type { TokenConfig, CreateTokenOptions, TokenResult, TransactionOptions } from '../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
 import { loadWallet } from '../drivers/solana/wallet'
@@ -191,7 +198,24 @@ export async function createToken(
         case 'permanentDelegate':
           extensionTypes.push(ExtensionType.PermanentDelegate)
           break
-        // Add more extension types as needed
+        case 'defaultAccountState':
+          extensionTypes.push(ExtensionType.DefaultAccountState)
+          break
+        case 'confidentialTransfer':
+          extensionTypes.push(ExtensionType.ConfidentialTransferMint)
+          break
+        case 'transferHook':
+          extensionTypes.push(ExtensionType.TransferHook)
+          break
+        case 'metadataPointer':
+          extensionTypes.push(ExtensionType.MetadataPointer)
+          break
+        case 'groupPointer':
+          extensionTypes.push(ExtensionType.GroupPointer)
+          break
+        case 'groupMemberPointer':
+          extensionTypes.push(ExtensionType.GroupMemberPointer)
+          break
       }
     }
     mintLen = getMintLen(extensionTypes)
@@ -250,6 +274,64 @@ export async function createToken(
             createInitializePermanentDelegateInstruction(
               mint,
               new PublicKey(ext.delegate),
+              programId
+            )
+          )
+          break
+        case 'defaultAccountState':
+          instructions.push(
+            createInitializeDefaultAccountStateInstruction(
+              mint,
+              ext.state === 'frozen' ? SplAccountState.Frozen : SplAccountState.Initialized,
+              programId
+            )
+          )
+          break
+        case 'confidentialTransfer':
+          instructions.push(
+            initializeConfidentialTransferMint({
+              mint,
+              authority: payer.publicKey,
+              autoApproveNewAccounts: true,
+            })
+          )
+          break
+        case 'transferHook':
+          instructions.push(
+            createInitializeTransferHookInstruction(
+              mint,
+              payer.publicKey,
+              new PublicKey(ext.programId),
+              programId
+            )
+          )
+          break
+        case 'metadataPointer':
+          instructions.push(
+            createInitializeMetadataPointerInstruction(
+              mint,
+              payer.publicKey,
+              new PublicKey(ext.metadataAddress),
+              programId
+            )
+          )
+          break
+        case 'groupPointer':
+          instructions.push(
+            createInitializeGroupPointerInstruction(
+              mint,
+              ext.authority ? new PublicKey(ext.authority) : payer.publicKey,
+              ext.groupAddress ? new PublicKey(ext.groupAddress) : mint,
+              programId
+            )
+          )
+          break
+        case 'groupMemberPointer':
+          instructions.push(
+            createInitializeGroupMemberPointerInstruction(
+              mint,
+              ext.authority ? new PublicKey(ext.authority) : payer.publicKey,
+              ext.memberAddress ? new PublicKey(ext.memberAddress) : mint,
               programId
             )
           )

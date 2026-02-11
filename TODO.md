@@ -1509,44 +1509,44 @@
   - [x] `initializeTransferFeeConfig` - Set up transfer fees
   - [x] `setTransferFee` - Update fee percentage
   - [x] `withdrawWithheldTokensFromMint` - Collect fees
-  - [ ] `harvestWithheldTokensToMint` - Harvest from accounts
+  - [x] `harvestWithheldTokensToMint` - Harvest from accounts
 - [x] **Interest-Bearing Tokens** - Tokens that accrue interest
   - [x] `initializeInterestBearingMint` - Set up interest
   - [x] `updateRateInterestBearingMint` - Update rate
-  - [ ] `amountToUiAmount` / `uiAmountToAmount` - Convert with interest
+  - [x] `amountToUiAmount` / `uiAmountToAmount` - Convert with interest
 - [x] **Non-Transferable Tokens** (Soulbound)
   - [x] `initializeNonTransferable` - Make token soulbound
 - [x] **Permanent Delegate**
   - [x] `initializePermanentDelegate` - Set permanent delegate
 - [x] **Transfer Hook** - Custom logic on transfers
   - [x] `initializeTransferHook` - Set hook program
-  - [ ] `updateTransferHook` - Update hook
+  - [x] `updateTransferHook` - Update hook
 - [x] **Metadata Pointer** - On-chain metadata
   - [x] `initializeMetadataPointer` - Point to metadata
-  - [ ] `updateMetadataPointer` - Update pointer
-- [ ] **Confidential Transfers** - Private balances
-  - [ ] `initializeConfidentialTransferMint` - Enable confidential
-  - [ ] `configureConfidentialTransferAccount` - Configure account
-  - [ ] `confidentialTransfer` - Private transfer
+  - [x] `updateMetadataPointer` - Update pointer
+- [x] **Confidential Transfers** - Private balances
+  - [x] `initializeConfidentialTransferMint` - Enable confidential
+  - [x] `configureConfidentialTransferAccount` - Configure account (stub — requires ElGamal crypto)
+  - [x] `confidentialTransfer` - Private transfer (stub — requires ElGamal + ZK proofs)
 - [x] **Default Account State** - Frozen by default
   - [x] `initializeDefaultAccountState` - Set default state
-  - [ ] `updateDefaultAccountState` - Update state
-- [ ] **CPI Guard** - Prevent CPI token transfers
-  - [ ] `enableCpiGuard` / `disableCpiGuard`
+  - [x] `updateDefaultAccountState` - Update state
+- [x] **CPI Guard** - Prevent CPI token transfers
+  - [x] `enableCpiGuard` / `disableCpiGuard`
 - [x] **Mint Close Authority** - Close mint accounts
   - [x] `initializeMintCloseAuthority` - Set close authority
-- [ ] **Group/Member Pointers** - Token grouping
-  - [ ] `initializeGroupPointer` / `initializeGroupMemberPointer`
+- [x] **Group/Member Pointers** - Token grouping
+  - [x] `initializeGroupPointer` / `initializeGroupMemberPointer`
 
 ### 12.3 CLI Commands for Token-2022
 
-- [ ] `tokens create --token-2022` - Create Token-2022 token
-- [ ] `tokens create --transfer-fee <bps>` - With transfer fees
-- [ ] `tokens create --interest-rate <rate>` - Interest-bearing
-- [ ] `tokens create --soulbound` - Non-transferable
-- [ ] `tokens create --confidential` - Confidential transfers
-- [ ] `tokens fees collect <mint>` - Collect transfer fees
-- [ ] `tokens fees withdraw <mint>` - Withdraw collected fees
+- [x] `tokens create --token-2022` - Create Token-2022 token
+- [x] `tokens create --transfer-fee <bps>` - With transfer fees
+- [x] `tokens create --interest-rate <rate>` - Interest-bearing
+- [x] `tokens create --soulbound` - Non-transferable
+- [x] `tokens create --confidential` - Confidential transfers
+- [x] `tokens fees collect <mint>` - Collect transfer fees
+- [x] `tokens fees withdraw <mint>` - Withdraw collected fees
 
 ---
 

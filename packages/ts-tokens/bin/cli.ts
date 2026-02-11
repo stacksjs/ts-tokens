@@ -137,7 +137,27 @@ cli
   .option('--decimals <decimals>', 'Decimal places', '9')
   .option('--supply <supply>', 'Initial supply')
   .option('--metadata-uri <uri>', 'Metadata URI')
-  .action(async (options: { name?: string; symbol?: string; decimals?: string; supply?: string; metadataUri?: string }) => {
+  .option('--token-2022', 'Use Token-2022 program')
+  .option('--transfer-fee <bps>', 'Enable transfer fees (basis points)')
+  .option('--max-fee <amount>', 'Maximum transfer fee', '1000000000')
+  .option('--interest-rate <rate>', 'Interest-bearing rate (basis points)')
+  .option('--soulbound', 'Non-transferable (soulbound)')
+  .option('--confidential', 'Enable confidential transfers')
+  .option('--default-frozen', 'New accounts start frozen')
+  .action(async (options: {
+    name?: string
+    symbol?: string
+    decimals?: string
+    supply?: string
+    metadataUri?: string
+    token2022?: boolean
+    transferFee?: string
+    maxFee?: string
+    interestRate?: string
+    soulbound?: boolean
+    confidential?: boolean
+    defaultFrozen?: boolean
+  }) => {
     if (!options.name || !options.symbol) {
       console.error('Error: --name and --symbol are required')
       process.exit(1)
@@ -147,13 +167,61 @@ cli
     const { createToken } = await import('../src/token/create')
 
     try {
+      // Build extensions array from flags
+      const extensions: Array<any> = []
+      let useToken2022 = options.token2022 || false
+
+      if (options.transferFee) {
+        useToken2022 = true
+        extensions.push({
+          type: 'transferFee',
+          feeBasisPoints: parseInt(options.transferFee),
+          maxFee: BigInt(options.maxFee || '1000000000'),
+          feeAuthority: '',
+          withdrawAuthority: '',
+        })
+      }
+
+      if (options.interestRate) {
+        useToken2022 = true
+        extensions.push({
+          type: 'interestBearing',
+          rate: parseInt(options.interestRate),
+          rateAuthority: '',
+        })
+      }
+
+      if (options.soulbound) {
+        useToken2022 = true
+        extensions.push({ type: 'nonTransferable' })
+      }
+
+      if (options.confidential) {
+        useToken2022 = true
+        extensions.push({ type: 'confidentialTransfer' })
+      }
+
+      if (options.defaultFrozen) {
+        useToken2022 = true
+        extensions.push({ type: 'defaultAccountState', state: 'frozen' })
+      }
+
       console.log('Creating token...')
+      if (useToken2022) {
+        console.log('  Program: Token-2022')
+        if (extensions.length > 0) {
+          console.log(`  Extensions: ${extensions.map((e: any) => e.type).join(', ')}`)
+        }
+      }
+
       const result = await createToken({
         name: options.name,
         symbol: options.symbol,
         decimals: parseInt(options.decimals || '9'),
         initialSupply: options.supply ? BigInt(options.supply) : undefined,
         uri: options.metadataUri,
+        useToken2022,
+        extensions: extensions.length > 0 ? extensions : undefined,
       }, config)
 
       console.log('\n✓ Token created successfully!')
@@ -263,6 +331,115 @@ cli
       const balance = await getTokenBalance(connection, owner, mint)
       console.log(`Token: ${mint}`)
       console.log(`Balance: ${balance}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+// ============================================
+// Token-2022 Fee Commands
+// ============================================
+
+cli
+  .command('fees:collect <mint>', 'Harvest withheld transfer fees to mint')
+  .option('--accounts <addrs>', 'Comma-separated source token accounts')
+  .action(async (mint: string, options: { accounts?: string }) => {
+    const config = await getConfig()
+    const { createConnection } = await import('../src/drivers/solana/connection')
+    const { loadWallet } = await import('../src/drivers/solana/wallet')
+    const { harvestWithheldTokensToMint } = await import('../src/programs/token-2022/instructions')
+    const { PublicKey, Transaction } = await import('@solana/web3.js')
+    const { TOKEN_2022_PROGRAM_ID } = await import('@solana/spl-token')
+
+    try {
+      const connection = createConnection(config)
+      const payer = loadWallet(config)
+      const mintPubkey = new PublicKey(mint)
+
+      let sources: InstanceType<typeof PublicKey>[] = []
+
+      if (options.accounts) {
+        sources = options.accounts.split(',').map(a => new PublicKey(a.trim()))
+      } else {
+        // Auto-discover token accounts with withheld fees
+        console.log('Discovering token accounts with withheld fees...')
+        const accounts = await connection.getProgramAccounts(TOKEN_2022_PROGRAM_ID, {
+          filters: [
+            { dataSize: 165 },
+            { memcmp: { offset: 0, bytes: mint } },
+          ],
+        })
+        sources = accounts.map(a => a.pubkey)
+      }
+
+      if (sources.length === 0) {
+        console.log('No token accounts found to harvest from')
+        return
+      }
+
+      console.log(`Harvesting fees from ${sources.length} account(s)...`)
+      const instruction = harvestWithheldTokensToMint({
+        mint: mintPubkey,
+        sources,
+      })
+
+      const transaction = new Transaction().add(instruction)
+      transaction.feePayer = payer.publicKey
+      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+      transaction.sign(payer)
+
+      const signature = await connection.sendRawTransaction(transaction.serialize())
+      await connection.confirmTransaction(signature)
+
+      console.log('\n✓ Fees harvested successfully!')
+      console.log(`  Signature: ${signature}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('fees:withdraw <mint>', 'Withdraw collected fees from mint')
+  .option('--destination <addr>', 'Destination token account')
+  .action(async (mint: string, options: { destination?: string }) => {
+    const config = await getConfig()
+    const { createConnection } = await import('../src/drivers/solana/connection')
+    const { loadWallet } = await import('../src/drivers/solana/wallet')
+    const { withdrawWithheldTokensFromAccounts } = await import('../src/programs/token-2022/instructions')
+    const { PublicKey, Transaction } = await import('@solana/web3.js')
+    const { getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } = await import('@solana/spl-token')
+
+    try {
+      const connection = createConnection(config)
+      const payer = loadWallet(config)
+      const mintPubkey = new PublicKey(mint)
+
+      const destination = options.destination
+        ? new PublicKey(options.destination)
+        : await getAssociatedTokenAddress(mintPubkey, payer.publicKey, false, TOKEN_2022_PROGRAM_ID)
+
+      console.log(`Withdrawing fees from mint ${mint}...`)
+      console.log(`  Destination: ${destination.toBase58()}`)
+
+      const instruction = withdrawWithheldTokensFromAccounts({
+        mint: mintPubkey,
+        destination,
+        authority: payer.publicKey,
+        sources: [],
+      })
+
+      const transaction = new Transaction().add(instruction)
+      transaction.feePayer = payer.publicKey
+      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+      transaction.sign(payer)
+
+      const signature = await connection.sendRawTransaction(transaction.serialize())
+      await connection.confirmTransaction(signature)
+
+      console.log('\n✓ Fees withdrawn successfully!')
+      console.log(`  Signature: ${signature}`)
     } catch (error) {
       console.error('Error:', error instanceof Error ? error.message : error)
       process.exit(1)

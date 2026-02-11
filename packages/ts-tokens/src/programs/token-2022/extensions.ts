@@ -12,7 +12,12 @@ import type {
   TransferHook,
   MetadataPointer,
   TokenExtension,
- AccountState } from './types'
+  AccountState,
+  ConfidentialTransferMint,
+  CpiGuardConfig,
+  GroupPointer,
+  GroupMemberPointer,
+} from './types'
 
 /**
  * Get the size of an extension
@@ -43,6 +48,22 @@ export function getExtensionSize(type: ExtensionType): number {
       return 64
     case ExtensionType.MetadataPointer:
       return 64
+    case ExtensionType.ConfidentialTransferMint:
+      return 97
+    case ExtensionType.ConfidentialTransferAccount:
+      return 295
+    case ExtensionType.TransferHookAccount:
+      return 1
+    case ExtensionType.NonTransferableAccount:
+      return 0
+    case ExtensionType.GroupPointer:
+      return 64
+    case ExtensionType.GroupMemberPointer:
+      return 64
+    case ExtensionType.TokenGroup:
+      return 136
+    case ExtensionType.TokenGroupMember:
+      return 72
     default:
       return 0
   }
@@ -150,6 +171,55 @@ export function parseMetadataPointer(data: Buffer, offset: number): MetadataPoin
 }
 
 /**
+ * Parse confidential transfer mint from buffer
+ */
+export function parseConfidentialTransferMint(data: Buffer, offset: number): ConfidentialTransferMint {
+  const authority = data.subarray(offset, offset + 32)
+  const hasAuthority = !authority.every(b => b === 0)
+
+  return {
+    authority: hasAuthority ? new PublicKey(authority) : null,
+    autoApproveNewAccounts: data[offset + 32] === 1,
+    auditorElGamalPubkey: new Uint8Array(data.subarray(offset + 33, offset + 97)),
+  }
+}
+
+/**
+ * Parse CPI guard from buffer
+ */
+export function parseCpiGuard(data: Buffer, offset: number): CpiGuardConfig {
+  return {
+    lockCpi: data[offset] === 1,
+  }
+}
+
+/**
+ * Parse group pointer from buffer
+ */
+export function parseGroupPointer(data: Buffer, offset: number): GroupPointer {
+  const authority = data.subarray(offset, offset + 32)
+  const hasAuthority = !authority.every(b => b === 0)
+
+  return {
+    authority: hasAuthority ? new PublicKey(authority) : null,
+    groupAddress: new PublicKey(data.subarray(offset + 32, offset + 64)),
+  }
+}
+
+/**
+ * Parse group member pointer from buffer
+ */
+export function parseGroupMemberPointer(data: Buffer, offset: number): GroupMemberPointer {
+  const authority = data.subarray(offset, offset + 32)
+  const hasAuthority = !authority.every(b => b === 0)
+
+  return {
+    authority: hasAuthority ? new PublicKey(authority) : null,
+    memberAddress: new PublicKey(data.subarray(offset + 32, offset + 64)),
+  }
+}
+
+/**
  * Parse extensions from mint account data
  */
 export function parseExtensions(data: Buffer): TokenExtension[] {
@@ -194,6 +264,18 @@ export function parseExtensions(data: Buffer): TokenExtension[] {
         break
       case ExtensionType.DefaultAccountState:
         extensionData = { state: data[offset] as AccountState }
+        break
+      case ExtensionType.ConfidentialTransferMint:
+        extensionData = parseConfidentialTransferMint(data, offset)
+        break
+      case ExtensionType.CpiGuard:
+        extensionData = parseCpiGuard(data, offset)
+        break
+      case ExtensionType.GroupPointer:
+        extensionData = parseGroupPointer(data, offset)
+        break
+      case ExtensionType.GroupMemberPointer:
+        extensionData = parseGroupMemberPointer(data, offset)
         break
       default:
         extensionData = data.subarray(offset, offset + length)

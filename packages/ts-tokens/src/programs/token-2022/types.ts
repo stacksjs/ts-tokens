@@ -84,6 +84,38 @@ export interface MetadataPointer {
 }
 
 /**
+ * Confidential transfer mint configuration
+ */
+export interface ConfidentialTransferMint {
+  authority: PublicKey | null
+  autoApproveNewAccounts: boolean
+  auditorElGamalPubkey: Uint8Array
+}
+
+/**
+ * CPI guard configuration
+ */
+export interface CpiGuardConfig {
+  lockCpi: boolean
+}
+
+/**
+ * Group pointer configuration
+ */
+export interface GroupPointer {
+  authority: PublicKey | null
+  groupAddress: PublicKey
+}
+
+/**
+ * Group member pointer configuration
+ */
+export interface GroupMemberPointer {
+  authority: PublicKey | null
+  memberAddress: PublicKey
+}
+
+/**
  * Default account state
  */
 export enum AccountState {
@@ -137,3 +169,6 @@ export type ExtensionConfig =
   | { type: 'immutableOwner' }
   | { type: 'memoTransfer' }
   | { type: 'cpiGuard' }
+  | { type: 'confidentialTransfer'; authority?: PublicKey; autoApproveNewAccounts?: boolean; auditorElGamalPubkey?: Uint8Array }
+  | { type: 'groupPointer'; authority?: PublicKey; groupAddress?: PublicKey }
+  | { type: 'groupMemberPointer'; authority?: PublicKey; memberAddress?: PublicKey }
