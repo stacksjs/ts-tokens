@@ -733,14 +733,14 @@
 - [x] Set up `packages/react/` with proper React + TypeScript config
 - [x] Add peer dependencies: `react`, `react-dom`, `@solana/wallet-adapter-react`
 - [x] Create component library build configuration
-- [ ] Set up Storybook for component development
+- [x] Set up Storybook for component development
 
 ### 6.2 Wallet Components
 
 - [x] `<TokensProvider>` - Tokens context provider
-- [ ] `<WalletConnectButton>` - Connect wallet button
-- [ ] `<WalletDisconnectButton>` - Disconnect button
-- [ ] `<WalletMultiButton>` - Multi-wallet selector
+- [x] `<WalletConnectButton>` - Connect wallet button
+- [x] `<WalletDisconnectButton>` - Disconnect button
+- [x] `<WalletMultiButton>` - Multi-wallet selector
 - [x] `<WalletAddress>` - Display wallet address (truncated)
 - [x] `<WalletBalance>` - Display SOL balance
 
@@ -749,27 +749,27 @@
 - [x] `<TokenBalance mint={} />` - Display token balance
 - [x] `<TokenInfo mint={} />` - Display token info card
 - [x] `<TokenList owner={} />` - List all tokens owned
-- [ ] `<TokenTransferForm mint={} />` - Token transfer form
-- [ ] `<TokenMintForm mint={} />` - Token mint form (for authorities)
+- [x] `<TokenTransferForm mint={} />` - Token transfer form
+- [x] `<TokenMintForm mint={} />` - Token mint form (for authorities)
 
 ### 6.4 NFT Components
 
 - [x] `<NFTCard mint={} />` - NFT display card with image
 - [x] `<NFTGrid owner={} />` - Grid of owned NFTs
-- [ ] `<NFTGallery collection={} />` - Collection gallery
+- [x] `<NFTGallery collection={} />` - Collection gallery
 - [x] `<NFTDetails mint={} />` - Full NFT details view
-- [ ] `<NFTTransferButton mint={} />` - Transfer NFT button
-- [ ] `<NFTBurnButton mint={} />` - Burn NFT button
+- [x] `<NFTTransferButton mint={} />` - Transfer NFT button
+- [x] `<NFTBurnButton mint={} />` - Burn NFT button
 
 ### 6.5 Candy Machine Components
 
-- [ ] `<CandyMachineProvider>` - CM context provider
+- [x] `<CandyMachineProvider>` - CM context provider
 - [x] `<MintButton candyMachine={} />` - Mint button
 - [x] `<MintCounter candyMachine={} />` - Minted/Total counter
 - [x] `<MintProgress candyMachine={} />` - Progress bar
-- [ ] `<MintPrice candyMachine={} />` - Display mint price
-- [ ] `<CountdownTimer date={} />` - Countdown to mint start
-- [ ] `<AllowlistChecker candyMachine={} />` - Check allowlist status
+- [x] `<MintPrice candyMachine={} />` - Display mint price
+- [x] `<CountdownTimer date={} />` - Countdown to mint start
+- [x] `<AllowlistChecker candyMachine={} />` - Check allowlist status
 
 ### 6.6 Utility Components
 
@@ -777,11 +777,11 @@
 - [x] `<ExplorerLink signature={} />` - Link to block explorer
 - [x] `<AddressDisplay address={} />` - Formatted address display
 - [x] `<SolAmount amount={} />` - Formatted SOL amount
-- [ ] `<TokenAmount mint={} amount={} />` - Formatted token amount
+- [x] `<TokenAmount mint={} amount={} />` - Formatted token amount
 
 ### 6.7 Hooks
 
-- [ ] `useWallet()` - Wallet state and methods
+- [x] `useWallet()` - Wallet state and methods
 - [x] `useConnection()` - Solana connection
 - [x] `useTokenBalance(mint)` - Token balance hook
 - [x] `useNFT(mint)` - NFT data hook
@@ -803,9 +803,9 @@
 ### 7.2 Wallet Components
 
 - [x] `<TokensPlugin>` - Tokens plugin for Vue app
-- [ ] `<WalletConnectButton>` - Connect wallet button
-- [ ] `<WalletDisconnectButton>` - Disconnect button
-- [ ] `<WalletMultiButton>` - Multi-wallet selector
+- [x] `<WalletConnectButton>` - Connect wallet button
+- [x] `<WalletDisconnectButton>` - Disconnect button
+- [x] `<WalletMultiButton>` - Multi-wallet selector
 - [x] `<WalletAddress>` - Display wallet address
 - [x] `<WalletBalance>` - Display SOL balance
 
@@ -814,31 +814,31 @@
 - [x] `<TokenBalance :mint="" />` - Display token balance
 - [x] `<TokenInfo :mint="" />` - Display token info card
 - [x] `<TokenList :owner="" />` - List all tokens owned
-- [ ] `<TokenTransferForm :mint="" />` - Token transfer form
-- [ ] `<TokenMintForm :mint="" />` - Token mint form
+- [x] `<TokenTransferForm :mint="" />` - Token transfer form
+- [x] `<TokenMintForm :mint="" />` - Token mint form
 
 ### 7.4 NFT Components
 
 - [x] `<NFTCard :mint="" />` - NFT display card
 - [x] `<NFTGrid :owner="" />` - Grid of owned NFTs
-- [ ] `<NFTGallery :collection="" />` - Collection gallery
+- [x] `<NFTGallery :collection="" />` - Collection gallery
 - [x] `<NFTDetails :mint="" />` - Full NFT details
-- [ ] `<NFTTransferButton :mint="" />` - Transfer button
-- [ ] `<NFTBurnButton :mint="" />` - Burn button
+- [x] `<NFTTransferButton :mint="" />` - Transfer button
+- [x] `<NFTBurnButton :mint="" />` - Burn button
 
 ### 7.5 Candy Machine Components
 
-- [ ] `<CandyMachineProvider>` - CM context provider
+- [x] `<CandyMachineProvider>` - CM context provider
 - [x] `<MintButton :candy-machine="" />` - Mint button
 - [x] `<MintCounter :candy-machine="" />` - Counter
 - [x] `<MintProgress :candy-machine="" />` - Progress bar
-- [ ] `<MintPrice :candy-machine="" />` - Price display
-- [ ] `<CountdownTimer :date="" />` - Countdown
-- [ ] `<AllowlistChecker :candy-machine="" />` - Allowlist check
+- [x] `<MintPrice :candy-machine="" />` - Price display
+- [x] `<CountdownTimer :date="" />` - Countdown
+- [x] `<AllowlistChecker :candy-machine="" />` - Allowlist check
 
 ### 7.6 Composables
 
-- [ ] `useWallet()` - Wallet state and methods
+- [x] `useWallet()` - Wallet state and methods
 - [x] `useConnection()` - Solana connection
 - [x] `useTokenBalance(mint)` - Token balance
 - [x] `useNFT(mint)` - NFT data
@@ -1368,8 +1368,8 @@
   ```
 
 - [x] Webhook support for security alerts
-- [ ] Email notifications for critical events
-- [ ] Discord/Telegram bot integration
+- [x] Email notifications for critical events
+- [x] Discord/Telegram bot integration
 
 #### Phishing & Social Engineering Protection
 
@@ -1423,21 +1423,21 @@
 - [x] **Keypair Backup Verification**
   - [x] Prompt for backup verification on first use
   - [x] Implement encrypted backup export
-  - [ ] Support Shamir secret sharing for key backup
+  - [x] Support Shamir secret sharing for key backup
 - [x] **Recovery Options**
   - [x] Document recovery procedures for lost keys
-  - [ ] Implement social recovery options (multi-sig guardians)
-  - [ ] Support hardware wallet recovery flows
+  - [x] Implement social recovery options (multi-sig guardians)
+  - [x] Support hardware wallet recovery flows
 - [x] **Disaster Recovery**
   - [x] Export all authority positions for recovery planning
   - [x] Generate recovery documentation
-  - [ ] Test recovery procedures in devnet
+  - [x] Test recovery procedures in devnet
 
 #### Operational Security (OpSec)
 
 - [x] **Environment Checks**
   - [x] Warn if running on shared/public computer
-  - [ ] Check for screen recording software
+  - [x] Check for screen recording software
   - [x] Verify secure network connection (warn on public WiFi)
   - [x] Check clipboard for sensitive data exposure
 - [x] **Session Security**
@@ -1446,50 +1446,50 @@
   - [x] Secure logging (redact sensitive values)
 - [x] **Audit Logging**
   - [x] Log all sensitive operations locally
-  - [ ] Tamper-evident audit trail
+  - [x] Tamper-evident audit trail
   - [x] Export audit logs for compliance
 
 #### Compliance & Regulatory
 
-- [ ] **OFAC Sanctions Screening**
-  - [ ] Check addresses against OFAC sanctions list
-  - [ ] Warn before transacting with flagged addresses
-  - [ ] Configurable compliance mode
-- [ ] **Transaction Limits**
-  - [ ] Configurable daily/weekly transaction limits
-  - [ ] Require additional confirmation above thresholds
-  - [ ] Cool-down periods for large operations
-- [ ] **Record Keeping**
-  - [ ] Export transaction history for tax reporting
-  - [ ] Generate cost basis reports
-  - [ ] Track gains/losses per token
+- [x] **OFAC Sanctions Screening**
+  - [x] Check addresses against OFAC sanctions list
+  - [x] Warn before transacting with flagged addresses
+  - [x] Configurable compliance mode
+- [x] **Transaction Limits**
+  - [x] Configurable daily/weekly transaction limits
+  - [x] Require additional confirmation above thresholds
+  - [x] Cool-down periods for large operations
+- [x] **Record Keeping**
+  - [x] Export transaction history for tax reporting
+  - [x] Generate cost basis reports
+  - [x] Track gains/losses per token
 
 #### Third-Party Integration Security
 
-- [ ] **RPC Provider Security**
-  - [ ] Verify RPC responses against multiple providers
-  - [ ] Detect RPC manipulation attacks
-  - [ ] Warn about untrusted RPC endpoints
-- [ ] **API Key Management**
-  - [ ] Secure storage for API keys (Helius, etc.)
-  - [ ] Key rotation reminders
-  - [ ] Scope-limited API keys where possible
-- [ ] **Dependency Security**
-  - [ ] Regular dependency audits
-  - [ ] Lock file verification
-  - [ ] Warn about known vulnerable dependencies
+- [x] **RPC Provider Security**
+  - [x] Verify RPC responses against multiple providers
+  - [x] Detect RPC manipulation attacks
+  - [x] Warn about untrusted RPC endpoints
+- [x] **API Key Management**
+  - [x] Secure storage for API keys (Helius, etc.)
+  - [x] Key rotation reminders
+  - [x] Scope-limited API keys where possible
+- [x] **Dependency Security**
+  - [x] Regular dependency audits
+  - [x] Lock file verification
+  - [x] Warn about known vulnerable dependencies
 
 #### Incident Response
 
-- [ ] **Emergency Procedures**
-  - [ ] `tokens emergency freeze` - Quick freeze all authorities
-  - [ ] `tokens emergency revoke` - Revoke all approvals
-  - [ ] `tokens emergency transfer` - Emergency authority transfer
-  - [ ] Document incident response playbook
-- [ ] **Post-Incident Analysis**
-  - [ ] Transaction trace analysis tools
-  - [ ] Timeline reconstruction
-  - [ ] Loss calculation utilities
+- [x] **Emergency Procedures**
+  - [x] `tokens emergency freeze` - Quick freeze all authorities
+  - [x] `tokens emergency revoke` - Revoke all approvals
+  - [x] `tokens emergency transfer` - Emergency authority transfer
+  - [x] Document incident response playbook
+- [x] **Post-Incident Analysis**
+  - [x] Transaction trace analysis tools
+  - [x] Timeline reconstruction
+  - [x] Loss calculation utilities
 
 ---
 
