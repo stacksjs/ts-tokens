@@ -29,11 +29,22 @@ export class SecurityMonitor {
   private intervalMs: number
   private webhookUrl: string | null
   private lastSignatures = new Map<string, string>()
+  private notificationDispatcher: ((event: SecurityEvent) => Promise<unknown>) | null = null
 
-  constructor(connection: Connection, options?: { intervalMs?: number; webhookUrl?: string }) {
+  constructor(connection: Connection, options?: {
+    intervalMs?: number
+    webhookUrl?: string
+    notificationConfigs?: import('./notifications').NotificationConfig[]
+  }) {
     this.connection = connection
     this.intervalMs = options?.intervalMs ?? 30000
     this.webhookUrl = options?.webhookUrl ?? null
+
+    if (options?.notificationConfigs?.length) {
+      import('./notifications').then(({ createNotificationDispatcher }) => {
+        this.notificationDispatcher = createNotificationDispatcher(options.notificationConfigs!)
+      })
+    }
   }
 
   /**
@@ -130,6 +141,9 @@ export class SecurityMonitor {
               this.events.push(event)
               if (this.webhookUrl) {
                 sendWebhookNotification(this.webhookUrl, event).catch(() => {})
+              }
+              if (this.notificationDispatcher) {
+                this.notificationDispatcher(event).catch(() => {})
               }
             }
           }
