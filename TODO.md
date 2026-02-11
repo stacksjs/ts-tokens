@@ -313,7 +313,7 @@
   - [x] `getConnection()` - Get cached connection
   - [x] Connection pooling for multiple requests
   - [x] Automatic retry logic with exponential backoff
-  - [ ] RPC rate limiting handling
+  - [x] RPC rate limiting handling
   - [x] Health check functionality
 
 ### 2.2 Wallet Management
@@ -455,9 +455,9 @@
     - [x] `sellerFeeBasisPoints` - Royalty percentage (basis points)
     - [x] `creators` - Creator shares array
     - [x] `isMutable` - Whether metadata can be updated
-  - [ ] `updateCollection(options)` - Update collection metadata
-  - [ ] `verifyCollection(collection, nft)` - Verify NFT belongs to collection
-  - [ ] `unverifyCollection(collection, nft)` - Remove collection verification
+  - [x] `updateCollection(options)` - Update collection metadata
+  - [x] `verifyCollection(collection, nft)` - Verify NFT belongs to collection
+  - [x] `unverifyCollection(collection, nft)` - Remove collection verification
 
 ### 4.2 NFT Minting
 
@@ -521,34 +521,34 @@
     - [x] `collection` - Collection NFT address
     - [x] `configLineSettings` - Config line settings
     - [x] `hiddenSettings` - Hidden settings (for reveals)
-- [ ] Create `src/nft/candy-machine/config.ts`:
-  - [ ] `updateCandyMachine(options)` - Update CM settings
-  - [ ] `setCandyMachineAuthority(cm, newAuthority)` - Transfer authority
-  - [ ] `deleteCandyMachine(cm)` - Delete and reclaim rent
+- [x] Create `src/nft/candy-machine/config.ts`:
+  - [x] `updateCandyMachine(options)` - Update CM settings
+  - [x] `setCandyMachineAuthority(cm, newAuthority)` - Transfer authority
+  - [x] `deleteCandyMachine(cm)` - Delete and reclaim rent
 
 ### 4.7 Candy Machine Guards
 
-- [ ] Create `src/nft/candy-machine/guards.ts`:
-  - [ ] `addGuards(candyMachine, guards)` - Add mint guards
-  - [ ] Supported guards:
-    - [ ] `solPayment` - SOL payment guard
-    - [ ] `tokenPayment` - SPL token payment guard
-    - [ ] `nftPayment` - NFT burn payment guard
-    - [ ] `startDate` - Mint start date
-    - [ ] `endDate` - Mint end date
-    - [ ] `mintLimit` - Per-wallet mint limit
-    - [ ] `allowList` - Merkle tree allowlist
-    - [ ] `nftGate` - NFT holder gate
-    - [ ] `tokenGate` - Token holder gate
-    - [ ] `redeemedAmount` - Max total mints
-    - [ ] `addressGate` - Specific address gate
-    - [ ] `freezeSolPayment` - Freeze SOL until thaw
-    - [ ] `freezeTokenPayment` - Freeze tokens until thaw
-    - [ ] `programGate` - Require specific program in tx
-    - [ ] `allocation` - Allocation tracking
-    - [ ] `token2022Payment` - Token-2022 payment
-  - [ ] `updateGuards(candyMachine, guards)` - Update guards
-  - [ ] `removeGuards(candyMachine)` - Remove all guards
+- [x] Create `src/nft/candy-machine/guards.ts`:
+  - [x] `addGuards(candyMachine, guards)` - Add mint guards
+  - [x] Supported guards:
+    - [x] `solPayment` - SOL payment guard
+    - [x] `tokenPayment` - SPL token payment guard
+    - [x] `nftPayment` - NFT burn payment guard
+    - [x] `startDate` - Mint start date
+    - [x] `endDate` - Mint end date
+    - [x] `mintLimit` - Per-wallet mint limit
+    - [x] `allowList` - Merkle tree allowlist
+    - [x] `nftGate` - NFT holder gate
+    - [x] `tokenGate` - Token holder gate
+    - [x] `redeemedAmount` - Max total mints
+    - [x] `addressGate` - Specific address gate
+    - [x] `freezeSolPayment` - Freeze SOL until thaw
+    - [x] `freezeTokenPayment` - Freeze tokens until thaw
+    - [x] `programGate` - Require specific program in tx
+    - [x] `allocation` - Allocation tracking
+    - [x] `token2022Payment` - Token-2022 payment
+  - [x] `updateGuards(candyMachine, guards)` - Update guards
+  - [x] `removeGuards(candyMachine)` - Remove all guards
 
 ### 4.8 Candy Machine Items
 
@@ -556,16 +556,16 @@
   - [x] `addConfigLines(candyMachine, items)` - Add NFT config lines
     - [x] `name` - NFT name (with index placeholder)
     - [x] `uri` - Metadata URI (with index placeholder)
-  - [ ] `addConfigLinesFromFile(candyMachine, filePath)` - Bulk add from JSON
-  - [ ] `getLoadedItems(candyMachine)` - Get loaded item count
-  - [ ] `getMintedItems(candyMachine)` - Get minted item count
+  - [x] `addConfigLinesFromFile(candyMachine, filePath)` - Bulk add from JSON
+  - [x] `getLoadedItems(candyMachine)` - Get loaded item count
+  - [x] `getMintedItems(candyMachine)` - Get minted item count
 
 ### 4.9 Candy Machine Minting
 
 - [x] Create `src/nft/candy-machine/mint.ts`:
   - [x] `mintFromCandyMachine(candyMachine, options)` - Mint NFT from CM
-  - [ ] `mintWithGuard(candyMachine, guard, options)` - Mint with specific guard
-  - [ ] `mintMultiple(candyMachine, count, options)` - Batch mint
+  - [x] `mintWithGuard(candyMachine, guard, options)` - Mint with specific guard
+  - [x] `mintMultiple(candyMachine, count, options)` - Batch mint
 
 ### 4.10 NFT Queries
 
@@ -574,8 +574,8 @@
   - [x] `getNFTsByCollection(collection)` - Get all NFTs in collection
   - [x] `getNFTsByCreator(creator)` - Get all NFTs by creator
   - [x] `getCollectionInfo(collection)` - Get collection details
-  - [ ] `getCandyMachineInfo(candyMachine)` - Get CM details
-  - [ ] `getCandyMachineItems(candyMachine)` - Get all CM items
+  - [x] `getCandyMachineInfo(candyMachine)` - Get CM details
+  - [x] `getCandyMachineItems(candyMachine)` - Get all CM items
 
 ### 4.11 Compressed NFTs (cNFTs)
 
@@ -593,9 +593,9 @@
 - [x] Create `src/nft/compressed/transfer.ts`:
   - [x] `transferCompressedNFT(options)` - Transfer cNFT
   - [x] `getAssetProof(assetId)` - Get proof for transfer
-- [ ] Create `src/nft/compressed/query.ts`:
-  - [ ] `getCompressedNFTsByOwner(owner)` - Get cNFTs by owner (requires DAS API)
-  - [ ] `getCompressedNFTsByTree(tree)` - Get cNFTs in tree (requires DAS API)
+- [x] Create `src/nft/compressed/query.ts`:
+  - [x] `getCompressedNFTsByOwner(owner)` - Get cNFTs by owner (requires DAS API)
+  - [x] `getCompressedNFTsByTree(tree)` - Get cNFTs in tree (requires DAS API)
   - [x] `getCompressedNFTMetadata(assetId)` - Get cNFT metadata (via getAsset)
 
 ### 4.12 Editions (Prints)
@@ -690,7 +690,7 @@
   - [x] `--symbol <symbol>` - Symbol
   - [x] `--royalty <bps>` - Royalty
   - [x] `--collection <address>` - Collection address
-  - [ ] `--config <path>` - Config file path
+  - [x] `--config <path>` - Config file path
 - [x] `tokens candy upload <path>` - Upload assets and create config lines
   - [x] `--storage <provider>` - Storage provider (arweave/ipfs/shadow)
 - [x] `tokens candy add <candy-machine> <items-file>` - Add config lines
