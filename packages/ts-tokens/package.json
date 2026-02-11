@@ -161,6 +161,7 @@
     "prepublishOnly": "bun --bun run build && bun run compile:all",
     "release": "bun publish --access public --provenance",
     "test": "bun test",
+    "test:binary": "bash scripts/test-binary.sh",
     "typecheck": "bun --bun tsc --noEmit"
   },
   "dependencies": {
