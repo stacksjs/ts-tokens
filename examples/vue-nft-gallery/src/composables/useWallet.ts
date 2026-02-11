@@ -1,7 +1,5 @@
 import { ref } from 'vue'
-import { wallets } from 'ts-tokens'
-
-const { PhantomWalletAdapter } = wallets
+import { PhantomWalletAdapter } from 'ts-tokens/wallets'
 
 const wallet = new PhantomWalletAdapter()
 const connected = ref(false)

@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import { wallets } from 'ts-tokens'
-
-const { PhantomWalletAdapter } = wallets
+import { PhantomWalletAdapter } from 'ts-tokens/wallets'
 
 function App() {
   const [wallet] = useState(() => new PhantomWalletAdapter())
