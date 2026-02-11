@@ -127,3 +127,106 @@ export interface MultisigAuthorityAssignment {
   authorityType: 'mint' | 'freeze' | 'update'
   multisig: PublicKey
 }
+
+// ---------------------------------------------------------------------------
+// On-chain multisig program types (Phase 19)
+// ---------------------------------------------------------------------------
+
+/**
+ * Result from multisig on-chain operations
+ */
+export interface MultisigResult {
+  signature: string
+  confirmed: boolean
+  multisig?: string
+  transaction?: string
+  error?: string
+}
+
+/**
+ * On-chain multisig account data
+ */
+export interface OnChainMultisig {
+  address: PublicKey
+  creator: PublicKey
+  owners: PublicKey[]
+  threshold: number
+  nonce: bigint
+  transactionCount: bigint
+  createdAt: bigint
+}
+
+/**
+ * On-chain multisig transaction data
+ */
+export interface OnChainTransaction {
+  address: PublicKey
+  multisig: PublicKey
+  proposer: PublicKey
+  instructionData: Buffer
+  approvals: PublicKey[]
+  rejections: PublicKey[]
+  executed: boolean
+  createdAt: bigint
+  expiresAt?: bigint
+}
+
+/**
+ * Options for adding an owner to a multisig
+ */
+export interface AddOwnerOptions {
+  multisig: PublicKey
+  newOwner: PublicKey
+}
+
+/**
+ * Options for removing an owner from a multisig
+ */
+export interface RemoveOwnerOptions {
+  multisig: PublicKey
+  ownerToRemove: PublicKey
+}
+
+/**
+ * Options for changing multisig threshold
+ */
+export interface ChangeThresholdOptions {
+  multisig: PublicKey
+  newThreshold: number
+}
+
+/**
+ * Options for proposing a multisig transaction
+ */
+export interface ProposeTransactionOptions {
+  multisig: PublicKey
+  instructionData: Buffer
+  expiresIn?: number // seconds from now
+}
+
+/**
+ * Options for approve/reject/execute/cancel transaction actions
+ */
+export interface TransactionActionOptions {
+  multisig: PublicKey
+  transactionIndex: bigint
+}
+
+/**
+ * Options for setting token authority to a multisig
+ */
+export interface SetTokenAuthorityMultisigOptions {
+  mint: PublicKey
+  authorityType: 'mint' | 'freeze'
+  multisig: PublicKey
+}
+
+/**
+ * Multisig transaction history entry
+ */
+export interface MultisigHistoryEntry {
+  timestamp: bigint
+  action: string
+  signature: string
+  actor: PublicKey
+}

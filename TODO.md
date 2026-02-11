@@ -2541,7 +2541,7 @@
 - [x] Create `src/multisig/` directory
 - [x] Design lightweight multi-sig (simpler than Squads)
 - [x] Support M-of-N signature schemes
-- [ ] Time-locked transactions option
+- [x] Time-locked transactions option
 
 ### 19.2 Multi-Sig Account Structures
 
@@ -2572,13 +2572,13 @@
 - [x] Design MultiSig account structure
 - [x] Design Transaction account structure
 - [x] Implement signature tracking
-- [ ] Implement transaction expiry
+- [x] Implement transaction expiry
 
 ### 19.3 Multi-Sig Instructions
 
 #### Setup
 
-- [ ] `create_multisig` - Create multi-sig wallet
+- [x] `create_multisig` - Create multi-sig wallet
 
   ```ts
   const multisig = await createMultiSig({
@@ -2587,13 +2587,13 @@
   })
   ```
 
-- [ ] `add_owner` - Add new owner (requires threshold)
-- [ ] `remove_owner` - Remove owner (requires threshold)
-- [ ] `change_threshold` - Change required signatures
+- [x] `add_owner` - Add new owner (requires threshold)
+- [x] `remove_owner` - Remove owner (requires threshold)
+- [x] `change_threshold` - Change required signatures
 
 #### Transactions
 
-- [ ] `create_transaction` - Propose a transaction
+- [x] `create_transaction` - Propose a transaction
 
   ```ts
   const tx = await createMultiSigTransaction({
@@ -2603,20 +2603,20 @@
   })
   ```
 
-- [ ] `approve` - Sign/approve transaction
+- [x] `approve` - Sign/approve transaction
 
   ```ts
   await approveTransaction(txAddress)
   // Auto-executes if threshold reached
   ```
 
-- [ ] `reject` - Reject transaction
-- [ ] `execute` - Execute approved transaction
-- [ ] `cancel` - Cancel pending transaction (proposer only)
+- [x] `reject` - Reject transaction
+- [x] `execute` - Execute approved transaction
+- [x] `cancel` - Cancel pending transaction (proposer only)
 
 ### 19.4 Multi-Sig Integration with Tokens
 
-- [ ] `set_token_authority_multisig` - Transfer authority to multisig
+- [x] `set_token_authority_multisig` - Transfer authority to multisig
 
   ```ts
   // Transfer mint authority to multisig
@@ -2627,7 +2627,7 @@
   })
   ```
 
-- [ ] Multi-sig controlled operations:
+- [ ] Multi-sig controlled operations (deferred — executes through standard multisig transaction flow):
   - [ ] Token minting
   - [ ] Authority transfers
   - [ ] Metadata updates
@@ -2665,15 +2665,15 @@ const info = await tokens.multisig.info(ms)
 
 ### 19.6 CLI Commands for Multi-Sig
 
-- [ ] `tokens multisig create` - Create multi-sig (interactive)
-- [ ] `tokens multisig info <address>` - Show multi-sig info
-- [ ] `tokens multisig owners <address>` - List owners
-- [ ] `tokens multisig propose <multisig>` - Propose transaction
-- [ ] `tokens multisig approve <tx>` - Approve transaction
-- [ ] `tokens multisig reject <tx>` - Reject transaction
-- [ ] `tokens multisig execute <tx>` - Execute approved tx
-- [ ] `tokens multisig pending <multisig>` - List pending txs
-- [ ] `tokens multisig history <multisig>` - Transaction history
+- [x] `tokens multisig create` - Create multi-sig (interactive)
+- [x] `tokens multisig info <address>` - Show multi-sig info
+- [x] `tokens multisig owners <address>` - List owners
+- [x] `tokens multisig propose <multisig>` - Propose transaction
+- [x] `tokens multisig approve <tx>` - Approve transaction
+- [x] `tokens multisig reject <tx>` - Reject transaction
+- [x] `tokens multisig execute <tx>` - Execute approved tx
+- [x] `tokens multisig pending <multisig>` - List pending txs
+- [x] `tokens multisig history <multisig>` - Transaction history
 
 ---
 

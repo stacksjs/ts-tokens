@@ -11,12 +11,21 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import {
+  TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
+  createSetAuthorityInstruction,
+  AuthorityType,
+  getMint,
+} from '@solana/spl-token'
 import type {
   MultisigAccount,
   CreateMultisigOptions,
   MultisigConfig,
+  SetTokenAuthorityMultisigOptions,
+  MultisigResult,
 } from './types'
+import type { TokenConfig, TransactionOptions } from '../types'
 
 // Multisig account size: 1 + 1 + 1 + (32 * 11) = 355 bytes
 const MULTISIG_SIZE = 355
@@ -205,4 +214,70 @@ export async function isMultisig(
 
   // Check if initialized
   return accountInfo.data[2] === 1
+}
+
+/**
+ * Transfer token mint or freeze authority to a multisig PDA
+ */
+export async function setTokenAuthorityMultisig(
+  options: SetTokenAuthorityMultisigOptions,
+  config: TokenConfig,
+  txOptions?: TransactionOptions
+): Promise<MultisigResult> {
+  const { createConnection } = await import('../drivers/solana/connection')
+  const { loadWallet } = await import('../drivers/solana/wallet')
+  const { buildTransaction, sendAndConfirmTransaction } = await import('../drivers/solana/transaction')
+
+  const connection = createConnection(config)
+  const payer = loadWallet(config)
+
+  const mintInfo = await getMint(connection, options.mint)
+  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
+    ? TOKEN_2022_PROGRAM_ID
+    : TOKEN_PROGRAM_ID
+
+  const authorityType = options.authorityType === 'mint'
+    ? AuthorityType.MintTokens
+    : AuthorityType.FreezeAccount
+
+  // Validate current authority
+  const currentAuthority = options.authorityType === 'mint'
+    ? mintInfo.mintAuthority
+    : mintInfo.freezeAuthority
+
+  if (!currentAuthority) {
+    throw new Error(`${options.authorityType} authority has already been revoked`)
+  }
+
+  if (!currentAuthority.equals(payer.publicKey)) {
+    throw new Error(
+      `Current wallet is not the ${options.authorityType} authority. ` +
+      `Expected: ${currentAuthority.toBase58()}, Got: ${payer.publicKey.toBase58()}`
+    )
+  }
+
+  const instruction = createSetAuthorityInstruction(
+    options.mint,
+    payer.publicKey,
+    authorityType,
+    options.multisig,
+    [],
+    programId
+  )
+
+  const transaction = await buildTransaction(
+    connection,
+    [instruction],
+    payer.publicKey,
+    txOptions
+  )
+
+  transaction.partialSign(payer)
+  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
+
+  return {
+    signature: result.signature,
+    confirmed: result.confirmed,
+    multisig: options.multisig.toBase58(),
+  }
 }
