@@ -1391,6 +1391,257 @@ cli
   })
 
 // ============================================
+// Security Audit Commands
+// ============================================
+
+cli
+  .command('security:audit <mint>', 'Audit a token for security issues')
+  .action(async (mint: string) => {
+    const config = await getConfig()
+    const { auditToken } = await import('../src/security/audit')
+    const { createConnection } = await import('../src/drivers/solana/connection')
+    const { formatAuditReport } = await import('../src/cli/security-helpers')
+    const { PublicKey } = await import('@solana/web3.js')
+
+    try {
+      const connection = createConnection(config)
+      const report = await auditToken(connection, new PublicKey(mint))
+      console.log(formatAuditReport(report))
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('security:collection <address>', 'Audit an NFT collection')
+  .action(async (address: string) => {
+    const config = await getConfig()
+    const { auditCollection } = await import('../src/security/audit')
+    const { createConnection } = await import('../src/drivers/solana/connection')
+    const { formatAuditReport } = await import('../src/cli/security-helpers')
+    const { PublicKey } = await import('@solana/web3.js')
+
+    try {
+      const connection = createConnection(config)
+      const report = await auditCollection(connection, new PublicKey(address))
+      console.log(formatAuditReport(report))
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('security:wallet [address]', 'Audit wallet security')
+  .action(async (address?: string) => {
+    const config = await getConfig()
+    const { auditWallet } = await import('../src/security/audit')
+    const { createConnection } = await import('../src/drivers/solana/connection')
+    const { getPublicKey } = await import('../src/drivers/solana/wallet')
+    const { formatAuditReport } = await import('../src/cli/security-helpers')
+    const { PublicKey } = await import('@solana/web3.js')
+
+    try {
+      const walletAddr = address || getPublicKey(config)
+      const connection = createConnection(config)
+      const report = await auditWallet(connection, new PublicKey(walletAddr))
+      console.log(formatAuditReport(report))
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('security:report', 'Generate full security report')
+  .option('--tokens <mints>', 'Comma-separated token mint addresses')
+  .option('--collections <addresses>', 'Comma-separated collection addresses')
+  .option('--wallet [address]', 'Include wallet audit')
+  .action(async (options: { tokens?: string; collections?: string; wallet?: string | boolean }) => {
+    const config = await getConfig()
+    const { generateSecurityReport } = await import('../src/security/audit')
+    const { createConnection } = await import('../src/drivers/solana/connection')
+    const { getPublicKey } = await import('../src/drivers/solana/wallet')
+    const { formatSecurityReport } = await import('../src/cli/security-helpers')
+    const { PublicKey } = await import('@solana/web3.js')
+
+    try {
+      const connection = createConnection(config)
+      const tokens = options.tokens?.split(',').map(m => new PublicKey(m.trim()))
+      const collections = options.collections?.split(',').map(a => new PublicKey(a.trim()))
+      let wallet: InstanceType<typeof PublicKey> | undefined
+      if (options.wallet) {
+        const addr = typeof options.wallet === 'string' ? options.wallet : getPublicKey(config)
+        wallet = new PublicKey(addr)
+      }
+
+      const report = await generateSecurityReport({ connection, tokens, collections, wallet })
+      console.log(formatSecurityReport(report))
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+// ============================================
+// Wallet Keyring & Session Commands
+// ============================================
+
+cli
+  .command('wallet:encrypt', 'Encrypt current keypair to keyring')
+  .option('--password <password>', 'Encryption password')
+  .action(async (options: { password?: string }) => {
+    if (!options.password) {
+      console.error('Error: --password is required')
+      process.exit(1)
+    }
+
+    const config = await getConfig()
+    const { loadWallet } = await import('../src/drivers/solana/wallet')
+    const { encryptAndSaveKeypair } = await import('../src/security/keyring')
+
+    try {
+      const keypair = loadWallet(config)
+      encryptAndSaveKeypair(
+        keypair.secretKey,
+        keypair.publicKey.toBase58(),
+        options.password
+      )
+      console.log(`\u2713 Keypair encrypted and saved to keyring`)
+      console.log(`  Public Key: ${keypair.publicKey.toBase58()}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('wallet:decrypt', 'Load wallet from encrypted keyring')
+  .option('--password <password>', 'Decryption password')
+  .action(async (options: { password?: string }) => {
+    if (!options.password) {
+      console.error('Error: --password is required')
+      process.exit(1)
+    }
+
+    const { loadKeypairFromKeyring, setWallet } = await import('../src/drivers/solana/wallet')
+
+    try {
+      const keypair = loadKeypairFromKeyring(options.password)
+      setWallet(keypair)
+      console.log(`\u2713 Wallet loaded from keyring`)
+      console.log(`  Public Key: ${keypair.publicKey.toBase58()}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('wallet:unlock', 'Start a signing session')
+  .option('--password <password>', 'Keyring password')
+  .option('--timeout <minutes>', 'Session timeout in minutes', '30')
+  .action(async (options: { password?: string; timeout?: string }) => {
+    if (!options.password) {
+      console.error('Error: --password is required')
+      process.exit(1)
+    }
+
+    const { startSession } = await import('../src/security/session')
+
+    try {
+      const timeoutMs = parseInt(options.timeout || '30') * 60 * 1000
+      startSession(options.password, { timeoutMs })
+      console.log(`\u2713 Signing session started (timeout: ${options.timeout || '30'} minutes)`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('wallet:lock', 'End the signing session')
+  .action(async () => {
+    const { endSession, isSessionActive } = await import('../src/security/session')
+
+    if (!isSessionActive()) {
+      console.log('No active session to lock')
+      return
+    }
+
+    endSession()
+    console.log('\u2713 Signing session ended')
+  })
+
+cli
+  .command('wallet:keyring-info', 'Show keyring public key without decrypting')
+  .action(async () => {
+    const { getKeyringInfo, keyringExists } = await import('../src/security/keyring')
+
+    try {
+      if (!keyringExists()) {
+        console.log('No keyring found. Use `tokens wallet:encrypt` to create one.')
+        return
+      }
+
+      const info = getKeyringInfo()
+      console.log('Keyring Information:')
+      console.log(`  Public Key: ${info.publicKey}`)
+      console.log(`  Version: ${info.version}`)
+      console.log(`  Algorithm: ${info.algorithm}`)
+      console.log(`  KDF: ${info.kdf}`)
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+// ============================================
+// Batch Recovery Commands
+// ============================================
+
+cli
+  .command('batch:retry <recovery-file>', 'Retry failed items from recovery state')
+  .action(async (recoveryFile: string) => {
+    const { loadRecoveryState, getRetryItems, formatRecoverySummary } = await import('../src/batch/recovery')
+
+    try {
+      const state = loadRecoveryState(recoveryFile)
+      const retryItems = getRetryItems(state)
+
+      if (retryItems.length === 0) {
+        console.log('No failed items to retry')
+        console.log(formatRecoverySummary(state))
+        return
+      }
+
+      console.log(`Found ${retryItems.length} failed item(s) to retry:`)
+      for (const item of retryItems) {
+        console.log(`  #${item.index} ${item.recipient}: ${item.error}`)
+      }
+      console.log('\nTo retry, re-run the batch operation with these recipients.')
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+cli
+  .command('batch:status <recovery-file>', 'Show batch operation status')
+  .action(async (recoveryFile: string) => {
+    const { loadRecoveryState, formatRecoverySummary } = await import('../src/batch/recovery')
+
+    try {
+      const state = loadRecoveryState(recoveryFile)
+      console.log(formatRecoverySummary(state))
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error)
+      process.exit(1)
+    }
+  })
+
+// ============================================
 // Version & Help
 // ============================================
 

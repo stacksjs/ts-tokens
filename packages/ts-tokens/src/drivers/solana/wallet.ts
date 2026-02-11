@@ -11,6 +11,9 @@ import { decode as decodeBase58 } from '../../utils/base58'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as os from 'node:os'
+import { getSessionKeypair } from '../../security/session'
+import { loadEncryptedKeypair, keyringExists } from '../../security/keyring'
+import type { KeyringOptions } from '../../security/keyring'
 
 /**
  * Current wallet instance
@@ -67,6 +70,74 @@ export function loadKeypairFromEnv(envVar: string = 'TOKENS_KEYPAIR'): Keypair {
 }
 
 /**
+ * Parse a secret key from a string input (base58 or JSON byte array)
+ *
+ * @param input - Raw string input (base58 or JSON array of bytes)
+ * @returns Secret key as Uint8Array
+ */
+export function parseSecretKeyInput(input: string): Uint8Array {
+  const trimmed = input.trim()
+
+  if (!trimmed) {
+    throw new Error('Empty secret key input')
+  }
+
+  // Try JSON array first (e.g. "[1,2,3,...]")
+  if (trimmed.startsWith('[')) {
+    try {
+      const arr = JSON.parse(trimmed)
+      if (!Array.isArray(arr) || arr.length === 0) {
+        throw new Error('Invalid JSON array')
+      }
+      return new Uint8Array(arr)
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        throw new Error('Invalid JSON byte array format')
+      }
+      throw e
+    }
+  }
+
+  // Try base58
+  try {
+    return decodeBase58(trimmed)
+  } catch {
+    throw new Error('Invalid secret key format. Expected base58 string or JSON byte array.')
+  }
+}
+
+/**
+ * Load keypair from stdin (reads fd 0 synchronously)
+ *
+ * @returns Keypair instance
+ */
+export function loadKeypairFromStdin(): Keypair {
+  const fd = fs.openSync('/dev/stdin', 'r')
+  const buf = Buffer.alloc(1024)
+  const bytesRead = fs.readSync(fd, buf, 0, 1024, null)
+  fs.closeSync(fd)
+
+  const input = buf.slice(0, bytesRead).toString('utf-8')
+  const secretKey = parseSecretKeyInput(input)
+  return Keypair.fromSecretKey(secretKey)
+}
+
+/**
+ * Load keypair from encrypted keyring
+ *
+ * @param password - Password to decrypt the keyring
+ * @param options - Keyring options (path overrides)
+ * @returns Keypair instance
+ */
+export function loadKeypairFromKeyring(
+  password: string,
+  options?: KeyringOptions
+): Keypair {
+  const secretKey = loadEncryptedKeypair(password, options)
+  return Keypair.fromSecretKey(secretKey)
+}
+
+/**
  * Generate a new random keypair
  *
  * @returns New Keypair instance
@@ -82,30 +153,47 @@ export function generateKeypair(): Keypair {
  * @returns Keypair instance
  */
 export function loadWallet(config: TokenConfig): Keypair {
-  // Check for cached wallet
+  // 1. Check for active session keypair
+  const sessionKp = getSessionKeypair()
+  if (sessionKp) {
+    return sessionKp
+  }
+
+  // 2. Check for cached wallet
   if (currentWallet) {
     return currentWallet
   }
 
-  // Try loading from config
+  // 3. Try loading from config keypair path
   if (config.wallet?.keypairPath) {
     currentWallet = loadKeypairFromFile(config.wallet.keypairPath)
     return currentWallet
   }
 
-  // Try loading from environment
+  // 4. Try loading from config env var
   if (config.wallet?.keypairEnv) {
     currentWallet = loadKeypairFromEnv(config.wallet.keypairEnv)
     return currentWallet
   }
 
-  // Try default environment variable
+  // 5. Try default environment variable
   if (process.env.TOKENS_KEYPAIR) {
     currentWallet = loadKeypairFromEnv('TOKENS_KEYPAIR')
     return currentWallet
   }
 
-  // Try default Solana CLI keypair location
+  // 6. Try encrypted keyring (if password is set via env)
+  if (process.env.TOKENS_KEYRING_PASSWORD) {
+    const keyringOpts = config.wallet?.keyringPath
+      ? { keyringDir: path.dirname(config.wallet.keyringPath), keyringFile: path.basename(config.wallet.keyringPath) }
+      : undefined
+    if (keyringExists(keyringOpts)) {
+      currentWallet = loadKeypairFromKeyring(process.env.TOKENS_KEYRING_PASSWORD, keyringOpts)
+      return currentWallet
+    }
+  }
+
+  // 7. Try default Solana CLI keypair location
   const defaultPath = path.join(os.homedir(), '.config', 'solana', 'id.json')
   if (fs.existsSync(defaultPath)) {
     currentWallet = loadKeypairFromFile(defaultPath)

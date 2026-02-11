@@ -7,3 +7,5 @@
 export * from './audit'
 export * from './validation'
 export * from './checks'
+export * from './keyring'
+export * from './session'

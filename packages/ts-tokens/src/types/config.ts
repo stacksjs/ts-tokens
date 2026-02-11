@@ -42,6 +42,16 @@ export interface WalletConfig {
    * Use browser wallet adapter (for web applications)
    */
   useAdapter?: boolean
+
+  /**
+   * Path to encrypted keyring file
+   */
+  keyringPath?: string
+
+  /**
+   * Read keypair from stdin
+   */
+  useStdin?: boolean
 }
 
 /**

@@ -409,7 +409,108 @@ describe('Utility Commands', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 9. Exit Codes & Output Formatting
+// 9. Security Audit CLI Commands — Error Cases
+// ---------------------------------------------------------------------------
+
+describe('Security Audit CLI Commands — Error Cases', () => {
+  test('security:audit without args shows error or help', () => {
+    const { stdout, stderr, exitCode } = runCLI(['security:audit'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined.length).toBeGreaterThan(0)
+  })
+
+  test('security:collection without args shows error or help', () => {
+    const { stdout, stderr, exitCode } = runCLI(['security:collection'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined.length).toBeGreaterThan(0)
+  })
+
+  test('security:wallet without wallet shows error or output', () => {
+    const { stdout, stderr, exitCode } = runCLI(['security:wallet'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined).toMatch(/error|wallet|no wallet|not configured|audit/)
+  })
+
+  test('security:report without flags shows error or empty report', () => {
+    const { stdout, stderr, exitCode } = runCLI(['security:report'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined.length).toBeGreaterThan(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 10. Wallet Keyring & Session CLI Commands — Error Cases
+// ---------------------------------------------------------------------------
+
+describe('Wallet Keyring & Session CLI Commands — Error Cases', () => {
+  test('wallet:encrypt without --password shows error', () => {
+    const { stdout, stderr, exitCode } = runCLI(['wallet:encrypt'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined).toMatch(/error|password|required/)
+    expect(exitCode).not.toBe(0)
+  })
+
+  test('wallet:decrypt without --password shows error', () => {
+    const { stdout, stderr, exitCode } = runCLI(['wallet:decrypt'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined).toMatch(/error|password|required/)
+    expect(exitCode).not.toBe(0)
+  })
+
+  test('wallet:unlock without --password shows error', () => {
+    const { stdout, stderr, exitCode } = runCLI(['wallet:unlock'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined).toMatch(/error|password|required/)
+    expect(exitCode).not.toBe(0)
+  })
+
+  test('wallet:lock without active session shows info message', () => {
+    const { stdout, stderr, exitCode } = runCLI(['wallet:lock'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined).toMatch(/no active session|session/)
+  })
+
+  test('wallet:keyring-info without keyring shows info message', () => {
+    const { stdout, stderr, exitCode } = runCLI(['wallet:keyring-info'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined).toMatch(/no keyring|keyring|encrypt/)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 11. Batch Recovery CLI Commands — Error Cases
+// ---------------------------------------------------------------------------
+
+describe('Batch Recovery CLI Commands — Error Cases', () => {
+  test('batch:retry without file arg shows error or help', () => {
+    const { stdout, stderr, exitCode } = runCLI(['batch:retry'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined.length).toBeGreaterThan(0)
+  })
+
+  test('batch:retry with non-existent file shows error', () => {
+    const { stdout, stderr, exitCode } = runCLI(['batch:retry', '/tmp/nonexistent-recovery.json'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined).toMatch(/error|not found/)
+    expect(exitCode).not.toBe(0)
+  })
+
+  test('batch:status without file arg shows error or help', () => {
+    const { stdout, stderr, exitCode } = runCLI(['batch:status'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined.length).toBeGreaterThan(0)
+  })
+
+  test('batch:status with non-existent file shows error', () => {
+    const { stdout, stderr, exitCode } = runCLI(['batch:status', '/tmp/nonexistent-recovery.json'])
+    const combined = (stdout + stderr).toLowerCase()
+    expect(combined).toMatch(/error|not found/)
+    expect(exitCode).not.toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 12. Exit Codes & Output Formatting
 // ---------------------------------------------------------------------------
 
 describe('Exit Codes & Output Formatting', () => {

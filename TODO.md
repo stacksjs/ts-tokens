@@ -1068,10 +1068,10 @@
 ### 11.2 Key Management
 
 - [ ] Support hardware wallet signing (Ledger via HID)
-- [ ] Implement encrypted keypair storage (local keyring)
-- [ ] Add environment variable keypair loading (`TOKENS_KEYPAIR`)
-- [ ] Support keypair from stdin (for CI/CD pipelines)
-- [ ] Implement session-based signing (sign once, execute many)
+- [x] Implement encrypted keypair storage (local keyring)
+- [x] Add environment variable keypair loading (`TOKENS_KEYPAIR`)
+- [x] Support keypair from stdin (for CI/CD pipelines)
+- [x] Implement session-based signing (sign once, execute many)
 
 ### 11.3 Rate Limiting & RPC Management
 
@@ -1085,7 +1085,7 @@
 
 - [x] Create comprehensive error types with actionable messages
 - [x] Implement transaction retry with exponential backoff
-- [ ] Add transaction recovery for partially failed batches
+- [x] Add transaction recovery for partially failed batches
 - [x] Create error code documentation
 - [ ] Implement dry-run mode for all destructive operations
 
@@ -1095,8 +1095,8 @@
 
 #### Pre-Launch Token Security Checklist
 
-- [ ] Create `tokens security check <mint>` CLI command
-- [ ] Implement automated security audit:
+- [x] Create `tokens security check <mint>` CLI command
+- [x] Implement automated security audit:
 
   ```ts
   const audit = await tokens.security.audit(tokenMint)
