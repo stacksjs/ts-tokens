@@ -3,12 +3,24 @@
  */
 
 import type { Connection, PublicKey } from '@solana/web3.js'
+import type { TokenConfig, TransactionOptions } from '../types'
 import type {
   ProgrammableNFT,
   TransferRule,
   TransferValidation,
   PNFTTransferOptions,
+  PNFTResult,
+  PNFTTransferResult,
 } from './types'
+import { createConnection } from '../drivers/solana/connection'
+import { loadWallet } from '../drivers/solana/wallet'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { getPNFTAddress } from './program'
+import {
+  createTransferPNFTInstruction,
+  createDelegateTransferInstruction,
+  createRevokeDelegateInstruction,
+} from './instructions'
 import { getPNFT } from './create'
 import { getAllRules } from './rules'
 
@@ -34,7 +46,7 @@ export async function canTransfer(
   for (const rule of rules) {
     if (!rule.enabled) continue
 
-    const result = await validateRule(connection, rule, pnft, from, to)
+    const result = await validateTransferRule(connection, rule, pnft, from, to)
     if (!result.allowed) {
       failedRules.push(rule.type)
     }
@@ -58,7 +70,7 @@ export async function canTransfer(
 /**
  * Validate a single rule
  */
-async function validateRule(
+async function validateTransferRule(
   connection: Connection,
   rule: TransferRule,
   pnft: ProgrammableNFT,
@@ -174,10 +186,14 @@ function formatDuration(seconds: number): string {
  * Transfer programmable NFT
  */
 export async function transferPNFT(
-  connection: Connection,
-  options: PNFTTransferOptions
-): Promise<{ signature: string; royaltyPaid?: bigint }> {
+  options: PNFTTransferOptions,
+  config: TokenConfig,
+  txOptions?: TransactionOptions
+): Promise<PNFTTransferResult> {
   const { mint, from, to, payRoyalty = true } = options
+
+  const connection = createConnection(config)
+  const payer = loadWallet(config)
 
   // Validate transfer
   const validation = await canTransfer(connection, mint, from, to)
@@ -186,14 +202,35 @@ export async function transferPNFT(
     throw new Error(`Transfer not allowed: ${validation.reason}`)
   }
 
-  // In production, would:
-  // 1. Build transfer instruction
-  // 2. Add royalty payment if required
-  // 3. Update pNFT state (lastTransfer, transferCount)
-  // 4. Execute transaction
+  const pnftAccount = getPNFTAddress(mint)
+
+  const { getAssociatedTokenAddress } = await import('@solana/spl-token')
+  const fromToken = await getAssociatedTokenAddress(mint, from)
+  const toToken = await getAssociatedTokenAddress(mint, to)
+
+  const instruction = createTransferPNFTInstruction(
+    payer.publicKey,
+    pnftAccount,
+    mint,
+    fromToken,
+    toToken,
+    to,
+    payRoyalty
+  )
+
+  const transaction = await buildTransaction(
+    connection,
+    [instruction],
+    payer.publicKey,
+    txOptions
+  )
+
+  transaction.partialSign(payer)
+  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
 
   return {
-    signature: `pnft_transferred_${Date.now()}`,
+    signature: result.signature,
+    confirmed: result.confirmed,
     royaltyPaid: validation.royaltyAmount,
   }
 }
@@ -202,25 +239,67 @@ export async function transferPNFT(
  * Delegate transfer authority
  */
 export async function delegateTransfer(
-  connection: Connection,
   mint: PublicKey,
-  owner: PublicKey,
-  delegate: PublicKey
-): Promise<string> {
-  // In production, would set delegate on pNFT account
-  return `delegate_set_${Date.now()}`
+  delegate: PublicKey,
+  config: TokenConfig,
+  txOptions?: TransactionOptions
+): Promise<PNFTResult> {
+  const connection = createConnection(config)
+  const payer = loadWallet(config)
+  const pnftAccount = getPNFTAddress(mint)
+
+  const instruction = createDelegateTransferInstruction(
+    payer.publicKey,
+    pnftAccount,
+    delegate
+  )
+
+  const transaction = await buildTransaction(
+    connection,
+    [instruction],
+    payer.publicKey,
+    txOptions
+  )
+
+  transaction.partialSign(payer)
+  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
+
+  return {
+    signature: result.signature,
+    confirmed: result.confirmed,
+    pnftAccount: pnftAccount.toBase58(),
+  }
 }
 
 /**
  * Revoke transfer delegation
  */
 export async function revokeDelegate(
-  connection: Connection,
   mint: PublicKey,
-  owner: PublicKey
-): Promise<string> {
-  // In production, would clear delegate on pNFT account
-  return `delegate_revoked_${Date.now()}`
+  config: TokenConfig,
+  txOptions?: TransactionOptions
+): Promise<PNFTResult> {
+  const connection = createConnection(config)
+  const payer = loadWallet(config)
+  const pnftAccount = getPNFTAddress(mint)
+
+  const instruction = createRevokeDelegateInstruction(payer.publicKey, pnftAccount)
+
+  const transaction = await buildTransaction(
+    connection,
+    [instruction],
+    payer.publicKey,
+    txOptions
+  )
+
+  transaction.partialSign(payer)
+  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
+
+  return {
+    signature: result.signature,
+    confirmed: result.confirmed,
+    pnftAccount: pnftAccount.toBase58(),
+  }
 }
 
 /**

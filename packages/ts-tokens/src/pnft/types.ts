@@ -200,3 +200,25 @@ export interface PNFTTransferOptions {
   payRoyalty?: boolean
   creatorSignature?: Uint8Array
 }
+
+/**
+ * pNFT operation result
+ */
+export interface PNFTResult {
+  signature: string
+  confirmed: boolean
+  mint?: string
+  pnftAccount?: string
+  ruleSet?: string
+  error?: string
+}
+
+/**
+ * pNFT transfer result
+ */
+export interface PNFTTransferResult {
+  signature: string
+  confirmed: boolean
+  royaltyPaid?: bigint
+  error?: string
+}

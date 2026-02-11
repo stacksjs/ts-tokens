@@ -1,12 +1,13 @@
 /**
- * Programmable NFT Rule Function Tests
+ * Programmable NFT Tests
  *
- * Tests for pure rule builder, validation, formatting, and query functions
- * exported from src/pnft/rules.ts.
+ * Tests for rule builders, validation, formatting, query functions,
+ * program constants, PDA derivation, instruction builders, and serializers.
  */
 
 import { describe, test, expect } from 'bun:test'
-import { Keypair } from '@solana/web3.js'
+import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   createRoyaltyRule,
   createAllowListRule,
@@ -19,9 +20,42 @@ import {
   hasRule,
   getRule,
 } from '../src/pnft/rules'
+import {
+  PNFT_PROGRAM_ID,
+  DISCRIMINATORS,
+  RULE_TYPE_INDEX,
+  getPNFTAddress,
+  getRuleSetAddress,
+  serializeRuleData,
+  serializeCreatePNFTData,
+  serializeCreateRuleSetData,
+  serializeCreateSoulboundData,
+  serializeAddRuleData,
+  serializeRemoveRuleData,
+  serializeUpdateRuleData,
+  serializeTransferPNFTData,
+  serializeLockPNFTData,
+} from '../src/pnft/program'
+import {
+  createCreatePNFTInstruction,
+  createCreateRuleSetInstruction,
+  createCreateSoulboundInstruction,
+  createAddRuleInstruction,
+  createRemoveRuleInstruction,
+  createUpdateRuleInstruction,
+  createFreezeRulesInstruction,
+  createTransferPNFTInstruction,
+  createDelegateTransferInstruction,
+  createRevokeDelegateInstruction,
+  createLockPNFTInstruction,
+  createUnlockPNFTInstruction,
+  createRecoverSoulboundInstruction,
+} from '../src/pnft/instructions'
+import { canTransfer, estimateRoyalty } from '../src/pnft/transfer'
 import type {
   ProgrammableNFT,
   TransferRule,
+  TransferRuleType,
   RoyaltyEnforcementRule,
 } from '../src/pnft/types'
 
@@ -342,5 +376,570 @@ describe('getRule', () => {
     const found = getRule(pnft, 'max_transfers')
     expect(found).toBeDefined()
     expect(found!.enabled).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Program constants
+// ---------------------------------------------------------------------------
+
+describe('PNFT_PROGRAM_ID', () => {
+  test('is a valid PublicKey (32 bytes)', () => {
+    expect(PNFT_PROGRAM_ID).toBeInstanceOf(PublicKey)
+    expect(PNFT_PROGRAM_ID.toBuffer()).toHaveLength(32)
+  })
+
+  test('encodes to a base58 string', () => {
+    const b58 = PNFT_PROGRAM_ID.toBase58()
+    expect(typeof b58).toBe('string')
+    expect(b58.length).toBeGreaterThan(0)
+  })
+})
+
+describe('DISCRIMINATORS', () => {
+  const allDiscriminators = Object.entries(DISCRIMINATORS)
+
+  test('has exactly 13 discriminators', () => {
+    expect(allDiscriminators).toHaveLength(13)
+  })
+
+  test('each discriminator is 8 bytes', () => {
+    for (const [name, disc] of allDiscriminators) {
+      expect(disc).toHaveLength(8)
+    }
+  })
+
+  test('all discriminators are unique', () => {
+    const hexSet = new Set(allDiscriminators.map(([, d]) => Buffer.from(d).toString('hex')))
+    expect(hexSet.size).toBe(13)
+  })
+
+  test('discriminators have correct first byte values', () => {
+    expect(DISCRIMINATORS.createPNFT[0]).toBe(0)
+    expect(DISCRIMINATORS.createRuleSet[0]).toBe(1)
+    expect(DISCRIMINATORS.createSoulbound[0]).toBe(2)
+    expect(DISCRIMINATORS.addRule[0]).toBe(3)
+    expect(DISCRIMINATORS.removeRule[0]).toBe(4)
+    expect(DISCRIMINATORS.updateRule[0]).toBe(5)
+    expect(DISCRIMINATORS.freezeRules[0]).toBe(6)
+    expect(DISCRIMINATORS.transferPNFT[0]).toBe(7)
+    expect(DISCRIMINATORS.delegateTransfer[0]).toBe(8)
+    expect(DISCRIMINATORS.revokeDelegate[0]).toBe(9)
+    expect(DISCRIMINATORS.lockPNFT[0]).toBe(10)
+    expect(DISCRIMINATORS.unlockPNFT[0]).toBe(11)
+    expect(DISCRIMINATORS.recoverSoulbound[0]).toBe(12)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// RULE_TYPE_INDEX
+// ---------------------------------------------------------------------------
+
+describe('RULE_TYPE_INDEX', () => {
+  test('covers all 10 rule types', () => {
+    const ruleTypes: TransferRuleType[] = [
+      'royalty_enforcement', 'allow_list', 'deny_list', 'program_gate',
+      'holder_gate', 'creator_approval', 'cooldown_period', 'max_transfers',
+      'soulbound', 'custom',
+    ]
+    for (const rt of ruleTypes) {
+      expect(typeof RULE_TYPE_INDEX[rt]).toBe('number')
+    }
+  })
+
+  test('values are 0 through 9', () => {
+    const values = Object.values(RULE_TYPE_INDEX).sort((a, b) => a - b)
+    expect(values).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// PDA derivation
+// ---------------------------------------------------------------------------
+
+describe('getPNFTAddress', () => {
+  test('returns a PublicKey', () => {
+    const mint = Keypair.generate().publicKey
+    const addr = getPNFTAddress(mint)
+    expect(addr).toBeInstanceOf(PublicKey)
+  })
+
+  test('is deterministic — same mint produces same PDA', () => {
+    const mint = Keypair.generate().publicKey
+    const addr1 = getPNFTAddress(mint)
+    const addr2 = getPNFTAddress(mint)
+    expect(addr1.equals(addr2)).toBe(true)
+  })
+
+  test('different mints produce different PDAs', () => {
+    const mint1 = Keypair.generate().publicKey
+    const mint2 = Keypair.generate().publicKey
+    const addr1 = getPNFTAddress(mint1)
+    const addr2 = getPNFTAddress(mint2)
+    expect(addr1.equals(addr2)).toBe(false)
+  })
+})
+
+describe('getRuleSetAddress', () => {
+  test('returns a PublicKey', () => {
+    const authority = Keypair.generate().publicKey
+    const collection = Keypair.generate().publicKey
+    const addr = getRuleSetAddress(authority, collection)
+    expect(addr).toBeInstanceOf(PublicKey)
+  })
+
+  test('is deterministic', () => {
+    const authority = Keypair.generate().publicKey
+    const collection = Keypair.generate().publicKey
+    const addr1 = getRuleSetAddress(authority, collection)
+    const addr2 = getRuleSetAddress(authority, collection)
+    expect(addr1.equals(addr2)).toBe(true)
+  })
+
+  test('different inputs produce different PDAs', () => {
+    const auth1 = Keypair.generate().publicKey
+    const auth2 = Keypair.generate().publicKey
+    const col = Keypair.generate().publicKey
+    const addr1 = getRuleSetAddress(auth1, col)
+    const addr2 = getRuleSetAddress(auth2, col)
+    expect(addr1.equals(addr2)).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Serializers
+// ---------------------------------------------------------------------------
+
+describe('serializeRuleData', () => {
+  test('serializes a cooldown rule with correct structure', () => {
+    const rule = createCooldownRule(3600)
+    const buf = serializeRuleData(rule)
+    // 1-byte type index + 4-byte periodSeconds
+    expect(buf.length).toBe(5)
+    expect(buf[0]).toBe(RULE_TYPE_INDEX.cooldown_period)
+    expect(buf.readUInt32LE(1)).toBe(3600)
+  })
+
+  test('serializes a max transfers rule', () => {
+    const rule = createMaxTransfersRule(42)
+    const buf = serializeRuleData(rule)
+    expect(buf.length).toBe(5)
+    expect(buf[0]).toBe(RULE_TYPE_INDEX.max_transfers)
+    expect(buf.readUInt32LE(1)).toBe(42)
+  })
+
+  test('serializes a soulbound rule without recovery authority', () => {
+    const rule: TransferRule = { type: 'soulbound', enabled: true }
+    const buf = serializeRuleData(rule)
+    // 1-byte type + 1-byte (no recovery)
+    expect(buf.length).toBe(2)
+    expect(buf[0]).toBe(RULE_TYPE_INDEX.soulbound)
+    expect(buf[1]).toBe(0) // no recovery authority
+  })
+
+  test('serializes a soulbound rule with recovery authority', () => {
+    const recovery = Keypair.generate().publicKey
+    const rule: TransferRule = { type: 'soulbound', enabled: true, recoveryAuthority: recovery }
+    const buf = serializeRuleData(rule)
+    // 1-byte type + 1-byte presence + 32-byte pubkey
+    expect(buf.length).toBe(34)
+    expect(buf[0]).toBe(RULE_TYPE_INDEX.soulbound)
+    expect(buf[1]).toBe(1) // has recovery authority
+  })
+
+  test('serializes a royalty rule', () => {
+    const addr = Keypair.generate().publicKey
+    const rule = createRoyaltyRule(500, [{ address: addr, share: 100 }])
+    const buf = serializeRuleData(rule)
+    // 1-byte type + 2-byte bps + 4-byte count + 1 * (32 + 4) = 43
+    expect(buf.length).toBe(43)
+    expect(buf[0]).toBe(RULE_TYPE_INDEX.royalty_enforcement)
+    expect(buf.readUInt16LE(1)).toBe(500)
+  })
+
+  test('serializes an allow list rule', () => {
+    const addrs = [Keypair.generate().publicKey, Keypair.generate().publicKey]
+    const rule = createAllowListRule(addrs)
+    const buf = serializeRuleData(rule)
+    // 1-byte type + 4-byte count + 2 * 32 = 69
+    expect(buf.length).toBe(69)
+    expect(buf[0]).toBe(RULE_TYPE_INDEX.allow_list)
+    expect(buf.readUInt32LE(1)).toBe(2)
+  })
+
+  test('serializes a holder gate rule', () => {
+    const token = Keypair.generate().publicKey
+    const rule = createHolderGateRule(token, 1000n)
+    const buf = serializeRuleData(rule)
+    // 1-byte type + 32-byte pubkey + 8-byte amount = 41
+    expect(buf.length).toBe(41)
+    expect(buf[0]).toBe(RULE_TYPE_INDEX.holder_gate)
+  })
+})
+
+describe('serializeCreatePNFTData', () => {
+  test('starts with createPNFT discriminator', () => {
+    const buf = serializeCreatePNFTData('Test', 'TST', 'https://example.com', Buffer.alloc(0))
+    expect(buf.subarray(0, 8)).toEqual(Buffer.from(DISCRIMINATORS.createPNFT))
+  })
+
+  test('encodes name, symbol, uri as length-prefixed strings', () => {
+    const buf = serializeCreatePNFTData('MyNFT', 'MN', 'https://uri.com', Buffer.alloc(0))
+    // disc(8) + name(4+5) + symbol(4+2) + uri(4+15) + rulesLen(4) + rules(0) = 46
+    expect(buf.length).toBe(46)
+  })
+})
+
+describe('serializeCreateRuleSetData', () => {
+  test('starts with createRuleSet discriminator', () => {
+    const buf = serializeCreateRuleSetData(true, Buffer.alloc(0))
+    expect(buf.subarray(0, 8)).toEqual(Buffer.from(DISCRIMINATORS.createRuleSet))
+  })
+
+  test('encodes isMutable flag', () => {
+    const bufTrue = serializeCreateRuleSetData(true, Buffer.alloc(0))
+    const bufFalse = serializeCreateRuleSetData(false, Buffer.alloc(0))
+    expect(bufTrue[8]).toBe(1)
+    expect(bufFalse[8]).toBe(0)
+  })
+})
+
+describe('serializeCreateSoulboundData', () => {
+  test('starts with createSoulbound discriminator', () => {
+    const buf = serializeCreateSoulboundData('SBT', 'SBT', 'https://sbt.com')
+    expect(buf.subarray(0, 8)).toEqual(Buffer.from(DISCRIMINATORS.createSoulbound))
+  })
+
+  test('without recovery authority has 0 presence byte', () => {
+    const buf = serializeCreateSoulboundData('SBT', 'S', 'https://sbt.com')
+    // last byte after strings should be 0 (no recovery)
+    expect(buf[buf.length - 1]).toBe(0)
+  })
+
+  test('with recovery authority encodes 1 + 32 byte pubkey', () => {
+    const recovery = Keypair.generate().publicKey
+    const bufWith = serializeCreateSoulboundData('SBT', 'S', 'https://sbt.com', recovery)
+    const bufWithout = serializeCreateSoulboundData('SBT', 'S', 'https://sbt.com')
+    expect(bufWith.length).toBe(bufWithout.length + 32)
+  })
+})
+
+describe('serializeTransferPNFTData', () => {
+  test('starts with transferPNFT discriminator', () => {
+    const buf = serializeTransferPNFTData(true)
+    expect(buf.subarray(0, 8)).toEqual(Buffer.from(DISCRIMINATORS.transferPNFT))
+  })
+
+  test('encodes payRoyalty flag', () => {
+    expect(serializeTransferPNFTData(true)[8]).toBe(1)
+    expect(serializeTransferPNFTData(false)[8]).toBe(0)
+  })
+
+  test('is exactly 9 bytes', () => {
+    expect(serializeTransferPNFTData(true).length).toBe(9)
+  })
+})
+
+describe('serializeLockPNFTData', () => {
+  test('starts with lockPNFT discriminator', () => {
+    const buf = serializeLockPNFTData('listed')
+    expect(buf.subarray(0, 8)).toEqual(Buffer.from(DISCRIMINATORS.lockPNFT))
+  })
+
+  test('encodes listed as 0, staked as 1', () => {
+    expect(serializeLockPNFTData('listed')[8]).toBe(0)
+    expect(serializeLockPNFTData('staked')[8]).toBe(1)
+  })
+})
+
+describe('serializeAddRuleData / serializeRemoveRuleData / serializeUpdateRuleData', () => {
+  test('serializeAddRuleData starts with addRule discriminator', () => {
+    const ruleData = Buffer.from([1, 2, 3])
+    const buf = serializeAddRuleData(ruleData)
+    expect(buf.subarray(0, 8)).toEqual(Buffer.from(DISCRIMINATORS.addRule))
+    expect(buf.subarray(8)).toEqual(ruleData)
+  })
+
+  test('serializeRemoveRuleData encodes rule type index', () => {
+    const buf = serializeRemoveRuleData(5)
+    expect(buf.subarray(0, 8)).toEqual(Buffer.from(DISCRIMINATORS.removeRule))
+    expect(buf[8]).toBe(5)
+    expect(buf.length).toBe(9)
+  })
+
+  test('serializeUpdateRuleData starts with updateRule discriminator', () => {
+    const ruleData = Buffer.from([7, 8])
+    const buf = serializeUpdateRuleData(ruleData)
+    expect(buf.subarray(0, 8)).toEqual(Buffer.from(DISCRIMINATORS.updateRule))
+    expect(buf.subarray(8)).toEqual(ruleData)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Instruction builders
+// ---------------------------------------------------------------------------
+
+describe('createCreatePNFTInstruction', () => {
+  test('returns instruction with correct programId', () => {
+    const payer = Keypair.generate().publicKey
+    const pnftAccount = Keypair.generate().publicKey
+    const mint = Keypair.generate().publicKey
+    const ix = createCreatePNFTInstruction(payer, pnftAccount, mint, 'Test', 'T', 'https://t.com', Buffer.alloc(0))
+    expect(ix.programId.equals(PNFT_PROGRAM_ID)).toBe(true)
+  })
+
+  test('has 6 account keys', () => {
+    const payer = Keypair.generate().publicKey
+    const pnftAccount = Keypair.generate().publicKey
+    const mint = Keypair.generate().publicKey
+    const ix = createCreatePNFTInstruction(payer, pnftAccount, mint, 'N', 'S', 'U', Buffer.alloc(0))
+    expect(ix.keys).toHaveLength(6)
+  })
+
+  test('payer is signer and writable', () => {
+    const payer = Keypair.generate().publicKey
+    const ix = createCreatePNFTInstruction(payer, Keypair.generate().publicKey, Keypair.generate().publicKey, 'N', 'S', 'U', Buffer.alloc(0))
+    expect(ix.keys[0].isSigner).toBe(true)
+    expect(ix.keys[0].isWritable).toBe(true)
+  })
+
+  test('data starts with createPNFT discriminator', () => {
+    const ix = createCreatePNFTInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey, Keypair.generate().publicKey, 'N', 'S', 'U', Buffer.alloc(0))
+    expect(Buffer.from(ix.data).subarray(0, 8)).toEqual(Buffer.from(DISCRIMINATORS.createPNFT))
+  })
+})
+
+describe('createCreateRuleSetInstruction', () => {
+  test('has 4 account keys', () => {
+    const ix = createCreateRuleSetInstruction(
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, true, Buffer.alloc(0)
+    )
+    expect(ix.keys).toHaveLength(4)
+  })
+
+  test('authority is signer and writable', () => {
+    const auth = Keypair.generate().publicKey
+    const ix = createCreateRuleSetInstruction(auth, Keypair.generate().publicKey, Keypair.generate().publicKey, true, Buffer.alloc(0))
+    expect(ix.keys[0].pubkey.equals(auth)).toBe(true)
+    expect(ix.keys[0].isSigner).toBe(true)
+    expect(ix.keys[0].isWritable).toBe(true)
+  })
+})
+
+describe('createCreateSoulboundInstruction', () => {
+  test('has 6 account keys (same as createPNFT)', () => {
+    const ix = createCreateSoulboundInstruction(
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, 'SBT', 'S', 'https://sbt.com'
+    )
+    expect(ix.keys).toHaveLength(6)
+  })
+
+  test('data starts with createSoulbound discriminator', () => {
+    const ix = createCreateSoulboundInstruction(
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, 'SBT', 'S', 'U'
+    )
+    expect(Buffer.from(ix.data).subarray(0, 8)).toEqual(Buffer.from(DISCRIMINATORS.createSoulbound))
+  })
+})
+
+describe('createAddRuleInstruction', () => {
+  test('has 2 account keys', () => {
+    const ix = createAddRuleInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey, Buffer.alloc(5))
+    expect(ix.keys).toHaveLength(2)
+  })
+
+  test('authority is signer, pnftAccount is writable', () => {
+    const auth = Keypair.generate().publicKey
+    const pnft = Keypair.generate().publicKey
+    const ix = createAddRuleInstruction(auth, pnft, Buffer.alloc(5))
+    expect(ix.keys[0].isSigner).toBe(true)
+    expect(ix.keys[1].isWritable).toBe(true)
+  })
+})
+
+describe('createRemoveRuleInstruction', () => {
+  test('has 2 account keys', () => {
+    const ix = createRemoveRuleInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey, 0)
+    expect(ix.keys).toHaveLength(2)
+  })
+
+  test('data encodes rule type index after discriminator', () => {
+    const ix = createRemoveRuleInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey, 7)
+    const data = Buffer.from(ix.data)
+    expect(data[8]).toBe(7)
+  })
+})
+
+describe('createUpdateRuleInstruction', () => {
+  test('has 2 account keys and correct programId', () => {
+    const ix = createUpdateRuleInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey, Buffer.alloc(10))
+    expect(ix.keys).toHaveLength(2)
+    expect(ix.programId.equals(PNFT_PROGRAM_ID)).toBe(true)
+  })
+})
+
+describe('createFreezeRulesInstruction', () => {
+  test('has 2 account keys', () => {
+    const ix = createFreezeRulesInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey)
+    expect(ix.keys).toHaveLength(2)
+  })
+
+  test('data is only the discriminator (8 bytes)', () => {
+    const ix = createFreezeRulesInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey)
+    expect(ix.data).toHaveLength(8)
+    expect(Buffer.from(ix.data)).toEqual(Buffer.from(DISCRIMINATORS.freezeRules))
+  })
+})
+
+describe('createTransferPNFTInstruction', () => {
+  test('has 7 account keys', () => {
+    const ix = createTransferPNFTInstruction(
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, Keypair.generate().publicKey, true
+    )
+    expect(ix.keys).toHaveLength(7)
+  })
+
+  test('owner is signer', () => {
+    const owner = Keypair.generate().publicKey
+    const ix = createTransferPNFTInstruction(
+      owner, Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, true
+    )
+    expect(ix.keys[0].pubkey.equals(owner)).toBe(true)
+    expect(ix.keys[0].isSigner).toBe(true)
+  })
+
+  test('data starts with transferPNFT discriminator', () => {
+    const ix = createTransferPNFTInstruction(
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, Keypair.generate().publicKey, false
+    )
+    expect(Buffer.from(ix.data).subarray(0, 8)).toEqual(Buffer.from(DISCRIMINATORS.transferPNFT))
+  })
+})
+
+describe('createDelegateTransferInstruction', () => {
+  test('has 3 account keys', () => {
+    const ix = createDelegateTransferInstruction(
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey
+    )
+    expect(ix.keys).toHaveLength(3)
+  })
+
+  test('data is delegateTransfer discriminator (8 bytes)', () => {
+    const ix = createDelegateTransferInstruction(
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey
+    )
+    expect(ix.data).toHaveLength(8)
+  })
+})
+
+describe('createRevokeDelegateInstruction', () => {
+  test('has 2 account keys', () => {
+    const ix = createRevokeDelegateInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey)
+    expect(ix.keys).toHaveLength(2)
+  })
+
+  test('data is revokeDelegate discriminator', () => {
+    const ix = createRevokeDelegateInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey)
+    expect(Buffer.from(ix.data)).toEqual(Buffer.from(DISCRIMINATORS.revokeDelegate))
+  })
+})
+
+describe('createLockPNFTInstruction', () => {
+  test('has 2 account keys', () => {
+    const ix = createLockPNFTInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey, 'listed')
+    expect(ix.keys).toHaveLength(2)
+  })
+
+  test('data is 9 bytes (discriminator + state)', () => {
+    const ix = createLockPNFTInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey, 'staked')
+    expect(ix.data).toHaveLength(9)
+  })
+})
+
+describe('createUnlockPNFTInstruction', () => {
+  test('has 2 account keys', () => {
+    const ix = createUnlockPNFTInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey)
+    expect(ix.keys).toHaveLength(2)
+  })
+
+  test('data is unlockPNFT discriminator', () => {
+    const ix = createUnlockPNFTInstruction(Keypair.generate().publicKey, Keypair.generate().publicKey)
+    expect(Buffer.from(ix.data)).toEqual(Buffer.from(DISCRIMINATORS.unlockPNFT))
+  })
+})
+
+describe('createRecoverSoulboundInstruction', () => {
+  test('has 6 account keys', () => {
+    const ix = createRecoverSoulboundInstruction(
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, Keypair.generate().publicKey
+    )
+    expect(ix.keys).toHaveLength(6)
+  })
+
+  test('recovery authority is signer', () => {
+    const recovery = Keypair.generate().publicKey
+    const ix = createRecoverSoulboundInstruction(
+      recovery, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, Keypair.generate().publicKey
+    )
+    expect(ix.keys[0].pubkey.equals(recovery)).toBe(true)
+    expect(ix.keys[0].isSigner).toBe(true)
+  })
+
+  test('data is recoverSoulbound discriminator', () => {
+    const ix = createRecoverSoulboundInstruction(
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, Keypair.generate().publicKey,
+      Keypair.generate().publicKey, Keypair.generate().publicKey
+    )
+    expect(Buffer.from(ix.data)).toEqual(Buffer.from(DISCRIMINATORS.recoverSoulbound))
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Transfer validation (canTransfer for non-existent pNFT)
+// ---------------------------------------------------------------------------
+
+describe('canTransfer', () => {
+  test('returns allowed for non-existent pNFT', async () => {
+    const { Connection } = await import('@solana/web3.js')
+    const connection = new Connection('https://api.devnet.solana.com')
+    const mint = Keypair.generate().publicKey
+    const from = Keypair.generate().publicKey
+    const to = Keypair.generate().publicKey
+
+    const result = await canTransfer(connection, mint, from, to)
+    expect(result.allowed).toBe(true)
+    expect(result.failedRules).toHaveLength(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Royalty estimation (estimateRoyalty for non-existent pNFT)
+// ---------------------------------------------------------------------------
+
+describe('estimateRoyalty', () => {
+  test('returns 0 for non-existent pNFT', async () => {
+    const { Connection } = await import('@solana/web3.js')
+    const connection = new Connection('https://api.devnet.solana.com')
+    const mint = Keypair.generate().publicKey
+
+    const result = await estimateRoyalty(connection, mint, 1000000n)
+    expect(result.amount).toBe(0n)
+    expect(result.recipients).toHaveLength(0)
   })
 })

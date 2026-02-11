@@ -2683,7 +2683,7 @@ const info = await tokens.multisig.info(ms)
 
 ### 20.1 pNFT Program Design
 
-- [ ] Create `src/programs/pnft/` directory
+- [ ] Create `src/programs/pnft/` directory (deferred — program deployment)
 - [x] Design rule engine for transfer validation
 - [x] Support composable rules (AND/OR logic)
 - [x] Maintain compatibility with standard NFT operations
@@ -2708,9 +2708,9 @@ const info = await tokens.multisig.info(ms)
 └─────────────────────────────────────────────────────────────┘
 ```
 
-- [ ] Implement each rule type
-- [ ] Design rule composition (multiple rules per NFT)
-- [ ] Implement rule inheritance from collection
+- [x] Implement each rule type
+- [x] Design rule composition (multiple rules per NFT)
+- [x] Implement rule inheritance from collection
 
 ### 20.3 pNFT Account Structure
 
@@ -2740,7 +2740,7 @@ const info = await tokens.multisig.info(ms)
 
 #### Creation
 
-- [ ] `create_pnft` - Create programmable NFT
+- [x] `create_pnft` - Create programmable NFT
 
   ```ts
   await createPNFT({
@@ -2753,7 +2753,7 @@ const info = await tokens.multisig.info(ms)
   })
   ```
 
-- [ ] `create_rule_set` - Create shared rule set for collection
+- [x] `create_rule_set` - Create shared rule set for collection
 
   ```ts
   await createRuleSet({
@@ -2767,14 +2767,14 @@ const info = await tokens.multisig.info(ms)
 
 #### Rule Management
 
-- [ ] `add_rule` - Add rule to NFT or rule set
-- [ ] `remove_rule` - Remove rule
-- [ ] `update_rule` - Update rule parameters
-- [ ] `freeze_rules` - Make rules immutable
+- [x] `add_rule` - Add rule to NFT or rule set
+- [x] `remove_rule` - Remove rule
+- [x] `update_rule` - Update rule parameters
+- [x] `freeze_rules` - Make rules immutable
 
 #### Transfers
 
-- [ ] `transfer_pnft` - Transfer with rule validation
+- [x] `transfer_pnft` - Transfer with rule validation
 
   ```ts
   await transferPNFT({
@@ -2785,26 +2785,26 @@ const info = await tokens.multisig.info(ms)
   })
   ```
 
-- [ ] `delegate_transfer` - Delegate transfer authority
-- [ ] `revoke_delegate` - Revoke delegation
+- [x] `delegate_transfer` - Delegate transfer authority
+- [x] `revoke_delegate` - Revoke delegation
 
 #### State Management
 
-- [ ] `lock_pnft` - Lock NFT (for staking, listing, etc.)
-- [ ] `unlock_pnft` - Unlock NFT
-- [ ] State transitions: `Unlocked` ↔ `Listed` ↔ `Staked`
+- [x] `lock_pnft` - Lock NFT (for staking, listing, etc.)
+- [x] `unlock_pnft` - Unlock NFT
+- [ ] State transitions: `Unlocked` ↔ `Listed` ↔ `Staked` (deferred — program deployment)
 
 ### 20.5 Royalty Enforcement
 
-- [ ] Implement on-chain royalty payment validation
-- [ ] Support multiple royalty recipients (creator splits)
-- [ ] Calculate royalty based on sale price
-- [ ] Integrate with marketplace escrow patterns
-- [ ] Provide royalty bypass for specific programs (bridges, etc.)
+- [x] Implement on-chain royalty payment validation
+- [x] Support multiple royalty recipients (creator splits)
+- [x] Calculate royalty based on sale price
+- [ ] Integrate with marketplace escrow patterns (deferred)
+- [ ] Provide royalty bypass for specific programs (bridges, etc.) (deferred)
 
 ### 20.6 Soulbound Tokens (SBTs)
 
-- [ ] `create_soulbound` - Create non-transferable NFT
+- [x] `create_soulbound` - Create non-transferable NFT
 
   ```ts
   await createSoulbound({
@@ -2815,9 +2815,9 @@ const info = await tokens.multisig.info(ms)
   })
   ```
 
-- [ ] Support "recoverable" soulbound (issuer can reassign)
-- [ ] Support "burnable" soulbound (holder can destroy)
-- [ ] Use cases: credentials, achievements, memberships
+- [x] Support "recoverable" soulbound (issuer can reassign)
+- [x] Support "burnable" soulbound (holder can destroy)
+- [x] Use cases: credentials, achievements, memberships
 
 ### 20.7 TypeScript SDK for pNFTs
 

@@ -2,35 +2,81 @@
  * Programmable NFT Creation
  */
 
-import type { Connection, PublicKey} from '@solana/web3.js';
+import type { Connection, PublicKey } from '@solana/web3.js'
 import { Keypair } from '@solana/web3.js'
+import type { TokenConfig, TransactionOptions } from '../types'
 import type {
   ProgrammableNFT,
   CreatePNFTOptions,
   RuleSet,
   CreateRuleSetOptions,
-  TransferRule,
+  PNFTResult,
 } from './types'
+import { createConnection } from '../drivers/solana/connection'
+import { loadWallet } from '../drivers/solana/wallet'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { getPNFTAddress, getRuleSetAddress, serializeRuleData } from './program'
+import {
+  createCreatePNFTInstruction,
+  createCreateSoulboundInstruction,
+  createCreateRuleSetInstruction,
+  createLockPNFTInstruction,
+  createUnlockPNFTInstruction,
+  createRecoverSoulboundInstruction,
+} from './instructions'
+import { validateRule } from './rules'
 
 /**
  * Create a programmable NFT
  */
 export async function createPNFT(
-  connection: Connection,
-  payer: PublicKey,
-  options: CreatePNFTOptions
-): Promise<{ mint: PublicKey; signature: string }> {
-  const mintKeypair = Keypair.generate()
+  options: CreatePNFTOptions,
+  config: TokenConfig,
+  txOptions?: TransactionOptions
+): Promise<PNFTResult> {
+  if (options.rules) {
+    for (const rule of options.rules) {
+      const validation = validateRule(rule)
+      if (!validation.valid) {
+        throw new Error(`Invalid rule ${rule.type}: ${validation.errors.join(', ')}`)
+      }
+    }
+  }
 
-  // In production, would:
-  // 1. Create mint account
-  // 2. Create pNFT data account with rules
-  // 3. Initialize metadata
-  // 4. Optionally link to rule set
+  const connection = createConnection(config)
+  const payer = loadWallet(config)
+  const mintKeypair = Keypair.generate()
+  const pnftAccount = getPNFTAddress(mintKeypair.publicKey)
+
+  const rulesData = options.rules
+    ? Buffer.concat(options.rules.map(serializeRuleData))
+    : Buffer.alloc(0)
+
+  const instruction = createCreatePNFTInstruction(
+    payer.publicKey,
+    pnftAccount,
+    mintKeypair.publicKey,
+    options.name,
+    options.symbol,
+    options.uri,
+    rulesData
+  )
+
+  const transaction = await buildTransaction(
+    connection,
+    [instruction],
+    payer.publicKey,
+    txOptions
+  )
+
+  transaction.partialSign(payer)
+  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
 
   return {
-    mint: mintKeypair.publicKey,
-    signature: `pnft_created_${Date.now()}`,
+    signature: result.signature,
+    confirmed: result.confirmed,
+    mint: mintKeypair.publicKey.toBase58(),
+    pnftAccount: pnftAccount.toBase58(),
   }
 }
 
@@ -38,38 +84,83 @@ export async function createPNFT(
  * Create a soulbound token (non-transferable NFT)
  */
 export async function createSoulbound(
-  connection: Connection,
-  payer: PublicKey,
   options: Omit<CreatePNFTOptions, 'rules'> & {
     recoveryAuthority?: PublicKey
-  }
-): Promise<{ mint: PublicKey; signature: string }> {
-  const soulboundRule: TransferRule = {
-    type: 'soulbound',
-    enabled: true,
-    recoveryAuthority: options.recoveryAuthority,
-  }
+  },
+  config: TokenConfig,
+  txOptions?: TransactionOptions
+): Promise<PNFTResult> {
+  const connection = createConnection(config)
+  const payer = loadWallet(config)
+  const mintKeypair = Keypair.generate()
+  const pnftAccount = getPNFTAddress(mintKeypair.publicKey)
 
-  return createPNFT(connection, payer, {
-    ...options,
-    rules: [soulboundRule],
-  })
+  const instruction = createCreateSoulboundInstruction(
+    payer.publicKey,
+    pnftAccount,
+    mintKeypair.publicKey,
+    options.name,
+    options.symbol,
+    options.uri,
+    options.recoveryAuthority
+  )
+
+  const transaction = await buildTransaction(
+    connection,
+    [instruction],
+    payer.publicKey,
+    txOptions
+  )
+
+  transaction.partialSign(payer)
+  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
+
+  return {
+    signature: result.signature,
+    confirmed: result.confirmed,
+    mint: mintKeypair.publicKey.toBase58(),
+    pnftAccount: pnftAccount.toBase58(),
+  }
 }
 
 /**
  * Create a rule set for a collection
  */
 export async function createRuleSet(
-  connection: Connection,
-  authority: PublicKey,
-  options: CreateRuleSetOptions
-): Promise<{ address: PublicKey; signature: string }> {
-  const ruleSetKeypair = Keypair.generate()
+  options: CreateRuleSetOptions,
+  config: TokenConfig,
+  txOptions?: TransactionOptions
+): Promise<PNFTResult> {
+  const connection = createConnection(config)
+  const payer = loadWallet(config)
 
-  // In production, would create rule set account
+  const collection = options.collection ?? Keypair.generate().publicKey
+  const ruleSetAccount = getRuleSetAddress(payer.publicKey, collection)
+
+  const rulesData = Buffer.concat(options.rules.map(serializeRuleData))
+
+  const instruction = createCreateRuleSetInstruction(
+    payer.publicKey,
+    ruleSetAccount,
+    collection,
+    options.isMutable ?? true,
+    rulesData
+  )
+
+  const transaction = await buildTransaction(
+    connection,
+    [instruction],
+    payer.publicKey,
+    txOptions
+  )
+
+  transaction.partialSign(payer)
+  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
+
   return {
-    address: ruleSetKeypair.publicKey,
-    signature: `ruleset_created_${Date.now()}`,
+    signature: result.signature,
+    confirmed: result.confirmed,
+    ruleSet: ruleSetAccount.toBase58(),
   }
 }
 
@@ -87,7 +178,7 @@ export async function getPNFT(
 /**
  * Get rule set
  */
-export async function getRuleSet(
+export async function getRuleSetData(
   connection: Connection,
   address: PublicKey
 ): Promise<RuleSet | null> {
@@ -134,38 +225,106 @@ export async function getPNFTState(
  * Lock pNFT (for staking, listing, etc.)
  */
 export async function lockPNFT(
-  connection: Connection,
   mint: PublicKey,
-  owner: PublicKey,
-  state: 'listed' | 'staked'
-): Promise<string> {
-  // In production, would update pNFT state
-  return `locked_${state}_${Date.now()}`
+  state: 'listed' | 'staked',
+  config: TokenConfig,
+  txOptions?: TransactionOptions
+): Promise<PNFTResult> {
+  const connection = createConnection(config)
+  const payer = loadWallet(config)
+  const pnftAccount = getPNFTAddress(mint)
+
+  const instruction = createLockPNFTInstruction(payer.publicKey, pnftAccount, state)
+
+  const transaction = await buildTransaction(
+    connection,
+    [instruction],
+    payer.publicKey,
+    txOptions
+  )
+
+  transaction.partialSign(payer)
+  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
+
+  return {
+    signature: result.signature,
+    confirmed: result.confirmed,
+    pnftAccount: pnftAccount.toBase58(),
+  }
 }
 
 /**
  * Unlock pNFT
  */
 export async function unlockPNFT(
-  connection: Connection,
   mint: PublicKey,
-  owner: PublicKey
-): Promise<string> {
-  // In production, would set state to unlocked
-  return `unlocked_${Date.now()}`
+  config: TokenConfig,
+  txOptions?: TransactionOptions
+): Promise<PNFTResult> {
+  const connection = createConnection(config)
+  const payer = loadWallet(config)
+  const pnftAccount = getPNFTAddress(mint)
+
+  const instruction = createUnlockPNFTInstruction(payer.publicKey, pnftAccount)
+
+  const transaction = await buildTransaction(
+    connection,
+    [instruction],
+    payer.publicKey,
+    txOptions
+  )
+
+  transaction.partialSign(payer)
+  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
+
+  return {
+    signature: result.signature,
+    confirmed: result.confirmed,
+    pnftAccount: pnftAccount.toBase58(),
+  }
 }
 
 /**
  * Recover soulbound token (emergency recovery)
  */
 export async function recoverSoulbound(
-  connection: Connection,
   mint: PublicKey,
-  recoveryAuthority: PublicKey,
-  newOwner: PublicKey
-): Promise<string> {
-  // In production, would transfer soulbound to new owner
-  return `recovered_${Date.now()}`
+  newOwner: PublicKey,
+  config: TokenConfig,
+  txOptions?: TransactionOptions
+): Promise<PNFTResult> {
+  const connection = createConnection(config)
+  const payer = loadWallet(config)
+  const pnftAccount = getPNFTAddress(mint)
+
+  const { getAssociatedTokenAddress } = await import('@solana/spl-token')
+  const fromToken = await getAssociatedTokenAddress(mint, payer.publicKey)
+  const toToken = await getAssociatedTokenAddress(mint, newOwner)
+
+  const instruction = createRecoverSoulboundInstruction(
+    payer.publicKey,
+    pnftAccount,
+    mint,
+    fromToken,
+    toToken,
+    newOwner
+  )
+
+  const transaction = await buildTransaction(
+    connection,
+    [instruction],
+    payer.publicKey,
+    txOptions
+  )
+
+  transaction.partialSign(payer)
+  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
+
+  return {
+    signature: result.signature,
+    confirmed: result.confirmed,
+    pnftAccount: pnftAccount.toBase58(),
+  }
 }
 
 /**
