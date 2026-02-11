@@ -160,11 +160,25 @@ function createMetadataInstructionData(
 }
 
 /**
- * Create a new SPL token
+ * Create a new SPL token with optional metadata and Token-2022 extensions.
  *
- * @param options - Token creation options
- * @param config - Token configuration
- * @returns Token creation result
+ * Generates a new mint keypair, creates the on-chain mint account, adds
+ * Metaplex metadata, and optionally mints an initial supply to the payer.
+ *
+ * @param options - Token creation options including name, symbol, decimals, and extensions
+ * @param config - ts-tokens configuration (network, wallet, RPC endpoint)
+ * @returns Token creation result with mint address and transaction signature
+ *
+ * @example
+ * ```ts
+ * const result = await createToken({
+ *   name: 'MyToken',
+ *   symbol: 'MTK',
+ *   decimals: 9,
+ *   initialSupply: 1_000_000n,
+ * }, config)
+ * console.log('Mint:', result.mint)
+ * ```
  */
 export async function createToken(
   options: CreateTokenOptions,
@@ -442,7 +456,21 @@ export async function createToken(
 }
 
 /**
- * Helper to create a simple token with defaults
+ * Create a simple token with sensible defaults (devnet, 9 decimals).
+ *
+ * A convenience wrapper around {@link createToken} for quick prototyping.
+ *
+ * @param name - Human-readable token name
+ * @param symbol - Short ticker symbol (e.g., "MTK")
+ * @param decimals - Number of decimal places (default: 9)
+ * @param initialSupply - Optional initial supply to mint to the payer
+ * @param config - Optional ts-tokens configuration override
+ * @returns Token creation result with mint address and signature
+ *
+ * @example
+ * ```ts
+ * const result = await createSimpleToken('MyToken', 'MTK', 9, 1_000_000n)
+ * ```
  */
 export async function createSimpleToken(
   name: string,

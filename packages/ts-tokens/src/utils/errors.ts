@@ -85,14 +85,30 @@ export class RpcError extends TokensError {
 
 /**
  * Validation error
+ *
+ * When `validOptions` is provided alongside an invalid `field` value,
+ * the error message is automatically enriched with a "Did you mean?"
+ * suggestion using Levenshtein distance matching.
  */
 export class ValidationError extends TokensError {
   field?: string
+  suggestion?: string
 
-  constructor(message: string, field?: string) {
-    super(message, 'VALIDATION_ERROR', { field })
+  constructor(message: string, field?: string, validOptions?: string[]) {
+    let enrichedMessage = message
+    let suggestion: string | undefined
+
+    if (field && validOptions && validOptions.length > 0) {
+      suggestion = didYouMean(field, validOptions)
+      if (suggestion) {
+        enrichedMessage = `${message}. Did you mean "${suggestion}"?`
+      }
+    }
+
+    super(enrichedMessage, 'VALIDATION_ERROR', { field, suggestion })
     this.name = 'ValidationError'
     this.field = field
+    this.suggestion = suggestion
   }
 }
 
@@ -171,6 +187,71 @@ export function getUserFriendlyMessage(error: TokensError): string {
     default:
       return error.message
   }
+}
+
+/**
+ * Compute Levenshtein distance between two strings.
+ *
+ * @param a - First string
+ * @param b - Second string
+ * @returns The edit distance between the two strings
+ */
+function levenshteinDistance(a: string, b: string): number {
+  const la = a.length
+  const lb = b.length
+  const dp: number[][] = Array.from({ length: la + 1 }, () => Array(lb + 1).fill(0))
+
+  for (let i = 0; i <= la; i++) dp[i][0] = i
+  for (let j = 0; j <= lb; j++) dp[0][j] = j
+
+  for (let i = 1; i <= la; i++) {
+    for (let j = 1; j <= lb; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost,
+      )
+    }
+  }
+
+  return dp[la][lb]
+}
+
+/**
+ * Suggest the closest match from a list of valid options.
+ *
+ * Uses Levenshtein distance to find the most similar string.
+ * Returns `undefined` if no option is close enough (threshold: half the input length + 2).
+ *
+ * @param input - The invalid value the user provided
+ * @param validOptions - Array of valid option strings
+ * @returns The closest matching option, or undefined if none is close enough
+ *
+ * @example
+ * ```ts
+ * didYouMean('trasfer', ['transfer', 'mint', 'burn'])
+ * // => 'transfer'
+ * ```
+ */
+export function didYouMean(input: string, validOptions: string[]): string | undefined {
+  if (validOptions.length === 0) return undefined
+
+  const lower = input.toLowerCase()
+  let bestMatch: string | undefined
+  let bestDistance = Infinity
+
+  for (const option of validOptions) {
+    const distance = levenshteinDistance(lower, option.toLowerCase())
+    if (distance < bestDistance) {
+      bestDistance = distance
+      bestMatch = option
+    }
+  }
+
+  // Only suggest if the distance is reasonable (within half the input length + 2)
+  const threshold = Math.floor(lower.length / 2) + 2
+  return bestDistance <= threshold ? bestMatch : undefined
 }
 
 /**

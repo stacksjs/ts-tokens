@@ -150,6 +150,56 @@ export interface BurnOptions {
 }
 
 /**
+ * Delegate options
+ */
+export interface DelegateOptions {
+  merkleTree: PublicKey
+  treeAuthority: PublicKey
+  leafOwner: PublicKey
+  previousLeafDelegate: PublicKey
+  newLeafDelegate: PublicKey
+  root: Uint8Array
+  dataHash: Uint8Array
+  creatorHash: Uint8Array
+  nonce: bigint
+  index: number
+  proof: PublicKey[]
+}
+
+/**
+ * Redeem options
+ */
+export interface RedeemOptions {
+  merkleTree: PublicKey
+  treeAuthority: PublicKey
+  leafOwner: PublicKey
+  leafDelegate: PublicKey
+  voucher: PublicKey
+  root: Uint8Array
+  dataHash: Uint8Array
+  creatorHash: Uint8Array
+  nonce: bigint
+  index: number
+  proof: PublicKey[]
+}
+
+/**
+ * Cancel redeem options
+ */
+export interface CancelRedeemOptions {
+  merkleTree: PublicKey
+  treeAuthority: PublicKey
+  leafOwner: PublicKey
+  voucher: PublicKey
+  root: Uint8Array
+  dataHash: Uint8Array
+  creatorHash: Uint8Array
+  nonce: bigint
+  index: number
+  proof: PublicKey[]
+}
+
+/**
  * Decompress options
  */
 export interface DecompressOptions {

@@ -17,6 +17,9 @@ import type {
   TransferOptions,
   BurnOptions,
   DecompressOptions,
+  DelegateOptions,
+  RedeemOptions,
+  CancelRedeemOptions,
   MetadataArgs,
   Creator,
 } from './types'
@@ -242,6 +245,129 @@ export function decompressV1(options: DecompressOptions): TransactionInstruction
     Buffer.from(options.root),
     Buffer.from(options.dataHash),
     Buffer.from(options.creatorHash),
+    nonceBuffer,
+    indexBuffer,
+  ])
+
+  return new TransactionInstruction({
+    keys,
+    programId: BUBBLEGUM_PROGRAM_ID,
+    data,
+  })
+}
+
+/**
+ * Delegate authority over a compressed NFT
+ *
+ * Allows the leaf owner to delegate authority to another address
+ * for transfer/burn operations.
+ */
+export function delegate(params: DelegateOptions): TransactionInstruction {
+  const keys = [
+    { pubkey: params.treeAuthority, isSigner: false, isWritable: false },
+    { pubkey: params.leafOwner, isSigner: true, isWritable: false },
+    { pubkey: params.previousLeafDelegate, isSigner: false, isWritable: false },
+    { pubkey: params.newLeafDelegate, isSigner: false, isWritable: false },
+    { pubkey: params.merkleTree, isSigner: false, isWritable: true },
+    { pubkey: SPL_NOOP_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: ACCOUNT_COMPRESSION_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ...params.proof.map(p => ({ pubkey: p, isSigner: false, isWritable: false })),
+  ]
+
+  const nonceBuffer = Buffer.alloc(8)
+  nonceBuffer.writeBigUInt64LE(params.nonce)
+
+  const indexBuffer = Buffer.alloc(4)
+  indexBuffer.writeUInt32LE(params.index)
+
+  const data = Buffer.concat([
+    DELEGATE_DISCRIMINATOR,
+    Buffer.from(params.root),
+    Buffer.from(params.dataHash),
+    Buffer.from(params.creatorHash),
+    nonceBuffer,
+    indexBuffer,
+  ])
+
+  return new TransactionInstruction({
+    keys,
+    programId: BUBBLEGUM_PROGRAM_ID,
+    data,
+  })
+}
+
+/**
+ * Redeem a compressed NFT
+ *
+ * Redeems a compressed NFT by removing it from the Merkle tree
+ * and creating a voucher account. The voucher can then be used
+ * to decompress the NFT into a regular SPL token.
+ */
+export function redeem(params: RedeemOptions): TransactionInstruction {
+  const keys = [
+    { pubkey: params.treeAuthority, isSigner: false, isWritable: false },
+    { pubkey: params.leafOwner, isSigner: true, isWritable: true },
+    { pubkey: params.leafDelegate, isSigner: false, isWritable: false },
+    { pubkey: params.merkleTree, isSigner: false, isWritable: true },
+    { pubkey: params.voucher, isSigner: false, isWritable: true },
+    { pubkey: SPL_NOOP_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: ACCOUNT_COMPRESSION_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ...params.proof.map(p => ({ pubkey: p, isSigner: false, isWritable: false })),
+  ]
+
+  const nonceBuffer = Buffer.alloc(8)
+  nonceBuffer.writeBigUInt64LE(params.nonce)
+
+  const indexBuffer = Buffer.alloc(4)
+  indexBuffer.writeUInt32LE(params.index)
+
+  const data = Buffer.concat([
+    REDEEM_DISCRIMINATOR,
+    Buffer.from(params.root),
+    Buffer.from(params.dataHash),
+    Buffer.from(params.creatorHash),
+    nonceBuffer,
+    indexBuffer,
+  ])
+
+  return new TransactionInstruction({
+    keys,
+    programId: BUBBLEGUM_PROGRAM_ID,
+    data,
+  })
+}
+
+/**
+ * Cancel a redemption of a compressed NFT
+ *
+ * Cancels a pending redemption, restoring the leaf in the Merkle tree
+ * and closing the voucher account.
+ */
+export function cancelRedeem(params: CancelRedeemOptions): TransactionInstruction {
+  const keys = [
+    { pubkey: params.treeAuthority, isSigner: false, isWritable: false },
+    { pubkey: params.leafOwner, isSigner: true, isWritable: true },
+    { pubkey: params.merkleTree, isSigner: false, isWritable: true },
+    { pubkey: params.voucher, isSigner: false, isWritable: true },
+    { pubkey: SPL_NOOP_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: ACCOUNT_COMPRESSION_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ...params.proof.map(p => ({ pubkey: p, isSigner: false, isWritable: false })),
+  ]
+
+  const nonceBuffer = Buffer.alloc(8)
+  nonceBuffer.writeBigUInt64LE(params.nonce)
+
+  const indexBuffer = Buffer.alloc(4)
+  indexBuffer.writeUInt32LE(params.index)
+
+  const data = Buffer.concat([
+    CANCEL_REDEEM_DISCRIMINATOR,
+    Buffer.from(params.root),
+    Buffer.from(params.dataHash),
+    Buffer.from(params.creatorHash),
     nonceBuffer,
     indexBuffer,
   ])

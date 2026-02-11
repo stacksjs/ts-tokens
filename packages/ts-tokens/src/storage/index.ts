@@ -19,7 +19,22 @@ import { ShadowDriveStorageAdapter, createShadowDriveAdapter } from './shadow-dr
 const adapters = new Map<StorageProvider, StorageAdapter>()
 
 /**
- * Get or create a storage adapter for a provider
+ * Get or create a storage adapter for a provider.
+ *
+ * Returns a cached adapter instance if one has already been created
+ * for the given provider. Supports Arweave, IPFS, Shadow Drive, and
+ * a local filesystem adapter for development.
+ *
+ * @param provider - Storage provider name ('arweave' | 'ipfs' | 'shadow-drive' | 'local')
+ * @param config - Optional ts-tokens configuration with storage settings
+ * @returns A StorageAdapter instance for the specified provider
+ *
+ * @example
+ * ```ts
+ * const adapter = getStorageAdapter('arweave', config)
+ * const result = await adapter.uploadFile('./image.png')
+ * console.log('URL:', result.url)
+ * ```
  */
 export function getStorageAdapter(
   provider: StorageProvider,
@@ -62,7 +77,9 @@ export function getStorageAdapter(
 }
 
 /**
- * Clear adapter cache
+ * Clear all cached storage adapter instances.
+ *
+ * Call this when you need to reconfigure adapters (e.g., after changing storage settings).
  */
 export function clearStorageAdapters(): void {
   adapters.clear()
@@ -233,6 +250,71 @@ class LocalStorageAdapter implements StorageAdapter {
  */
 export function createLocalAdapter(config?: { baseDir?: string; baseUrl?: string }): LocalStorageAdapter {
   return new LocalStorageAdapter(config)
+}
+
+/**
+ * Storage driver factory — auto-selects the storage adapter based on config
+ *
+ * Reads `config.storageProvider` (or `config.storage?.provider`) and returns
+ * the corresponding adapter, with driver-specific options forwarded.
+ *
+ * @param config - Token configuration
+ * @returns Configured storage adapter
+ */
+export function createStorageDriver(config: TokenConfig): StorageAdapter {
+  const provider: StorageProvider =
+    config.storage?.provider || config.storageProvider || 'arweave'
+
+  return getStorageAdapter(provider, config)
+}
+
+/**
+ * Storage fallback chain — tries providers in order until one succeeds
+ *
+ * Default order: arweave -> ipfs -> shadow-drive -> local
+ *
+ * @param data - Data to upload
+ * @param config - Token configuration
+ * @param options - Upload options
+ * @param providers - Custom provider order (optional)
+ * @returns Upload result from the first successful provider
+ */
+export async function uploadWithFallback(
+  data: Uint8Array | string,
+  config: TokenConfig,
+  options?: { contentType?: string },
+  providers: StorageProvider[] = ['arweave', 'ipfs', 'shadow-drive', 'local']
+): Promise<{
+  id: string
+  url: string
+  provider: StorageProvider
+  size: number
+  contentType: string
+}> {
+  const errors: Array<{ provider: StorageProvider; error: string }> = []
+
+  for (const provider of providers) {
+    try {
+      const adapter = getStorageAdapter(provider, config)
+      const result = await adapter.upload(data, options)
+      return {
+        id: result.id,
+        url: result.url,
+        provider,
+        size: result.size,
+        contentType: result.contentType,
+      }
+    } catch (error) {
+      errors.push({
+        provider,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+
+  throw new Error(
+    `All storage providers failed:\n${errors.map(e => `  ${e.provider}: ${e.error}`).join('\n')}`
+  )
 }
 
 // Re-export adapters

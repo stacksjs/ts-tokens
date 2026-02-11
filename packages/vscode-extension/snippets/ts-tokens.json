@@ -1,0 +1,218 @@
+{
+  "ts-tokens: Create Token": {
+    "prefix": "tst-create-token",
+    "body": [
+      "import { createToken } from 'ts-tokens'",
+      "",
+      "const result = await createToken({",
+      "  name: '${1:MyToken}',",
+      "  symbol: '${2:MTK}',",
+      "  decimals: ${3:9},",
+      "  initialSupply: ${4:1_000_000n},",
+      "}, config)",
+      "",
+      "console.log('Mint:', result.mint)"
+    ],
+    "description": "Create a new SPL token with metadata"
+  },
+  "ts-tokens: Create Simple Token": {
+    "prefix": "tst-simple-token",
+    "body": [
+      "import { createSimpleToken } from 'ts-tokens'",
+      "",
+      "const result = await createSimpleToken('${1:MyToken}', '${2:MTK}', ${3:9}, ${4:1_000_000n})"
+    ],
+    "description": "Create a simple token with defaults"
+  },
+  "ts-tokens: Mint Tokens": {
+    "prefix": "tst-mint",
+    "body": [
+      "import { mintTokens } from 'ts-tokens'",
+      "",
+      "const result = await mintTokens({",
+      "  mint: '${1:mintAddress}',",
+      "  amount: ${2:1_000n},",
+      "  destination: '${3:recipientAddress}',",
+      "}, config)"
+    ],
+    "description": "Mint tokens to an address"
+  },
+  "ts-tokens: Transfer Tokens": {
+    "prefix": "tst-transfer",
+    "body": [
+      "import { transfer } from 'ts-tokens'",
+      "",
+      "const result = await transfer(",
+      "  '${1:mintAddress}',",
+      "  '${2:recipientAddress}',",
+      "  ${3:100n},",
+      "  config",
+      ")"
+    ],
+    "description": "Transfer tokens to a recipient"
+  },
+  "ts-tokens: Create NFT": {
+    "prefix": "tst-create-nft",
+    "body": [
+      "import { createNFT } from 'ts-tokens'",
+      "",
+      "const result = await createNFT({",
+      "  name: '${1:My NFT}',",
+      "  symbol: '${2:NFT}',",
+      "  uri: '${3:https://arweave.net/metadata.json}',",
+      "  sellerFeeBasisPoints: ${4:500},",
+      "}, config)",
+      "",
+      "console.log('Mint:', result.mint)"
+    ],
+    "description": "Create a new NFT"
+  },
+  "ts-tokens: Create Collection": {
+    "prefix": "tst-create-collection",
+    "body": [
+      "import { createCollection } from 'ts-tokens'",
+      "",
+      "const result = await createCollection({",
+      "  name: '${1:My Collection}',",
+      "  symbol: '${2:MCOL}',",
+      "  uri: '${3:https://arweave.net/collection.json}',",
+      "}, config)"
+    ],
+    "description": "Create an NFT collection"
+  },
+  "ts-tokens: Transfer NFT": {
+    "prefix": "tst-transfer-nft",
+    "body": [
+      "import { transferNFT } from 'ts-tokens'",
+      "",
+      "const result = await transferNFT(",
+      "  '${1:nftMintAddress}',",
+      "  '${2:recipientAddress}',",
+      "  config",
+      ")"
+    ],
+    "description": "Transfer an NFT to a recipient"
+  },
+  "ts-tokens: Candy Machine": {
+    "prefix": "tst-candy-machine",
+    "body": [
+      "import { createCandyMachine, addConfigLines, mintFromCandyMachine } from 'ts-tokens'",
+      "",
+      "// Create candy machine",
+      "const cm = await createCandyMachine({",
+      "  itemsAvailable: ${1:100},",
+      "  symbol: '${2:NFT}',",
+      "  sellerFeeBasisPoints: ${3:500},",
+      "  collection: '${4:collectionMint}',",
+      "  configLineSettings: {",
+      "    prefixName: '${5:NFT #}',",
+      "    nameLength: 32,",
+      "    prefixUri: '${6:https://arweave.net/}',",
+      "    uriLength: 200,",
+      "    isSequential: false,",
+      "  },",
+      "}, config)",
+      "",
+      "console.log('Candy Machine:', cm.candyMachine)"
+    ],
+    "description": "Create and configure a Candy Machine"
+  },
+  "ts-tokens: Upload to Storage": {
+    "prefix": "tst-upload",
+    "body": [
+      "import { getStorageAdapter } from 'ts-tokens'",
+      "",
+      "const adapter = getStorageAdapter('${1|arweave,ipfs,shadow-drive,local|}', config)",
+      "const result = await adapter.uploadFile('${2:./path/to/file}')",
+      "console.log('URL:', result.url)"
+    ],
+    "description": "Upload a file to storage"
+  },
+  "ts-tokens: Upload JSON Metadata": {
+    "prefix": "tst-upload-json",
+    "body": [
+      "import { getStorageAdapter } from 'ts-tokens'",
+      "",
+      "const adapter = getStorageAdapter('${1:arweave}', config)",
+      "const result = await adapter.uploadJson({",
+      "  name: '${2:My NFT}',",
+      "  description: '${3:Description}',",
+      "  image: '${4:https://arweave.net/image.png}',",
+      "  attributes: [",
+      "    { trait_type: '${5:Color}', value: '${6:Blue}' },",
+      "  ],",
+      "})",
+      "console.log('Metadata URL:', result.url)"
+    ],
+    "description": "Upload JSON metadata to storage"
+  },
+  "ts-tokens: Get Config": {
+    "prefix": "tst-config",
+    "body": [
+      "import { getConfig } from 'ts-tokens'",
+      "",
+      "const config = await getConfig()"
+    ],
+    "description": "Load ts-tokens configuration"
+  },
+  "ts-tokens: Connection": {
+    "prefix": "tst-connection",
+    "body": [
+      "import { createSolanaConnection } from 'ts-tokens'",
+      "",
+      "const connection = createSolanaConnection(config)"
+    ],
+    "description": "Create a Solana connection from config"
+  },
+  "ts-tokens: Compressed NFT": {
+    "prefix": "tst-compressed-nft",
+    "body": [
+      "import { createMerkleTree, mintCompressedNFT } from 'ts-tokens'",
+      "",
+      "// Create a merkle tree for compressed NFTs",
+      "const tree = await createMerkleTree({",
+      "  maxDepth: ${1:14},",
+      "  maxBufferSize: ${2:64},",
+      "}, config)",
+      "",
+      "// Mint a compressed NFT",
+      "const nft = await mintCompressedNFT({",
+      "  tree: tree.address,",
+      "  name: '${3:Compressed NFT}',",
+      "  uri: '${4:https://arweave.net/metadata.json}',",
+      "}, config)"
+    ],
+    "description": "Create a merkle tree and mint compressed NFTs"
+  },
+  "ts-tokens: Token Builder": {
+    "prefix": "tst-token-builder",
+    "body": [
+      "import { TokenConfigBuilder } from 'ts-tokens'",
+      "",
+      "const tokenConfig = new TokenConfigBuilder()",
+      "  .name('${1:MyToken}')",
+      "  .symbol('${2:MTK}')",
+      "  .decimals(${3:9})",
+      "  .supply(${4:1_000_000n})",
+      "  .build()"
+    ],
+    "description": "Build a token config using the fluent builder"
+  },
+  "ts-tokens: Result Type": {
+    "prefix": "tst-result",
+    "body": [
+      "import type { Result, AsyncResult } from 'ts-tokens'",
+      "import { ok, err } from 'ts-tokens'",
+      "",
+      "async function ${1:myFunction}(): AsyncResult<${2:string}, Error> {",
+      "  try {",
+      "    const value = ${3:await someOperation()}",
+      "    return ok(value)",
+      "  } catch (e) {",
+      "    return err(e instanceof Error ? e : new Error(String(e)))",
+      "  }",
+      "}"
+    ],
+    "description": "Function returning a Result type"
+  }
+}

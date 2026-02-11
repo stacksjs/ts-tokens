@@ -44,6 +44,7 @@
     "dist"
   ],
   "scripts": {
+    "dev": "vite --config vite.config.ts",
     "build": "bun build ./src/index.ts --outdir ./dist --target browser --sourcemap=external",
     "lint": "bunx --bun eslint .",
     "lint:fix": "bunx --bun eslint . --fix",

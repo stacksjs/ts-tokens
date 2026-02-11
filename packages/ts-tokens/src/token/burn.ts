@@ -20,11 +20,18 @@ import { loadWallet } from '../drivers/solana/wallet'
 import { createConnection } from '../drivers/solana/connection'
 
 /**
- * Burn tokens from an account
+ * Burn tokens from a token account, permanently reducing total supply.
  *
- * @param options - Burn options
- * @param config - Token configuration
- * @returns Transaction result
+ * The burn authority must be the token account owner or a delegated authority.
+ *
+ * @param options - Burn options (mint, amount, optional owner/from)
+ * @param config - ts-tokens configuration
+ * @returns Transaction result with signature
+ *
+ * @example
+ * ```ts
+ * const result = await burnTokens({ mint: 'Abc...', amount: 100n }, config)
+ * ```
  */
 export async function burnTokens(
   options: BurnOptions,

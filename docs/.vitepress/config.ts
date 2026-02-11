@@ -60,61 +60,72 @@ const sidebar = [
       { text: 'Install', link: '/install' },
       { text: 'Usage', link: '/usage' },
       { text: 'Config', link: '/config' },
-      { text: 'Demo', link: '/demo' },
     ],
   },
   {
     text: 'API',
     items: [
       {
-        text: 'Barcodes',
-        link: '/api/barcode',
+        text: 'Tokens',
         collapsed: false,
         items: [
-          {
-            text: 'CODE128',
-            link: '/api/barcode/CODE128',
-          },
-          { text: 'CODE39', link: '/api/barcode/CODE39' },
-          {
-            text: 'EAN / UPC',
-            link: '/api/barcode/EAN/',
-            items: [
-              { text: 'EAN-13', link: '/api/barcode/EAN/EAN-13' },
-              { text: 'EAN-8', link: '/api/barcode/EAN/EAN-8' },
-              { text: 'EAN-5', link: '/api/barcode/EAN/EAN-5' },
-              { text: 'EAN-2', link: '/api/barcode/EAN/EAN-2' },
-              { text: 'UPC-A', link: '/api/barcode/EAN/UPC-A' },
-              { text: 'UPC-E', link: '/api/barcode/EAN/UPC-E' },
-            ],
-          },
-          { text: 'ITF-14', link: '/api/barcode/ITF-14' },
-          {
-            text: 'MSI',
-            link: '/api/barcode/MSI/',
-            items: [
-              { text: 'MSI10', link: '/api/barcode/MSI/MSI10' },
-              { text: 'MSI11', link: '/api/barcode/MSI/MSI11' },
-              { text: 'MSI1010', link: '/api/barcode/MSI/MSI1010' },
-              { text: 'MSI1110', link: '/api/barcode/MSI/MSI1110' },
-            ],
-          },
-          { text: 'Pharmacode', link: '/api/barcode/Pharmacode' },
-          { text: 'Codabar', link: '/api/barcode/Codabar' },
+          { text: 'Create', link: '/api/tokens/create' },
+          { text: 'Mint', link: '/api/tokens/mint' },
+          { text: 'Transfer', link: '/api/tokens/transfer' },
+          { text: 'Burn', link: '/api/tokens/burn' },
+          { text: 'Metadata', link: '/api/tokens/metadata' },
+          { text: 'Authority', link: '/api/tokens/authority' },
         ],
       },
-      { text: 'QR Codes', link: '/api/qr-code' },
+      {
+        text: 'NFTs',
+        collapsed: false,
+        items: [
+          { text: 'Create', link: '/api/nft/create' },
+          { text: 'Collections', link: '/api/nft/collection' },
+          { text: 'Transfer', link: '/api/nft/transfer' },
+          { text: 'Metadata', link: '/api/nft/metadata' },
+          { text: 'Compressed NFTs', link: '/api/nft/compressed' },
+        ],
+      },
+      {
+        text: 'Candy Machine',
+        collapsed: true,
+        items: [
+          { text: 'Create', link: '/api/candy-machine/create' },
+          { text: 'Mint', link: '/api/candy-machine/mint' },
+          { text: 'Guards', link: '/api/candy-machine/guards' },
+          { text: 'Manage', link: '/api/candy-machine/manage' },
+        ],
+      },
+      { text: 'Token 2022', link: '/api/token-2022/' },
+      { text: 'Programmable NFTs', link: '/api/pnft/' },
+      { text: 'DeFi', link: '/api/defi/' },
+      { text: 'Staking', link: '/api/staking/' },
+      { text: 'Governance', link: '/api/governance/' },
+      { text: 'Marketplace', link: '/api/marketplace/' },
+      { text: 'Multisig', link: '/api/multisig/' },
+      { text: 'Treasury', link: '/api/treasury/' },
+      { text: 'Wallets', link: '/api/wallets/' },
+      { text: 'Batch Operations', link: '/api/batch/' },
+      { text: 'Events', link: '/api/events/' },
+      { text: 'Analytics', link: '/api/analytics/' },
+      { text: 'Indexer', link: '/api/indexer/' },
+      { text: 'Fluent API', link: '/api/fluent/' },
+      { text: 'Voting', link: '/api/voting/' },
+      { text: 'i18n', link: '/api/i18n/' },
+      { text: 'Debug', link: '/api/debug/' },
     ],
   },
   { text: 'Showcase', link: '/showcase' },
 ]
-const description = 'TypeScript QR & Barcode generating & reading. Lightweight & powerful.'
-const title = 'tokens | QR & Barcode generating & reading. Lightweight & powerful.'
+const description = 'TypeScript toolkit for Solana tokens, NFTs, and DeFi. Zero dependencies beyond official Solana packages.'
+const title = 'ts-tokens | Solana Token & NFT Toolkit'
 
 export default withPwa(
   defineConfig({
     lang: 'en-US',
-    title: 'tokens',
+    title: 'ts-tokens',
     description,
     metaChunk: true,
     cleanUrls: true,
@@ -129,7 +140,7 @@ export default withPwa(
       ['meta', { name: 'author', content: 'Stacks.js, Inc.' }],
       ['meta', {
         name: 'tags',
-        content: 'tokens, typescript, qrcode, barcode, qr, bar, code, generate, read, lightweight, powerful, scanner, reader, decoder, encoder, stacksjs, stacks',
+        content: 'ts-tokens, typescript, solana, tokens, nft, defi, spl, metaplex, candy-machine, token-2022, web3, blockchain, stacksjs, stacks',
       }],
 
       ['meta', { property: 'og:type', content: 'website' }],
@@ -137,9 +148,9 @@ export default withPwa(
       ['meta', { property: 'og:title', content: title }],
       ['meta', { property: 'og:description', content: description }],
 
-      ['meta', { property: 'og:site_name', content: 'tokens' }],
-      ['meta', { property: 'og:image', content: 'https://ts-quick-reaction.netlify.app/images/og-image.png' }],
-      ['meta', { property: 'og:url', content: 'https://ts-quick-reaction.netlify.app/' }],
+      ['meta', { property: 'og:site_name', content: 'ts-tokens' }],
+      ['meta', { property: 'og:image', content: 'https://ts-tokens.dev/images/og-image.png' }],
+      ['meta', { property: 'og:url', content: 'https://ts-tokens.dev/' }],
       // ['script', { 'src': 'https://cdn.usefathom.com/script.js', 'data-site': '', 'data-spa': 'auto', 'defer': '' }],
       ...analyticsHead,
     ],

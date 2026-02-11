@@ -10,6 +10,7 @@ export * from './accounts'
 export * from './pda'
 export * from './types'
 export * from './guards'
+export * from './guard-instructions'
 
 export const CANDY_MACHINE_PROGRAM_ID = 'CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR'
 export const CANDY_GUARD_PROGRAM_ID = 'Guard1JwRhJkVH6XZhzoYxeBVQe872VH6QggF4BWmS9g'

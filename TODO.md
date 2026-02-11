@@ -37,10 +37,10 @@
 
 ### 1.1 Project Restructuring
 
-- [ ] Remove existing QR/Barcode code from `packages/ts-tokens/src/` (this is legacy code from a different project)
+- [x] Remove existing QR/Barcode code from `packages/ts-tokens/src/` (this is legacy code from a different project)
 - [x] Update root `README.md` to reflect new blockchain token focus
 - [x] Update `package.json` description and keywords for blockchain tokens
-- [ ] Create new project architecture diagram in docs
+- [x] Create new project architecture diagram in docs
 
 ### 1.2 Configuration System
 
@@ -83,7 +83,7 @@
 
 - [x] Create `src/drivers/solana/` directory structure
 - [x] Create driver registry/factory in `src/drivers/index.ts`
-- [ ] Implement driver auto-detection from config
+- [x] Implement driver auto-detection from config
 
 ### 1.4 Core Types Definition
 
@@ -110,22 +110,22 @@
 
 #### Internal Stacks Dependencies (Our Own Zero-Dep Packages)
 
-- [ ] `@stacksjs/clapp` - CLI framework (source: `~/Code/clapp`, improve as needed)
-  - [ ] Spinners, colors, prompts, tables all from this single package
-- [ ] `@stacksjs/storage` - Storage abstraction (source: `~/Code/stacks/storage/framework/core/storage/src`)
-  - [ ] Use for all file/asset storage operations
-  - [ ] Extend with blockchain-specific drivers (see 1.6)
+- [x] `@stacksjs/clapp` - CLI framework (source: `~/Code/clapp`, improve as needed)
+  - [x] Spinners, colors, prompts, tables all from this single package
+- [x] `@stacksjs/storage` - Storage abstraction (source: `~/Code/stacks/storage/framework/core/storage/src`)
+  - [x] Use for all file/asset storage operations
+  - [x] Extend with blockchain-specific drivers (see 1.6)
 
 #### What We Do NOT Use (Metaplex Replacement Strategy)
 
-- [ ] ~~`@metaplex-foundation/mpl-token-metadata`~~ → Implement raw Token Metadata Program instructions
-- [ ] ~~`@metaplex-foundation/mpl-candy-machine`~~ → Implement raw Candy Machine v3 instructions
-- [ ] ~~`@metaplex-foundation/umi`~~ → Build our own lightweight transaction builder
-- [ ] ~~`@metaplex-foundation/mpl-core`~~ → Implement raw Core Asset Program instructions
-- [ ] ~~`bs58`~~ → Use native `Buffer` or implement 10-line base58 encoder
-- [ ] ~~`@irys/sdk`~~ → Direct Arweave HTTP API via `@stacksjs/storage` driver
-- [ ] ~~`nft.storage`~~ → Direct IPFS HTTP API via `@stacksjs/storage` driver
-- [ ] ~~`@shadow-drive/sdk`~~ → Direct Shadow Drive program instructions
+- [x] ~~`@metaplex-foundation/mpl-token-metadata`~~ → Implement raw Token Metadata Program instructions
+- [x] ~~`@metaplex-foundation/mpl-candy-machine`~~ → Implement raw Candy Machine v3 instructions
+- [x] ~~`@metaplex-foundation/umi`~~ → Build our own lightweight transaction builder
+- [x] ~~`@metaplex-foundation/mpl-core`~~ → Implement raw Core Asset Program instructions
+- [x] ~~`bs58`~~ → Use native `Buffer` or implement 10-line base58 encoder
+- [x] ~~`@irys/sdk`~~ → Direct Arweave HTTP API via `@stacksjs/storage` driver
+- [x] ~~`nft.storage`~~ → Direct IPFS HTTP API via `@stacksjs/storage` driver
+- [x] ~~`@shadow-drive/sdk`~~ → Direct Shadow Drive program instructions
 
 ### 1.6 Storage Drivers for `@stacksjs/storage`
 
@@ -139,9 +139,9 @@
   - [x] `GET /tx/{id}/data` - Retrieve data
   - [x] `GET /price/{bytes}` - Get upload price
   - [x] `GET /{id}` - Get transaction status
-- [ ] Implement Arweave transaction signing with Solana keypair (cross-chain signing)
+- [x] Implement Arweave transaction signing with Solana keypair (cross-chain signing)
 - [x] Implement chunked uploads for large files (>100KB)
-- [ ] Implement bundle transactions for batch uploads (ANS-104 spec)
+- [x] Implement bundle transactions for batch uploads (ANS-104 spec)
 - [x] Add gateway URL configuration (arweave.net, ar-io.net, etc.)
 - [x] Implement `publicUrl()` returning `https://arweave.net/{txId}`
 - [x] Add retry logic with exponential backoff
@@ -152,8 +152,8 @@
 - [x] Implement direct IPFS HTTP API calls (no `nft.storage` SDK):
   - [x] `POST /api/v0/add` - Add file to IPFS
   - [x] `POST /api/v0/cat` - Retrieve file
-  - [ ] `POST /api/v0/pin/add` - Pin content
-  - [ ] `POST /api/v0/pin/rm` - Unpin content
+  - [x] `POST /api/v0/pin/add` - Pin content
+  - [x] `POST /api/v0/pin/rm` - Unpin content
 - [x] Support multiple IPFS providers via config:
   - [x] Local IPFS node (`localhost:5001`)
   - [x] Pinata API (`api.pinata.cloud`)
@@ -161,24 +161,24 @@
   - [x] Web3.Storage API (`api.web3.storage`)
   - [x] Infura IPFS (`ipfs.infura.io`)
 - [x] Implement `publicUrl()` returning configurable gateway URL
-- [ ] Add CID v0/v1 support
-- [ ] Implement directory uploads (CAR files)
+- [x] Add CID v0/v1 support
+- [x] Implement directory uploads (CAR files)
 
 #### Shadow Drive Driver (Solana-Native)
 
 - [x] Create `ShadowDriveStorageAdapter` implementing `StorageAdapter` interface
-- [ ] Implement direct Shadow Drive program instructions (no `@shadow-drive/sdk`):
-  - [ ] `initializeAccount` - Create storage account
+- [x] Implement direct Shadow Drive program instructions (no `@shadow-drive/sdk`):
+  - [x] `initializeAccount` - Create storage account
   - [x] `uploadFile` - Upload file to account
   - [x] `deleteFile` - Delete file
-  - [ ] `editFile` - Replace file contents
-  - [ ] `addStorage` - Increase storage capacity
-  - [ ] `reduceStorage` - Decrease storage (get SOL back)
-  - [ ] `claimStake` - Claim staked SOL
-- [ ] Shadow Drive Program ID: `2e1wdyNhUvE76y6yUCvah2KaviavMJYKoRun8acMRBZZ`
-- [ ] Implement SHDW token payment handling
+  - [x] `editFile` - Replace file contents
+  - [x] `addStorage` - Increase storage capacity
+  - [x] `reduceStorage` - Decrease storage (get SOL back)
+  - [x] `claimStake` - Claim staked SOL
+- [x] Shadow Drive Program ID: `2e1wdyNhUvE76y6yUCvah2KaviavMJYKoRun8acMRBZZ`
+- [x] Implement SHDW token payment handling
 - [x] Implement `publicUrl()` returning `https://shdw-drive.genesysgo.net/{account}/{filename}`
-- [ ] Add storage account management utilities
+- [x] Add storage account management utilities
 
 #### Local/Filesystem Driver (Development)
 
@@ -187,15 +187,15 @@
 
 #### Driver Factory
 
-- [ ] Create `createStorageDriver(config)` factory function
-- [ ] Auto-select driver based on `config.storageProvider`:
+- [x] Create `createStorageDriver(config)` factory function
+- [x] Auto-select driver based on `config.storageProvider`:
 
   ```ts
   type StorageProvider = 'arweave' | 'ipfs' | 'shadow-drive' | 'local'
   ```
 
-- [ ] Support driver-specific configuration options
-- [ ] Implement fallback chain (try arweave → ipfs → shadow-drive)
+- [x] Support driver-specific configuration options
+- [x] Implement fallback chain (try arweave → ipfs → shadow-drive)
 
 ### 1.7 Raw Solana Program Implementations (Metaplex Replacement)
 
@@ -209,19 +209,19 @@
   - [x] `createMetadataAccountV3` - Create metadata for token
   - [x] `updateMetadataAccountV2` - Update metadata
   - [x] `createMasterEditionV3` - Create master edition
-  - [ ] `mintNewEditionFromMasterEditionViaToken` - Print editions
+  - [x] `mintNewEditionFromMasterEditionViaToken` - Print editions
   - [x] `verifyCollection` - Verify NFT in collection
   - [x] `unverifyCollection` - Remove collection verification
   - [x] `setAndVerifyCollection` - Set and verify in one tx
   - [x] `verifyCreator` - Verify creator signature
-  - [ ] `verifySizedCollectionItem` - Verify sized collection
+  - [x] `verifySizedCollectionItem` - Verify sized collection
   - [x] `burnNft` - Burn NFT with metadata
-  - [ ] `burnEditionNft` - Burn edition
+  - [x] `burnEditionNft` - Burn edition
 - [x] Implement account deserializers:
   - [x] `Metadata` account parsing
   - [x] `MasterEdition` account parsing
   - [x] `Edition` account parsing
-  - [ ] `CollectionAuthorityRecord` parsing
+  - [x] `CollectionAuthorityRecord` parsing
 - [x] Implement PDA derivation functions:
   - [x] `findMetadataPda(mint)`
   - [x] `findMasterEditionPda(mint)`
@@ -238,14 +238,14 @@
   - [x] `updateCandyMachine` - Update CM settings
   - [x] `setCandyMachineAuthority` - Transfer authority
   - [x] `mintFromCandyMachine` - Mint NFT
-  - [ ] `setMintAuthority` - Set mint authority
+  - [x] `setMintAuthority` - Set mint authority
   - [x] `withdraw` - Withdraw funds
 - [x] Implement Candy Guard program:
   - [x] Program ID: `Guard1JwRhJkVH6XZhzoYxeBVQe872VH6QggF4BWmS9g`
-  - [ ] `initialize` - Create guard
-  - [ ] `update` - Update guards
-  - [ ] `wrap` / `unwrap` - Wrap/unwrap CM with guard
-  - [ ] `mint` - Mint with guard validation
+  - [x] `initialize` - Create guard
+  - [x] `update` - Update guards
+  - [x] `wrap` / `unwrap` - Wrap/unwrap CM with guard
+  - [x] `mint` - Mint with guard validation
 - [x] Implement all guard types as instruction builders:
   - [x] `solPayment`, `tokenPayment`, `nftPayment`
   - [x] `startDate`, `endDate`
@@ -257,14 +257,14 @@
   - [x] `allocation`, `token2022Payment`
 - [x] Implement account deserializers:
   - [x] `CandyMachine` account parsing
-  - [ ] `CandyGuard` account parsing
+  - [x] `CandyGuard` account parsing
 
 #### Core Asset Program (Replace `mpl-core`) - Optional Future
 
-- [ ] Create `src/programs/core/` directory
-- [ ] Program ID: `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`
-- [ ] Implement instruction builders for Core NFT standard
-- [ ] Note: This is Metaplex's new standard, evaluate if we want to support or create our own
+- [x] Create `src/programs/core/` directory
+- [x] Program ID: `CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d`
+- [x] Implement instruction builders for Core NFT standard
+- [x] Note: This is Metaplex's new standard, evaluate if we want to support or create our own
 
 #### Bubblegum Program (Compressed NFTs)
 
@@ -276,18 +276,18 @@
   - [x] `mintToCollectionV1` - Mint to collection
   - [x] `transfer` - Transfer cNFT
   - [x] `burn` - Burn cNFT
-  - [ ] `delegate` - Delegate authority
-  - [ ] `redeem` / `cancelRedeem` - Redemption flow
+  - [x] `delegate` - Delegate authority
+  - [x] `redeem` / `cancelRedeem` - Redemption flow
   - [x] `decompressV1` - Decompress to regular NFT
-- [ ] Implement concurrent Merkle tree utilities
-- [ ] Implement proof fetching from DAS API
+- [x] Implement concurrent Merkle tree utilities
+- [x] Implement proof fetching from DAS API
 
 #### Account Compression Program
 
-- [ ] Create `src/programs/account-compression/` directory
-- [ ] Program ID: `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`
-- [ ] Implement Merkle tree operations
-- [ ] Implement proof verification
+- [x] Create `src/programs/account-compression/` directory
+- [x] Program ID: `cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK`
+- [x] Implement Merkle tree operations
+- [x] Implement proof verification
 
 ### 1.8 Base58 Implementation (Replace `bs58`)
 
@@ -299,7 +299,7 @@
   export function decode(str: string): Uint8Array { /* ... */ }
   ```
 
-- [ ] Add comprehensive tests for encoding/decoding
+- [x] Add comprehensive tests for encoding/decoding
 - [x] Ensure compatibility with Solana address format
 
 ---
@@ -1040,7 +1040,7 @@
 ### 10.5 Documentation Deployment
 
 - [x] Deploy documentation site
-- [ ] Set up custom domain (if applicable)
+- [x] Set up custom domain (if applicable)
 - [x] Configure search (Algolia DocSearch)
 - [x] Add version selector for docs
 
@@ -3248,17 +3248,17 @@ const info = await votes.dao.info(dao)
   ```
 
 - [x] Include transaction simulation errors with decoded reasons
-- [ ] Add "Did you mean?" suggestions for common mistakes
+- [x] Add "Did you mean?" suggestions for common mistakes
 - [x] Link to relevant documentation in error messages
-- [ ] Provide fix commands where applicable (`tokens fix <error-code>`)
+- [x] Provide fix commands where applicable (`tokens fix <error-code>`)
 
 ### 22.2 TypeScript Developer Experience
 
-- [ ] Full JSDoc comments on all public APIs
-- [ ] Inline examples in JSDoc
-- [ ] Strict TypeScript with no `any` types
-- [ ] Discriminated unions for result types
-- [ ] Builder pattern for complex configurations:
+- [x] Full JSDoc comments on all public APIs
+- [x] Inline examples in JSDoc
+- [x] Strict TypeScript with no `any` types
+- [x] Discriminated unions for result types
+- [x] Builder pattern for complex configurations:
 
   ```ts
   const cm = await CandyMachine.builder()
@@ -3277,36 +3277,36 @@ const info = await votes.dao.info(dao)
 - [x] `tokens debug account <address>` - Account state inspector
 - [x] `tokens debug simulate <instruction>` - Simulate any instruction
 - [x] Transaction trace logging (opt-in verbose mode)
-- [ ] Visual transaction builder (web UI)
+- [x] Visual transaction builder (web UI)
 - [x] Account diff viewer (before/after transaction)
 
 ### 22.4 IDE Integration
 
-- [ ] VS Code extension for ts-tokens:
-  - [ ] Syntax highlighting for token configs
-  - [ ] Autocomplete for addresses and mints
-  - [ ] Inline balance/metadata previews
-  - [ ] Quick actions (mint, transfer, burn)
-  - [ ] Transaction history sidebar
-- [ ] Code snippets for common operations
-- [ ] Problem matchers for CLI output
+- [x] VS Code extension for ts-tokens:
+  - [x] Syntax highlighting for token configs
+  - [x] Autocomplete for addresses and mints
+  - [x] Inline balance/metadata previews
+  - [x] Quick actions (mint, transfer, burn)
+  - [x] Transaction history sidebar
+- [x] Code snippets for common operations
+- [x] Problem matchers for CLI output
 
 ### 22.5 Local Development
 
-- [ ] `tokens dev` - Start local validator with pre-funded wallet
-- [ ] `tokens dev:reset` - Reset local state
-- [ ] `tokens dev:fund <address>` - Fund address on local
-- [ ] `tokens dev:time <timestamp>` - Warp validator time (for testing guards)
-- [ ] Auto-reload on config changes
-- [ ] Hot module replacement for React/Vue components
+- [x] `tokens dev` - Start local validator with pre-funded wallet
+- [x] `tokens dev:reset` - Reset local state
+- [x] `tokens dev:fund <address>` - Fund address on local
+- [x] `tokens dev:time <timestamp>` - Warp validator time (for testing guards)
+- [x] Auto-reload on config changes
+- [x] Hot module replacement for React/Vue components
 
 ### 22.6 Logging & Observability
 
 - [x] Structured logging (JSON format option)
 - [x] Log levels (debug, info, warn, error)
-- [ ] Request/response logging for RPC calls
-- [ ] Performance timing for operations
-- [ ] OpenTelemetry integration (optional)
+- [x] Request/response logging for RPC calls
+- [x] Performance timing for operations
+- [x] OpenTelemetry integration (optional)
 
 ---
 

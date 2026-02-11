@@ -21,6 +21,7 @@ import type {
 const METADATA_KEY = 4
 const MASTER_EDITION_V2_KEY = 6
 const EDITION_KEY = 1
+const COLLECTION_AUTHORITY_RECORD_KEY = 9
 
 /**
  * Deserialize a Metadata account
@@ -168,6 +169,44 @@ export function deserializeEdition(data: Buffer): Edition {
   const edition = data.readBigUInt64LE(offset)
 
   return { key, parent, edition }
+}
+
+/**
+ * Collection authority record account data
+ */
+export interface CollectionAuthorityRecord {
+  key: number
+  bump: number
+  updateAuthority: PublicKey | null
+}
+
+/**
+ * Deserialize a CollectionAuthorityRecord account
+ *
+ * This account is created when a collection authority is delegated
+ * for verifying NFTs in a collection.
+ */
+export function parseCollectionAuthorityRecord(data: Buffer): CollectionAuthorityRecord {
+  let offset = 0
+
+  const key = data.readUInt8(offset)
+  offset += 1
+
+  if (key !== COLLECTION_AUTHORITY_RECORD_KEY) {
+    throw new Error(`Invalid collection authority record key: ${key}`)
+  }
+
+  const bump = data.readUInt8(offset)
+  offset += 1
+
+  // Update authority (optional)
+  const hasUpdateAuthority = data.readUInt8(offset) === 1
+  offset += 1
+  const updateAuthority = hasUpdateAuthority
+    ? new PublicKey(data.subarray(offset, offset + 32))
+    : null
+
+  return { key, bump, updateAuthority }
 }
 
 /**

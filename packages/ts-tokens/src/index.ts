@@ -30,6 +30,7 @@ export {
   getDriver,
   hasDriver,
   listDrivers,
+  autoDetectDriver,
   createDriverRegistry,
   driverRegistry,
   // Solana driver exports
@@ -138,6 +139,8 @@ export {
 export {
   getStorageAdapter,
   clearStorageAdapters,
+  createStorageDriver,
+  uploadWithFallback,
   createArweaveAdapter,
   createIPFSAdapter,
   createShadowDriveAdapter,

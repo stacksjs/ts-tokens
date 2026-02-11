@@ -1,18 +1,19 @@
 <p align="center"><img src="https://github.com/stacksjs/tokens/blob/main/.github/art/cover.jpg?raw=true" alt="Social Card of this repo"></p>
 
-# tokens
+# ts-tokens
 
-> A QR & Barcode Library & CLI for Node.js/Bun/Browser.
+> A TypeScript toolkit for Solana tokens, NFTs, and DeFi.
 
 ## Features
 
-- 🤖 QR & Barcode Generating & Decoding
-- 📦 **Lightweight**: Zero dependencies
-- 🚀 **Fast**: Built with performance in mind
-- 📜 **TypeScript**: Strongly typed
-- 📚 **Simple**: Easy to use
-- 📖 **Documentation**: Well-documented
-- 🛠 **Library & CLI**: Interact in different ways
+- **Solana Tokens**: Create, mint, transfer, and burn SPL tokens
+- **NFTs**: Create NFTs, collections, compressed NFTs, and manage metadata
+- **DeFi**: Staking, governance, marketplace, and treasury operations
+- **Token 2022**: Full support for the Token 2022 program extensions
+- **Candy Machine**: Create and manage NFT drops with guards
+- **Zero Dependencies**: Beyond official Solana packages
+- **TypeScript**: Strongly typed with full IntelliSense support
+- **Library & CLI**: Use programmatically or from the command line
 
 ## Testing
 
@@ -53,8 +54,6 @@ We would like to extend our thanks to the following sponsors for funding Stacks 
 
 ## Credits
 
-- [JsBarcode](https://github.com/lindell/JsBarcode)
-- [qrcodejs](https://github.com/davidshimjs/qrcodejs)
 - [Chris Breuer](https://github.com/chrisbbreuer)
 - [All Contributors](https://github.com/stacksjs/tokens/graphs/contributors)
 

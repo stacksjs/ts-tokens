@@ -4,10 +4,26 @@
  * Solana-native decentralized storage using GenesysGo Shadow Drive.
  */
 
-import { Connection, PublicKey, Transaction } from '@solana/web3.js'
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+  SystemProgram,
+} from '@solana/web3.js'
 import type { StorageAdapter, UploadResult, UploadOptions, BatchUploadResult, TokenConfig } from '../types'
 import { loadWallet } from '../drivers/solana/wallet'
 import { createConnection } from '../drivers/solana/connection'
+
+/**
+ * Shadow Drive Program ID
+ */
+export const SHADOW_DRIVE_PROGRAM_ID = new PublicKey('2e1wdyNhUvE76y6yUCvah2KaviavMJYKoRun8acMRBZZ')
+
+/**
+ * SHDW Token Mint
+ */
+export const SHDW_TOKEN_MINT = new PublicKey('SHDWyBxihqiCj6YekG2GUr7wqKLeLAMK1gHZck9pL6y')
 
 /**
  * Shadow Drive configuration
@@ -254,6 +270,174 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
   }
 
   /**
+   * Initialize a new storage account on Shadow Drive
+   *
+   * Creates a storage account instruction for the Shadow Drive program.
+   * The account size determines how much storage is allocated and the
+   * corresponding SHDW token cost.
+   *
+   * @param size - Storage size in bytes
+   * @param owner - Owner public key for the storage account
+   * @returns TransactionInstruction for account initialization
+   */
+  initializeAccount(
+    size: number,
+    owner: PublicKey
+  ): TransactionInstruction {
+    // Instruction data: discriminator (8 bytes) + size (8 bytes) + name length + name
+    const name = `storage-${Date.now()}`
+    const nameBytes = Buffer.from(name)
+
+    // Anchor-style discriminator for "initialize"
+    const discriminator = Buffer.from([175, 175, 109, 31, 13, 152, 155, 237])
+
+    const sizeBuffer = Buffer.alloc(8)
+    sizeBuffer.writeBigUInt64LE(BigInt(size))
+
+    const nameLenBuffer = Buffer.alloc(4)
+    nameLenBuffer.writeUInt32LE(nameBytes.length)
+
+    const data = Buffer.concat([discriminator, sizeBuffer, nameLenBuffer, nameBytes])
+
+    // Derive storage account PDA
+    const [storageAccount] = PublicKey.findProgramAddressSync(
+      [Buffer.from('storage-account'), owner.toBuffer(), Buffer.from(name)],
+      SHADOW_DRIVE_PROGRAM_ID
+    )
+
+    const keys = [
+      { pubkey: storageAccount, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: true, isWritable: true },
+      { pubkey: SHDW_TOKEN_MINT, isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ]
+
+    return new TransactionInstruction({
+      keys,
+      programId: SHADOW_DRIVE_PROGRAM_ID,
+      data,
+    })
+  }
+
+  /**
+   * Edit/replace a file on Shadow Drive
+   *
+   * @param account - Storage account address
+   * @param filename - Name of the file to replace
+   * @param data - New file data
+   */
+  async editFile(
+    account: string,
+    filename: string,
+    data: Uint8Array | string
+  ): Promise<{ url: string }> {
+    if (!this.tokenConfig) {
+      throw new Error('Shadow Drive requires token config. Call setTokenConfig() first.')
+    }
+
+    const wallet = loadWallet(this.tokenConfig)
+    const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
+    const formData = new FormData()
+    const blob = new Blob([bytes])
+    formData.append('file', blob, filename)
+    formData.append('storageAccount', account)
+
+    const response = await fetch(`${this.config.endpoint}/edit`, {
+      method: 'POST',
+      headers: {
+        'x-shadow-signature': Buffer.from(wallet.secretKey.slice(0, 64)).toString('base64'),
+        'x-shadow-signer': wallet.publicKey.toBase58(),
+      },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`Shadow Drive edit failed: ${error}`)
+    }
+
+    const result = await response.json()
+    return { url: result.finalized_location || result.location }
+  }
+
+  /**
+   * Add storage capacity to an existing account
+   *
+   * @param account - Storage account address
+   * @param additionalBytes - Number of bytes to add
+   * @returns TransactionInstruction
+   */
+  addStorage(account: PublicKey, additionalBytes: number): TransactionInstruction {
+    const discriminator = Buffer.from([223, 50, 224, 227, 151, 8, 115, 106])
+    const sizeBuffer = Buffer.alloc(8)
+    sizeBuffer.writeBigUInt64LE(BigInt(additionalBytes))
+
+    const data = Buffer.concat([discriminator, sizeBuffer])
+
+    const keys = [
+      { pubkey: account, isSigner: false, isWritable: true },
+      { pubkey: SHDW_TOKEN_MINT, isSigner: false, isWritable: false },
+    ]
+
+    return new TransactionInstruction({
+      keys,
+      programId: SHADOW_DRIVE_PROGRAM_ID,
+      data,
+    })
+  }
+
+  /**
+   * Reduce storage capacity of an existing account
+   *
+   * @param account - Storage account address
+   * @param bytesToReduce - Number of bytes to reduce
+   * @returns TransactionInstruction
+   */
+  reduceStorage(account: PublicKey, bytesToReduce: number): TransactionInstruction {
+    const discriminator = Buffer.from([51, 57, 225, 47, 182, 146, 137, 166])
+    const sizeBuffer = Buffer.alloc(8)
+    sizeBuffer.writeBigUInt64LE(BigInt(bytesToReduce))
+
+    const data = Buffer.concat([discriminator, sizeBuffer])
+
+    const keys = [
+      { pubkey: account, isSigner: false, isWritable: true },
+      { pubkey: SHDW_TOKEN_MINT, isSigner: false, isWritable: false },
+    ]
+
+    return new TransactionInstruction({
+      keys,
+      programId: SHADOW_DRIVE_PROGRAM_ID,
+      data,
+    })
+  }
+
+  /**
+   * Claim staked SOL from a storage account
+   *
+   * When storage is reduced, the corresponding staked SOL can be claimed
+   * back to the owner's wallet.
+   *
+   * @param account - Storage account address
+   * @returns TransactionInstruction
+   */
+  claimStake(account: PublicKey): TransactionInstruction {
+    const discriminator = Buffer.from([183, 18, 70, 156, 148, 109, 161, 34])
+    const data = Buffer.from(discriminator)
+
+    const keys = [
+      { pubkey: account, isSigner: false, isWritable: true },
+      { pubkey: SHDW_TOKEN_MINT, isSigner: false, isWritable: false },
+    ]
+
+    return new TransactionInstruction({
+      keys,
+      programId: SHADOW_DRIVE_PROGRAM_ID,
+      data,
+    })
+  }
+
+  /**
    * Get content type from file extension
    */
   private getContentType(ext: string): string {
@@ -278,4 +462,122 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
  */
 export function createShadowDriveAdapter(config?: Partial<ShadowDriveConfig>): ShadowDriveStorageAdapter {
   return new ShadowDriveStorageAdapter(config)
+}
+
+// ============================================
+// SHDW Token Payment Utilities
+// ============================================
+
+/**
+ * Estimate SHDW token cost for storage
+ *
+ * Shadow Drive charges in SHDW tokens based on storage size.
+ *
+ * @param sizeInBytes - Storage size in bytes
+ * @returns Estimated cost in SHDW token base units
+ */
+export function estimateShdwCost(sizeInBytes: number): bigint {
+  // Approximate pricing: ~$0.05 per GB per year
+  // 1 SHDW ~= $0.01 (approximate, varies)
+  // Cost in SHDW base units (9 decimals)
+  const gbSize = sizeInBytes / (1024 * 1024 * 1024)
+  const shdwAmount = gbSize * 5 // ~5 SHDW per GB
+  return BigInt(Math.ceil(shdwAmount * 1e9))
+}
+
+/**
+ * Create a SHDW token transfer instruction for storage payment
+ *
+ * @param from - Payer's token account
+ * @param to - Shadow Drive treasury token account
+ * @param owner - Payer wallet (signer)
+ * @param amount - SHDW token amount in base units
+ * @returns TransactionInstruction for the token transfer
+ */
+export function createShdwPaymentInstruction(
+  from: PublicKey,
+  to: PublicKey,
+  owner: PublicKey,
+  amount: bigint
+): TransactionInstruction {
+  // SPL Token transfer instruction (program ID: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA)
+  const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+
+  const data = Buffer.alloc(9)
+  data.writeUInt8(3, 0) // Transfer instruction discriminator
+  data.writeBigUInt64LE(amount, 1)
+
+  return new TransactionInstruction({
+    keys: [
+      { pubkey: from, isSigner: false, isWritable: true },
+      { pubkey: to, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: true, isWritable: false },
+    ],
+    programId: TOKEN_PROGRAM_ID,
+    data,
+  })
+}
+
+// ============================================
+// Storage Account Management Utilities
+// ============================================
+
+/**
+ * Derive the storage account PDA for a given owner and name
+ *
+ * @param owner - Owner public key
+ * @param name - Storage account name
+ * @returns [PDA address, bump seed]
+ */
+export function findStorageAccountPda(
+  owner: PublicKey,
+  name: string
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from('storage-account'), owner.toBuffer(), Buffer.from(name)],
+    SHADOW_DRIVE_PROGRAM_ID
+  )
+}
+
+/**
+ * Parse storage account data from on-chain account info
+ *
+ * @param data - Raw account data buffer
+ * @returns Parsed storage account info
+ */
+export function parseStorageAccount(data: Buffer): {
+  isInitialized: boolean
+  owner: PublicKey
+  totalStorage: bigint
+  usedStorage: bigint
+  immutable: boolean
+  creationTime: bigint
+} {
+  let offset = 8 // Skip discriminator
+
+  const isInitialized = data.readUInt8(offset) === 1
+  offset += 1
+
+  const owner = new PublicKey(data.subarray(offset, offset + 32))
+  offset += 32
+
+  const totalStorage = data.readBigUInt64LE(offset)
+  offset += 8
+
+  const usedStorage = data.readBigUInt64LE(offset)
+  offset += 8
+
+  const immutable = data.readUInt8(offset) === 1
+  offset += 1
+
+  const creationTime = data.readBigInt64LE(offset)
+
+  return {
+    isInitialized,
+    owner,
+    totalStorage,
+    usedStorage,
+    immutable,
+    creationTime,
+  }
 }

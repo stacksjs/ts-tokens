@@ -20,11 +20,19 @@ import { loadWallet } from '../drivers/solana/wallet'
 import { createConnection } from '../drivers/solana/connection'
 
 /**
- * Mint tokens to an address
+ * Mint new tokens to a destination address.
  *
- * @param options - Mint options
- * @param config - Token configuration
- * @returns Transaction result
+ * Automatically detects Token Program vs Token-2022 and creates the
+ * associated token account for the destination if it does not exist.
+ *
+ * @param options - Mint options (mint address, amount, destination)
+ * @param config - ts-tokens configuration
+ * @returns Transaction result with signature
+ *
+ * @example
+ * ```ts
+ * const result = await mintTokens({ mint: 'Abc...', amount: 1000n, destination: 'Def...' }, config)
+ * ```
  */
 export async function mintTokens(
   options: MintOptions,

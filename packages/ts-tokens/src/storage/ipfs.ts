@@ -388,3 +388,291 @@ export class IPFSStorageAdapter implements StorageAdapter {
 export function createIPFSAdapter(config?: Partial<IPFSConfig>): IPFSStorageAdapter {
   return new IPFSStorageAdapter(config)
 }
+
+/**
+ * Pin content on an IPFS node
+ *
+ * Sends a POST request to /api/v0/pin/add to pin content by CID.
+ *
+ * @param cid - Content identifier to pin
+ * @param config - IPFS configuration (requires apiEndpoint)
+ * @returns Pin result with the pinned CID
+ */
+export async function pinContent(
+  cid: string,
+  config: Partial<IPFSConfig>
+): Promise<{ cid: string; pinned: boolean }> {
+  const endpoint = config.apiEndpoint
+  if (!endpoint) {
+    throw new Error('IPFS pinContent requires apiEndpoint in config')
+  }
+
+  const timeout = config.timeout || 30000
+  const response = await fetch(`${endpoint}/api/v0/pin/add?arg=${encodeURIComponent(cid)}`, {
+    method: 'POST',
+    signal: AbortSignal.timeout(timeout),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`IPFS pin/add failed: ${error}`)
+  }
+
+  const result = await response.json()
+  return { cid: result.Pins?.[0] || cid, pinned: true }
+}
+
+/**
+ * Unpin content from an IPFS node
+ *
+ * Sends a POST request to /api/v0/pin/rm to remove a pin.
+ *
+ * @param cid - Content identifier to unpin
+ * @param config - IPFS configuration (requires apiEndpoint)
+ * @returns Unpin result
+ */
+export async function unpinContent(
+  cid: string,
+  config: Partial<IPFSConfig>
+): Promise<{ cid: string; unpinned: boolean }> {
+  const endpoint = config.apiEndpoint
+  if (!endpoint) {
+    throw new Error('IPFS unpinContent requires apiEndpoint in config')
+  }
+
+  const timeout = config.timeout || 30000
+  const response = await fetch(`${endpoint}/api/v0/pin/rm?arg=${encodeURIComponent(cid)}`, {
+    method: 'POST',
+    signal: AbortSignal.timeout(timeout),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`IPFS pin/rm failed: ${error}`)
+  }
+
+  const result = await response.json()
+  return { cid: result.Pins?.[0] || cid, unpinned: true }
+}
+
+/**
+ * Convert a CIDv0 (Qm...) to CIDv1 (bafy...)
+ *
+ * CIDv0 is a bare multihash (sha2-256, base58btc).
+ * CIDv1 format: <multibase><version><codec><multihash>
+ * This produces a base32-encoded CIDv1 with dag-pb codec.
+ *
+ * @param cidV0 - CIDv0 string starting with "Qm"
+ * @returns CIDv1 string in base32lower encoding
+ */
+export function toCIDv1(cidV0: string): string {
+  if (!cidV0.startsWith('Qm')) {
+    // Already v1 or invalid
+    return cidV0
+  }
+
+  // Decode the base58 CIDv0 to get the raw multihash
+  const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+  const alphabetMap = new Map<string, number>()
+  for (let i = 0; i < ALPHABET.length; i++) {
+    alphabetMap.set(ALPHABET[i], i)
+  }
+
+  // Decode base58
+  let zeros = 0
+  for (let i = 0; i < cidV0.length && cidV0[i] === '1'; i++) zeros++
+  const size = Math.ceil(cidV0.length * 733 / 1000) + 1
+  const b256 = new Uint8Array(size)
+  let length = 0
+  for (let i = zeros; i < cidV0.length; i++) {
+    const value = alphabetMap.get(cidV0[i])
+    if (value === undefined) throw new Error(`Invalid Base58 character: ${cidV0[i]}`)
+    let carry = value
+    let j = 0
+    for (let k = size - 1; (carry !== 0 || j < length) && k >= 0; k--, j++) {
+      carry += 58 * b256[k]
+      b256[k] = carry % 256
+      carry = Math.floor(carry / 256)
+    }
+    length = j
+  }
+  let idx = size - length
+  while (idx < size && b256[idx] === 0) idx++
+  const multihash = new Uint8Array(zeros + (size - idx))
+  let ji = zeros
+  while (idx < size) multihash[ji++] = b256[idx++]
+
+  // CIDv1: version(1) + codec(dag-pb=0x70) + multihash
+  const cidV1Bytes = new Uint8Array(2 + multihash.length)
+  cidV1Bytes[0] = 0x01 // version 1
+  cidV1Bytes[1] = 0x70 // dag-pb codec
+  cidV1Bytes.set(multihash, 2)
+
+  // Encode as base32lower with 'b' multibase prefix
+  const base32Chars = 'abcdefghijklmnopqrstuvwxyz234567'
+  let bits = 0
+  let value = 0
+  let base32 = ''
+  for (const byte of cidV1Bytes) {
+    value = (value << 8) | byte
+    bits += 8
+    while (bits >= 5) {
+      bits -= 5
+      base32 += base32Chars[(value >> bits) & 0x1f]
+    }
+  }
+  if (bits > 0) {
+    base32 += base32Chars[(value << (5 - bits)) & 0x1f]
+  }
+
+  return 'b' + base32
+}
+
+/**
+ * Convert a CIDv1 back to CIDv0 format
+ *
+ * Only works for CIDv1 with dag-pb codec and sha2-256 multihash.
+ *
+ * @param cidV1 - CIDv1 string (base32 with 'b' prefix)
+ * @returns CIDv0 string starting with "Qm"
+ */
+export function toCIDv0(cidV1: string): string {
+  if (cidV1.startsWith('Qm')) {
+    // Already v0
+    return cidV1
+  }
+
+  if (!cidV1.startsWith('b')) {
+    throw new Error('toCIDv0 only supports base32lower CIDv1 (starting with "b")')
+  }
+
+  // Decode base32lower
+  const base32Chars = 'abcdefghijklmnopqrstuvwxyz234567'
+  const base32Map = new Map<string, number>()
+  for (let i = 0; i < base32Chars.length; i++) {
+    base32Map.set(base32Chars[i], i)
+  }
+
+  const encoded = cidV1.slice(1) // remove 'b' prefix
+  let bits = 0
+  let value = 0
+  const bytes: number[] = []
+  for (const char of encoded) {
+    const v = base32Map.get(char)
+    if (v === undefined) throw new Error(`Invalid base32 character: ${char}`)
+    value = (value << 5) | v
+    bits += 5
+    if (bits >= 8) {
+      bits -= 8
+      bytes.push((value >> bits) & 0xff)
+    }
+  }
+
+  const cidBytes = new Uint8Array(bytes)
+
+  // Verify: version must be 1, codec must be dag-pb (0x70)
+  if (cidBytes[0] !== 0x01) {
+    throw new Error('Not a CIDv1')
+  }
+  if (cidBytes[1] !== 0x70) {
+    throw new Error('toCIDv0 only supports dag-pb codec (0x70)')
+  }
+
+  // Extract multihash (everything after version + codec)
+  const multihash = cidBytes.slice(2)
+
+  // Encode multihash as base58
+  const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+  let leadingZeros = 0
+  for (let i = 0; i < multihash.length && multihash[i] === 0; i++) leadingZeros++
+
+  const b58Size = Math.ceil(multihash.length * 138 / 100) + 1
+  const b58 = new Uint8Array(b58Size)
+  let b58Len = 0
+  for (let i = leadingZeros; i < multihash.length; i++) {
+    let carry = multihash[i]
+    let j = 0
+    for (let k = b58Size - 1; (carry !== 0 || j < b58Len) && k >= 0; k--, j++) {
+      carry += 256 * b58[k]
+      b58[k] = carry % 58
+      carry = Math.floor(carry / 58)
+    }
+    b58Len = j
+  }
+  let si = b58Size - b58Len
+  while (si < b58Size && b58[si] === 0) si++
+
+  let result = '1'.repeat(leadingZeros)
+  for (; si < b58Size; si++) {
+    result += ALPHABET[b58[si]]
+  }
+
+  return result
+}
+
+/**
+ * Upload multiple files as an IPFS directory
+ *
+ * Uploads files using the IPFS /api/v0/add endpoint with wrap-with-directory,
+ * producing a single directory CID containing all files.
+ *
+ * @param files - Array of file objects with name and data
+ * @param config - IPFS configuration (requires apiEndpoint)
+ * @returns Directory CID and individual file CIDs
+ */
+export async function uploadDirectory(
+  files: Array<{ name: string; data: Uint8Array; contentType?: string }>,
+  config: Partial<IPFSConfig>
+): Promise<{
+  directoryCid: string
+  files: Array<{ name: string; cid: string }>
+}> {
+  const endpoint = config.apiEndpoint
+  if (!endpoint) {
+    throw new Error('IPFS uploadDirectory requires apiEndpoint in config')
+  }
+
+  const timeout = config.timeout || 60000
+  const formData = new FormData()
+
+  for (const file of files) {
+    const blob = new Blob([file.data], { type: file.contentType || 'application/octet-stream' })
+    formData.append('file', blob, file.name)
+  }
+
+  const response = await fetch(
+    `${endpoint}/api/v0/add?wrap-with-directory=true&pin=true`,
+    {
+      method: 'POST',
+      body: formData,
+      signal: AbortSignal.timeout(timeout),
+    }
+  )
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`IPFS directory upload failed: ${error}`)
+  }
+
+  // IPFS /api/v0/add returns newline-delimited JSON objects
+  const text = await response.text()
+  const lines = text.trim().split('\n').map(line => JSON.parse(line))
+
+  // Last entry with empty name is the directory wrapper
+  const fileResults: Array<{ name: string; cid: string }> = []
+  let directoryCid = ''
+
+  for (const line of lines) {
+    if (line.Name === '') {
+      directoryCid = line.Hash
+    } else {
+      fileResults.push({ name: line.Name, cid: line.Hash })
+    }
+  }
+
+  if (!directoryCid && lines.length > 0) {
+    directoryCid = lines[lines.length - 1].Hash
+  }
+
+  return { directoryCid, files: fileResults }
+}

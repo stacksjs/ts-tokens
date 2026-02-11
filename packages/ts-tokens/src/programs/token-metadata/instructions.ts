@@ -33,6 +33,9 @@ enum MetadataInstruction {
   SetAndVerifyCollection = 25,
   VerifyCreator = 4,
   BurnNft = 29,
+  MintNewEditionFromMasterEditionViaToken = 11,
+  VerifySizedCollectionItem = 30,
+  BurnEditionNft = 37,
 }
 
 /**
@@ -224,6 +227,157 @@ export function burnNft(
   }
 
   const data = Buffer.from([MetadataInstruction.BurnNft])
+
+  return new TransactionInstruction({
+    keys,
+    programId: TOKEN_METADATA_PROGRAM_ID,
+    data,
+  })
+}
+
+/**
+ * Print a new edition from a master edition via token ownership
+ *
+ * Creates a numbered edition NFT from an existing master edition.
+ * The caller must own the master edition token to print.
+ */
+export function mintNewEditionFromMasterEditionViaToken(params: {
+  /** New edition metadata PDA */
+  newMetadata: PublicKey
+  /** New edition PDA */
+  newEdition: PublicKey
+  /** Master edition account (original) */
+  masterEdition: PublicKey
+  /** New mint account for the edition */
+  newMint: PublicKey
+  /** Edition mark PDA */
+  editionMarkPda: PublicKey
+  /** Authority: mint authority of new mint */
+  newMintAuthority: PublicKey
+  /** Payer for transaction fees */
+  payer: PublicKey
+  /** Owner of the master edition token */
+  tokenAccountOwner: PublicKey
+  /** Token account holding the master edition token */
+  tokenAccount: PublicKey
+  /** Update authority of the new metadata */
+  newMetadataUpdateAuthority: PublicKey
+  /** Metadata of the master edition */
+  metadata: PublicKey
+  /** Edition number to mint */
+  editionNumber: bigint
+}): TransactionInstruction {
+  const keys = [
+    { pubkey: params.newMetadata, isSigner: false, isWritable: true },
+    { pubkey: params.newEdition, isSigner: false, isWritable: true },
+    { pubkey: params.masterEdition, isSigner: false, isWritable: true },
+    { pubkey: params.newMint, isSigner: false, isWritable: true },
+    { pubkey: params.editionMarkPda, isSigner: false, isWritable: true },
+    { pubkey: params.newMintAuthority, isSigner: true, isWritable: false },
+    { pubkey: params.payer, isSigner: true, isWritable: true },
+    { pubkey: params.tokenAccountOwner, isSigner: true, isWritable: false },
+    { pubkey: params.tokenAccount, isSigner: false, isWritable: false },
+    { pubkey: params.newMetadataUpdateAuthority, isSigner: false, isWritable: false },
+    { pubkey: params.metadata, isSigner: false, isWritable: false },
+    { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+  ]
+
+  const editionBuffer = Buffer.alloc(8)
+  editionBuffer.writeBigUInt64LE(params.editionNumber)
+
+  const data = Buffer.concat([
+    Buffer.from([MetadataInstruction.MintNewEditionFromMasterEditionViaToken]),
+    editionBuffer,
+  ])
+
+  return new TransactionInstruction({
+    keys,
+    programId: TOKEN_METADATA_PROGRAM_ID,
+    data,
+  })
+}
+
+/**
+ * Verify a sized collection item
+ *
+ * Verifies that an NFT belongs to a sized collection and increments
+ * the collection size counter. Use this instead of verifyCollection
+ * when working with sized collections (CollectionDetails.size).
+ */
+export function verifySizedCollectionItem(params: {
+  /** NFT metadata account to verify */
+  metadata: PublicKey
+  /** Collection authority (signer) */
+  collectionAuthority: PublicKey
+  /** Payer for transaction fees */
+  payer: PublicKey
+  /** Collection mint address */
+  collectionMint: PublicKey
+  /** Collection metadata account */
+  collection: PublicKey
+  /** Collection master edition account */
+  collectionMasterEdition: PublicKey
+}): TransactionInstruction {
+  const keys = [
+    { pubkey: params.metadata, isSigner: false, isWritable: true },
+    { pubkey: params.collectionAuthority, isSigner: true, isWritable: true },
+    { pubkey: params.payer, isSigner: true, isWritable: true },
+    { pubkey: params.collectionMint, isSigner: false, isWritable: false },
+    { pubkey: params.collection, isSigner: false, isWritable: true },
+    { pubkey: params.collectionMasterEdition, isSigner: false, isWritable: false },
+  ]
+
+  const data = Buffer.from([MetadataInstruction.VerifySizedCollectionItem])
+
+  return new TransactionInstruction({
+    keys,
+    programId: TOKEN_METADATA_PROGRAM_ID,
+    data,
+  })
+}
+
+/**
+ * Burn an edition NFT
+ *
+ * Burns a printed edition NFT and its associated accounts.
+ * This decrements the master edition supply counter.
+ */
+export function burnEditionNft(params: {
+  /** Edition metadata account */
+  metadata: PublicKey
+  /** Owner of the edition (signer) */
+  owner: PublicKey
+  /** Print edition mint */
+  printEditionMint: PublicKey
+  /** Master edition mint */
+  masterEditionMint: PublicKey
+  /** Print edition token account */
+  printEditionTokenAccount: PublicKey
+  /** Master edition token account */
+  masterEditionTokenAccount: PublicKey
+  /** Master edition account */
+  masterEditionAccount: PublicKey
+  /** Print edition account */
+  printEditionAccount: PublicKey
+  /** Edition marker PDA */
+  editionMarkerPda: PublicKey
+}): TransactionInstruction {
+  const keys = [
+    { pubkey: params.metadata, isSigner: false, isWritable: true },
+    { pubkey: params.owner, isSigner: true, isWritable: true },
+    { pubkey: params.printEditionMint, isSigner: false, isWritable: true },
+    { pubkey: params.masterEditionMint, isSigner: false, isWritable: false },
+    { pubkey: params.printEditionTokenAccount, isSigner: false, isWritable: true },
+    { pubkey: params.masterEditionTokenAccount, isSigner: false, isWritable: false },
+    { pubkey: params.masterEditionAccount, isSigner: false, isWritable: true },
+    { pubkey: params.printEditionAccount, isSigner: false, isWritable: true },
+    { pubkey: params.editionMarkerPda, isSigner: false, isWritable: true },
+    { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+  ]
+
+  const data = Buffer.from([MetadataInstruction.BurnEditionNft])
 
   return new TransactionInstruction({
     keys,

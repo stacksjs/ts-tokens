@@ -22,11 +22,21 @@ import { loadWallet } from '../drivers/solana/wallet'
 import { createConnection } from '../drivers/solana/connection'
 
 /**
- * Transfer tokens to an address
+ * Transfer tokens from one address to another.
  *
- * @param options - Transfer options
- * @param config - Token configuration
- * @returns Transaction result
+ * Supports both Token Program and Token-2022 tokens. Automatically
+ * creates the destination associated token account if needed.
+ *
+ * @param options - Transfer options (mint, from, to, amount)
+ * @param config - ts-tokens configuration
+ * @returns Transaction result with signature
+ *
+ * @example
+ * ```ts
+ * const result = await transferTokens({
+ *   mint: 'Abc...', from: 'Src...', to: 'Dst...', amount: 500n,
+ * }, config)
+ * ```
  */
 export async function transferTokens(
   options: TransferOptions,

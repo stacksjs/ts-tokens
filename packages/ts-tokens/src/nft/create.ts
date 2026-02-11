@@ -287,7 +287,26 @@ function serializeCreateMetadataV3(params: {
 }
 
 /**
- * Create a single NFT
+ * Create a single NFT with on-chain metadata and a master edition.
+ *
+ * Handles mint creation, ATA setup, metadata PDA derivation, and the
+ * master edition account in a single transaction. Optionally uploads
+ * off-chain metadata to the configured storage provider.
+ *
+ * @param options - NFT creation options (name, symbol, URI, royalties, etc.)
+ * @param config - ts-tokens configuration
+ * @returns NFT result with mint, metadata, master edition addresses, and signature
+ *
+ * @example
+ * ```ts
+ * const nft = await createNFT({
+ *   name: 'My NFT',
+ *   symbol: 'MNFT',
+ *   uri: 'https://arweave.net/abc123',
+ *   sellerFeeBasisPoints: 500,
+ * }, config)
+ * console.log('Mint:', nft.mint)
+ * ```
  */
 export async function createNFT(
   options: CreateNFTOptions,
@@ -429,7 +448,23 @@ export async function createNFT(
 }
 
 /**
- * Create an NFT collection
+ * Create an NFT collection.
+ *
+ * A collection is an NFT with special collection details set on-chain.
+ * Other NFTs can then reference this mint as their verified collection.
+ *
+ * @param options - Collection creation options (name, symbol, URI, royalties)
+ * @param config - ts-tokens configuration
+ * @returns Collection result with mint, metadata, and signature
+ *
+ * @example
+ * ```ts
+ * const col = await createCollection({
+ *   name: 'My Collection',
+ *   symbol: 'MCOL',
+ *   uri: 'https://arweave.net/collection.json',
+ * }, config)
+ * ```
  */
 export async function createCollection(
   options: CreateCollectionOptions,
@@ -461,7 +496,17 @@ export async function createCollection(
 }
 
 /**
- * Simple NFT creation helper
+ * Convenience helper to mint an NFT with minimal parameters.
+ *
+ * @param name - The NFT name
+ * @param uri - Metadata URI pointing to the off-chain JSON
+ * @param config - ts-tokens configuration
+ * @returns NFT result with mint address and signature
+ *
+ * @example
+ * ```ts
+ * const nft = await mintNFT('Cool Art', 'https://arweave.net/meta.json', config)
+ * ```
  */
 export async function mintNFT(
   name: string,
@@ -477,6 +522,17 @@ export async function mintNFT(
  * This is a convenience wrapper that:
  * 1. Creates the NFT with the collection field set
  * 2. Verifies the NFT as a member of the collection
+ *
+ * @param options - NFT creation options with required `collection` field
+ * @param config - ts-tokens configuration
+ * @returns NFT result with mint address, metadata, and signature
+ *
+ * @example
+ * ```ts
+ * const nft = await mintNFTToCollection({
+ *   name: 'NFT #1', uri: 'https://arweave.net/1.json', collection: 'Col...',
+ * }, config)
+ * ```
  */
 export async function mintNFTToCollection(
   options: CreateNFTOptions & { collection: string },

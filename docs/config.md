@@ -103,4 +103,4 @@ _Then run:_
 ./rpx start
 ```
 
-To learn more, head over to the [documentation](https://ts-quick-reaction.netlify.app).
+To learn more, head over to the [documentation](https://ts-tokens.dev).

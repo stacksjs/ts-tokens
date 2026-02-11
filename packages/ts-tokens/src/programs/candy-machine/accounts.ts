@@ -12,6 +12,50 @@ import type {
 } from './types'
 
 /**
+ * Candy Guard account data
+ */
+export interface CandyGuard {
+  /** Base address used for PDA derivation */
+  base: PublicKey
+  /** Bump seed for the PDA */
+  bump: number
+  /** Guard authority */
+  authority: PublicKey
+  /** Raw guard data (features bitmap + serialized guards) */
+  guardData: Buffer
+}
+
+/**
+ * Deserialize a Candy Guard account
+ *
+ * Parses the Candy Guard account header. The guard set data is returned
+ * as a raw buffer since its variable-length encoding depends on which
+ * guards are enabled (use the features bitmap to decode).
+ */
+export function parseCandyGuard(data: Buffer): CandyGuard {
+  let offset = 8 // Skip Anchor discriminator
+
+  const base = new PublicKey(data.subarray(offset, offset + 32))
+  offset += 32
+
+  const bump = data.readUInt8(offset)
+  offset += 1
+
+  const authority = new PublicKey(data.subarray(offset, offset + 32))
+  offset += 32
+
+  // Remaining data is the serialized guard configuration
+  const guardData = data.subarray(offset)
+
+  return {
+    base,
+    bump,
+    authority,
+    guardData: Buffer.from(guardData),
+  }
+}
+
+/**
  * Deserialize a Candy Machine account
  */
 export function deserializeCandyMachine(data: Buffer): CandyMachine {
