@@ -1,7 +1,7 @@
 {
   "name": "react-tokens",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "React components for Solana tokens and NFTs",
   "author": "Chris Breuer <chris@stacksjs.org>",
   "license": "MIT",
@@ -46,7 +46,7 @@
     "build": "bun build ./src/index.ts --outdir ./dist --target browser",
     "lint": "bunx --bun eslint .",
     "lint:fix": "bunx --bun eslint . --fix",
-    "release": "bun publish --access public",
+    "release": "bun publish --access public --provenance",
     "prepublishOnly": "bun --bun run build",
     "test": "bun test",
     "typecheck": "bun --bun tsc --noEmit"
@@ -55,8 +55,8 @@
     "ts-tokens": "workspace:*"
   },
   "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": "^19.2.4",
+    "react": "^19.2.4",
+    "react-dom": ">=18.0.0",
     "@solana/wallet-adapter-react": ">=0.15.0",
     "@solana/wallet-adapter-react-ui": ">=0.9.0",
     "@solana/web3.js": ">=1.87.0"
@@ -64,8 +64,8 @@
   "devDependencies": {
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "react": "^18.2.0",
-    "react-dom": "^19.2.4",
+    "react": "^19.2.4",
+    "react-dom": "^18.2.0",
     "better-dx": "^0.2.5"
   },
   "lint-staged": {
