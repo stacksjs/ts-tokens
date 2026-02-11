@@ -614,7 +614,7 @@
 
 - [x] Restructure `bin/cli.ts` with proper command organization
 - [x] Create `src/cli/` directory for CLI-specific code
-- [ ] Create `src/cli/commands/` for command implementations
+- [x] Create `src/cli/commands/` for command implementations
 - [x] Create `src/cli/utils/` for CLI utilities
 - [x] Add colorful output with `chalk`
 - [x] Add spinners with `ora` for async operations

@@ -1,4 +1,7 @@
-import { getConfig } from '../../src/config'
+import {
+  candyCreate, candyAdd, candyMint, candyInfo,
+  candyWithdraw, candyDelete, candyUpload, candyGuards,
+} from '../../src/cli/commands/candy-machine'
 
 export function register(cli: any): void {
   cli
@@ -8,262 +11,51 @@ export function register(cli: any): void {
     .option('--royalty <bps>', 'Royalty in basis points')
     .option('--collection <address>', 'Collection NFT address')
     .option('--config <path>', 'Load candy machine config from JSON file')
-    .action(async (options: { items?: string; symbol?: string; royalty?: string; collection?: string; config?: string }) => {
-      let fileConfig: Record<string, any> = {}
-
-      if (options.config) {
-        const fs = await import('node:fs')
-        const path = await import('node:path')
-        const resolved = path.resolve(options.config)
-        if (!fs.existsSync(resolved)) {
-          console.error(`Error: Config file not found: ${resolved}`)
-          process.exit(1)
-        }
-        try {
-          fileConfig = JSON.parse(fs.readFileSync(resolved, 'utf-8'))
-        } catch {
-          console.error('Error: Invalid JSON in config file')
-          process.exit(1)
-        }
-      }
-
-      // CLI flags override config file values
-      const collection = options.collection || fileConfig.collection
-      const items = options.items || fileConfig.items?.toString() || fileConfig.itemsAvailable?.toString()
-
-      if (!collection || !items) {
-        console.error('Error: --collection and --items are required (via flags or config file)')
-        process.exit(1)
-      }
-
-      const config = await getConfig()
-      const { createCandyMachine } = await import('../../src/nft/candy-machine/create')
-
-      try {
-        console.log('Creating Candy Machine...')
-        const result = await createCandyMachine({
-          itemsAvailable: parseInt(items),
-          symbol: options.symbol || fileConfig.symbol || '',
-          sellerFeeBasisPoints: options.royalty ? parseInt(options.royalty) : (fileConfig.sellerFeeBasisPoints ?? 0),
-          maxEditionSupply: fileConfig.maxEditionSupply ?? 0,
-          isMutable: fileConfig.isMutable ?? true,
-          creators: fileConfig.creators ?? [],
-          collection,
-          configLineSettings: fileConfig.configLineSettings ?? {
-            prefixName: '',
-            nameLength: 32,
-            prefixUri: '',
-            uriLength: 200,
-            isSequential: false,
-          },
-          ...(fileConfig.hiddenSettings ? { hiddenSettings: fileConfig.hiddenSettings } : {}),
-        }, config)
-
-        console.log('\n\u2713 Candy Machine created!')
-        console.log(`  Address: ${result.candyMachine}`)
-        console.log(`  Collection: ${result.collection}`)
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+    .action(async (options: any) => {
+      await candyCreate(options)
     })
 
   cli
     .command('candy:add <candy-machine> <items-file>', 'Add config lines from JSON file')
     .action(async (candyMachine: string, itemsFile: string) => {
-      const config = await getConfig()
-      const { addConfigLines } = await import('../../src/nft/candy-machine/create')
-      const fs = await import('node:fs')
-
-      try {
-        const content = fs.readFileSync(itemsFile, 'utf-8')
-        const items: Array<{ name: string; uri: string }> = JSON.parse(content)
-
-        console.log(`Adding ${items.length} config lines to ${candyMachine}...`)
-        const result = await addConfigLines(candyMachine, 0, items, config)
-
-        console.log(`\n\u2713 Config lines added!`)
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await candyAdd(candyMachine, itemsFile)
     })
 
   cli
     .command('candy:mint <candy-machine>', 'Mint from Candy Machine')
     .option('--count <n>', 'Number to mint', '1')
     .action(async (candyMachine: string, options: { count?: string }) => {
-      const config = await getConfig()
-      const { mintFromCandyMachine } = await import('../../src/nft/candy-machine/create')
-
-      try {
-        const count = parseInt(options.count || '1')
-        for (let i = 0; i < count; i++) {
-          console.log(`Minting NFT ${i + 1}/${count}...`)
-          const result = await mintFromCandyMachine(candyMachine, config)
-
-          console.log(`  \u2713 Minted! Mint: ${result.mint}`)
-          console.log(`    Signature: ${result.signature}`)
-        }
-        console.log('\n\u2713 All mints complete!')
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await candyMint(candyMachine, options)
     })
 
   cli
     .command('candy:info <candy-machine>', 'Show Candy Machine information')
     .action(async (candyMachine: string) => {
-      const config = await getConfig()
-      const { createConnection } = await import('../../src/drivers/solana/connection')
-      const { PublicKey } = await import('@solana/web3.js')
-
-      try {
-        const connection = createConnection(config)
-        const pubkey = new PublicKey(candyMachine)
-        const accountInfo = await connection.getAccountInfo(pubkey)
-
-        if (!accountInfo) {
-          console.error('Candy Machine not found')
-          process.exit(1)
-        }
-
-        console.log('Candy Machine Information:')
-        console.log(`  Address: ${candyMachine}`)
-        console.log(`  Owner: ${accountInfo.owner.toBase58()}`)
-        console.log(`  Data Size: ${accountInfo.data.length} bytes`)
-        console.log(`  Lamports: ${accountInfo.lamports}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await candyInfo(candyMachine)
     })
 
   cli
     .command('candy:withdraw <candy-machine>', 'Withdraw funds from Candy Machine')
     .action(async (candyMachine: string) => {
-      const config = await getConfig()
-      const { createConnection } = await import('../../src/drivers/solana/connection')
-      const { loadWallet } = await import('../../src/drivers/solana/wallet')
-      const { lamportsToSol } = await import('../../src/utils')
-      const { PublicKey } = await import('@solana/web3.js')
-
-      try {
-        const connection = createConnection(config)
-        const payer = loadWallet(config)
-        const pubkey = new PublicKey(candyMachine)
-        const accountInfo = await connection.getAccountInfo(pubkey)
-
-        if (!accountInfo) {
-          console.error('Candy Machine not found')
-          process.exit(1)
-        }
-
-        console.log(`Candy Machine: ${candyMachine}`)
-        console.log(`Balance: ${lamportsToSol(accountInfo.lamports)} SOL`)
-        console.log(`Owner: ${payer.publicKey.toBase58()}`)
-        console.log('\nNote: Full withdrawal requires closing the Candy Machine account on-chain.')
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await candyWithdraw(candyMachine)
     })
 
   cli
     .command('candy:delete <candy-machine>', 'Delete Candy Machine and reclaim rent')
     .action(async (candyMachine: string) => {
-      const config = await getConfig()
-      const { createConnection } = await import('../../src/drivers/solana/connection')
-      const { lamportsToSol } = await import('../../src/utils')
-      const { PublicKey } = await import('@solana/web3.js')
-
-      try {
-        const connection = createConnection(config)
-        const pubkey = new PublicKey(candyMachine)
-        const accountInfo = await connection.getAccountInfo(pubkey)
-
-        if (!accountInfo) {
-          console.error('Candy Machine not found')
-          process.exit(1)
-        }
-
-        console.log(`Candy Machine: ${candyMachine}`)
-        console.log(`Rent to reclaim: ${lamportsToSol(accountInfo.lamports)} SOL`)
-        console.log('\nNote: Deletion requires sending a close instruction to the Candy Machine program.')
-        console.log('This will reclaim the rent and close the account permanently.')
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await candyDelete(candyMachine)
     })
 
   cli
     .command('candy:upload <path>', 'Upload assets and create config lines')
     .option('--storage <provider>', 'Storage provider (arweave/ipfs/shadow)', 'arweave')
     .action(async (assetsPath: string, options: { storage?: string }) => {
-      const config = await getConfig()
-      const fs = await import('node:fs')
-      const path = await import('node:path')
-
-      try {
-        const resolved = path.resolve(assetsPath)
-        if (!fs.existsSync(resolved)) {
-          console.error(`Path not found: ${resolved}`)
-          process.exit(1)
-        }
-
-        const stats = fs.statSync(resolved)
-        if (stats.isDirectory()) {
-          const files = fs.readdirSync(resolved)
-          console.log(`Found ${files.length} files in ${resolved}`)
-          console.log(`Storage provider: ${options.storage || 'arweave'}`)
-          console.log('\nFiles to upload:')
-          for (const file of files.slice(0, 10)) {
-            console.log(`  ${file}`)
-          }
-          if (files.length > 10) {
-            console.log(`  ... and ${files.length - 10} more`)
-          }
-        } else {
-          console.log(`File: ${resolved}`)
-          console.log(`Size: ${stats.size} bytes`)
-          console.log(`Storage provider: ${options.storage || 'arweave'}`)
-        }
-
-        console.log('\nNote: Upload requires a funded storage provider account.')
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await candyUpload(assetsPath, options)
     })
 
   cli
     .command('candy:guards <candy-machine>', 'Show Candy Machine guards')
     .action(async (candyMachine: string) => {
-      const config = await getConfig()
-      const { createConnection } = await import('../../src/drivers/solana/connection')
-      const { PublicKey } = await import('@solana/web3.js')
-
-      try {
-        const connection = createConnection(config)
-        const pubkey = new PublicKey(candyMachine)
-        const accountInfo = await connection.getAccountInfo(pubkey)
-
-        if (!accountInfo) {
-          console.error('Candy Machine not found')
-          process.exit(1)
-        }
-
-        console.log('Candy Machine Guards:')
-        console.log(`  Address: ${candyMachine}`)
-        console.log(`  Data Size: ${accountInfo.data.length} bytes`)
-        console.log('\nNote: Guard parsing requires decoding the Candy Guard account data.')
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await candyGuards(candyMachine)
     })
 }

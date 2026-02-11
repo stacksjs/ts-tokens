@@ -1,4 +1,8 @@
-import { getConfig } from '../../src/config'
+import {
+  nftCreate, nftMint, nftTransfer, nftBurn, nftInfo, nftList,
+  collectionCreate, collectionInfo, collectionItems, collectionVerify, collectionUpdate,
+  coreCreate, coreCollection, coreTransfer, coreInfo,
+} from '../../src/cli/commands/nft'
 
 export function register(cli: any): void {
   cli
@@ -8,112 +12,26 @@ export function register(cli: any): void {
     .option('--uri <uri>', 'Metadata URI')
     .option('--collection <address>', 'Collection address')
     .option('--royalty <bps>', 'Royalty in basis points (e.g., 500 = 5%)')
-    .action(async (options: { name?: string; symbol?: string; uri?: string; collection?: string; royalty?: string }) => {
-      if (!options.name || !options.uri) {
-        console.error('Error: --name and --uri are required')
-        process.exit(1)
-      }
-
-      const config = await getConfig()
-      const { createNFT } = await import('../../src/nft/create')
-
-      try {
-        console.log('Creating NFT...')
-        const result = await createNFT({
-          name: options.name,
-          symbol: options.symbol || '',
-          uri: options.uri,
-          collection: options.collection,
-          sellerFeeBasisPoints: options.royalty ? parseInt(options.royalty) : 0,
-        }, config)
-
-        console.log('\n\u2713 NFT created successfully!')
-        console.log(`  Mint: ${result.mint}`)
-        console.log(`  Metadata: ${result.metadata}`)
-        console.log(`  Master Edition: ${result.masterEdition}`)
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+    .action(async (options: any) => {
+      await nftCreate(options)
     })
 
   cli
     .command('nft:transfer <mint> <to>', 'Transfer an NFT')
     .action(async (mint: string, to: string) => {
-      const config = await getConfig()
-      const { transferNFT } = await import('../../src/nft/transfer')
-
-      try {
-        console.log(`Transferring NFT ${mint} to ${to}...`)
-        const result = await transferNFT(mint, to, config)
-
-        console.log('\n\u2713 NFT transferred successfully!')
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await nftTransfer(mint, to)
     })
 
   cli
     .command('nft:burn <mint>', 'Burn an NFT')
     .action(async (mint: string) => {
-      const config = await getConfig()
-      const { burnNFT } = await import('../../src/nft/burn')
-
-      try {
-        console.log(`Burning NFT ${mint}...`)
-        const result = await burnNFT(mint, config)
-
-        console.log('\n\u2713 NFT burned successfully!')
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await nftBurn(mint)
     })
 
   cli
     .command('nft:info <mint>', 'Show NFT information')
     .action(async (mint: string) => {
-      const config = await getConfig()
-      const { getNFTMetadata, fetchOffChainMetadata } = await import('../../src/nft/metadata')
-
-      try {
-        const metadata = await getNFTMetadata(mint, config)
-        if (!metadata) {
-          console.error('NFT not found')
-          process.exit(1)
-        }
-
-        console.log('NFT Information:')
-        console.log(`  Mint: ${mint}`)
-        console.log(`  Name: ${metadata.name}`)
-        console.log(`  Symbol: ${metadata.symbol}`)
-        console.log(`  URI: ${metadata.uri}`)
-        console.log(`  Royalty: ${metadata.sellerFeeBasisPoints / 100}%`)
-        console.log(`  Mutable: ${metadata.isMutable}`)
-        console.log(`  Update Authority: ${metadata.updateAuthority}`)
-
-        if (metadata.creators && metadata.creators.length > 0) {
-          console.log('  Creators:')
-          for (const creator of metadata.creators) {
-            console.log(`    - ${creator.address} (${creator.share}%)${creator.verified ? ' \u2713' : ''}`)
-          }
-        }
-
-        // Fetch off-chain metadata
-        const offChain = await fetchOffChainMetadata(metadata.uri)
-        if (offChain) {
-          console.log('\nOff-chain Metadata:')
-          console.log(`  Description: ${(offChain as any).description || 'N/A'}`)
-          console.log(`  Image: ${(offChain as any).image || 'N/A'}`)
-        }
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await nftInfo(mint)
     })
 
   cli
@@ -122,66 +40,15 @@ export function register(cli: any): void {
     .option('--symbol <symbol>', 'Collection symbol')
     .option('--uri <uri>', 'Metadata URI')
     .option('--royalty <bps>', 'Royalty in basis points (e.g., 500 = 5%)')
-    .action(async (options: { name?: string; symbol?: string; uri?: string; royalty?: string }) => {
-      if (!options.name || !options.uri) {
-        console.error('Error: --name and --uri are required')
-        process.exit(1)
-      }
-
-      const config = await getConfig()
-      const { createCollection } = await import('../../src/nft/create')
-
-      try {
-        console.log('Creating collection...')
-        const result = await createCollection({
-          name: options.name,
-          symbol: options.symbol || '',
-          uri: options.uri,
-          sellerFeeBasisPoints: options.royalty ? parseInt(options.royalty) : undefined,
-        }, config)
-
-        console.log('\n\u2713 Collection created successfully!')
-        console.log(`  Mint: ${result.mint}`)
-        console.log(`  Metadata: ${result.metadata}`)
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+    .action(async (options: any) => {
+      await collectionCreate(options)
     })
 
   cli
     .command('nft:list [owner]', 'List NFTs owned by address')
     .action(async (owner?: string) => {
-      const config = await getConfig()
-      const { getNFTsByOwner } = await import('../../src/nft/query')
-      const { getPublicKey } = await import('../../src/drivers/solana/wallet')
-
-      try {
-        const address = owner || getPublicKey(config)
-        console.log(`Fetching NFTs for ${address}...`)
-
-        const nfts = await getNFTsByOwner(address, config)
-
-        if (nfts.length === 0) {
-          console.log('No NFTs found')
-          return
-        }
-
-        console.log(`\nFound ${nfts.length} NFT(s):\n`)
-        for (const nft of nfts) {
-          console.log(`  ${nft.name}`)
-          console.log(`    Mint: ${nft.mint}`)
-          console.log(`    Symbol: ${nft.symbol}`)
-          console.log('')
-        }
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await nftList(owner)
     })
-
-  // NFT Commands (additional)
 
   cli
     .command('nft:mint <uri>', 'Mint an NFT from metadata URI')
@@ -189,109 +56,28 @@ export function register(cli: any): void {
     .option('--symbol <symbol>', 'NFT symbol')
     .option('--royalty <bps>', 'Royalty in basis points')
     .option('--collection <address>', 'Collection address')
-    .action(async (uri: string, options: { name?: string; symbol?: string; royalty?: string; collection?: string }) => {
-      const config = await getConfig()
-      const { createNFT } = await import('../../src/nft/create')
-
-      try {
-        console.log('Minting NFT...')
-        const result = await createNFT({
-          name: options.name || 'NFT',
-          symbol: options.symbol || '',
-          uri,
-          collection: options.collection,
-          sellerFeeBasisPoints: options.royalty ? parseInt(options.royalty) : 0,
-        }, config)
-
-        console.log('\n\u2713 NFT minted successfully!')
-        console.log(`  Mint: ${result.mint}`)
-        console.log(`  Metadata: ${result.metadata}`)
-        console.log(`  Master Edition: ${result.masterEdition}`)
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+    .action(async (uri: string, options: any) => {
+      await nftMint(uri, options)
     })
-
-  // Collection Commands (additional)
 
   cli
     .command('collection:info <address>', 'Show collection information')
     .action(async (address: string) => {
-      const config = await getConfig()
-      const { getCollectionInfo } = await import('../../src/nft/query')
-
-      try {
-        console.log(`Fetching collection info for ${address}...`)
-        const info = await getCollectionInfo(address, config)
-
-        console.log('\nCollection Information:')
-        console.log(`  Address: ${address}`)
-        console.log(`  Size: ${info.size} items`)
-        if (info.metadata) {
-          console.log(`  Name: ${info.metadata.name}`)
-          console.log(`  Symbol: ${info.metadata.symbol}`)
-          console.log(`  URI: ${info.metadata.uri}`)
-          console.log(`  Royalty: ${info.metadata.sellerFeeBasisPoints / 100}%`)
-          console.log(`  Update Authority: ${info.metadata.updateAuthority}`)
-        }
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await collectionInfo(address)
     })
 
   cli
     .command('collection:items <address>', 'List NFTs in a collection')
     .option('--limit <limit>', 'Maximum items to list', '50')
     .action(async (address: string, options: { limit?: string }) => {
-      const config = await getConfig()
-      const { getNFTsByCollection } = await import('../../src/nft/query')
-
-      try {
-        const limit = parseInt(options.limit || '50')
-        console.log(`Fetching NFTs in collection ${address}...`)
-        const nfts = await getNFTsByCollection(address, config, limit)
-
-        if (nfts.length === 0) {
-          console.log('No NFTs found in collection')
-          return
-        }
-
-        console.log(`\nFound ${nfts.length} NFT(s):\n`)
-        for (const nft of nfts) {
-          console.log(`  ${nft.name}`)
-          console.log(`    Mint: ${nft.mint}`)
-          console.log(`    Symbol: ${nft.symbol}`)
-          console.log('')
-        }
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await collectionItems(address, options)
     })
 
   cli
     .command('collection:verify <collection> <nft>', 'Verify an NFT belongs to a collection')
     .action(async (collection: string, nft: string) => {
-      const config = await getConfig()
-      const { setAndVerifyCollection } = await import('../../src/nft/metadata')
-
-      try {
-        console.log(`Verifying NFT ${nft} in collection ${collection}...`)
-        const result = await setAndVerifyCollection(nft, collection, config)
-        console.log(`\n\u2713 NFT verified in collection!`)
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await collectionVerify(collection, nft)
     })
-
-  // ============================================
-  // MPL Core Commands
-  // ============================================
 
   cli
     .command('core:create', 'Create an MPL Core asset')
@@ -299,106 +85,29 @@ export function register(cli: any): void {
     .option('--uri <uri>', 'Metadata URI')
     .option('--collection <address>', 'Collection address')
     .option('--owner <address>', 'Owner address')
-    .action(async (options: { name?: string; uri?: string; collection?: string; owner?: string }) => {
-      if (!options.name || !options.uri) {
-        console.error('Error: --name and --uri are required')
-        process.exit(1)
-      }
-
-      const config = await getConfig()
-      const { createCoreAsset } = await import('../../src/core/asset')
-
-      try {
-        console.log('Creating MPL Core asset...')
-        const result = await createCoreAsset({
-          name: options.name,
-          uri: options.uri,
-          collection: options.collection,
-          owner: options.owner,
-        }, config)
-
-        console.log('\n\u2713 Core asset created successfully!')
-        console.log(`  Address: ${result.address}`)
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+    .action(async (options: any) => {
+      await coreCreate(options)
     })
 
   cli
     .command('core:collection', 'Create an MPL Core collection')
     .option('--name <name>', 'Collection name')
     .option('--uri <uri>', 'Metadata URI')
-    .action(async (options: { name?: string; uri?: string }) => {
-      if (!options.name || !options.uri) {
-        console.error('Error: --name and --uri are required')
-        process.exit(1)
-      }
-
-      const config = await getConfig()
-      const { createCoreCollection } = await import('../../src/core/collection')
-
-      try {
-        console.log('Creating MPL Core collection...')
-        const result = await createCoreCollection({
-          name: options.name,
-          uri: options.uri,
-        }, config)
-
-        console.log('\n\u2713 Core collection created successfully!')
-        console.log(`  Address: ${result.address}`)
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+    .action(async (options: any) => {
+      await coreCollection(options)
     })
 
   cli
     .command('core:transfer <asset> <to>', 'Transfer an MPL Core asset')
     .option('--collection <address>', 'Collection address')
     .action(async (asset: string, to: string, options: { collection?: string }) => {
-      const config = await getConfig()
-      const { transferCoreAsset } = await import('../../src/core/asset')
-
-      try {
-        console.log(`Transferring Core asset ${asset} to ${to}...`)
-        const result = await transferCoreAsset(asset, to, config, options.collection)
-        console.log('\n\u2713 Core asset transferred!')
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await coreTransfer(asset, to, options)
     })
 
   cli
     .command('core:info <address>', 'Show MPL Core asset information')
     .action(async (address: string) => {
-      const config = await getConfig()
-      const { getCoreAsset } = await import('../../src/core/query')
-
-      try {
-        const asset = await getCoreAsset(address, config)
-        if (!asset) {
-          console.error('Core asset not found')
-          process.exit(1)
-        }
-
-        console.log('MPL Core Asset:')
-        console.log(`  Address: ${asset.address}`)
-        console.log(`  Name: ${asset.name}`)
-        console.log(`  URI: ${asset.uri}`)
-        console.log(`  Owner: ${asset.owner}`)
-        console.log(`  Update Authority: ${typeof asset.updateAuthority === 'string' ? asset.updateAuthority : `Collection: ${asset.updateAuthority.address}`}`)
-        if (asset.plugins.length > 0) {
-          console.log(`  Plugins: ${asset.plugins.map(p => p.type).join(', ')}`)
-        }
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await coreInfo(address)
     })
 
   cli
@@ -407,22 +116,6 @@ export function register(cli: any): void {
     .option('--symbol <symbol>', 'New symbol')
     .option('--uri <uri>', 'New metadata URI')
     .action(async (address: string, options: { name?: string; symbol?: string; uri?: string }) => {
-      const config = await getConfig()
-      const { updateNFTMetadata } = await import('../../src/nft/metadata')
-
-      try {
-        console.log(`Updating collection ${address}...`)
-        const result = await updateNFTMetadata(address, {
-          name: options.name,
-          symbol: options.symbol,
-          uri: options.uri,
-        }, config)
-
-        console.log(`\n\u2713 Collection updated!`)
-        console.log(`  Signature: ${result.signature}`)
-      } catch (error) {
-        console.error('Error:', error instanceof Error ? error.message : error)
-        process.exit(1)
-      }
+      await collectionUpdate(address, options)
     })
 }
