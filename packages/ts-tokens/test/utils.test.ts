@@ -276,8 +276,10 @@ describe('isBrowser / isNode / nowSeconds', () => {
     expect(typeof isNode()).toBe('boolean')
   })
 
-  test('isBrowser returns false in test environment', () => {
-    expect(isBrowser()).toBe(false)
+  test('isBrowser detects DOM environment', () => {
+    // With happy-dom preload providing window/document globals, isBrowser returns true
+    const expected = typeof window !== 'undefined' && typeof window.document !== 'undefined'
+    expect(isBrowser()).toBe(expected)
   })
 
   test('nowSeconds returns a recent epoch', () => {

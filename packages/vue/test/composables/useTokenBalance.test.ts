@@ -32,19 +32,6 @@ mock.module('@solana/spl-token', () => ({
   getAccount: mockGetAccount,
 }))
 
-// Mock @solana/web3.js PublicKey
-mock.module('@solana/web3.js', () => ({
-  PublicKey: class MockPublicKey {
-    _key: string
-    constructor(key: string) {
-      this._key = key
-    }
-    toBase58() {
-      return this._key
-    }
-  },
-}))
-
 // Mock useConnection to return a mock connection object
 mock.module('../../src/composables/useConnection', () => ({
   useConnection: () => ({

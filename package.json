@@ -30,7 +30,7 @@
   "scripts": {
     "build": "bun --bun build.ts && bun run compile",
     "fresh": "bunx rimraf node_modules/ bun.lock && bun i",
-    "test": "bun test",
+    "test": "bun test packages/ test/",
     "lint": "bunx --bun eslint .",
     "lint:fix": "bunx --bun eslint . --fix",
     "changelog": "bunx logsmith --verbose",
