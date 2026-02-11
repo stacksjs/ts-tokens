@@ -1,106 +1,126 @@
-/**
- * Configuration Tests
- *
- * Unit tests for configuration loading and validation.
- */
+import { describe, test, expect, beforeEach } from 'bun:test'
+import {
+  getRpcUrl,
+  getExplorerUrl,
+  mergeConfig,
+  setConfig,
+  resetConfig,
+  getCurrentConfig,
+  defaults,
+} from '../src/config'
+import { DEFAULT_RPC_ENDPOINTS, DEFAULT_EXPLORER_URLS } from '../src/types'
 
-import { describe, test, expect } from 'bun:test'
+beforeEach(() => {
+  resetConfig()
+})
 
-describe('Network Configuration', () => {
-  test('should validate network names', () => {
-    const validNetworks = ['mainnet-beta', 'devnet', 'testnet']
-
-    for (const network of validNetworks) {
-      expect(['mainnet-beta', 'devnet', 'testnet']).toContain(network)
-    }
+describe('getRpcUrl', () => {
+  test('returns default devnet URL', () => {
+    expect(getRpcUrl('devnet')).toBe('https://api.devnet.solana.com')
   })
 
-  test('should get correct RPC URL for network', () => {
-    const networkUrls: Record<string, string> = {
-      'mainnet-beta': 'https://api.mainnet-beta.solana.com',
-      devnet: 'https://api.devnet.solana.com',
-      testnet: 'https://api.testnet.solana.com',
-    }
+  test('returns default mainnet URL', () => {
+    expect(getRpcUrl('mainnet-beta')).toBe('https://api.mainnet-beta.solana.com')
+  })
 
-    expect(networkUrls['devnet']).toBe('https://api.devnet.solana.com')
-    expect(networkUrls['mainnet-beta']).toBe('https://api.mainnet-beta.solana.com')
+  test('returns default testnet URL', () => {
+    expect(getRpcUrl('testnet')).toBe('https://api.testnet.solana.com')
+  })
+
+  test('returns default localnet URL', () => {
+    expect(getRpcUrl('localnet')).toBe('http://localhost:8899')
+  })
+
+  test('returns custom URL when provided', () => {
+    expect(getRpcUrl('devnet', 'https://my-rpc.example.com')).toBe('https://my-rpc.example.com')
+  })
+
+  test('prefers custom URL over default', () => {
+    const custom = 'https://custom-rpc.io'
+    expect(getRpcUrl('mainnet-beta', custom)).toBe(custom)
   })
 })
 
-describe('Wallet Configuration', () => {
-  test('should validate keypair path format', () => {
-    const validPaths = [
-      '~/.config/solana/id.json',
-      '/home/user/.config/solana/id.json',
-      './keypair.json',
-    ]
-
-    for (const path of validPaths) {
-      expect(path.endsWith('.json')).toBe(true)
-    }
+describe('getExplorerUrl', () => {
+  test('returns default devnet explorer URL', () => {
+    expect(getExplorerUrl('devnet')).toBe(DEFAULT_EXPLORER_URLS['devnet'])
   })
 
-  test('should validate base58 private key format', () => {
-    // Base58 characters
-    const base58Chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-    const testKey = 'abc123XYZ'
+  test('returns default mainnet explorer URL', () => {
+    expect(getExplorerUrl('mainnet-beta')).toBe(DEFAULT_EXPLORER_URLS['mainnet-beta'])
+  })
 
-    for (const char of testKey) {
-      expect(base58Chars.includes(char)).toBe(true)
-    }
+  test('returns custom URL when provided', () => {
+    expect(getExplorerUrl('devnet', 'https://solscan.io')).toBe('https://solscan.io')
   })
 })
 
-describe('RPC Configuration', () => {
-  test('should validate RPC URL format', () => {
-    const validUrls = [
-      'https://api.devnet.solana.com',
-      'https://api.mainnet-beta.solana.com',
-      'https://my-rpc.example.com',
-      'http://localhost:8899',
-    ]
-
-    for (const url of validUrls) {
-      expect(url.startsWith('http://') || url.startsWith('https://')).toBe(true)
-    }
+describe('mergeConfig', () => {
+  test('returns defaults when given empty options', () => {
+    const config = mergeConfig({})
+    expect(config.chain).toBe('solana')
+    expect(config.network).toBe('devnet')
+    expect(config.commitment).toBe('confirmed')
   })
 
-  test('should reject invalid RPC URLs', () => {
-    const invalidUrls = [
-      'not-a-url',
-      'ftp://example.com',
-      '',
-    ]
+  test('overrides specific fields', () => {
+    const config = mergeConfig({ network: 'mainnet-beta', verbose: true })
+    expect(config.network).toBe('mainnet-beta')
+    expect(config.verbose).toBe(true)
+    expect(config.commitment).toBe('confirmed') // unchanged
+  })
 
-    for (const url of invalidUrls) {
-      const isValid = url.startsWith('http://') || url.startsWith('https://')
-      expect(isValid).toBe(false)
-    }
+  test('derives rpcUrl from network', () => {
+    const config = mergeConfig({ network: 'testnet' })
+    expect(config.rpcUrl).toBe(DEFAULT_RPC_ENDPOINTS['testnet'])
+  })
+
+  test('uses provided rpcUrl over derived', () => {
+    const config = mergeConfig({ rpcUrl: 'https://custom.rpc' })
+    expect(config.rpcUrl).toBe('https://custom.rpc')
+  })
+
+  test('derives explorerUrl from network', () => {
+    const config = mergeConfig({ network: 'mainnet-beta' })
+    expect(config.explorerUrl).toBe(DEFAULT_EXPLORER_URLS['mainnet-beta'])
   })
 })
 
-describe('Config Defaults', () => {
-  test('should have sensible defaults', () => {
-    const defaults = {
-      network: 'devnet',
-      commitment: 'confirmed',
-    }
+describe('setConfig / getCurrentConfig / resetConfig', () => {
+  test('setConfig updates current config', () => {
+    setConfig({ network: 'mainnet-beta' })
+    const config = getCurrentConfig()
+    expect(config.network).toBe('mainnet-beta')
+  })
 
+  test('resetConfig clears cached config', () => {
+    setConfig({ network: 'mainnet-beta' })
+    resetConfig()
+    const config = getCurrentConfig()
+    expect(config.network).toBe('devnet') // back to default
+  })
+
+  test('getCurrentConfig returns defaults when no config set', () => {
+    const config = getCurrentConfig()
+    expect(config.chain).toBe('solana')
+    expect(config.network).toBe('devnet')
+  })
+
+  test('setConfig returns the new config', () => {
+    const config = setConfig({ verbose: true })
+    expect(config.verbose).toBe(true)
+  })
+})
+
+describe('defaults', () => {
+  test('has expected default values', () => {
+    expect(defaults.chain).toBe('solana')
     expect(defaults.network).toBe('devnet')
     expect(defaults.commitment).toBe('confirmed')
-  })
-})
-
-describe('Environment Variables', () => {
-  test('should recognize environment variable names', () => {
-    const envVars = [
-      'SOLANA_PRIVATE_KEY',
-      'SOLANA_RPC_URL',
-      'SOLANA_NETWORK',
-    ]
-
-    for (const envVar of envVars) {
-      expect(envVar.startsWith('SOLANA_')).toBe(true)
-    }
+    expect(defaults.verbose).toBe(false)
+    expect(defaults.dryRun).toBe(false)
+    expect(defaults.securityChecks).toBe(true)
+    expect(defaults.autoCreateAccounts).toBe(true)
+    expect(defaults.storageProvider).toBe('arweave')
   })
 })

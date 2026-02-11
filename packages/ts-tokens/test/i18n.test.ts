@@ -1,159 +1,145 @@
-/**
- * i18n Tests
- */
+import { describe, test, expect, beforeEach } from 'bun:test'
+import {
+  t,
+  setLocale,
+  getLocale,
+  hasTranslation,
+  getAvailableLocales,
+  translations,
+  setI18nConfig,
+} from '../src/i18n/translations'
 
-import { describe, test, expect } from 'bun:test'
+beforeEach(() => {
+  setLocale('en')
+})
 
-describe('Translations', () => {
-  test('should interpolate values', () => {
-    const template = 'Transferred {amount} tokens to {recipient}'
-    const values = { amount: '1000', recipient: 'ABC123' }
+describe('setLocale / getLocale', () => {
+  test('defaults to en', () => {
+    expect(getLocale()).toBe('en')
+  })
 
-    let result = template
-    for (const [k, v] of Object.entries(values)) {
-      result = result.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
+  test('changes locale', () => {
+    setLocale('es')
+    expect(getLocale()).toBe('es')
+  })
+
+  test('supports all defined locales', () => {
+    const locales = ['en', 'es', 'zh', 'ja', 'ko'] as const
+    for (const locale of locales) {
+      setLocale(locale)
+      expect(getLocale()).toBe(locale)
     }
+  })
+})
 
-    expect(result).toBe('Transferred 1000 tokens to ABC123')
+describe('t — translation lookup', () => {
+  test('returns English translation by default', () => {
+    expect(t('common.success')).toBe('Success')
   })
 
-  test('should handle missing values', () => {
-    const template = 'Hello {name}'
-    const values = {}
+  test('returns Spanish translation when locale is es', () => {
+    setLocale('es')
+    expect(t('common.success')).toBe('Éxito')
+  })
 
-    let result = template
-    for (const [k, v] of Object.entries(values)) {
-      result = result.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v))
+  test('returns Chinese translation when locale is zh', () => {
+    setLocale('zh')
+    expect(t('common.success')).toBe('成功')
+  })
+
+  test('interpolates values', () => {
+    const result = t('token.minted', { amount: '1000' })
+    expect(result).toBe('Minted 1000 tokens')
+  })
+
+  test('interpolates multiple values', () => {
+    const result = t('token.transferred', { amount: '50', recipient: 'Alice' })
+    expect(result).toBe('Transferred 50 tokens to Alice')
+  })
+
+  test('handles numeric interpolation values', () => {
+    const result = t('token.minted', { amount: 500 })
+    expect(result).toBe('Minted 500 tokens')
+  })
+
+  test('leaves unreplaced placeholders when value is not provided', () => {
+    const result = t('token.minted')
+    expect(result).toContain('{amount}')
+  })
+
+  test('falls back to key for missing translations', () => {
+    const key = 'nonexistent.key' as any
+    expect(t(key)).toBe('nonexistent.key')
+  })
+
+  test('falls back to fallback locale for unsupported locale', () => {
+    setLocale('fr') // fr falls back to en
+    expect(t('common.success')).toBe('Success')
+  })
+})
+
+describe('hasTranslation', () => {
+  test('returns true for existing key in current locale', () => {
+    expect(hasTranslation('common.success')).toBe(true)
+  })
+
+  test('returns true for existing key in specified locale', () => {
+    expect(hasTranslation('common.success', 'es')).toBe(true)
+  })
+
+  test('returns false for non-existing key', () => {
+    expect(hasTranslation('does.not.exist' as any)).toBe(false)
+  })
+
+  test('returns true for all standard keys in en', () => {
+    const keys = [
+      'common.success', 'common.error', 'token.created', 'nft.minted',
+      'error.insufficientBalance', 'governance.proposalCreated', 'staking.staked',
+    ] as const
+    for (const key of keys) {
+      expect(hasTranslation(key, 'en')).toBe(true)
     }
-
-    expect(result).toBe('Hello {name}')
   })
 })
 
-describe('Number Formatting', () => {
-  test('should format numbers with locale', () => {
-    const value = 1234567.89
-    const formatted = new Intl.NumberFormat('en-US').format(value)
-
-    expect(formatted).toBe('1,234,567.89')
+describe('getAvailableLocales', () => {
+  test('returns array of locale strings', () => {
+    const locales = getAvailableLocales()
+    expect(Array.isArray(locales)).toBe(true)
+    expect(locales.length).toBeGreaterThan(0)
   })
 
-  test('should format currency', () => {
-    const value = 1234.56
-    const formatted = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(value)
-
-    expect(formatted).toBe('$1,234.56')
+  test('includes en, es, zh, ja, ko', () => {
+    const locales = getAvailableLocales()
+    expect(locales).toContain('en')
+    expect(locales).toContain('es')
+    expect(locales).toContain('zh')
+    expect(locales).toContain('ja')
+    expect(locales).toContain('ko')
   })
 
-  test('should format percentage', () => {
-    const value = 0.75
-    const formatted = new Intl.NumberFormat('en-US', {
-      style: 'percent',
-    }).format(value)
-
-    expect(formatted).toBe('75%')
-  })
-
-  test('should format compact numbers', () => {
-    const value = 1500000
-    const formatted = new Intl.NumberFormat('en-US', {
-      notation: 'compact',
-    }).format(value)
-
-    expect(formatted).toBe('1.5M')
+  test('includes fallback locales fr, de, pt, ru', () => {
+    const locales = getAvailableLocales()
+    expect(locales).toContain('fr')
+    expect(locales).toContain('de')
+    expect(locales).toContain('pt')
+    expect(locales).toContain('ru')
   })
 })
 
-describe('Date Formatting', () => {
-  test('should format date short', () => {
-    const date = new Date('2024-01-15')
-    const formatted = new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(date)
-
-    expect(formatted).toBe('01/15/2024')
-  })
-
-  test('should format date long', () => {
-    const date = new Date('2024-01-15')
-    const formatted = new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }).format(date)
-
-    expect(formatted).toBe('January 15, 2024')
-  })
-})
-
-describe('Relative Time', () => {
-  test('should format relative time', () => {
-    const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
-
-    expect(rtf.format(-1, 'day')).toBe('yesterday')
-    expect(rtf.format(-2, 'day')).toBe('2 days ago')
-    expect(rtf.format(-1, 'hour')).toBe('1 hour ago')
-  })
-})
-
-describe('Duration Formatting', () => {
-  test('should format duration', () => {
-    const formatDuration = (seconds: number): string => {
-      const days = Math.floor(seconds / 86400)
-      const hours = Math.floor((seconds % 86400) / 3600)
-      const minutes = Math.floor((seconds % 3600) / 60)
-      const secs = seconds % 60
-
-      const parts: string[] = []
-      if (days > 0) parts.push(`${days}d`)
-      if (hours > 0) parts.push(`${hours}h`)
-      if (minutes > 0) parts.push(`${minutes}m`)
-      if (secs > 0 || parts.length === 0) parts.push(`${secs}s`)
-
-      return parts.join(' ')
+describe('translations object', () => {
+  test('has same keys across en, es, zh, ja, ko', () => {
+    const enKeys = Object.keys(translations['en']).sort()
+    for (const locale of ['es', 'zh', 'ja', 'ko'] as const) {
+      const keys = Object.keys(translations[locale]).sort()
+      expect(keys).toEqual(enKeys)
     }
-
-    expect(formatDuration(90061)).toBe('1d 1h 1m 1s')
-    expect(formatDuration(3600)).toBe('1h')
-    expect(formatDuration(60)).toBe('1m')
-    expect(formatDuration(30)).toBe('30s')
   })
 })
 
-describe('Address Formatting', () => {
-  test('should truncate address', () => {
-    const address = 'ABC123DEF456GHI789JKL012MNO345PQR678STU901'
-    const chars = 4
-
-    const formatted = `${address.slice(0, chars)}...${address.slice(-chars)}`
-
-    expect(formatted).toBe('ABC1...U901')
-  })
-})
-
-describe('Bytes Formatting', () => {
-  test('should format bytes', () => {
-    const formatBytes = (bytes: number): string => {
-      const units = ['B', 'KB', 'MB', 'GB']
-      let unitIndex = 0
-      let value = bytes
-
-      while (value >= 1024 && unitIndex < units.length - 1) {
-        value /= 1024
-        unitIndex++
-      }
-
-      return `${value.toFixed(unitIndex === 0 ? 0 : 2)} ${units[unitIndex]}`
-    }
-
-    expect(formatBytes(500)).toBe('500 B')
-    expect(formatBytes(1024)).toBe('1.00 KB')
-    expect(formatBytes(1536)).toBe('1.50 KB')
-    expect(formatBytes(1048576)).toBe('1.00 MB')
+describe('setI18nConfig', () => {
+  test('updates locale via config', () => {
+    setI18nConfig({ locale: 'ja' })
+    expect(getLocale()).toBe('ja')
   })
 })

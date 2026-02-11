@@ -930,7 +930,7 @@
 
 - [x] Create `test/` directory structure mirroring `src/`
 - [x] Test configuration loading and validation
-- [ ] Test driver interface implementations
+- [x] Test driver interface implementations
 - [x] Test token creation functions
 - [ ] Test token minting functions
 - [ ] Test token transfer functions
@@ -938,6 +938,17 @@
 - [ ] Test collection management functions
 - [x] Test Candy Machine functions
 - [x] Test utility functions
+- [x] Test Base58 encoding/decoding (`test/base58.test.ts`)
+- [x] Test error classes and parsing (`test/errors.test.ts`)
+- [x] Test transaction utilities (`test/transaction-utils.test.ts`)
+- [x] Test PDA derivation (`test/pda.test.ts`)
+- [x] Test metadata deserialization (`test/metadata-accounts.test.ts`)
+- [x] Test wallet functions (`test/wallet.test.ts`)
+- [x] Test connection management (`test/connection.test.ts`)
+- [x] Test validation functions (`test/validation.test.ts`)
+- [x] Test security checks (`test/security-checks.test.ts`)
+- [x] Test i18n translations (`test/i18n.test.ts`)
+- [x] Test i18n formatting (`test/i18n-format.test.ts`)
 
 ### 9.2 Integration Tests
 
