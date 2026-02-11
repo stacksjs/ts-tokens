@@ -1067,7 +1067,7 @@
 
 ### 11.2 Key Management
 
-- [ ] Support hardware wallet signing (Ledger via HID)
+- [x] Support hardware wallet signing (Ledger via HID)
 - [x] Implement encrypted keypair storage (local keyring)
 - [x] Add environment variable keypair loading (`TOKENS_KEYPAIR`)
 - [x] Support keypair from stdin (for CI/CD pipelines)
@@ -1087,7 +1087,7 @@
 - [x] Implement transaction retry with exponential backoff
 - [x] Add transaction recovery for partially failed batches
 - [x] Create error code documentation
-- [ ] Implement dry-run mode for all destructive operations
+- [x] Implement dry-run mode for all destructive operations
 
 ### 11.5 Security Checklists
 
@@ -1105,76 +1105,76 @@
 
 ##### Token Configuration Checks
 
-- [ ] **Mint Authority**
-  - [ ] Verify mint authority is set correctly (not compromised wallet)
-  - [ ] Warn if mint authority is a hot wallet (recommend multi-sig)
-  - [ ] Check if mint authority should be revoked for fixed supply
-  - [ ] Verify mint authority is not a known scam address
-- [ ] **Freeze Authority**
-  - [ ] Warn if freeze authority exists (can freeze user tokens)
-  - [ ] Recommend revoking freeze authority for trustless tokens
-  - [ ] Verify freeze authority holder if intentionally kept
-- [ ] **Supply Verification**
-  - [ ] Verify initial supply matches intended amount
-  - [ ] Check for any unexpected mints after creation
-  - [ ] Verify decimal places are correct (common mistake: wrong decimals)
-- [ ] **Metadata Verification**
-  - [ ] Verify metadata URI is accessible and valid JSON
-  - [ ] Check metadata matches on-chain data (name, symbol)
-  - [ ] Verify image URL is accessible
-  - [ ] Check for metadata mutability (warn if mutable)
-  - [ ] Verify update authority is secure
+- [x] **Mint Authority**
+  - [x] Verify mint authority is set correctly (not compromised wallet)
+  - [x] Warn if mint authority is a hot wallet (recommend multi-sig)
+  - [x] Check if mint authority should be revoked for fixed supply
+  - [x] Verify mint authority is not a known scam address
+- [x] **Freeze Authority**
+  - [x] Warn if freeze authority exists (can freeze user tokens)
+  - [x] Recommend revoking freeze authority for trustless tokens
+  - [x] Verify freeze authority holder if intentionally kept
+- [x] **Supply Verification**
+  - [x] Verify initial supply matches intended amount
+  - [x] Check for any unexpected mints after creation
+  - [x] Verify decimal places are correct (common mistake: wrong decimals)
+- [x] **Metadata Verification**
+  - [x] Verify metadata URI is accessible and valid JSON
+  - [x] Check metadata matches on-chain data (name, symbol)
+  - [x] Verify image URL is accessible
+  - [x] Check for metadata mutability (warn if mutable)
+  - [x] Verify update authority is secure
 
 ##### Smart Contract Security (Token-2022)
 
-- [ ] **Transfer Fee Checks**
-  - [ ] Verify fee percentage is as intended
-  - [ ] Check fee recipient address is correct
-  - [ ] Warn about high fees (>5%)
-- [ ] **Transfer Hook Checks**
-  - [ ] Verify hook program is audited/trusted
-  - [ ] Check hook program source is available
-  - [ ] Warn about unknown hook programs
-- [ ] **Permanent Delegate Checks**
-  - [ ] Warn if permanent delegate is set (can transfer any time)
-  - [ ] Verify delegate address is intended
+- [x] **Transfer Fee Checks**
+  - [x] Verify fee percentage is as intended
+  - [x] Check fee recipient address is correct
+  - [x] Warn about high fees (>5%)
+- [x] **Transfer Hook Checks**
+  - [x] Verify hook program is audited/trusted
+  - [x] Check hook program source is available
+  - [x] Warn about unknown hook programs
+- [x] **Permanent Delegate Checks**
+  - [x] Warn if permanent delegate is set (can transfer any time)
+  - [x] Verify delegate address is intended
 
 #### Pre-Launch NFT Collection Security Checklist
 
 ##### Collection Configuration
 
-- [ ] **Collection Authority**
-  - [ ] Verify collection authority is secure (multi-sig recommended)
-  - [ ] Check if authority should be transferred to DAO
-- [ ] **Royalty Configuration**
-  - [ ] Verify royalty percentage is correct
-  - [ ] Verify all creator addresses are correct
-  - [ ] Check creator shares sum to 100%
-  - [ ] Verify creators have signed/verified
-- [ ] **Metadata Mutability**
-  - [ ] Warn if collection is mutable (can be rugged)
-  - [ ] Recommend making immutable after launch
-- [ ] **Update Authority**
-  - [ ] Verify update authority is secure
-  - [ ] Recommend multi-sig for update authority
+- [x] **Collection Authority**
+  - [x] Verify collection authority is secure (multi-sig recommended)
+  - [x] Check if authority should be transferred to DAO
+- [x] **Royalty Configuration**
+  - [x] Verify royalty percentage is correct
+  - [x] Verify all creator addresses are correct
+  - [x] Check creator shares sum to 100%
+  - [x] Verify creators have signed/verified
+- [x] **Metadata Mutability**
+  - [x] Warn if collection is mutable (can be rugged)
+  - [x] Recommend making immutable after launch
+- [x] **Update Authority**
+  - [x] Verify update authority is secure
+  - [x] Recommend multi-sig for update authority
 
 ##### Candy Machine Security
 
-- [ ] **Price Configuration**
-  - [ ] Verify mint price is correct
-  - [ ] Check payment destination address
-- [ ] **Guard Configuration**
-  - [ ] Verify start/end dates are correct
-  - [ ] Check allowlist merkle root is correct
-  - [ ] Verify mint limits are set appropriately
-- [ ] **Bot Protection**
-  - [ ] Recommend enabling bot tax
-  - [ ] Check for rate limiting guards
-  - [ ] Verify captcha/gatekeeper if needed
+- [x] **Price Configuration**
+  - [x] Verify mint price is correct
+  - [x] Check payment destination address
+- [x] **Guard Configuration**
+  - [x] Verify start/end dates are correct
+  - [x] Check allowlist merkle root is correct
+  - [x] Verify mint limits are set appropriately
+- [x] **Bot Protection**
+  - [x] Recommend enabling bot tax
+  - [x] Check for rate limiting guards
+  - [x] Verify captcha/gatekeeper if needed
 
 #### Transaction Security Checklist
 
-- [ ] Create pre-transaction security checks:
+- [x] Create pre-transaction security checks:
 
   ```ts
   const check = await tokens.security.checkTransaction(transaction)
@@ -1187,27 +1187,27 @@
 
 ##### Pre-Transaction Checks
 
-- [ ] **Address Validation**
-  - [ ] Verify recipient is valid Solana address
-  - [ ] Check against known scam address database
-  - [ ] Warn if sending to exchange deposit address without memo
-  - [ ] Warn if address has never been used (potential typo)
-- [ ] **Amount Validation**
-  - [ ] Warn if amount is unusually large
-  - [ ] Check sufficient balance (including fees)
-  - [ ] Verify decimal handling is correct
-- [ ] **Authority Checks**
-  - [ ] Verify signer has required authority
-  - [ ] Check for authority expiration (delegated)
-- [ ] **Simulation**
-  - [ ] Always simulate transaction before sending
-  - [ ] Parse simulation for errors/warnings
-  - [ ] Show expected account changes
+- [x] **Address Validation**
+  - [x] Verify recipient is valid Solana address
+  - [x] Check against known scam address database
+  - [x] Warn if sending to exchange deposit address without memo
+  - [x] Warn if address has never been used (potential typo)
+- [x] **Amount Validation**
+  - [x] Warn if amount is unusually large
+  - [x] Check sufficient balance (including fees)
+  - [x] Verify decimal handling is correct
+- [x] **Authority Checks**
+  - [x] Verify signer has required authority
+  - [x] Check for authority expiration (delegated)
+- [x] **Simulation**
+  - [x] Always simulate transaction before sending
+  - [x] Parse simulation for errors/warnings
+  - [x] Show expected account changes
 
 #### Wallet Security Checklist
 
-- [ ] Create `tokens security wallet` CLI command
-- [ ] Implement wallet security audit:
+- [x] Create `tokens security wallet` CLI command
+- [x] Implement wallet security audit:
 
   ```ts
   const walletAudit = await tokens.security.auditWallet(wallet)
@@ -1215,24 +1215,24 @@
 
 ##### Wallet Checks
 
-- [ ] **Key Security**
-  - [ ] Warn if using file-based keypair (recommend hardware wallet)
-  - [ ] Check keypair file permissions (should be 600)
-  - [ ] Verify keypair is not in version control
-  - [ ] Check for keypair in environment variables (warn about logging)
-- [ ] **Balance Checks**
-  - [ ] Warn if wallet has large SOL balance (recommend cold storage)
-  - [ ] Check for dust attacks (tiny token amounts from unknown sources)
-  - [ ] Identify suspicious token accounts
-- [ ] **Authority Exposure**
-  - [ ] List all tokens where wallet is mint authority
-  - [ ] List all tokens where wallet is freeze authority
-  - [ ] List all NFT collections where wallet is update authority
-  - [ ] Recommend multi-sig for high-value authorities
+- [x] **Key Security**
+  - [x] Warn if using file-based keypair (recommend hardware wallet)
+  - [x] Check keypair file permissions (should be 600)
+  - [x] Verify keypair is not in version control
+  - [x] Check for keypair in environment variables (warn about logging)
+- [x] **Balance Checks**
+  - [x] Warn if wallet has large SOL balance (recommend cold storage)
+  - [x] Check for dust attacks (tiny token amounts from unknown sources)
+  - [x] Identify suspicious token accounts
+- [x] **Authority Exposure**
+  - [x] List all tokens where wallet is mint authority
+  - [x] List all tokens where wallet is freeze authority
+  - [x] List all NFT collections where wallet is update authority
+  - [x] Recommend multi-sig for high-value authorities
 
 #### Authority Transfer Security Checklist
 
-- [ ] Create confirmation flow for authority transfers:
+- [x] Create confirmation flow for authority transfers:
 
   ```ts
   await tokens.security.confirmAuthorityTransfer({
@@ -1245,21 +1245,21 @@
 
 ##### Authority Transfer Checks
 
-- [ ] **Irreversibility Warning**
-  - [ ] Clearly warn that authority transfers are irreversible
-  - [ ] Require explicit confirmation (type address to confirm)
-- [ ] **Destination Validation**
-  - [ ] Verify new authority address is correct
-  - [ ] Check if new authority is multi-sig (recommended)
-  - [ ] Warn if transferring to single hot wallet
-- [ ] **Revocation Checks**
-  - [ ] Double-confirm authority revocation (setting to null)
-  - [ ] Explain implications (no more minting, etc.)
-  - [ ] Require typing "REVOKE" to confirm
+- [x] **Irreversibility Warning**
+  - [x] Clearly warn that authority transfers are irreversible
+  - [x] Require explicit confirmation (type address to confirm)
+- [x] **Destination Validation**
+  - [x] Verify new authority address is correct
+  - [x] Check if new authority is multi-sig (recommended)
+  - [x] Warn if transferring to single hot wallet
+- [x] **Revocation Checks**
+  - [x] Double-confirm authority revocation (setting to null)
+  - [x] Explain implications (no more minting, etc.)
+  - [x] Require typing "REVOKE" to confirm
 
 #### Burn Security Checklist
 
-- [ ] Create confirmation flow for burns:
+- [x] Create confirmation flow for burns:
 
   ```ts
   await tokens.security.confirmBurn({
@@ -1271,61 +1271,61 @@
 
 ##### Burn Checks
 
-- [ ] **Irreversibility Warning**
-  - [ ] Clearly warn that burns are irreversible
-  - [ ] Show USD value if available
-- [ ] **Amount Validation**
-  - [ ] Confirm amount with decimal display
-  - [ ] Warn if burning large percentage of holdings
-  - [ ] Warn if burning entire balance
-- [ ] **NFT Burns**
-  - [ ] Show NFT image and name before burn
-  - [ ] Require typing NFT name to confirm
-  - [ ] Check if NFT is part of valuable collection
+- [x] **Irreversibility Warning**
+  - [x] Clearly warn that burns are irreversible
+  - [x] Show USD value if available
+- [x] **Amount Validation**
+  - [x] Confirm amount with decimal display
+  - [x] Warn if burning large percentage of holdings
+  - [x] Warn if burning entire balance
+- [x] **NFT Burns**
+  - [x] Show NFT image and name before burn
+  - [x] Require typing NFT name to confirm
+  - [x] Check if NFT is part of valuable collection
 
 #### DAO/Governance Security Checklist
 
-- [ ] Create `governance security check <dao>` CLI command
+- [x] Create `governance security check <dao>` CLI command
 
 ##### DAO Configuration Checks
 
-- [ ] **Voting Parameters**
-  - [ ] Warn if quorum is too low (<5%)
-  - [ ] Warn if approval threshold is too low (<50%)
-  - [ ] Check voting period is reasonable (not too short)
-  - [ ] Verify execution delay provides time to react
-- [ ] **Treasury Security**
-  - [ ] Verify treasury is controlled by governance
-  - [ ] Check for backdoor admin access
-  - [ ] Verify proposal threshold prevents spam
-- [ ] **Authority Distribution**
-  - [ ] Check token distribution (warn if concentrated)
-  - [ ] Verify no single entity controls majority
-  - [ ] Check for delegation concentration
+- [x] **Voting Parameters**
+  - [x] Warn if quorum is too low (<5%)
+  - [x] Warn if approval threshold is too low (<50%)
+  - [x] Check voting period is reasonable (not too short)
+  - [x] Verify execution delay provides time to react
+- [x] **Treasury Security**
+  - [x] Verify treasury is controlled by governance
+  - [x] Check for backdoor admin access
+  - [x] Verify proposal threshold prevents spam
+- [x] **Authority Distribution**
+  - [x] Check token distribution (warn if concentrated)
+  - [x] Verify no single entity controls majority
+  - [x] Check for delegation concentration
 
 #### Staking Security Checklist
 
-- [ ] Create `tokens staking security <pool>` CLI command
+- [x] Create `tokens staking security <pool>` CLI command
 
 ##### Staking Pool Checks
 
-- [ ] **Pool Configuration**
-  - [ ] Verify reward rate is sustainable
-  - [ ] Check reward token balance covers obligations
-  - [ ] Verify lock periods are as advertised
-  - [ ] Check early unstake penalties are reasonable
-- [ ] **Authority Checks**
-  - [ ] Verify pool authority is secure
-  - [ ] Check for emergency withdrawal mechanisms
-  - [ ] Verify pause functionality exists
-- [ ] **Smart Contract Checks**
-  - [ ] Verify staking program is audited
-  - [ ] Check for known vulnerabilities
-  - [ ] Verify upgrade authority (if upgradeable)
+- [x] **Pool Configuration**
+  - [x] Verify reward rate is sustainable
+  - [x] Check reward token balance covers obligations
+  - [x] Verify lock periods are as advertised
+  - [x] Check early unstake penalties are reasonable
+- [x] **Authority Checks**
+  - [x] Verify pool authority is secure
+  - [x] Check for emergency withdrawal mechanisms
+  - [x] Verify pause functionality exists
+- [x] **Smart Contract Checks**
+  - [x] Verify staking program is audited
+  - [x] Check for known vulnerabilities
+  - [x] Verify upgrade authority (if upgradeable)
 
 #### Security Report Generation
 
-- [ ] Create comprehensive security report:
+- [x] Create comprehensive security report:
 
   ```ts
   const report = await tokens.security.generateReport({
@@ -1338,26 +1338,26 @@
   // Generates PDF/HTML report with all findings
   ```
 
-- [ ] Report includes:
-  - [ ] Executive summary with risk score
-  - [ ] Detailed findings by category
-  - [ ] Recommendations with priority levels
-  - [ ] Action items checklist
-  - [ ] Historical comparison (if previous report exists)
+- [x] Report includes:
+  - [x] Executive summary with risk score
+  - [x] Detailed findings by category
+  - [x] Recommendations with priority levels
+  - [x] Action items checklist
+  - [x] Historical comparison (if previous report exists)
 
 #### CLI Security Commands
 
-- [ ] `tokens security audit <mint>` - Full token security audit
-- [ ] `tokens security collection <collection>` - Collection audit
-- [ ] `tokens security wallet` - Wallet security check
-- [ ] `tokens security tx <signature>` - Analyze transaction
-- [ ] `tokens security address <address>` - Check address reputation
-- [ ] `tokens security report` - Generate full security report
-- [ ] `tokens security watch <mint>` - Monitor for security events
+- [x] `tokens security audit <mint>` - Full token security audit
+- [x] `tokens security collection <collection>` - Collection audit
+- [x] `tokens security wallet` - Wallet security check
+- [x] `tokens security tx <signature>` - Analyze transaction
+- [x] `tokens security address <address>` - Check address reputation
+- [x] `tokens security report` - Generate full security report
+- [x] `tokens security watch <mint>` - Monitor for security events
 
 #### Security Notifications
 
-- [ ] Implement security event monitoring:
+- [x] Implement security event monitoring:
 
   ```ts
   tokens.security.watch(tokenMint, {
@@ -1367,87 +1367,87 @@
   })
   ```
 
-- [ ] Webhook support for security alerts
+- [x] Webhook support for security alerts
 - [ ] Email notifications for critical events
 - [ ] Discord/Telegram bot integration
 
 #### Phishing & Social Engineering Protection
 
-- [ ] **Approval Phishing Detection**
-  - [ ] Warn when approving unlimited token spending
-  - [ ] Detect suspicious approval patterns
-  - [ ] Show approval history and recommend revocations
-  - [ ] `tokens security approvals` - List all active approvals
-- [ ] **Fake Token Detection**
-  - [ ] Check if token name/symbol mimics known tokens
-  - [ ] Verify token against official registries
-  - [ ] Warn about tokens with similar names (e.g., "USDC" vs "USDC.e")
-  - [ ] Check token age and holder count
-- [ ] **Malicious Metadata Detection**
-  - [ ] Scan metadata URIs for known malicious domains
-  - [ ] Check for redirect chains in metadata URLs
-  - [ ] Detect hidden characters in names/symbols
-  - [ ] Warn about external links in NFT metadata
+- [x] **Approval Phishing Detection**
+  - [x] Warn when approving unlimited token spending
+  - [x] Detect suspicious approval patterns
+  - [x] Show approval history and recommend revocations
+  - [x] `tokens security approvals` - List all active approvals
+- [x] **Fake Token Detection**
+  - [x] Check if token name/symbol mimics known tokens
+  - [x] Verify token against official registries
+  - [x] Warn about tokens with similar names (e.g., "USDC" vs "USDC.e")
+  - [x] Check token age and holder count
+- [x] **Malicious Metadata Detection**
+  - [x] Scan metadata URIs for known malicious domains
+  - [x] Check for redirect chains in metadata URLs
+  - [x] Detect hidden characters in names/symbols
+  - [x] Warn about external links in NFT metadata
 
 #### Program/Contract Security
 
-- [ ] **Program Verification**
-  - [ ] Verify program is verified on-chain (Anchor verified)
-  - [ ] Check program upgrade authority status
-  - [ ] Warn if program is upgradeable by unknown authority
-  - [ ] Check program against known vulnerability database
-- [ ] **CPI (Cross-Program Invocation) Analysis**
-  - [ ] Analyze which programs a transaction will invoke
-  - [ ] Warn about unknown or unverified programs
-  - [ ] Detect potential sandwich attack vectors
-- [ ] **IDL Verification**
-  - [ ] Verify program IDL matches on-chain bytecode
-  - [ ] Warn if IDL is missing or outdated
+- [x] **Program Verification**
+  - [x] Verify program is verified on-chain (Anchor verified)
+  - [x] Check program upgrade authority status
+  - [x] Warn if program is upgradeable by unknown authority
+  - [x] Check program against known vulnerability database
+- [x] **CPI (Cross-Program Invocation) Analysis**
+  - [x] Analyze which programs a transaction will invoke
+  - [x] Warn about unknown or unverified programs
+  - [x] Detect potential sandwich attack vectors
+- [x] **IDL Verification**
+  - [x] Verify program IDL matches on-chain bytecode
+  - [x] Warn if IDL is missing or outdated
 
 #### MEV & Front-Running Protection
 
-- [ ] **Transaction Privacy**
-  - [ ] Support private transaction submission (Jito bundles)
-  - [ ] Implement transaction timing randomization
-  - [ ] Warn about MEV-vulnerable transactions
-- [ ] **Slippage Protection**
-  - [ ] Enforce maximum slippage on swaps
-  - [ ] Detect abnormal price impact
-  - [ ] Warn about low liquidity situations
-- [ ] **Sandwich Attack Detection**
-  - [ ] Analyze mempool for potential sandwich attacks
-  - [ ] Recommend Jito bundles for high-value transactions
+- [x] **Transaction Privacy**
+  - [x] Support private transaction submission (Jito bundles)
+  - [x] Implement transaction timing randomization
+  - [x] Warn about MEV-vulnerable transactions
+- [x] **Slippage Protection**
+  - [x] Enforce maximum slippage on swaps
+  - [x] Detect abnormal price impact
+  - [x] Warn about low liquidity situations
+- [x] **Sandwich Attack Detection**
+  - [x] Analyze mempool for potential sandwich attacks
+  - [x] Recommend Jito bundles for high-value transactions
 
 #### Backup & Recovery Security
 
-- [ ] **Keypair Backup Verification**
-  - [ ] Prompt for backup verification on first use
-  - [ ] Implement encrypted backup export
+- [x] **Keypair Backup Verification**
+  - [x] Prompt for backup verification on first use
+  - [x] Implement encrypted backup export
   - [ ] Support Shamir secret sharing for key backup
-- [ ] **Recovery Options**
-  - [ ] Document recovery procedures for lost keys
+- [x] **Recovery Options**
+  - [x] Document recovery procedures for lost keys
   - [ ] Implement social recovery options (multi-sig guardians)
   - [ ] Support hardware wallet recovery flows
-- [ ] **Disaster Recovery**
-  - [ ] Export all authority positions for recovery planning
-  - [ ] Generate recovery documentation
+- [x] **Disaster Recovery**
+  - [x] Export all authority positions for recovery planning
+  - [x] Generate recovery documentation
   - [ ] Test recovery procedures in devnet
 
 #### Operational Security (OpSec)
 
-- [ ] **Environment Checks**
-  - [ ] Warn if running on shared/public computer
+- [x] **Environment Checks**
+  - [x] Warn if running on shared/public computer
   - [ ] Check for screen recording software
-  - [ ] Verify secure network connection (warn on public WiFi)
-  - [ ] Check clipboard for sensitive data exposure
-- [ ] **Session Security**
-  - [ ] Implement session timeouts for CLI
-  - [ ] Clear sensitive data from memory after use
-  - [ ] Secure logging (redact sensitive values)
-- [ ] **Audit Logging**
-  - [ ] Log all sensitive operations locally
+  - [x] Verify secure network connection (warn on public WiFi)
+  - [x] Check clipboard for sensitive data exposure
+- [x] **Session Security**
+  - [x] Implement session timeouts for CLI
+  - [x] Clear sensitive data from memory after use
+  - [x] Secure logging (redact sensitive values)
+- [x] **Audit Logging**
+  - [x] Log all sensitive operations locally
   - [ ] Tamper-evident audit trail
-  - [ ] Export audit logs for compliance
+  - [x] Export audit logs for compliance
 
 #### Compliance & Regulatory
 

@@ -48,6 +48,12 @@ export interface TransactionOptions {
    * @default 30000
    */
   timeout?: number
+
+  /**
+   * Run in dry-run mode (simulate only, don't send)
+   * @default false
+   */
+  dryRun?: boolean
 }
 
 /**

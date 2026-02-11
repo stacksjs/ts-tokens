@@ -268,6 +268,9 @@ export function createWalletAdapter(type: WalletType): WalletAdapter | null {
     case 'backpack':
       provider = win.backpack
       break
+    case 'ledger':
+      // Use createLedgerAdapter() from './ledger' for Ledger HID support
+      return null
     default:
       return null
   }

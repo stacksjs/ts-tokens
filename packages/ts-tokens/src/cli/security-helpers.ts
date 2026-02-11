@@ -109,3 +109,67 @@ export function formatSecurityReport(reports: {
 
   return lines.join('\n')
 }
+
+/**
+ * Format a transaction security check result
+ */
+export function formatTransactionCheck(result: { safe: boolean; warnings: string[]; recommendations: string[] }, signature: string): string {
+  const lines: string[] = []
+  lines.push(`Transaction Check: ${signature}`)
+  lines.push(`Status: ${result.safe ? 'SAFE' : 'WARNING'}`)
+
+  if (result.warnings.length > 0) {
+    lines.push('')
+    lines.push('Warnings:')
+    for (const w of result.warnings) {
+      lines.push(`  [!] ${w}`)
+    }
+  }
+
+  if (result.recommendations.length > 0) {
+    lines.push('')
+    lines.push('Recommendations:')
+    for (const r of result.recommendations) {
+      lines.push(`  - ${r}`)
+    }
+  }
+
+  return lines.join('\n')
+}
+
+/**
+ * Format an address security check result
+ */
+export function formatAddressCheck(result: { safe: boolean; warnings: string[]; recommendations: string[] }, address: string): string {
+  const lines: string[] = []
+  lines.push(`Address Check: ${address}`)
+  lines.push(`Status: ${result.safe ? 'SAFE' : 'WARNING'}`)
+
+  if (result.warnings.length > 0) {
+    lines.push('')
+    lines.push('Warnings:')
+    for (const w of result.warnings) {
+      lines.push(`  [!] ${w}`)
+    }
+  }
+
+  if (result.recommendations.length > 0) {
+    lines.push('')
+    lines.push('Recommendations:')
+    for (const r of result.recommendations) {
+      lines.push(`  - ${r}`)
+    }
+  }
+
+  return lines.join('\n')
+}
+
+/**
+ * Format a security monitoring event
+ */
+export function formatWatchEvent(event: { type: string; severity: string; timestamp: Date; address: string; details: Record<string, unknown> }): string {
+  const severity = event.severity.toUpperCase().padEnd(8)
+  const type = event.type.replace(/_/g, ' ')
+  const time = event.timestamp.toLocaleTimeString()
+  return `[${severity}] ${time} | ${type} | ${event.address}`
+}

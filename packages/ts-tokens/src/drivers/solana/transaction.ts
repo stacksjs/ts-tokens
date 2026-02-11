@@ -113,6 +113,32 @@ export async function sendAndConfirmTransaction(
   transaction: Transaction | VersionedTransaction,
   options?: TransactionOptions
 ): Promise<TransactionResult> {
+  // Dry-run mode: simulate instead of sending
+  if (options?.dryRun) {
+    try {
+      let simResult
+      if (transaction instanceof Transaction) {
+        simResult = await connection.simulateTransaction(transaction)
+      } else {
+        simResult = await connection.simulateTransaction(transaction)
+      }
+
+      return {
+        signature: 'DRY_RUN',
+        confirmed: false,
+        computeUnitsConsumed: simResult.value.unitsConsumed ?? undefined,
+        logs: simResult.value.logs ?? undefined,
+        error: simResult.value.err ? JSON.stringify(simResult.value.err) : undefined,
+      }
+    } catch (error) {
+      return {
+        signature: 'DRY_RUN',
+        confirmed: false,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    }
+  }
+
   const sendOptions: SendOptions = {
     skipPreflight: options?.skipPreflight ?? false,
     preflightCommitment: options?.commitment ?? 'confirmed',

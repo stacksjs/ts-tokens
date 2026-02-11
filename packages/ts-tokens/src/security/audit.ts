@@ -320,3 +320,36 @@ export async function generateSecurityReport(options: {
     summary: `Audited ${reports.length} items. Overall risk score: ${overallRiskScore}/100`,
   }
 }
+
+/**
+ * Audit a Candy Machine
+ */
+export async function auditCandyMachine(
+  connection: Connection,
+  address: PublicKey
+): Promise<AuditReport> {
+  const { fullCandyMachineSecurityCheck } = await import('./candy-machine-checks')
+  return fullCandyMachineSecurityCheck(connection, address)
+}
+
+/**
+ * Audit a DAO governance program
+ */
+export async function auditGovernance(
+  connection: Connection,
+  address: PublicKey
+): Promise<AuditReport> {
+  const { fullGovernanceSecurityCheck } = await import('./governance-checks')
+  return fullGovernanceSecurityCheck(connection, address)
+}
+
+/**
+ * Audit a staking pool
+ */
+export async function auditStakingPool(
+  connection: Connection,
+  address: PublicKey
+): Promise<AuditReport> {
+  const { fullStakingSecurityCheck } = await import('./staking-checks')
+  return fullStakingSecurityCheck(connection, address)
+}
