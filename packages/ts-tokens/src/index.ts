@@ -207,3 +207,24 @@ export * as debug from './debug'
 
 // Automation & Scheduling
 export * as automation from './automation'
+
+// MPL Core NFT Standard
+export * as core from './core'
+
+// Transaction Utilities (Priority Fees)
+export * as transaction from './transaction'
+
+// Fanout Wallets
+export * as fanout from './fanout'
+
+// Link-Based Distribution
+export * as distribution from './distribution'
+
+// Compressed Tokens
+export * as compressedToken from './compressed-token'
+
+// Token Vesting
+export * as vesting from './vesting'
+
+// Solana Actions / Blinks
+export * as actions from './actions'

@@ -315,6 +315,151 @@ export function register(cli: any): void {
       }
     })
 
+  // Token-2022 Enhanced Commands
+
+  cli
+    .command('token:create-2022', 'Create a Token-2022 token with extensions')
+    .option('--name <name>', 'Token name')
+    .option('--symbol <symbol>', 'Token symbol')
+    .option('--decimals <decimals>', 'Decimal places', '9')
+    .option('--extensions <list>', 'Comma-separated extensions (transferFee,metadata,nonTransferable,permanentDelegate)')
+    .option('--transfer-fee-bps <bps>', 'Transfer fee basis points')
+    .option('--max-fee <amount>', 'Max transfer fee')
+    .action(async (options: {
+      name?: string
+      symbol?: string
+      decimals?: string
+      extensions?: string
+      transferFeeBps?: string
+      maxFee?: string
+    }) => {
+      if (!options.name || !options.symbol) {
+        console.error('Error: --name and --symbol are required')
+        process.exit(1)
+      }
+
+      const config = await getConfig()
+      const { createToken2022 } = await import('../../src/token/token2022')
+
+      try {
+        const extNames = (options.extensions || '').split(',').filter(Boolean)
+        const extensions: any[] = []
+
+        for (const ext of extNames) {
+          switch (ext.trim()) {
+            case 'transferFee':
+              extensions.push({
+                type: 'transferFee',
+                feeBasisPoints: parseInt(options.transferFeeBps || '100'),
+                maxFee: BigInt(options.maxFee || '1000000000'),
+                feeAuthority: '',
+                withdrawAuthority: '',
+              })
+              break
+            case 'nonTransferable':
+              extensions.push({ type: 'nonTransferable' })
+              break
+            case 'defaultFrozen':
+              extensions.push({ type: 'defaultAccountState', state: 'frozen' })
+              break
+          }
+        }
+
+        console.log('Creating Token-2022...')
+        console.log(`  Extensions: ${extensions.map(e => e.type).join(', ') || 'none'}`)
+
+        const result = await createToken2022({
+          name: options.name,
+          symbol: options.symbol,
+          decimals: parseInt(options.decimals || '9'),
+          extensions,
+        }, config)
+
+        console.log('\n\u2713 Token-2022 created!')
+        console.log(`  Mint: ${result.mint}`)
+        console.log(`  Signature: ${result.signature}`)
+      } catch (error) {
+        console.error('Error:', error instanceof Error ? error.message : error)
+        process.exit(1)
+      }
+    })
+
+  cli
+    .command('token:metadata <mint>', 'Set embedded metadata on Token-2022 mint')
+    .option('--name <name>', 'Token name')
+    .option('--symbol <symbol>', 'Token symbol')
+    .option('--uri <uri>', 'Metadata URI')
+    .action(async (mint: string, options: { name?: string; symbol?: string; uri?: string }) => {
+      if (!options.name || !options.symbol || !options.uri) {
+        console.error('Error: --name, --symbol, and --uri are required')
+        process.exit(1)
+      }
+
+      const config = await getConfig()
+      const { setEmbeddedMetadata } = await import('../../src/token/embedded-metadata')
+
+      try {
+        console.log(`Setting embedded metadata on ${mint}...`)
+        const result = await setEmbeddedMetadata(mint, {
+          name: options.name,
+          symbol: options.symbol,
+          uri: options.uri,
+        }, config)
+
+        console.log('\n\u2713 Metadata set!')
+        console.log(`  Signature: ${result.signature}`)
+      } catch (error) {
+        console.error('Error:', error instanceof Error ? error.message : error)
+        process.exit(1)
+      }
+    })
+
+  cli
+    .command('token:group <mint>', 'Initialize a token group')
+    .option('--max-size <size>', 'Maximum group size', '100')
+    .action(async (mint: string, options: { maxSize?: string }) => {
+      const config = await getConfig()
+      const { createTokenGroup } = await import('../../src/token/token-group')
+
+      try {
+        console.log(`Creating token group on ${mint}...`)
+        const result = await createTokenGroup(mint, parseInt(options.maxSize || '100'), config)
+        console.log('\n\u2713 Token group created!')
+        console.log(`  Signature: ${result.signature}`)
+      } catch (error) {
+        console.error('Error:', error instanceof Error ? error.message : error)
+        process.exit(1)
+      }
+    })
+
+  cli
+    .command('token:harvest-fees <mint>', 'Harvest transfer fees from all accounts')
+    .option('--withdraw', 'Also withdraw fees from mint')
+    .option('--destination <address>', 'Withdrawal destination')
+    .action(async (mint: string, options: { withdraw?: boolean; destination?: string }) => {
+      const config = await getConfig()
+      const { harvestTransferFees } = await import('../../src/token/fee-harvester')
+
+      try {
+        console.log(`Harvesting transfer fees for ${mint}...`)
+        const result = await harvestTransferFees(mint, config, {
+          withdraw: options.withdraw,
+          destination: options.destination,
+        })
+
+        console.log(`\n\u2713 Fees harvested from ${result.accountsProcessed} account(s)`)
+        if (result.harvestSignature) {
+          console.log(`  Harvest Signature: ${result.harvestSignature}`)
+        }
+        if (result.withdrawSignature) {
+          console.log(`  Withdraw Signature: ${result.withdrawSignature}`)
+        }
+      } catch (error) {
+        console.error('Error:', error instanceof Error ? error.message : error)
+        process.exit(1)
+      }
+    })
+
   // Token Commands (additional)
 
   cli

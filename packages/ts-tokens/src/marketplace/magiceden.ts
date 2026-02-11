@@ -217,3 +217,109 @@ function mapActivityType(type: string): NFTActivity['type'] {
 export function formatPrice(lamports: bigint): string {
   return `${(Number(lamports) / 1e9).toFixed(4)} SOL`
 }
+
+// ============================================
+// On-chain Marketplace Instructions (Phase 8)
+// ============================================
+
+const ME_INSTRUCTIONS_API = 'https://api-mainnet.magiceden.dev/v2/instructions'
+
+/**
+ * Options for buying on Magic Eden
+ */
+export interface MEBuyOptions {
+  mint: string
+  buyer: string
+  seller: string
+  price: number
+  tokenATA?: string
+}
+
+/**
+ * Options for listing on Magic Eden
+ */
+export interface MEListOptions {
+  mint: string
+  seller: string
+  price: number
+  tokenATA: string
+}
+
+/**
+ * Buy an NFT on Magic Eden via instruction API
+ */
+export async function buyOnMagicEden(options: MEBuyOptions): Promise<{
+  transaction: string
+}> {
+  const params = new URLSearchParams({
+    buyer: options.buyer,
+    seller: options.seller,
+    auctionHouseAddress: '',
+    tokenMint: options.mint,
+    price: options.price.toString(),
+  })
+
+  if (options.tokenATA) {
+    params.set('tokenATA', options.tokenATA)
+  }
+
+  const response = await fetch(`${ME_INSTRUCTIONS_API}/buy_now?${params}`)
+
+  if (!response.ok) {
+    throw new Error(`Magic Eden buy API error: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return { transaction: data.txSigned ?? data.tx ?? '' }
+}
+
+/**
+ * List an NFT on Magic Eden via instruction API
+ */
+export async function listOnMagicEden(options: MEListOptions): Promise<{
+  transaction: string
+}> {
+  const params = new URLSearchParams({
+    seller: options.seller,
+    auctionHouseAddress: '',
+    tokenMint: options.mint,
+    tokenAccount: options.tokenATA,
+    price: options.price.toString(),
+  })
+
+  const response = await fetch(`${ME_INSTRUCTIONS_API}/sell?${params}`)
+
+  if (!response.ok) {
+    throw new Error(`Magic Eden list API error: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return { transaction: data.txSigned ?? data.tx ?? '' }
+}
+
+/**
+ * Delist an NFT from Magic Eden via instruction API
+ */
+export async function delistFromMagicEden(options: {
+  seller: string
+  mint: string
+  tokenATA: string
+  price: number
+}): Promise<{ transaction: string }> {
+  const params = new URLSearchParams({
+    seller: options.seller,
+    auctionHouseAddress: '',
+    tokenMint: options.mint,
+    tokenAccount: options.tokenATA,
+    price: options.price.toString(),
+  })
+
+  const response = await fetch(`${ME_INSTRUCTIONS_API}/sell_cancel?${params}`)
+
+  if (!response.ok) {
+    throw new Error(`Magic Eden delist API error: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return { transaction: data.txSigned ?? data.tx ?? '' }
+}

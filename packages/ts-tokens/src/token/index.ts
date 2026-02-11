@@ -46,3 +46,13 @@ export {
   getTokenHistory,
   getLargestAccounts,
 } from './query'
+
+// Token-2022 Enhanced
+export { createToken2022 } from './token2022'
+export type { Token2022CreateOptions } from './token2022'
+export { setEmbeddedMetadata, updateEmbeddedMetadataField, getEmbeddedMetadata } from './embedded-metadata'
+export type { EmbeddedMetadata } from './embedded-metadata'
+export { createTokenGroup, addGroupMember, updateGroupMaxSize } from './token-group'
+export type { TokenGroup, TokenGroupMember } from './token-group'
+export { harvestTransferFees, findAccountsWithWithheldFees } from './fee-harvester'
+export type { HarvestResult } from './fee-harvester'

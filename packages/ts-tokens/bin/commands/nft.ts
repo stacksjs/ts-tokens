@@ -289,6 +289,118 @@ export function register(cli: any): void {
       }
     })
 
+  // ============================================
+  // MPL Core Commands
+  // ============================================
+
+  cli
+    .command('core:create', 'Create an MPL Core asset')
+    .option('--name <name>', 'Asset name')
+    .option('--uri <uri>', 'Metadata URI')
+    .option('--collection <address>', 'Collection address')
+    .option('--owner <address>', 'Owner address')
+    .action(async (options: { name?: string; uri?: string; collection?: string; owner?: string }) => {
+      if (!options.name || !options.uri) {
+        console.error('Error: --name and --uri are required')
+        process.exit(1)
+      }
+
+      const config = await getConfig()
+      const { createCoreAsset } = await import('../../src/core/asset')
+
+      try {
+        console.log('Creating MPL Core asset...')
+        const result = await createCoreAsset({
+          name: options.name,
+          uri: options.uri,
+          collection: options.collection,
+          owner: options.owner,
+        }, config)
+
+        console.log('\n\u2713 Core asset created successfully!')
+        console.log(`  Address: ${result.address}`)
+        console.log(`  Signature: ${result.signature}`)
+      } catch (error) {
+        console.error('Error:', error instanceof Error ? error.message : error)
+        process.exit(1)
+      }
+    })
+
+  cli
+    .command('core:collection', 'Create an MPL Core collection')
+    .option('--name <name>', 'Collection name')
+    .option('--uri <uri>', 'Metadata URI')
+    .action(async (options: { name?: string; uri?: string }) => {
+      if (!options.name || !options.uri) {
+        console.error('Error: --name and --uri are required')
+        process.exit(1)
+      }
+
+      const config = await getConfig()
+      const { createCoreCollection } = await import('../../src/core/collection')
+
+      try {
+        console.log('Creating MPL Core collection...')
+        const result = await createCoreCollection({
+          name: options.name,
+          uri: options.uri,
+        }, config)
+
+        console.log('\n\u2713 Core collection created successfully!')
+        console.log(`  Address: ${result.address}`)
+        console.log(`  Signature: ${result.signature}`)
+      } catch (error) {
+        console.error('Error:', error instanceof Error ? error.message : error)
+        process.exit(1)
+      }
+    })
+
+  cli
+    .command('core:transfer <asset> <to>', 'Transfer an MPL Core asset')
+    .option('--collection <address>', 'Collection address')
+    .action(async (asset: string, to: string, options: { collection?: string }) => {
+      const config = await getConfig()
+      const { transferCoreAsset } = await import('../../src/core/asset')
+
+      try {
+        console.log(`Transferring Core asset ${asset} to ${to}...`)
+        const result = await transferCoreAsset(asset, to, config, options.collection)
+        console.log('\n\u2713 Core asset transferred!')
+        console.log(`  Signature: ${result.signature}`)
+      } catch (error) {
+        console.error('Error:', error instanceof Error ? error.message : error)
+        process.exit(1)
+      }
+    })
+
+  cli
+    .command('core:info <address>', 'Show MPL Core asset information')
+    .action(async (address: string) => {
+      const config = await getConfig()
+      const { getCoreAsset } = await import('../../src/core/query')
+
+      try {
+        const asset = await getCoreAsset(address, config)
+        if (!asset) {
+          console.error('Core asset not found')
+          process.exit(1)
+        }
+
+        console.log('MPL Core Asset:')
+        console.log(`  Address: ${asset.address}`)
+        console.log(`  Name: ${asset.name}`)
+        console.log(`  URI: ${asset.uri}`)
+        console.log(`  Owner: ${asset.owner}`)
+        console.log(`  Update Authority: ${typeof asset.updateAuthority === 'string' ? asset.updateAuthority : `Collection: ${asset.updateAuthority.address}`}`)
+        if (asset.plugins.length > 0) {
+          console.log(`  Plugins: ${asset.plugins.map(p => p.type).join(', ')}`)
+        }
+      } catch (error) {
+        console.error('Error:', error instanceof Error ? error.message : error)
+        process.exit(1)
+      }
+    })
+
   cli
     .command('collection:update <address>', 'Update collection metadata')
     .option('--name <name>', 'New collection name')

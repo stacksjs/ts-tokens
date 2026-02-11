@@ -11,6 +11,7 @@ import { register as registerSecurity } from './commands/security'
 import { register as registerMarketplace } from './commands/marketplace'
 import { register as registerBatch } from './commands/batch'
 import { register as registerAutomation } from './commands/automation'
+import { register as registerDefi } from './commands/defi'
 
 const cli = new (CLI as any)('tokens', {
   description: 'A CLI for managing fungible and non-fungible tokens on Solana',
@@ -27,6 +28,7 @@ registerSecurity(cli)
 registerMarketplace(cli)
 registerBatch(cli)
 registerAutomation(cli)
+registerDefi(cli)
 
 cli.command('version', 'Show the version of the CLI').action(() => {
   console.log(`ts-tokens v${version}`)

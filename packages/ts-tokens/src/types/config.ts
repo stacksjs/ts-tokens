@@ -284,6 +284,17 @@ export interface TokenConfig {
    * @default true
    */
   autoCreateAccounts: boolean
+
+  /**
+   * Default priority fee level for transactions
+   * @default 'none'
+   */
+  defaultPriorityFee?: 'none' | 'low' | 'medium' | 'high' | number
+
+  /**
+   * Helius API key (enables enhanced priority fee estimation)
+   */
+  heliusApiKey?: string
 }
 
 /**

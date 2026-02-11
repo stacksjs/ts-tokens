@@ -21,6 +21,33 @@ import { getLatestBlockhash } from './connection'
 import { loadWallet } from './wallet'
 
 /**
+ * Resolve a named priority fee level to microlamports
+ */
+async function resolveNamedPriorityFee(
+  connection: Connection,
+  level: 'low' | 'medium' | 'high'
+): Promise<number> {
+  try {
+    const recentFees = await connection.getRecentPrioritizationFees()
+    if (recentFees.length === 0) {
+      const defaults: Record<string, number> = { low: 1000, medium: 10000, high: 100000 }
+      return defaults[level] ?? 10000
+    }
+    const fees = recentFees.map(f => f.prioritizationFee).sort((a, b) => a - b)
+    const len = fees.length
+    const percentiles: Record<string, number> = {
+      low: fees[Math.floor(len * 0.25)],
+      medium: fees[Math.floor(len * 0.5)],
+      high: fees[Math.floor(len * 0.75)],
+    }
+    return percentiles[level] ?? 10000
+  } catch {
+    const defaults: Record<string, number> = { low: 1000, medium: 10000, high: 100000 }
+    return defaults[level] ?? 10000
+  }
+}
+
+/**
  * Build a transaction from instructions
  *
  * @param connection - Solana connection
@@ -52,12 +79,17 @@ export async function buildTransaction(
     )
   }
 
-  if (options?.priorityFee) {
-    transaction.add(
-      ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: options.priorityFee,
-      })
-    )
+  if (options?.priorityFee && options.priorityFee !== 'none') {
+    const microLamports = typeof options.priorityFee === 'number'
+      ? options.priorityFee
+      : await resolveNamedPriorityFee(connection, options.priorityFee)
+    if (microLamports > 0) {
+      transaction.add(
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports,
+        })
+      )
+    }
   }
 
   // Add all instructions

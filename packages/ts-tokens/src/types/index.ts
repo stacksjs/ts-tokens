@@ -16,5 +16,8 @@ export * from './storage'
 export * from './token'
 export * from './nft'
 
+// MPL Core types
+export * from './core'
+
 // Driver interface depends on all other types
 export * from './driver'

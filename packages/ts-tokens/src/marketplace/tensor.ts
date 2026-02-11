@@ -272,3 +272,128 @@ export function getCollectionUrl(slug: string): string {
 export function formatPrice(lamports: bigint): string {
   return `${(Number(lamports) / 1e9).toFixed(4)} SOL`
 }
+
+// ============================================
+// On-chain Marketplace Instructions (Phase 8)
+// ============================================
+
+const TSWAP_PROGRAM_ID = 'TSWAPaqyCSx2KABk68Shruf4rp7CxcNi8hAsbdwmHbN'
+const TCOMP_PROGRAM_ID = 'TCMPhJdwDryooaGtiocG1u3xcYbRpiJzb283XfCZsDp'
+
+/**
+ * Options for buying an NFT on Tensor
+ */
+export interface TensorBuyOptions {
+  mint: string
+  maxPrice: bigint
+  owner?: string
+}
+
+/**
+ * Options for listing an NFT on Tensor
+ */
+export interface TensorListOptions {
+  mint: string
+  price: bigint
+  expiry?: number
+}
+
+/**
+ * Build a buy instruction for Tensor TComp
+ */
+export async function buyOnTensor(options: TensorBuyOptions): Promise<{
+  transaction: string
+}> {
+  // Use Tensor's transaction API to get a pre-built transaction
+  const response = await fetch('https://api.tensor.so/api/v1/tx/buy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      mint: options.mint,
+      owner: options.owner || '',
+      maxPrice: options.maxPrice.toString(),
+      buyer: options.owner || '',
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Tensor buy API error: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return { transaction: data.txs?.[0]?.tx ?? data.tx ?? '' }
+}
+
+/**
+ * Build a list instruction for Tensor
+ */
+export async function listOnTensor(options: TensorListOptions): Promise<{
+  transaction: string
+}> {
+  const response = await fetch('https://api.tensor.so/api/v1/tx/list', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      mint: options.mint,
+      price: options.price.toString(),
+      owner: '',
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Tensor list API error: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return { transaction: data.txs?.[0]?.tx ?? data.tx ?? '' }
+}
+
+/**
+ * Build a delist instruction for Tensor
+ */
+export async function delistFromTensor(mint: string): Promise<{
+  transaction: string
+}> {
+  const response = await fetch('https://api.tensor.so/api/v1/tx/delist', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      mint,
+      owner: '',
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Tensor delist API error: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return { transaction: data.txs?.[0]?.tx ?? data.tx ?? '' }
+}
+
+/**
+ * Build a bid instruction for Tensor
+ */
+export async function bidOnTensor(options: {
+  mint?: string
+  collection?: string
+  price: bigint
+}): Promise<{ transaction: string }> {
+  const response = await fetch('https://api.tensor.so/api/v1/tx/bid', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      mint: options.mint,
+      collection: options.collection,
+      price: options.price.toString(),
+      owner: '',
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Tensor bid API error: ${response.statusText}`)
+  }
+
+  const data = await response.json()
+  return { transaction: data.txs?.[0]?.tx ?? data.tx ?? '' }
+}

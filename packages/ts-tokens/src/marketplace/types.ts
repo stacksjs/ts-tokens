@@ -434,3 +434,39 @@ export interface MarketplaceState {
   escrows: Record<string, SerializedEscrow>
   auctions: Record<string, SerializedAuction>
 }
+
+// ============================================
+// On-chain Marketplace Transaction Types
+// ============================================
+
+/**
+ * Marketplace transaction (buy/list/delist result)
+ */
+export interface MarketplaceTransaction {
+  signature: string
+  marketplace: MarketplaceType
+  type: 'buy' | 'list' | 'delist' | 'bid'
+  mint: string
+  price: bigint
+}
+
+/**
+ * Options for buying on a marketplace
+ */
+export interface MarketplaceBuyOptions {
+  mint: string
+  marketplace: MarketplaceType
+  maxPrice: bigint
+  seller?: string
+}
+
+/**
+ * Options for listing on a marketplace
+ */
+export interface MarketplaceListOptions {
+  mint: string
+  marketplace: MarketplaceType
+  price: bigint
+  tokenAccount?: string
+  expiry?: number
+}

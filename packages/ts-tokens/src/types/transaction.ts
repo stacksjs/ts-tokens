@@ -29,9 +29,9 @@ export interface TransactionOptions {
   maxRetries?: number
 
   /**
-   * Priority fee in microlamports per compute unit
+   * Priority fee in microlamports per compute unit, or a named level
    */
-  priorityFee?: number
+  priorityFee?: 'none' | 'low' | 'medium' | 'high' | number
 
   /**
    * Compute unit limit
