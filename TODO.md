@@ -1554,33 +1554,33 @@
 
 ### 13.1 Listing & Sales
 
-- [ ] Create `src/marketplace/` directory
-- [ ] Implement direct peer-to-peer NFT sales (no marketplace program)
-- [ ] Implement escrow-based sales with atomic swaps
-- [ ] Support SOL and SPL token payments
-- [ ] Implement offer/bid system
+- [x] Create `src/marketplace/` directory
+- [x] Implement direct peer-to-peer NFT sales (no marketplace program)
+- [x] Implement escrow-based sales with atomic swaps
+- [x] Support SOL and SPL token payments
+- [x] Implement offer/bid system
 
 ### 13.2 Auction Support
 
-- [ ] Implement English auction (highest bid wins)
-- [ ] Implement Dutch auction (price decreases over time)
-- [ ] Implement timed auctions with auto-settlement
-- [ ] Create auction house program interactions (if using existing)
+- [x] Implement English auction (highest bid wins)
+- [x] Implement Dutch auction (price decreases over time)
+- [x] Implement timed auctions with auto-settlement
+- [x] Create auction house program interactions (if using existing)
 
 ### 13.3 Royalty Enforcement
 
-- [ ] Implement royalty calculation and distribution
-- [ ] Support creator splits (multiple creators)
-- [ ] Track primary vs secondary sales
-- [ ] Implement royalty bypass detection/prevention
+- [x] Implement royalty calculation and distribution
+- [x] Support creator splits (multiple creators)
+- [x] Track primary vs secondary sales
+- [x] Implement royalty bypass detection/prevention
 
 ### 13.4 CLI Commands for Trading
 
-- [ ] `tokens nft list <mint> --price <amount>` - List NFT for sale
-- [ ] `tokens nft delist <mint>` - Remove listing
-- [ ] `tokens nft buy <mint>` - Purchase listed NFT
-- [ ] `tokens nft offer <mint> --price <amount>` - Make offer
-- [ ] `tokens nft auction <mint> --type <type> --start <price>` - Start auction
+- [x] `tokens nft list <mint> --price <amount>` - List NFT for sale
+- [x] `tokens nft delist <mint>` - Remove listing
+- [x] `tokens nft buy <mint>` - Purchase listed NFT
+- [x] `tokens nft offer <mint> --price <amount>` - Make offer
+- [x] `tokens nft auction <mint> --type <type> --start <price>` - Start auction
 
 ---
 
