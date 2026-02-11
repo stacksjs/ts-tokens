@@ -19,5 +19,8 @@ export * from './nft'
 // MPL Core types
 export * from './core'
 
+// Legacy migration types
+export * from './legacy'
+
 // Driver interface depends on all other types
 export * from './driver'

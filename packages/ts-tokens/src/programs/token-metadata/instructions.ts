@@ -36,6 +36,9 @@ enum MetadataInstruction {
   MintNewEditionFromMasterEditionViaToken = 11,
   VerifySizedCollectionItem = 30,
   BurnEditionNft = 37,
+  ApproveCollectionAuthority = 23,
+  RevokeCollectionAuthority = 24,
+  SetCollectionSize = 34,
 }
 
 /**
@@ -378,6 +381,121 @@ export function burnEditionNft(params: {
   ]
 
   const data = Buffer.from([MetadataInstruction.BurnEditionNft])
+
+  return new TransactionInstruction({
+    keys,
+    programId: TOKEN_METADATA_PROGRAM_ID,
+    data,
+  })
+}
+
+/**
+ * Approve a collection authority
+ *
+ * Grants a new authority the ability to verify NFTs as part of a collection.
+ */
+export function approveCollectionAuthority(params: {
+  /** Collection authority record PDA */
+  collectionAuthorityRecord: PublicKey
+  /** New authority to approve */
+  newCollectionAuthority: PublicKey
+  /** Current update authority (signer) */
+  updateAuthority: PublicKey
+  /** Payer for account creation */
+  payer: PublicKey
+  /** Collection metadata account */
+  metadata: PublicKey
+  /** Collection mint */
+  mint: PublicKey
+}): TransactionInstruction {
+  const keys = [
+    { pubkey: params.collectionAuthorityRecord, isSigner: false, isWritable: true },
+    { pubkey: params.newCollectionAuthority, isSigner: false, isWritable: false },
+    { pubkey: params.updateAuthority, isSigner: true, isWritable: true },
+    { pubkey: params.payer, isSigner: true, isWritable: true },
+    { pubkey: params.metadata, isSigner: false, isWritable: false },
+    { pubkey: params.mint, isSigner: false, isWritable: false },
+    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+  ]
+
+  const data = Buffer.from([MetadataInstruction.ApproveCollectionAuthority])
+
+  return new TransactionInstruction({
+    keys,
+    programId: TOKEN_METADATA_PROGRAM_ID,
+    data,
+  })
+}
+
+/**
+ * Revoke a collection authority
+ *
+ * Removes a delegated collection authority's ability to verify NFTs.
+ */
+export function revokeCollectionAuthority(params: {
+  /** Collection authority record PDA to close */
+  collectionAuthorityRecord: PublicKey
+  /** Authority being revoked */
+  delegateAuthority: PublicKey
+  /** Current update authority or delegate authority (signer) */
+  revokeAuthority: PublicKey
+  /** Collection metadata account */
+  metadata: PublicKey
+  /** Collection mint */
+  mint: PublicKey
+}): TransactionInstruction {
+  const keys = [
+    { pubkey: params.collectionAuthorityRecord, isSigner: false, isWritable: true },
+    { pubkey: params.delegateAuthority, isSigner: false, isWritable: true },
+    { pubkey: params.revokeAuthority, isSigner: true, isWritable: true },
+    { pubkey: params.metadata, isSigner: false, isWritable: false },
+    { pubkey: params.mint, isSigner: false, isWritable: false },
+  ]
+
+  const data = Buffer.from([MetadataInstruction.RevokeCollectionAuthority])
+
+  return new TransactionInstruction({
+    keys,
+    programId: TOKEN_METADATA_PROGRAM_ID,
+    data,
+  })
+}
+
+/**
+ * Set collection size
+ *
+ * Sets the size field on a collection NFT's metadata for migration to sized collections.
+ */
+export function setCollectionSize(params: {
+  /** Collection metadata account */
+  collectionMetadata: PublicKey
+  /** Collection update authority (signer) */
+  collectionAuthority: PublicKey
+  /** Collection mint */
+  collectionMint: PublicKey
+  /** Collection authority record PDA (optional) */
+  collectionAuthorityRecord?: PublicKey
+  /** New size value */
+  size: bigint
+}): TransactionInstruction {
+  const keys = [
+    { pubkey: params.collectionMetadata, isSigner: false, isWritable: true },
+    { pubkey: params.collectionAuthority, isSigner: true, isWritable: true },
+    { pubkey: params.collectionMint, isSigner: false, isWritable: false },
+  ]
+
+  if (params.collectionAuthorityRecord) {
+    keys.push({ pubkey: params.collectionAuthorityRecord, isSigner: false, isWritable: false })
+  }
+
+  const sizeBuffer = Buffer.alloc(8)
+  sizeBuffer.writeBigUInt64LE(params.size)
+
+  const data = Buffer.concat([
+    Buffer.from([MetadataInstruction.SetCollectionSize]),
+    sizeBuffer,
+  ])
 
   return new TransactionInstruction({
     keys,

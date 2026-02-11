@@ -232,3 +232,7 @@ export * as vesting from './vesting'
 
 // Solana Actions / Blinks
 export * as actions from './actions'
+
+// Legacy Migration & Compatibility
+export * as legacy from './legacy'
+export * as compat from './compat'

@@ -1658,23 +1658,23 @@
 
 ### 16.1 Metaplex Migration
 
-- [ ] Create migration guide from Metaplex SDK
-- [ ] Implement 1:1 API compatibility layer (optional)
-- [ ] Create codemod scripts for automatic migration
-- [ ] Document API differences and equivalents
+- [x] Create migration guide from Metaplex SDK
+- [x] Implement 1:1 API compatibility layer (optional)
+- [x] Create codemod scripts for automatic migration
+- [x] Document API differences and equivalents
 
 ### 16.2 Import/Export Tools
 
-- [ ] Import existing collections from on-chain data
-- [ ] Export collection data to JSON/CSV
-- [ ] Import Candy Machine config from Sugar format
-- [ ] Export to Metaplex-compatible formats
+- [x] Import existing collections from on-chain data
+- [x] Export collection data to JSON/CSV
+- [x] Import Candy Machine config from Sugar format
+- [x] Export to Metaplex-compatible formats
 
 ### 16.3 Backward Compatibility
 
-- [ ] Support reading legacy metadata formats
-- [ ] Handle deprecated instruction formats
-- [ ] Maintain compatibility with existing NFT marketplaces
+- [x] Support reading legacy metadata formats
+- [x] Handle deprecated instruction formats
+- [x] Maintain compatibility with existing NFT marketplaces
 
 ### 16.4 Legacy Metaplex Collection Management
 
@@ -1682,7 +1682,7 @@
 
 #### Collection Discovery & Import
 
-- [ ] `importCollection(collectionMint)` - Import existing collection
+- [x] `importCollection(collectionMint)` - Import existing collection
 
   ```ts
   const collection = await tokens.legacy.importCollection({
@@ -1695,14 +1695,14 @@
   })
   ```
 
-- [ ] `discoverCollectionByCreator(creator)` - Find all collections by creator
-- [ ] `discoverCollectionByAuthority(authority)` - Find by update authority
-- [ ] `discoverCollectionByCandyMachine(cm)` - Find by CM address
-- [ ] Auto-detect collection type and version
+- [x] `discoverCollectionByCreator(creator)` - Find all collections by creator
+- [x] `discoverCollectionByAuthority(authority)` - Find by update authority
+- [x] `discoverCollectionByCandyMachine(cm)` - Find by CM address
+- [x] Auto-detect collection type and version
 
 #### Collection Metadata Management
 
-- [ ] `getCollectionMetadata(collection)` - Fetch full collection metadata
+- [x] `getCollectionMetadata(collection)` - Fetch full collection metadata
 
   ```ts
   const metadata = await tokens.legacy.getCollectionMetadata(collectionMint)
@@ -1720,7 +1720,7 @@
   // }
   ```
 
-- [ ] `updateCollectionMetadata(collection, updates)` - Update collection NFT metadata
+- [x] `updateCollectionMetadata(collection, updates)` - Update collection NFT metadata
 
   ```ts
   await tokens.legacy.updateCollectionMetadata(collectionMint, {
@@ -1730,12 +1730,12 @@
   })
   ```
 
-- [ ] `updateCollectionUri(collection, newUri)` - Update just the URI
-- [ ] `updateCollectionRoyalty(collection, newRoyaltyBps)` - Update royalty
+- [x] `updateCollectionUri(collection, newUri)` - Update just the URI
+- [x] `updateCollectionRoyalty(collection, newRoyaltyBps)` - Update royalty
 
 #### Individual NFT Management
 
-- [ ] `getNFTsInCollection(collection, options)` - Get all NFTs in collection
+- [x] `getNFTsInCollection(collection, options)` - Get all NFTs in collection
 
   ```ts
   const nfts = await tokens.legacy.getNFTsInCollection(collectionMint, {
@@ -1746,8 +1746,8 @@
   // Returns array of NFT data with on-chain + off-chain metadata
   ```
 
-- [ ] `getNFTMetadata(mint)` - Get single NFT metadata (Metaplex format)
-- [ ] `updateNFTMetadata(mint, updates)` - Update individual NFT
+- [x] `getNFTMetadata(mint)` - Get single NFT metadata (Metaplex format)
+- [x] `updateNFTMetadata(mint, updates)` - Update individual NFT
 
   ```ts
   await tokens.legacy.updateNFTMetadata(nftMint, {
@@ -1756,8 +1756,8 @@
   })
   ```
 
-- [ ] `updateNFTUri(mint, newUri)` - Update just URI
-- [ ] `batchUpdateNFTMetadata(mints, updates)` - Batch update multiple NFTs
+- [x] `updateNFTUri(mint, newUri)` - Update just URI
+- [x] `batchUpdateNFTMetadata(mints, updates)` - Batch update multiple NFTs
 
   ```ts
   // Update all NFTs in collection with new base URI
@@ -1771,7 +1771,7 @@
 
 #### Authority Management
 
-- [ ] `getCollectionAuthorities(collection)` - Get all authorities
+- [x] `getCollectionAuthorities(collection)` - Get all authorities
 
   ```ts
   const authorities = await tokens.legacy.getCollectionAuthorities(collectionMint)
@@ -1783,29 +1783,29 @@
   // }
   ```
 
-- [ ] `transferUpdateAuthority(collection, newAuthority)` - Transfer update authority
+- [x] `transferUpdateAuthority(collection, newAuthority)` - Transfer update authority
 
   ```ts
   await tokens.legacy.transferUpdateAuthority(collectionMint, newAuthorityPubkey)
   ```
 
-- [ ] `transferNFTUpdateAuthority(mint, newAuthority)` - Transfer for single NFT
-- [ ] `batchTransferUpdateAuthority(mints, newAuthority)` - Batch transfer
-- [ ] `setCollectionAuthority(collection, authority)` - Set collection authority record
-- [ ] `revokeCollectionAuthority(collection, authority)` - Revoke authority
+- [x] `transferNFTUpdateAuthority(mint, newAuthority)` - Transfer for single NFT
+- [x] `batchTransferUpdateAuthority(mints, newAuthority)` - Batch transfer
+- [x] `setCollectionAuthority(collection, authority)` - Set collection authority record
+- [x] `revokeCollectionAuthority(collection, authority)` - Revoke authority
 
 #### Creator Management
 
-- [ ] `verifyCreator(mint, creator)` - Verify creator on NFT
+- [x] `verifyCreator(mint, creator)` - Verify creator on NFT
 
   ```ts
   // Creator signs to verify themselves on NFT
   await tokens.legacy.verifyCreator(nftMint, creatorPubkey)
   ```
 
-- [ ] `unverifyCreator(mint, creator)` - Remove creator verification
-- [ ] `batchVerifyCreator(mints, creator)` - Batch verify across collection
-- [ ] `updateCreators(mint, newCreators)` - Update creator array
+- [x] `unverifyCreator(mint, creator)` - Remove creator verification
+- [x] `batchVerifyCreator(mints, creator)` - Batch verify across collection
+- [x] `updateCreators(mint, newCreators)` - Update creator array
 
   ```ts
   await tokens.legacy.updateCreators(nftMint, [
@@ -1817,17 +1817,17 @@
 
 #### Collection Verification
 
-- [ ] `verifyNFTInCollection(nft, collection)` - Verify NFT belongs to collection
+- [x] `verifyNFTInCollection(nft, collection)` - Verify NFT belongs to collection
 
   ```ts
   await tokens.legacy.verifyNFTInCollection(nftMint, collectionMint)
   // Requires collection authority signature
   ```
 
-- [ ] `unverifyNFTFromCollection(nft, collection)` - Remove from collection
-- [ ] `batchVerifyCollection(nfts, collection)` - Batch verify multiple NFTs
-- [ ] `setAndVerifyCollection(nft, collection)` - Set and verify in one tx
-- [ ] `migrateToSizedCollection(collection)` - Migrate to sized collection
+- [x] `unverifyNFTFromCollection(nft, collection)` - Remove from collection
+- [x] `batchVerifyCollection(nfts, collection)` - Batch verify multiple NFTs
+- [x] `setAndVerifyCollection(nft, collection)` - Set and verify in one tx
+- [x] `migrateToSizedCollection(collection)` - Migrate to sized collection
 
   ```ts
   // Upgrade old unsized collection to sized collection
@@ -1838,7 +1838,7 @@
 
 #### Royalty Management
 
-- [ ] `getRoyaltyInfo(mint)` - Get royalty configuration
+- [x] `getRoyaltyInfo(mint)` - Get royalty configuration
 
   ```ts
   const royalty = await tokens.legacy.getRoyaltyInfo(nftMint)
@@ -1851,13 +1851,13 @@
   // }
   ```
 
-- [ ] `updateRoyalty(mint, newRoyaltyBps)` - Update royalty percentage
-- [ ] `updateRoyaltySplits(mint, newCreators)` - Update creator splits
-- [ ] `batchUpdateRoyalty(collection, newRoyaltyBps)` - Update entire collection
+- [x] `updateRoyalty(mint, newRoyaltyBps)` - Update royalty percentage
+- [x] `updateRoyaltySplits(mint, newCreators)` - Update creator splits
+- [x] `batchUpdateRoyalty(collection, newRoyaltyBps)` - Update entire collection
 
 #### Edition Management (Master Editions & Prints)
 
-- [ ] `getMasterEditionInfo(mint)` - Get master edition details
+- [x] `getMasterEditionInfo(mint)` - Get master edition details
 
   ```ts
   const edition = await tokens.legacy.getMasterEditionInfo(masterMint)
@@ -1868,8 +1868,8 @@
   // }
   ```
 
-- [ ] `getEditionInfo(mint)` - Get print edition details
-- [ ] `printEdition(masterMint, options)` - Print new edition
+- [x] `getEditionInfo(mint)` - Get print edition details
+- [x] `printEdition(masterMint, options)` - Print new edition
 
   ```ts
   const edition = await tokens.legacy.printEdition(masterMint, {
@@ -1878,12 +1878,12 @@
   })
   ```
 
-- [ ] `getEditionsByMaster(masterMint)` - Get all editions of a master
-- [ ] `updateMasterEditionMaxSupply(mint, newMax)` - Reduce max supply
+- [x] `getEditionsByMaster(masterMint)` - Get all editions of a master
+- [x] `updateMasterEditionMaxSupply(mint, newMax)` - Reduce max supply
 
 #### Burning & Closing
 
-- [ ] `burnNFT(mint)` - Burn NFT and reclaim rent
+- [x] `burnNFT(mint)` - Burn NFT and reclaim rent
 
   ```ts
   const rent = await tokens.legacy.burnNFT(nftMint)
@@ -1891,20 +1891,20 @@
   // Returns reclaimed rent in lamports
   ```
 
-- [ ] `burnEdition(mint)` - Burn print edition
-- [ ] `batchBurnNFTs(mints)` - Batch burn multiple NFTs
-- [ ] `closeEmptyAccounts(owner)` - Close empty token accounts
+- [x] `burnEdition(mint)` - Burn print edition
+- [x] `batchBurnNFTs(mints)` - Batch burn multiple NFTs
+- [x] `closeEmptyAccounts(owner)` - Close empty token accounts
 
 #### Freeze/Thaw Operations
 
-- [ ] `freezeNFT(mint, owner)` - Freeze NFT (prevent transfers)
-- [ ] `thawNFT(mint, owner)` - Unfreeze NFT
-- [ ] `batchFreezeNFTs(mints)` - Batch freeze
-- [ ] `batchThawNFTs(mints)` - Batch thaw
+- [x] `freezeNFT(mint, owner)` - Freeze NFT (prevent transfers)
+- [x] `thawNFT(mint, owner)` - Unfreeze NFT
+- [x] `batchFreezeNFTs(mints)` - Batch freeze
+- [x] `batchThawNFTs(mints)` - Batch thaw
 
 #### Delegation
 
-- [ ] `delegateNFT(mint, delegate, options)` - Delegate NFT authority
+- [x] `delegateNFT(mint, delegate, options)` - Delegate NFT authority
 
   ```ts
   await tokens.legacy.delegateNFT(nftMint, delegateAddress, {
@@ -1912,12 +1912,12 @@
   })
   ```
 
-- [ ] `revokeDelegate(mint)` - Revoke delegation
-- [ ] `getDelegateInfo(mint)` - Get current delegate
+- [x] `revokeDelegate(mint)` - Revoke delegation
+- [x] `getDelegateInfo(mint)` - Get current delegate
 
 #### Collection Analytics
 
-- [ ] `getCollectionStats(collection)` - Get collection statistics
+- [x] `getCollectionStats(collection)` - Get collection statistics
 
   ```ts
   const stats = await tokens.legacy.getCollectionStats(collectionMint)
@@ -1931,19 +1931,19 @@
   // }
   ```
 
-- [ ] `getHolderSnapshot(collection)` - Snapshot all holders
+- [x] `getHolderSnapshot(collection)` - Snapshot all holders
 
   ```ts
   const holders = await tokens.legacy.getHolderSnapshot(collectionMint)
   // [{ owner: '...', mints: ['...', '...'], count: 2 }, ...]
   ```
 
-- [ ] `getCollectionHistory(collection)` - Transaction history
-- [ ] `exportCollectionData(collection, format)` - Export to JSON/CSV
+- [x] `getCollectionHistory(collection)` - Transaction history
+- [x] `exportCollectionData(collection, format)` - Export to JSON/CSV
 
 #### Legacy Candy Machine Management
 
-- [ ] `getCandyMachineInfo(cm)` - Get CM details (v1, v2, or v3)
+- [x] `getCandyMachineInfo(cm)` - Get CM details (v1, v2, or v3)
 
   ```ts
   const cm = await tokens.legacy.getCandyMachineInfo(candyMachineAddress)
@@ -1959,26 +1959,26 @@
   // }
   ```
 
-- [ ] `updateCandyMachine(cm, updates)` - Update CM settings
-- [ ] `withdrawCandyMachineFunds(cm)` - Withdraw SOL from CM
-- [ ] `closeCandyMachine(cm)` - Close CM and reclaim rent
+- [x] `updateCandyMachine(cm, updates)` - Update CM settings
+- [x] `withdrawCandyMachineFunds(cm)` - Withdraw SOL from CM
+- [x] `closeCandyMachine(cm)` - Close CM and reclaim rent
 
 #### CLI Commands for Legacy Management
 
-- [ ] `tokens legacy import <collection>` - Import existing collection
-- [ ] `tokens legacy info <collection>` - Show collection info
-- [ ] `tokens legacy nfts <collection>` - List all NFTs in collection
-- [ ] `tokens legacy update <mint>` - Update NFT metadata (interactive)
-- [ ] `tokens legacy batch-update <collection>` - Batch update collection
-- [ ] `tokens legacy authority <collection>` - Manage authorities
-- [ ] `tokens legacy verify <nft> <collection>` - Verify NFT in collection
-- [ ] `tokens legacy royalty <mint> [new-bps]` - View/update royalty
-- [ ] `tokens legacy creators <mint>` - Manage creators
-- [ ] `tokens legacy burn <mint>` - Burn NFT
-- [ ] `tokens legacy snapshot <collection>` - Export holder snapshot
-- [ ] `tokens legacy export <collection>` - Export collection data
-- [ ] `tokens legacy cm-info <candy-machine>` - Show CM info
-- [ ] `tokens legacy cm-withdraw <candy-machine>` - Withdraw CM funds
+- [x] `tokens legacy import <collection>` - Import existing collection
+- [x] `tokens legacy info <collection>` - Show collection info
+- [x] `tokens legacy nfts <collection>` - List all NFTs in collection
+- [x] `tokens legacy update <mint>` - Update NFT metadata (interactive)
+- [x] `tokens legacy batch-update <collection>` - Batch update collection
+- [x] `tokens legacy authority <collection>` - Manage authorities
+- [x] `tokens legacy verify <nft> <collection>` - Verify NFT in collection
+- [x] `tokens legacy royalty <mint> [new-bps]` - View/update royalty
+- [x] `tokens legacy creators <mint>` - Manage creators
+- [x] `tokens legacy burn <mint>` - Burn NFT
+- [x] `tokens legacy snapshot <collection>` - Export holder snapshot
+- [x] `tokens legacy export <collection>` - Export collection data
+- [x] `tokens legacy cm-info <candy-machine>` - Show CM info
+- [x] `tokens legacy cm-withdraw <candy-machine>` - Withdraw CM funds
 
 ---
 
