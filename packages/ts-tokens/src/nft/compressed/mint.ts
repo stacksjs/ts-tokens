@@ -48,6 +48,7 @@ export interface CompressedNFTMetadata {
   creators?: Array<{ address: string; verified: boolean; share: number }>
   collection?: { key: string; verified: boolean }
   isMutable?: boolean
+  primarySaleHappened?: boolean
 }
 
 /**
@@ -284,7 +285,7 @@ function serializeMetadataArgs(metadata: CompressedNFTMetadata): Buffer {
   offset += 2
 
   // Primary sale happened
-  buffer.writeUInt8(0, offset)
+  buffer.writeUInt8(metadata.primarySaleHappened ? 1 : 0, offset)
   offset += 1
 
   // Is mutable

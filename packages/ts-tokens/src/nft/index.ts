@@ -15,7 +15,7 @@ export * from './compressed'
 export * from './editions'
 
 // Re-export convenience functions
-export { createNFT, createCollection, mintNFT } from './create'
+export { createNFT, createCollection, mintNFT, mintNFTToCollection } from './create'
 export { transferNFT, transferNFTs, transferNFTFrom } from './transfer'
 export { burnNFT, burnNFTFull, burnNFTs } from './burn'
 export {

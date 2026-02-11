@@ -2,15 +2,12 @@
  * Wallet Adapters
  */
 
-import type { Transaction } from '@solana/web3.js';
-import { PublicKey } from '@solana/web3.js'
 import type {
   WalletAdapter,
   WalletType,
   WalletMetadata,
-  WalletCapabilities,
-  ConnectOptions,
 } from './types'
+import { createBrowserWalletAdapter } from './browser'
 
 /**
  * Wallet registry with metadata
@@ -247,79 +244,10 @@ export function getRecommendedWallet(): WalletType {
 
 /**
  * Create a basic wallet adapter (for browser wallets)
+ *
+ * Returns a class-based adapter from `./browser`. For hardware wallets
+ * (Ledger, Trezor), use the dedicated adapters from `./ledger`.
  */
 export function createWalletAdapter(type: WalletType): WalletAdapter | null {
-  if (typeof window === 'undefined') {
-    return null
-  }
-
-  const metadata = WALLET_REGISTRY[type]
-  const win = window as unknown as Record<string, unknown>
-
-  let provider: unknown
-
-  switch (type) {
-    case 'phantom':
-      provider = (win.phantom as Record<string, unknown>)?.solana
-      break
-    case 'solflare':
-      provider = win.solflare
-      break
-    case 'backpack':
-      provider = win.backpack
-      break
-    case 'ledger':
-      // Use createLedgerAdapter() from './ledger' for Ledger HID support
-      return null
-    default:
-      return null
-  }
-
-  if (!provider) {
-    return null
-  }
-
-  const p = provider as {
-    publicKey?: { toBase58(): string }
-    isConnected?: boolean
-    connect(opts?: ConnectOptions): Promise<{ publicKey: { toBase58(): string } }>
-    disconnect(): Promise<void>
-    signTransaction(tx: Transaction): Promise<Transaction>
-    signAllTransactions(txs: Transaction[]): Promise<Transaction[]>
-    signMessage(msg: Uint8Array): Promise<{ signature: Uint8Array }>
-  }
-
-  return {
-    name: metadata.name,
-    type,
-    icon: metadata.icon,
-    url: metadata.url,
-    connected: p.isConnected ?? false,
-    publicKey: p.publicKey ? new PublicKey(p.publicKey.toBase58()) : null,
-
-    async connect() {
-      const result = await p.connect()
-      this.publicKey = new PublicKey(result.publicKey.toBase58())
-      this.connected = true
-    },
-
-    async disconnect() {
-      await p.disconnect()
-      this.publicKey = null
-      this.connected = false
-    },
-
-    async signTransaction(transaction: Transaction) {
-      return p.signTransaction(transaction)
-    },
-
-    async signAllTransactions(transactions: Transaction[]) {
-      return p.signAllTransactions(transactions)
-    },
-
-    async signMessage(message: Uint8Array) {
-      const result = await p.signMessage(message)
-      return result.signature
-    },
-  }
+  return createBrowserWalletAdapter(type)
 }

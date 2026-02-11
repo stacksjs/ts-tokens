@@ -470,3 +470,22 @@ export async function mintNFT(
 ): Promise<NFTResult> {
   return createNFT({ name, uri }, config)
 }
+
+/**
+ * Create an NFT and verify it as part of a collection in one step.
+ *
+ * This is a convenience wrapper that:
+ * 1. Creates the NFT with the collection field set
+ * 2. Verifies the NFT as a member of the collection
+ */
+export async function mintNFTToCollection(
+  options: CreateNFTOptions & { collection: string },
+  config: TokenConfig
+): Promise<NFTResult> {
+  const result = await createNFT(options, config)
+
+  const { verifyCollectionItem } = await import('./collection')
+  await verifyCollectionItem(result.mint, options.collection, config)
+
+  return result
+}

@@ -6,5 +6,6 @@
 
 export * from './types'
 export * from './adapters'
+export * from './browser'
 export * from './deeplinks'
 export * from './ledger'

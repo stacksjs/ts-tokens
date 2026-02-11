@@ -138,6 +138,12 @@ export interface MintNFTOptions {
   ruleSet?: string
 
   /**
+   * Whether the primary sale has happened
+   * @default false
+   */
+  primarySaleHappened?: boolean
+
+  /**
    * Transaction options
    */
   options?: TransactionOptions

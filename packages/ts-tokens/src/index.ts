@@ -90,6 +90,7 @@ export {
   createNFT,
   createCollection,
   mintNFT,
+  mintNFTToCollection,
   transferNFT,
   transferNFTs,
   transferNFTFrom,

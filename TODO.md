@@ -325,10 +325,10 @@
   - [x] `getPublicKey()` - Get current wallet public key
   - [x] `signTransaction(tx)` - Sign transaction
   - [x] `signAllTransactions(txs)` - Batch sign
-- [ ] Create `src/wallet/adapter.ts` for browser wallet adapters:
-  - [ ] Phantom adapter support
-  - [ ] Solflare adapter support
-  - [ ] Generic wallet adapter interface
+- [x] Create `src/wallets/browser.ts` for browser wallet adapters:
+  - [x] Phantom adapter support
+  - [x] Solflare adapter support
+  - [x] Generic wallet adapter interface
 
 ### 2.3 Transaction Utilities
 
@@ -470,8 +470,8 @@
     - [x] `creators` - Creator array with shares
     - [x] `collection` - Collection address (optional)
     - [x] `isMutable` - Metadata mutability
-    - [ ] `primarySaleHappened` - Primary sale flag
-  - [ ] `mintNFTToCollection(options)` - Mint directly to collection
+    - [x] `primarySaleHappened` - Primary sale flag
+  - [x] `mintNFTToCollection(options)` - Mint directly to collection
   - [ ] `mintCompressedNFT(options)` - Mint compressed NFT (cNFT)
   - [x] Return mint address and transaction signature
 
@@ -615,10 +615,10 @@
 - [x] Restructure `bin/cli.ts` with proper command organization
 - [x] Create `src/cli/` directory for CLI-specific code
 - [ ] Create `src/cli/commands/` for command implementations
-- [ ] Create `src/cli/utils/` for CLI utilities
-- [ ] Add colorful output with `chalk`
-- [ ] Add spinners with `ora` for async operations
-- [ ] Add interactive prompts with `inquirer`
+- [x] Create `src/cli/utils/` for CLI utilities
+- [x] Add colorful output with `chalk`
+- [x] Add spinners with `ora` for async operations
+- [x] Add interactive prompts with `@inquirer/prompts`
 
 ### 5.2 Configuration Commands
 
@@ -916,10 +916,10 @@
 - [x] Create `examples/` directory in repo root
 - [x] `examples/create-token/` - Simple token creation example
 - [x] `examples/nft-collection/` - NFT collection example
-- [ ] `examples/nft-minting-site/` - React NFT minting site
-- [ ] `examples/candy-machine-ui/` - Full CM frontend
+- [x] `examples/nft-minting-site/` - React NFT minting site
+- [x] `examples/candy-machine-ui/` - Full CM frontend
 - [x] `examples/token-airdrop/` - Airdrop script example
-- [ ] `examples/vue-nft-gallery/` - Vue NFT gallery
+- [x] `examples/vue-nft-gallery/` - Vue NFT gallery
 - [x] `examples/cli-scripts/` - CLI automation scripts
 
 ---
