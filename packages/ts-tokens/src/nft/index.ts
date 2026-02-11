@@ -8,6 +8,7 @@ export * from './create'
 export * from './transfer'
 export * from './burn'
 export * from './metadata'
+export * from './collection'
 export * from './candy-machine'
 export * from './query'
 export * from './compressed'
@@ -30,4 +31,11 @@ export {
   createCandyMachine,
   addConfigLines,
   mintFromCandyMachine,
+  addConfigLinesFromFile,
+  mintMultiple,
 } from './candy-machine'
+export {
+  updateCollection,
+  verifyCollectionItem,
+  unverifyCollectionItem,
+} from './collection'

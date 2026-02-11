@@ -7,6 +7,7 @@
 export * from './tree'
 export * from './mint'
 export * from './transfer'
+export * from './query'
 
 // Re-export main functions
 export {
@@ -46,3 +47,13 @@ export type {
   AssetProof,
   TransferCompressedNFTOptions,
 } from './transfer'
+
+export {
+  getCompressedNFTsByOwner,
+  getCompressedNFTsByTree,
+} from './query'
+
+export type {
+  DASAsset,
+  DASResponse,
+} from './query'

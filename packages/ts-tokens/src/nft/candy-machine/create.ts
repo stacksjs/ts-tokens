@@ -12,6 +12,7 @@ import {
   PublicKey,
   SystemProgram
 } from '@solana/web3.js'
+import * as fs from 'node:fs'
 import type { TokenConfig, TransactionResult, TransactionOptions } from '../../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../../drivers/solana/transaction'
 import { loadWallet } from '../../drivers/solana/wallet'
@@ -415,4 +416,51 @@ export async function mintFromCandyMachine(
     mint: mintKeypair.publicKey.toBase58(),
     signature: result.signature,
   }
+}
+
+/**
+ * Add config lines from a JSON file
+ *
+ * The file should contain an array of { name, uri } objects.
+ */
+export async function addConfigLinesFromFile(
+  candyMachine: string,
+  filePath: string,
+  tokenConfig: TokenConfig,
+  options?: TransactionOptions
+): Promise<TransactionResult> {
+  const content = fs.readFileSync(filePath, 'utf-8')
+  const items: Array<{ name: string; uri: string }> = JSON.parse(content)
+
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error('Config file must contain a non-empty array of { name, uri } objects')
+  }
+
+  return addConfigLines(candyMachine, 0, items, tokenConfig, options)
+}
+
+/**
+ * Mint multiple NFTs from a Candy Machine
+ *
+ * Mints sequentially with a delay between each mint to avoid rate limiting.
+ */
+export async function mintMultiple(
+  candyMachine: string,
+  count: number,
+  tokenConfig: TokenConfig,
+  options?: TransactionOptions & { delayMs?: number }
+): Promise<Array<{ mint: string; signature: string }>> {
+  const results: Array<{ mint: string; signature: string }> = []
+  const delayMs = options?.delayMs ?? 2000
+
+  for (let i = 0; i < count; i++) {
+    const result = await mintFromCandyMachine(candyMachine, tokenConfig, options)
+    results.push(result)
+
+    if (i < count - 1 && delayMs > 0) {
+      await new Promise(resolve => setTimeout(resolve, delayMs))
+    }
+  }
+
+  return results
 }

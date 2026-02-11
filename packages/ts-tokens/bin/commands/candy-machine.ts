@@ -7,9 +7,32 @@ export function register(cli: any): void {
     .option('--symbol <symbol>', 'Collection symbol')
     .option('--royalty <bps>', 'Royalty in basis points')
     .option('--collection <address>', 'Collection NFT address')
-    .action(async (options: { items?: string; symbol?: string; royalty?: string; collection?: string }) => {
-      if (!options.collection || !options.items) {
-        console.error('Error: --collection and --items are required')
+    .option('--config <path>', 'Load candy machine config from JSON file')
+    .action(async (options: { items?: string; symbol?: string; royalty?: string; collection?: string; config?: string }) => {
+      let fileConfig: Record<string, any> = {}
+
+      if (options.config) {
+        const fs = await import('node:fs')
+        const path = await import('node:path')
+        const resolved = path.resolve(options.config)
+        if (!fs.existsSync(resolved)) {
+          console.error(`Error: Config file not found: ${resolved}`)
+          process.exit(1)
+        }
+        try {
+          fileConfig = JSON.parse(fs.readFileSync(resolved, 'utf-8'))
+        } catch {
+          console.error('Error: Invalid JSON in config file')
+          process.exit(1)
+        }
+      }
+
+      // CLI flags override config file values
+      const collection = options.collection || fileConfig.collection
+      const items = options.items || fileConfig.items?.toString() || fileConfig.itemsAvailable?.toString()
+
+      if (!collection || !items) {
+        console.error('Error: --collection and --items are required (via flags or config file)')
         process.exit(1)
       }
 
@@ -19,20 +42,21 @@ export function register(cli: any): void {
       try {
         console.log('Creating Candy Machine...')
         const result = await createCandyMachine({
-          itemsAvailable: parseInt(options.items),
-          symbol: options.symbol || '',
-          sellerFeeBasisPoints: options.royalty ? parseInt(options.royalty) : 0,
-          maxEditionSupply: 0,
-          isMutable: true,
-          creators: [],
-          collection: options.collection,
-          configLineSettings: {
+          itemsAvailable: parseInt(items),
+          symbol: options.symbol || fileConfig.symbol || '',
+          sellerFeeBasisPoints: options.royalty ? parseInt(options.royalty) : (fileConfig.sellerFeeBasisPoints ?? 0),
+          maxEditionSupply: fileConfig.maxEditionSupply ?? 0,
+          isMutable: fileConfig.isMutable ?? true,
+          creators: fileConfig.creators ?? [],
+          collection,
+          configLineSettings: fileConfig.configLineSettings ?? {
             prefixName: '',
             nameLength: 32,
             prefixUri: '',
             uriLength: 200,
             isSequential: false,
           },
+          ...(fileConfig.hiddenSettings ? { hiddenSettings: fileConfig.hiddenSettings } : {}),
         }, config)
 
         console.log('\n\u2713 Candy Machine created!')

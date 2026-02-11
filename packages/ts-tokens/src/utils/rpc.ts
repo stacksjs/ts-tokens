@@ -25,6 +25,44 @@ export interface RpcManagerOptions {
 }
 
 /**
+ * Token bucket rate limiter
+ */
+class TokenBucket {
+  private tokens: number
+  private lastRefill: number
+
+  constructor(
+    private capacity: number,
+    private refillRate: number // tokens per second
+  ) {
+    this.tokens = capacity
+    this.lastRefill = Date.now()
+  }
+
+  async consume(): Promise<void> {
+    this.refill()
+
+    if (this.tokens >= 1) {
+      this.tokens -= 1
+      return
+    }
+
+    // Wait until a token is available
+    const waitMs = ((1 - this.tokens) / this.refillRate) * 1000
+    await new Promise(resolve => setTimeout(resolve, waitMs))
+    this.refill()
+    this.tokens -= 1
+  }
+
+  private refill(): void {
+    const now = Date.now()
+    const elapsed = (now - this.lastRefill) / 1000
+    this.tokens = Math.min(this.capacity, this.tokens + elapsed * this.refillRate)
+    this.lastRefill = now
+  }
+}
+
+/**
  * RPC Manager with failover and rate limiting
  */
 export class RpcManager {
@@ -33,6 +71,7 @@ export class RpcManager {
   private requestQueue: Array<() => Promise<unknown>> = []
   private processing = false
   private cache = new Map<string, { data: unknown; timestamp: number }>()
+  private rateLimiters = new Map<string, TokenBucket>()
   private options: Required<RpcManagerOptions>
 
   constructor(options: RpcManagerOptions) {
@@ -85,6 +124,16 @@ export class RpcManager {
     for (let attempt = 0; attempt < this.options.maxRetries; attempt++) {
       const endpoint = this.getHealthyEndpoint()
       const connection = new Connection(endpoint.url)
+
+      // Enforce rate limit if configured
+      if (endpoint.rateLimit) {
+        let limiter = this.rateLimiters.get(endpoint.url)
+        if (!limiter) {
+          limiter = new TokenBucket(endpoint.rateLimit, endpoint.rateLimit)
+          this.rateLimiters.set(endpoint.url, limiter)
+        }
+        await limiter.consume()
+      }
 
       try {
         return await fn(connection)
