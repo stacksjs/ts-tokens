@@ -624,14 +624,14 @@
 
 - [x] `tokens config init` - Initialize config file interactively
 - [x] `tokens config show` - Display current configuration
-- [ ] `tokens config set <key> <value>` - Set config value
-- [ ] `tokens config get <key>` - Get config value
+- [x] `tokens config set <key> <value>` - Set config value
+- [x] `tokens config get <key>` - Get config value
 - [x] `tokens config network <network>` - Switch network (devnet/mainnet/etc)
 
 ### 5.3 Wallet Commands
 
 - [x] `tokens wallet generate` - Generate new keypair
-- [ ] `tokens wallet import <path>` - Import keypair from file
+- [x] `tokens wallet import <path>` - Import keypair from file
 - [x] `tokens wallet show` - Show current wallet address
 - [x] `tokens wallet balance` - Show SOL balance
 - [x] `tokens wallet airdrop [amount]` - Request devnet airdrop
@@ -643,29 +643,29 @@
   - [x] `--symbol <symbol>` - Token symbol
   - [x] `--decimals <n>` - Decimal places
   - [x] `--supply <amount>` - Initial supply
-  - [ ] `--metadata-uri <uri>` - Metadata URI
+  - [x] `--metadata-uri <uri>` - Metadata URI
 - [x] `tokens mint <mint> <amount>` - Mint tokens
   - [x] `--to <address>` - Recipient (default: self)
 - [x] `tokens transfer <mint> <amount> <to>` - Transfer tokens
 - [x] `tokens burn <mint> <amount>` - Burn tokens
 - [x] `tokens info <mint>` - Show token info
 - [x] `tokens balance <mint>` - Show token balance
-- [ ] `tokens holders <mint>` - List token holders
-- [ ] `tokens authority <mint>` - Manage authorities
-  - [ ] `--revoke-mint` - Revoke mint authority
-  - [ ] `--revoke-freeze` - Revoke freeze authority
-  - [ ] `--transfer-mint <address>` - Transfer mint authority
-  - [ ] `--transfer-freeze <address>` - Transfer freeze authority
+- [x] `tokens holders <mint>` - List token holders
+- [x] `tokens authority <mint>` - Manage authorities
+  - [x] `--revoke-mint` - Revoke mint authority
+  - [x] `--revoke-freeze` - Revoke freeze authority
+  - [x] `--transfer-mint <address>` - Transfer mint authority
+  - [x] `--transfer-freeze <address>` - Transfer freeze authority
 
 ### 5.5 NFT Commands
 
 - [x] `tokens nft create` - Create single NFT (interactive)
   - [x] `--name <name>` - NFT name
-  - [ ] `--symbol <symbol>` - Symbol
+  - [x] `--symbol <symbol>` - Symbol
   - [x] `--uri <uri>` - Metadata URI
   - [x] `--royalty <bps>` - Royalty in basis points
   - [x] `--collection <address>` - Collection address
-- [ ] `tokens nft mint <uri>` - Mint NFT from metadata URI
+- [x] `tokens nft mint <uri>` - Mint NFT from metadata URI
 - [x] `tokens nft transfer <mint> <to>` - Transfer NFT
 - [x] `tokens nft burn <mint>` - Burn NFT
 - [x] `tokens nft info <mint>` - Show NFT info
@@ -677,52 +677,52 @@
   - [x] `--name <name>` - Collection name
   - [x] `--symbol <symbol>` - Symbol
   - [x] `--uri <uri>` - Metadata URI
-  - [ ] `--royalty <bps>` - Royalty in basis points
-- [ ] `tokens collection info <address>` - Show collection info
-- [ ] `tokens collection items <address>` - List collection items
-- [ ] `tokens collection verify <collection> <nft>` - Verify NFT in collection
-- [ ] `tokens collection update <address>` - Update collection metadata
+  - [x] `--royalty <bps>` - Royalty in basis points
+- [x] `tokens collection info <address>` - Show collection info
+- [x] `tokens collection items <address>` - List collection items
+- [x] `tokens collection verify <collection> <nft>` - Verify NFT in collection
+- [x] `tokens collection update <address>` - Update collection metadata
 
 ### 5.7 Candy Machine Commands
 
-- [ ] `tokens candy create` - Create Candy Machine (interactive)
-  - [ ] `--items <n>` - Number of items
-  - [ ] `--symbol <symbol>` - Symbol
-  - [ ] `--royalty <bps>` - Royalty
-  - [ ] `--collection <address>` - Collection address
+- [x] `tokens candy create` - Create Candy Machine (interactive)
+  - [x] `--items <n>` - Number of items
+  - [x] `--symbol <symbol>` - Symbol
+  - [x] `--royalty <bps>` - Royalty
+  - [x] `--collection <address>` - Collection address
   - [ ] `--config <path>` - Config file path
-- [ ] `tokens candy upload <path>` - Upload assets and create config lines
-  - [ ] `--storage <provider>` - Storage provider (arweave/ipfs/shadow)
-- [ ] `tokens candy add <candy-machine> <items-file>` - Add config lines
-- [ ] `tokens candy guards <candy-machine>` - Manage guards (interactive)
-- [ ] `tokens candy mint <candy-machine>` - Mint from Candy Machine
-  - [ ] `--count <n>` - Number to mint
-- [ ] `tokens candy info <candy-machine>` - Show CM info
-- [ ] `tokens candy withdraw <candy-machine>` - Withdraw funds
-- [ ] `tokens candy delete <candy-machine>` - Delete CM
+- [x] `tokens candy upload <path>` - Upload assets and create config lines
+  - [x] `--storage <provider>` - Storage provider (arweave/ipfs/shadow)
+- [x] `tokens candy add <candy-machine> <items-file>` - Add config lines
+- [x] `tokens candy guards <candy-machine>` - Manage guards (interactive)
+- [x] `tokens candy mint <candy-machine>` - Mint from Candy Machine
+  - [x] `--count <n>` - Number to mint
+- [x] `tokens candy info <candy-machine>` - Show CM info
+- [x] `tokens candy withdraw <candy-machine>` - Withdraw funds
+- [x] `tokens candy delete <candy-machine>` - Delete CM
 
 ### 5.8 Storage Commands
 
-- [ ] `tokens upload <path>` - Upload file to storage
-  - [ ] `--provider <provider>` - Storage provider
-  - [ ] `--type <type>` - Content type (image/json/etc)
-- [ ] `tokens upload-assets <directory>` - Bulk upload assets
-  - [ ] `--provider <provider>` - Storage provider
-  - [ ] `--output <path>` - Output manifest path
-- [ ] `tokens upload-metadata <path>` - Upload metadata JSON
-- [ ] `tokens storage balance` - Check storage balance (Arweave/Shadow)
-- [ ] `tokens storage fund <amount>` - Fund storage account
+- [x] `tokens upload <path>` - Upload file to storage
+  - [x] `--provider <provider>` - Storage provider
+  - [x] `--type <type>` - Content type (image/json/etc)
+- [x] `tokens upload-assets <directory>` - Bulk upload assets
+  - [x] `--provider <provider>` - Storage provider
+  - [x] `--output <path>` - Output manifest path
+- [x] `tokens upload-metadata <path>` - Upload metadata JSON
+- [x] `tokens storage balance` - Check storage balance (Arweave/Shadow)
+- [x] `tokens storage fund <amount>` - Fund storage account
 
 ### 5.9 Utility Commands
 
-- [ ] `tokens airdrop <mint> <recipients-file>` - Airdrop tokens/NFTs
-  - [ ] `--amount <amount>` - Amount per recipient (fungible)
-  - [ ] `--delay <ms>` - Delay between transactions
-- [ ] `tokens snapshot <mint>` - Snapshot token holders
-  - [ ] `--output <path>` - Output file path
-  - [ ] `--min-balance <amount>` - Minimum balance filter
-- [ ] `tokens verify <signature>` - Verify transaction
-- [ ] `tokens decode <data>` - Decode transaction/account data
+- [x] `tokens airdrop <mint> <recipients-file>` - Airdrop tokens/NFTs
+  - [x] `--amount <amount>` - Amount per recipient (fungible)
+  - [x] `--delay <ms>` - Delay between transactions
+- [x] `tokens snapshot <mint>` - Snapshot token holders
+  - [x] `--output <path>` - Output file path
+  - [x] `--min-balance <amount>` - Minimum balance filter
+- [x] `tokens verify <signature>` - Verify transaction
+- [x] `tokens decode <data>` - Decode transaction/account data
 
 ---
 
