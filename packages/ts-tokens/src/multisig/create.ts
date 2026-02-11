@@ -2,8 +2,9 @@
  * Multi-Signature Creation
  */
 
+import type {
+  Connection} from '@solana/web3.js';
 import {
-  Connection,
   PublicKey,
   Keypair,
   Transaction,

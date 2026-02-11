@@ -81,7 +81,22 @@ jobs:
         run: bun install
 
       - name: Unit Test
-        run: bun test --coverage
+        run: bun test --coverage 2>&1 | tee coverage-output.txt
+
+      - name: Check Coverage Threshold
+        run: |
+          if grep -q "All files" coverage-output.txt; then
+            LINE_COV=$(grep "All files" coverage-output.txt | awk '{print $4}' | tr -d '%')
+            echo "Line coverage: ${LINE_COV}%"
+            THRESHOLD=50
+            if [ "$(echo "${LINE_COV} < ${THRESHOLD}" | bc -l)" -eq 1 ]; then
+              echo "::error::Line coverage ${LINE_COV}% is below threshold ${THRESHOLD}%"
+              exit 1
+            fi
+            echo "Coverage ${LINE_COV}% meets threshold ${THRESHOLD}%"
+          else
+            echo "Coverage report not found — skipping threshold check"
+          fi
 
   publish-commit:
     runs-on: ubuntu-latest

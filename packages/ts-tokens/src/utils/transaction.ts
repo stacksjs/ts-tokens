@@ -4,13 +4,14 @@
  * Optimization, priority fees, and transaction management.
  */
 
-import {
+import type {
   Connection,
   PublicKey,
-  Transaction,
   TransactionInstruction,
+  AddressLookupTableAccount} from '@solana/web3.js';
+import {
+  Transaction,
   ComputeBudgetProgram,
-  AddressLookupTableAccount,
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js'

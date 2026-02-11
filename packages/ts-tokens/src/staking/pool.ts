@@ -2,7 +2,8 @@
  * Staking Pool Management
  */
 
-import { Connection, PublicKey, Keypair, Transaction } from '@solana/web3.js'
+import type { Connection} from '@solana/web3.js';
+import { PublicKey, Keypair, Transaction } from '@solana/web3.js'
 import type {
   StakingPool,
   NFTStakingPool,

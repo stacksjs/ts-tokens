@@ -2,7 +2,8 @@
  * DAO Management
  */
 
-import { Connection, PublicKey, Keypair } from '@solana/web3.js'
+import type { Connection} from '@solana/web3.js';
+import { PublicKey, Keypair } from '@solana/web3.js'
 import type { DAO, DAOConfig, CreateDAOOptions } from './types'
 
 /**

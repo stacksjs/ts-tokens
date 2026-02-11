@@ -3,7 +3,7 @@
  */
 
 import { PublicKey } from '@solana/web3.js'
-import { ExtensionType, AccountState } from './types'
+import { ExtensionType } from './types'
 import type {
   TransferFeeConfig,
   TransferFee,
@@ -12,7 +12,7 @@ import type {
   TransferHook,
   MetadataPointer,
   TokenExtension,
-} from './types'
+ AccountState } from './types'
 
 /**
  * Get the size of an extension

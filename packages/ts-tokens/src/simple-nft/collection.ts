@@ -2,7 +2,8 @@
  * Simple NFT Collections
  */
 
-import { Connection, PublicKey, Keypair } from '@solana/web3.js'
+import type { Connection, PublicKey} from '@solana/web3.js';
+import { Keypair } from '@solana/web3.js'
 import type { SimpleCollection, CreateSimpleCollectionOptions, SimpleNFT } from './types'
 
 /**

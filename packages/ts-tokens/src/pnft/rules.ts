@@ -2,7 +2,7 @@
  * Programmable NFT Rules
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
   TransferRule,
   TransferRuleType,

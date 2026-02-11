@@ -4,7 +4,8 @@
  * Swap aggregator integration for token swaps.
  */
 
-import { Connection, PublicKey, Transaction } from '@solana/web3.js'
+import type { Connection} from '@solana/web3.js';
+import { PublicKey, Transaction } from '@solana/web3.js'
 import type { SwapQuote, SwapOptions, TokenPrice } from './types'
 
 const JUPITER_API = 'https://quote-api.jup.ag/v6'

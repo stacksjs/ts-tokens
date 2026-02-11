@@ -2,10 +2,11 @@
  * Batch Mint Operations
  */
 
-import {
+import type {
   Connection,
-  PublicKey,
-  TransactionInstruction,
+  TransactionInstruction} from '@solana/web3.js';
+import {
+  PublicKey
 } from '@solana/web3.js'
 import {
   createMintToInstruction,

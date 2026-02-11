@@ -2,7 +2,7 @@
  * Price History Analytics
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type { PriceHistory, PricePoint, TokenMetrics, CollectionMetrics, ExportOptions } from './types'
 
 /**

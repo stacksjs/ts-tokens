@@ -2,7 +2,7 @@
  * Voting
  */
 
-import { Connection, PublicKey, Keypair } from '@solana/web3.js'
+import type { Connection, PublicKey, Keypair } from '@solana/web3.js'
 import type {
   VoteRecord,
   VoteType,

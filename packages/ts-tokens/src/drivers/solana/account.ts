@@ -4,7 +4,8 @@
  * Handles account queries and token account management.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection} from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js'
 import {
   getAccount,
   getAssociatedTokenAddress,

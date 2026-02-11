@@ -4,7 +4,8 @@
  * Foundation for fluent API builders.
  */
 
-import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js'
+import type { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { Transaction } from '@solana/web3.js'
 import type {
   ChainedOperation,
   ExecutionResult,

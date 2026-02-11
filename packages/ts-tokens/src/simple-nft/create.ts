@@ -2,7 +2,8 @@
  * Simple NFT Creation
  */
 
-import { Connection, PublicKey, Keypair, Transaction } from '@solana/web3.js'
+import type { Connection, PublicKey} from '@solana/web3.js';
+import { Keypair, Transaction } from '@solana/web3.js'
 import type {
   SimpleNFT,
   CreateSimpleNFTOptions,

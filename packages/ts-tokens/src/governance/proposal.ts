@@ -2,7 +2,8 @@
  * Proposal Management
  */
 
-import { Connection, PublicKey, Keypair, SystemProgram } from '@solana/web3.js'
+import type { Connection} from '@solana/web3.js';
+import { PublicKey, Keypair, SystemProgram } from '@solana/web3.js'
 import type {
   Proposal,
   ProposalStatus,

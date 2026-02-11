@@ -46,6 +46,11 @@
     "better-dx": "^0.2.5"
   },
   "git-hooks": {
+    "pre-commit": {
+      "staged-lint": {
+        "*.ts": "bunx --bun eslint --fix"
+      }
+    },
     "commit-msg": "bunx gitlint --edit .git/COMMIT_EDITMSG"
   },
   "workspaces": [

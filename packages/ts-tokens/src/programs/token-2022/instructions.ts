@@ -8,7 +8,7 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js'
-import { ExtensionType, AccountState } from './types'
+import type { ExtensionType, AccountState } from './types'
 import { getMintSize } from './extensions'
 
 const TOKEN_2022_PROGRAM_ID = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb')

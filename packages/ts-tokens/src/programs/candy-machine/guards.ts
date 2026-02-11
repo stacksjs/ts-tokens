@@ -4,7 +4,7 @@
  * All guard types for Candy Machine v3.
  */
 
-import { PublicKey } from '@solana/web3.js'
+import type { PublicKey } from '@solana/web3.js'
 
 /**
  * Guard types enum

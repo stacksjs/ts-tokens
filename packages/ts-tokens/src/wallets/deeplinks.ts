@@ -4,7 +4,8 @@
  * Generate deep links for mobile wallet interactions.
  */
 
-import { PublicKey, Transaction } from '@solana/web3.js'
+import type { Transaction } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js'
 import type { WalletType } from './types'
 import { encode as bs58encode } from '../utils/base58'
 

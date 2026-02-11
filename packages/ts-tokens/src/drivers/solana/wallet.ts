@@ -4,7 +4,8 @@
  * Handles keypair loading, signing, and wallet adapter integration.
  */
 
-import { Keypair, PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js'
+import type { VersionedTransaction } from '@solana/web3.js';
+import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import type { TokenConfig, Wallet, WalletAdapter } from '../../types'
 import { decode as decodeBase58 } from '../../utils/base58'
 import * as fs from 'node:fs'

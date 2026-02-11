@@ -2,7 +2,7 @@
  * Holder Analytics
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type { TokenHolder, HolderDistribution, HolderSnapshot } from './types'
 
 /**

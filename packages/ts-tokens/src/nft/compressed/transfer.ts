@@ -4,10 +4,11 @@
  * Transfer compressed NFTs between wallets.
  */
 
+import type {
+  TransactionInstruction} from '@solana/web3.js';
 import {
   Connection,
-  PublicKey,
-  TransactionInstruction,
+  PublicKey
 } from '@solana/web3.js'
 import type { TokenConfig, TransactionResult, TransactionOptions } from '../../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../../drivers/solana/transaction'

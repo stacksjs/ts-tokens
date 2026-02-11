@@ -4,12 +4,13 @@
  * Create and manage Merkle trees for cNFT storage.
  */
 
+import type {
+  TransactionInstruction} from '@solana/web3.js';
 import {
   Connection,
   Keypair,
   PublicKey,
-  SystemProgram,
-  TransactionInstruction,
+  SystemProgram
 } from '@solana/web3.js'
 import type { TokenConfig, TransactionResult, TransactionOptions } from '../../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../../drivers/solana/transaction'

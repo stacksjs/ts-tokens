@@ -4,7 +4,8 @@
  * Pre-transaction and pre-operation security checks.
  */
 
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import type { Connection} from '@solana/web3.js';
+import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js'
 
 export interface SecurityCheckResult {
   safe: boolean

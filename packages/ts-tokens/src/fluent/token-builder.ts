@@ -4,7 +4,7 @@
  * Fluent API for token operations.
  */
 
-import { PublicKey, TransactionInstruction } from '@solana/web3.js'
+import type { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { BaseBuilder } from './builder'
 import type {
   TokenCreationParams,

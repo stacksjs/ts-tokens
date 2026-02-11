@@ -4,13 +4,14 @@
  * Create single NFTs and collections using raw Solana program instructions.
  */
 
+import type {
+  TransactionInstruction} from '@solana/web3.js';
 import {
   Connection,
   Keypair,
   PublicKey,
   SystemProgram,
-  Transaction,
-  TransactionInstruction,
+  Transaction
 } from '@solana/web3.js'
 import {
   createInitializeMintInstruction,

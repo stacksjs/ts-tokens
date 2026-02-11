@@ -2,7 +2,8 @@
  * Wallet Adapters
  */
 
-import { PublicKey, Transaction } from '@solana/web3.js'
+import type { Transaction } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js'
 import type {
   WalletAdapter,
   WalletType,

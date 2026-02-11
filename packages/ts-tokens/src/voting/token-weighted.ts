@@ -4,7 +4,7 @@
  * 1 token = 1 vote
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
   VotingPower,
   TokenWeightedConfig,

@@ -4,12 +4,13 @@
  * Create master editions and print limited editions.
  */
 
+import type {
+  TransactionInstruction} from '@solana/web3.js';
 import {
   Connection,
   Keypair,
   PublicKey,
-  SystemProgram,
-  TransactionInstruction,
+  SystemProgram
 } from '@solana/web3.js'
 import {
   createInitializeMintInstruction,

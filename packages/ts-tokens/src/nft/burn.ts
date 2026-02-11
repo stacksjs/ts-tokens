@@ -4,7 +4,8 @@
  * Burn NFTs to remove them from circulation.
  */
 
-import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js'
+import type { TransactionInstruction } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js'
 import {
   createBurnInstruction,
   createCloseAccountInstruction,

@@ -4,7 +4,7 @@
  * Tools for debugging transactions, accounts, and operations.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 
 /**
  * Transaction analysis result

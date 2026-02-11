@@ -2,12 +2,13 @@
  * Transaction Simulation
  */
 
-import {
+import type {
   Connection,
   PublicKey,
-  Transaction,
   TransactionInstruction,
-  VersionedTransaction,
+  VersionedTransaction} from '@solana/web3.js';
+import {
+  Transaction
 } from '@solana/web3.js'
 import type { SimulationResult, AccountChange } from './types'
 

@@ -4,7 +4,8 @@
  * AMM and liquidity pool helpers.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection} from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js'
 import type { LiquidityPool, CreatePoolOptions, AddLiquidityOptions, RemoveLiquidityOptions } from './types'
 
 const RAYDIUM_API = 'https://api.raydium.io/v2'

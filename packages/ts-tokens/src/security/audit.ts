@@ -4,7 +4,8 @@
  * Comprehensive security auditing for tokens, NFTs, and collections.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection} from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js'
 import type { SecurityCheckResult } from './checks'
 
 export interface AuditReport {

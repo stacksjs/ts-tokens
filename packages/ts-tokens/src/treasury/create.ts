@@ -2,7 +2,8 @@
  * Treasury Creation
  */
 
-import { Connection, PublicKey, Keypair } from '@solana/web3.js'
+import type { Connection} from '@solana/web3.js';
+import { PublicKey, Keypair } from '@solana/web3.js'
 import type {
   Treasury,
   CreateTreasuryOptions,

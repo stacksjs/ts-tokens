@@ -4,7 +4,7 @@
  * Generic DAS API helpers that work with any DAS-compatible RPC.
  */
 
-import { PublicKey } from '@solana/web3.js'
+import type { PublicKey } from '@solana/web3.js'
 import type { DASAsset, DASSearchResult, DASSearchOptions } from './types'
 
 /**

@@ -4,7 +4,7 @@
  * 1 NFT = 1 vote, or trait-weighted voting.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
   VotingPower,
   NFTVotingConfig,

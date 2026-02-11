@@ -4,7 +4,8 @@
  * Update and fetch NFT metadata.
  */
 
-import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js'
+import type { TransactionInstruction } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js'
 import type { TokenConfig, TransactionResult, TransactionOptions, NFTMetadata } from '../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
 import { loadWallet } from '../drivers/solana/wallet'

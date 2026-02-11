@@ -4,7 +4,7 @@
  * Real-time event streaming via WebSocket.
  */
 
-import { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
 import type {
   TokenEvent,
   EventCallback,

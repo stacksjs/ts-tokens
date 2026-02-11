@@ -5,16 +5,16 @@
  */
 
 import {
-  Connection,
   Transaction,
-  TransactionInstruction,
-  PublicKey,
   Keypair,
   ComputeBudgetProgram,
   VersionedTransaction,
   TransactionMessage,
 } from '@solana/web3.js'
-import type { SendOptions, TransactionSignature } from '@solana/web3.js'
+import type { SendOptions, TransactionSignature ,
+  Connection,
+  TransactionInstruction,
+  PublicKey} from '@solana/web3.js'
 import type { TokenConfig, TransactionResult, TransactionOptions, SimulationResult } from '../../types'
 import { retry, sleep } from '../../utils'
 import { getLatestBlockhash } from './connection'

@@ -2,12 +2,13 @@
  * Multi-Signature Signing
  */
 
-import {
+import type {
   Connection,
   PublicKey,
+  TransactionInstruction} from '@solana/web3.js';
+import {
   Keypair,
-  Transaction,
-  TransactionInstruction,
+  Transaction
 } from '@solana/web3.js'
 import type {
   MultisigTransaction,

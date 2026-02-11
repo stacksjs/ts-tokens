@@ -2,11 +2,12 @@
  * Batch Transfer Operations
  */
 
-import {
+import type {
   Connection,
+  TransactionInstruction} from '@solana/web3.js';
+import {
   PublicKey,
-  Transaction,
-  TransactionInstruction,
+  Transaction
 } from '@solana/web3.js'
 import {
   createTransferInstruction,
