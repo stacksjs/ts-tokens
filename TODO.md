@@ -421,25 +421,25 @@
 
 ### 3.7 Token Metadata
 
-- [ ] Create `src/token/metadata.ts`:
-  - [ ] `createTokenMetadata(options)` - Create metadata for existing token
-    - [ ] `mint` - Token mint address
-    - [ ] `name` - Display name
-    - [ ] `symbol` - Symbol
-    - [ ] `uri` - Metadata JSON URI
-    - [ ] `sellerFeeBasisPoints` - Royalty (0 for fungible)
-    - [ ] `creators` - Creator array (optional)
-  - [ ] `updateTokenMetadata(options)` - Update existing metadata
-  - [ ] `getTokenMetadata(mint)` - Fetch metadata
+- [x] Create `src/token/metadata.ts`:
+  - [x] `createTokenMetadata(options)` - Create metadata for existing token
+    - [x] `mint` - Token mint address
+    - [x] `name` - Display name
+    - [x] `symbol` - Symbol
+    - [x] `uri` - Metadata JSON URI
+    - [x] `sellerFeeBasisPoints` - Royalty (0 for fungible)
+    - [x] `creators` - Creator array (optional)
+  - [x] `updateTokenMetadata(options)` - Update existing metadata
+  - [x] `getTokenMetadata(mint)` - Fetch metadata
 
 ### 3.8 Token Queries
 
-- [ ] Create `src/token/query.ts`:
-  - [ ] `getTokenInfo(mint)` - Get token mint info
-  - [ ] `getTokenSupply(mint)` - Get current supply
-  - [ ] `getTokenHolders(mint)` - Get all token holders (paginated)
-  - [ ] `getTokenHistory(mint)` - Get transaction history
-  - [ ] `getLargestAccounts(mint)` - Get largest token holders
+- [x] Create `src/token/query.ts`:
+  - [x] `getTokenInfo(mint)` - Get token mint info
+  - [x] `getTokenSupply(mint)` - Get current supply
+  - [x] `getTokenHolders(mint)` - Get all token holders (paginated)
+  - [x] `getTokenHistory(mint)` - Get transaction history
+  - [x] `getLargestAccounts(mint)` - Get largest token holders
 
 ---
 

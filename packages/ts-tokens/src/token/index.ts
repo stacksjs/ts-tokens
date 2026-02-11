@@ -10,6 +10,8 @@ export * from './transfer'
 export * from './burn'
 export * from './authority'
 export * from './account'
+export * from './metadata'
+export * from './query'
 
 // Re-export convenience functions
 export { createToken, createSimpleToken } from './create'
@@ -32,3 +34,15 @@ export {
   getAssociatedTokenAccountAddress,
   tokenAccountExists,
 } from './account'
+export {
+  createTokenMetadata,
+  updateTokenMetadata,
+  getTokenMetadata,
+} from './metadata'
+export {
+  getTokenInfo,
+  getTokenSupply,
+  getTokenHolders,
+  getTokenHistory,
+  getLargestAccounts,
+} from './query'

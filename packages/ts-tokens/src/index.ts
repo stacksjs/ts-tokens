@@ -75,6 +75,14 @@ export {
   createTokenAccount,
   closeTokenAccount,
   getTokenAccountInfo,
+  createTokenMetadata,
+  updateTokenMetadata,
+  getTokenMetadata,
+  getTokenInfo,
+  getTokenSupply,
+  getTokenHolders,
+  getTokenHistory,
+  getLargestAccounts,
 } from './token'
 
 // NFT operations
