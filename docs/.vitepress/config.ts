@@ -18,11 +18,14 @@ const analyticsHead: HeadConfig[] = [
 ]
 
 const nav = [
-  { text: 'News', link: 'https://stacksjs.org/news' },
   {
-    text: 'Changelog',
-    link: 'https://github.com/stacksjs/tokens/blob/main/CHANGELOG.md',
+    text: 'v0.1.0',
+    items: [
+      { text: 'v0.1.0 (Latest)', link: '/' },
+      { text: 'Changelog', link: 'https://github.com/stacksjs/tokens/blob/main/CHANGELOG.md' },
+    ],
   },
+  { text: 'News', link: 'https://stacksjs.org/news' },
   // { text: 'Blog', link: 'https://updates.ow3.org' },
   {
     text: 'Resources',
@@ -170,7 +173,16 @@ export default withPwa(
         { icon: 'discord', link: 'https://discord.gg/stacksjs' },
       ],
 
-      // algolia: services.algolia,
+      // Algolia DocSearch — uncomment and fill in credentials after applying at
+      // https://docsearch.algolia.com/apply/ with your deployed docs URL
+      // search: {
+      //   provider: 'algolia',
+      //   options: {
+      //     appId: '<YOUR_ALGOLIA_APP_ID>',
+      //     apiKey: '<YOUR_ALGOLIA_SEARCH_API_KEY>',
+      //     indexName: 'ts-tokens',
+      //   },
+      // },
 
       // carbonAds: {
       //   code: '',

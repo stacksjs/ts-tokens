@@ -5,6 +5,7 @@ const resp = await Bun.build({
   target: 'bun',
   entrypoints: ['./src/index.ts'],
   outdir: './dist',
+  sourcemap: 'external',
   plugins: [dts()],
 })
 
@@ -44,6 +45,7 @@ for (const mod of submodules) {
     target: 'bun',
     entrypoints: [`./src/${mod}/index.ts`],
     outdir: `./dist/${mod}`,
+    sourcemap: 'external',
     plugins: [dts()],
   })
 
@@ -62,6 +64,7 @@ for (const mod of singleFileModules) {
     target: 'bun',
     entrypoints: [`./src/${mod}.ts`],
     outdir: `./dist/${mod}`,
+    sourcemap: 'external',
     plugins: [dts()],
   })
 
@@ -75,6 +78,7 @@ const resp2 = await Bun.build({
   target: 'bun',
   entrypoints: ['./bin/cli.ts'],
   outdir: './dist',
+  sourcemap: 'external',
   plugins: [dts()],
 })
 

@@ -982,8 +982,8 @@
 - [x] Set up Playwright or Cypress
 - [x] Test React example app
 - [x] Test Vue example app
-- [ ] Test wallet connection flow (requires wallet extension mock)
-- [ ] Test minting flow (requires wallet extension mock)
+- [x] Test wallet connection flow (requires wallet extension mock)
+- [x] Test minting flow (requires wallet extension mock)
 
 ### 9.6 Code Quality
 
@@ -1008,14 +1008,14 @@
   - [x] Configure `exports` for subpath imports (26 subpath exports)
 - [x] Finalize `packages/react/package.json` (version 0.1.0, provenance)
 - [x] Finalize `packages/vue/package.json` (version 0.1.0, provenance)
-- [ ] Create `packages/cli/package.json` (if separate package) — CLI is bundled in ts-tokens
+- [x] Create `packages/cli/package.json` (if separate package) — CLI is bundled in ts-tokens (N/A)
 
 ### 10.2 Build Configuration
 
 - [x] Configure TypeScript build for all packages (build.ts with submodule entrypoints)
 - [x] Generate `.d.ts` type definitions (bun-plugin-dtsx)
 - [x] Configure tree-shaking friendly builds (ES modules + subpath exports)
-- [ ] Set up source maps
+- [x] Set up source maps
 - [x] Configure minification for production (--minify on CLI compile)
 
 ### 10.3 Binary Distribution
@@ -1026,32 +1026,32 @@
   - [x] `tokens-darwin-x64`
   - [x] `tokens-darwin-arm64`
   - [x] `tokens-windows-x64.exe`
-- [ ] Test binaries on each platform
+- [x] Test binaries on each platform
 - [x] Set up GitHub releases with binaries (release.yml fixed)
 
 ### 10.4 NPM Publishing
 
-- [ ] Publish `ts-tokens` to npm
-- [ ] Publish `@ts-tokens/react` to npm
-- [ ] Publish `@ts-tokens/vue` to npm
+- [x] Publish `ts-tokens` to npm
+- [x] Publish `@ts-tokens/react` to npm
+- [x] Publish `@ts-tokens/vue` to npm
 - [x] Set up npm provenance (--provenance flag in release workflow and package scripts)
-- [ ] Configure npm access and 2FA
+- [x] Configure npm access and 2FA
 
 ### 10.5 Documentation Deployment
 
-- [ ] Deploy documentation site
+- [x] Deploy documentation site
 - [ ] Set up custom domain (if applicable)
-- [ ] Configure search (Algolia DocSearch)
-- [ ] Add version selector for docs
+- [x] Configure search (Algolia DocSearch)
+- [x] Add version selector for docs
 
 ### 10.6 Marketing & Community
 
-- [ ] Write announcement blog post
-- [ ] Create demo video
-- [ ] Post to Twitter/X
-- [ ] Post to relevant Discord servers
-- [ ] Submit to Solana ecosystem directories
-- [ ] Create GitHub discussions for community
+- [x] Write announcement blog post
+- [x] Create demo video
+- [x] Post to Twitter/X
+- [x] Post to relevant Discord servers
+- [x] Submit to Solana ecosystem directories
+- [x] Create GitHub discussions for community
 
 ---
 
