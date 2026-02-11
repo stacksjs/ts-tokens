@@ -1625,15 +1625,15 @@
 
 - [x] Implement batch token transfers (airdrop optimization)
 - [x] Implement batch NFT minting
-- [ ] Implement batch metadata updates
-- [ ] Use lookup tables (ALTs) for large batches
+- [x] Implement batch metadata updates
+- [x] Use lookup tables (ALTs) for large batches
 - [x] Implement transaction chunking for RPC limits
 
 ### 15.2 Scheduled Operations
 
-- [ ] Implement delayed/scheduled transactions
-- [ ] Support cron-like scheduling for CLI
-- [ ] Implement mint start/end automation
+- [x] Implement delayed/scheduled transactions
+- [x] Support cron-like scheduling for CLI
+- [x] Implement mint start/end automation
 - [x] Create webhook triggers for events
 
 ### 15.3 Scripting API
@@ -1650,7 +1650,7 @@
 
 - [x] Implement transaction batching in fluent API
 - [x] Add dry-run support for scripts
-- [ ] Create script templates for common workflows
+- [x] Create script templates for common workflows
 
 ---
 

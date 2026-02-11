@@ -204,3 +204,6 @@ export * as i18n from './i18n'
 
 // Debugging Tools
 export * as debug from './debug'
+
+// Automation & Scheduling
+export * as automation from './automation'

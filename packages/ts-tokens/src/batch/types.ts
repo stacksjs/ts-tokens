@@ -4,6 +4,55 @@
 
 import type { PublicKey } from '@solana/web3.js'
 
+// ============================================
+// Batch Metadata Update Types
+// ============================================
+
+/**
+ * Single metadata update item
+ */
+export interface BatchMetadataUpdateItem {
+  mint: string
+  updates: {
+    name?: string
+    symbol?: string
+    uri?: string
+    sellerFeeBasisPoints?: number
+    creators?: Array<{ address: string; share: number }>
+    primarySaleHappened?: boolean
+    isMutable?: boolean
+  }
+}
+
+/**
+ * Options for batch metadata update
+ */
+export interface BatchMetadataUpdateOptions {
+  items: BatchMetadataUpdateItem[]
+  batchSize?: number       // default 5 (metadata updates are large instructions)
+  delayMs?: number         // default 500
+  useLookupTable?: boolean // use ALT for address compression
+  lookupTable?: PublicKey  // existing ALT to use
+  onProgress?: (completed: number, total: number, mint?: string) => void
+  onError?: (error: Error, item: BatchMetadataUpdateItem) => void
+}
+
+/**
+ * Batch metadata update result
+ */
+export interface BatchMetadataUpdateResult {
+  successful: number
+  failed: number
+  total: number
+  signatures: string[]
+  errors: Array<{ mint: string; error: string }>
+  lookupTable?: string  // ALT address if created
+}
+
+// ============================================
+// Core Batch Types
+// ============================================
+
 /**
  * Batch transfer recipient
  */
