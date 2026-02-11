@@ -1,0 +1,110 @@
+{
+  "name": "ts-tokens-vscode",
+  "displayName": "ts-tokens",
+  "description": "VS Code extension for ts-tokens — Solana token and NFT development",
+  "version": "0.1.0",
+  "publisher": "stacksjs",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Snippets",
+    "Other"
+  ],
+  "keywords": [
+    "solana",
+    "tokens",
+    "nft",
+    "typescript",
+    "web3"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stacksjs/ts-tokens.git",
+    "directory": "packages/vscode-extension"
+  },
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "workspaceContains:tokens.config.ts",
+    "workspaceContains:tokens.config.js"
+  ],
+  "contributes": {
+    "snippets": [
+      {
+        "language": "typescript",
+        "path": "./snippets/ts-tokens.json"
+      },
+      {
+        "language": "typescriptreact",
+        "path": "./snippets/ts-tokens.json"
+      }
+    ],
+    "problemMatchers": [
+      {
+        "name": "ts-tokens",
+        "owner": "ts-tokens",
+        "fileLocation": "absolute",
+        "pattern": [
+          {
+            "regexp": "^\\[ERROR\\]\\s+(.+)$",
+            "message": 1
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^\\[ts-tokens\\]",
+          "endsPattern": "^\\[ts-tokens\\] (Done|Error)"
+        }
+      },
+      {
+        "name": "ts-tokens-transaction",
+        "owner": "ts-tokens",
+        "fileLocation": "absolute",
+        "severity": "error",
+        "pattern": [
+          {
+            "regexp": "^Transaction failed:\\s+(.+)\\s+\\(signature:\\s+(\\S+)\\)",
+            "message": 1,
+            "code": 2
+          }
+        ]
+      },
+      {
+        "name": "ts-tokens-validation",
+        "owner": "ts-tokens",
+        "fileLocation": "relative",
+        "severity": "warning",
+        "pattern": [
+          {
+            "regexp": "^Validation error in (.+):(\\d+):\\s+(.+)$",
+            "file": 1,
+            "line": 2,
+            "message": 3
+          }
+        ]
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "ts-tokens",
+        "required": [
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The ts-tokens CLI command to run"
+          }
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "build": "bun build ./src/extension.ts --outdir ./dist --target node --format esm",
+    "typecheck": "bun --bun tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.109.0"
+  }
+}
