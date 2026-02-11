@@ -11,3 +11,8 @@ node_modules
 temp
 docs/.vitepress/cache
 pantry_modules
+
+# Storybook
+packages/react/.storybook
+packages/react/src/**/*.stories.tsx
+storybook-static

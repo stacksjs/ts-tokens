@@ -1,15 +1,7 @@
 import React from 'react'
 import type { Preview } from '@storybook/react'
-import { TokensProvider } from '../src/context'
 
 const preview: Preview = {
-  decorators: [
-    (Story) => (
-      <TokensProvider endpoint="https://api.devnet.solana.com">
-        <Story />
-      </TokensProvider>
-    ),
-  ],
   parameters: {
     controls: {
       matchers: {
@@ -17,6 +9,7 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    layout: 'centered',
   },
 }
 
