@@ -2,6 +2,8 @@
 
 A React + Vite app demonstrating Candy Machine creation and minting with **ts-tokens**.
 
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/stacksjs/ts-tokens/tree/main/examples/candy-machine-ui)
+
 ## Setup
 
 ```bash

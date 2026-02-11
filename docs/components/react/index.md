@@ -2,6 +2,8 @@
 
 React components for building Solana token applications.
 
+> **Try it live:** [NFT Minting Site on StackBlitz](https://stackblitz.com/github/stacksjs/ts-tokens/tree/main/examples/nft-minting-site) | [Candy Machine UI on StackBlitz](https://stackblitz.com/github/stacksjs/ts-tokens/tree/main/examples/candy-machine-ui)
+
 ## Installation
 
 ```bash

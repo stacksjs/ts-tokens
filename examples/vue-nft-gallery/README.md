@@ -2,6 +2,8 @@
 
 A Vue 3 + Vite app that displays a gallery of NFTs owned by the connected wallet, built with **ts-tokens**.
 
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/stacksjs/ts-tokens/tree/main/examples/vue-nft-gallery)
+
 ## Setup
 
 ```bash

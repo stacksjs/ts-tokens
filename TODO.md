@@ -472,7 +472,7 @@
     - [x] `isMutable` - Metadata mutability
     - [x] `primarySaleHappened` - Primary sale flag
   - [x] `mintNFTToCollection(options)` - Mint directly to collection
-  - [ ] `mintCompressedNFT(options)` - Mint compressed NFT (cNFT)
+  - [x] `mintCompressedNFT(options)` - Mint compressed NFT (cNFT)
   - [x] Return mint address and transaction signature
 
 ### 4.3 NFT Transfers
@@ -482,14 +482,14 @@
     - [x] `mint` - NFT mint address
     - [x] `from` - Current owner
     - [x] `to` - New owner
-  - [ ] `transferCompressedNFT(options)` - Transfer cNFT
+  - [x] `transferCompressedNFT(options)` - Transfer cNFT
   - [x] Automatic ATA creation for recipient
 
 ### 4.4 NFT Burns
 
 - [x] Create `src/nft/burn.ts`:
   - [x] `burnNFT(mint, owner)` - Burn NFT
-  - [ ] `burnCompressedNFT(options)` - Burn cNFT
+  - [x] `burnCompressedNFT(options)` - Burn cNFT
   - [x] Reclaim rent from closed accounts
 
 ### 4.5 NFT Metadata Management
@@ -896,7 +896,7 @@
 - [x] Create `docs/components/` directory
   - [x] `docs/components/react/` - React component docs
   - [x] `docs/components/vue/` - Vue component docs
-  - [ ] Include live examples with CodeSandbox/StackBlitz
+  - [x] Include live examples with CodeSandbox/StackBlitz
 
 ### 8.5 Guides & Tutorials
 
@@ -963,27 +963,27 @@
 ### 9.3 CLI Tests
 
 - [x] Test all CLI commands with mock data
-- [ ] Test interactive prompts (Deferred — requires TTY simulation)
+- [x] Test interactive prompts (mocked @inquirer/prompts — 13 tests)
 - [x] Test error handling and messages
 - [x] Test output formatting
 
-### 9.4 Component Tests (Deferred — pending React/Vue package development)
+### 9.4 Component Tests
 
-- [ ] Set up React Testing Library
-- [ ] Set up Vue Test Utils
-- [ ] Test wallet connection components
-- [ ] Test token display components
-- [ ] Test NFT display components
-- [ ] Test form components
-- [ ] Test hooks/composables
+- [x] Set up React Testing Library
+- [x] Set up Vue Test Utils
+- [x] Test wallet connection components
+- [x] Test token display components
+- [x] Test NFT display components
+- [x] Test form components
+- [x] Test hooks/composables
 
-### 9.5 E2E Tests (Deferred — pending React/Vue package development)
+### 9.5 E2E Tests
 
-- [ ] Set up Playwright or Cypress
-- [ ] Test React example app
-- [ ] Test Vue example app
-- [ ] Test wallet connection flow
-- [ ] Test minting flow
+- [x] Set up Playwright or Cypress
+- [x] Test React example app
+- [x] Test Vue example app
+- [ ] Test wallet connection flow (requires wallet extension mock)
+- [ ] Test minting flow (requires wallet extension mock)
 
 ### 9.6 Code Quality
 
