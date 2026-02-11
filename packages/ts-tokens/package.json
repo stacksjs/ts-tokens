@@ -71,6 +71,6 @@
     "bunfig": "^0.5.0"
   },
   "lint-staged": {
-    "*.{js,ts}": "bunx --bun eslint --flag unstable_ts_config . --fix"
+    "*.{js,ts}": "bunx --bun eslint --flag unstable_ts_config --fix"
   }
 }

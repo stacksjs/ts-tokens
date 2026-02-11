@@ -1,177 +1,246 @@
-/**
- * Batch Operations Tests
- */
-
 import { describe, test, expect } from 'bun:test'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
+import { validateBatchRecipients } from '../src/batch/transfer'
+import { calculateTotalMintAmount, validateBatchMintRecipients, validateBatchNFTItems } from '../src/batch/mint'
+import type { BatchTransferRecipient, BatchMintRecipient, BatchNFTMintItem } from '../src/batch/types'
 
-describe('Batch Transfer Validation', () => {
-  test('should validate recipient addresses', () => {
-    const validAddress = Keypair.generate().publicKey.toBase58()
-    expect(() => new PublicKey(validAddress)).not.toThrow()
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function validAddress(): string {
+  return Keypair.generate().publicKey.toBase58()
+}
+
+function makeTransferRecipients(count: number): BatchTransferRecipient[] {
+  return Array.from({ length: count }, () => ({
+    address: validAddress(),
+    amount: 100n,
+  }))
+}
+
+// ---------------------------------------------------------------------------
+// validateBatchRecipients  (batch transfer validation)
+// ---------------------------------------------------------------------------
+
+describe('validateBatchRecipients', () => {
+  test('returns error for empty recipients array', () => {
+    const result = validateBatchRecipients([])
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContain('No recipients provided')
   })
 
-  test('should reject invalid addresses', () => {
-    const invalidAddress = 'not-a-valid-address'
-    expect(() => new PublicKey(invalidAddress)).toThrow()
+  test('returns error when recipients exceed 1000', () => {
+    const recipients = makeTransferRecipients(1001)
+    const result = validateBatchRecipients(recipients)
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContain('Maximum 1000 recipients per batch')
   })
 
-  test('should validate positive amounts', () => {
-    const amount = 1000n
-    expect(amount > 0n).toBe(true)
-  })
-
-  test('should reject zero amounts', () => {
-    const amount = 0n
-    expect(amount > 0n).toBe(false)
-  })
-
-  test('should reject negative amounts', () => {
-    const amount = -1n
-    expect(amount > 0n).toBe(false)
-  })
-})
-
-describe('Batch Size Calculations', () => {
-  test('should calculate correct batch count', () => {
-    const total = 100
-    const batchSize = 10
-    const batches = Math.ceil(total / batchSize)
-    expect(batches).toBe(10)
-  })
-
-  test('should handle partial last batch', () => {
-    const total = 95
-    const batchSize = 10
-    const batches = Math.ceil(total / batchSize)
-    expect(batches).toBe(10)
-  })
-
-  test('should handle single item', () => {
-    const total = 1
-    const batchSize = 10
-    const batches = Math.ceil(total / batchSize)
-    expect(batches).toBe(1)
-  })
-})
-
-describe('Batch Progress Tracking', () => {
-  test('should track progress correctly', () => {
-    const total = 100
-    let completed = 0
-    const batchSize = 10
-
-    for (let i = 0; i < total; i += batchSize) {
-      completed = Math.min(i + batchSize, total)
-    }
-
-    expect(completed).toBe(100)
-  })
-
-  test('should calculate percentage', () => {
-    const completed = 50
-    const total = 100
-    const percentage = (completed / total) * 100
-    expect(percentage).toBe(50)
-  })
-})
-
-describe('Batch Cost Estimation', () => {
-  test('should calculate ATA creation cost', () => {
-    const rentExempt = 2039280 // ~0.002 SOL
-    const ataCount = 10
-    const totalCost = rentExempt * ataCount
-    expect(totalCost).toBe(20392800)
-  })
-
-  test('should calculate transaction fees', () => {
-    const feePerTx = 5000 // ~0.000005 SOL
-    const txCount = 10
-    const totalFees = feePerTx * txCount
-    expect(totalFees).toBe(50000)
-  })
-
-  test('should calculate total cost', () => {
-    const ataCost = 20392800
-    const txFees = 50000
-    const total = ataCost + txFees
-    expect(total).toBe(20442800)
-  })
-})
-
-describe('Batch NFT Validation', () => {
-  test('should validate NFT name length', () => {
-    const name = 'My NFT #1'
-    expect(name.length).toBeLessThanOrEqual(32)
-  })
-
-  test('should reject long names', () => {
-    const name = 'A'.repeat(33)
-    expect(name.length).toBeGreaterThan(32)
-  })
-
-  test('should validate symbol length', () => {
-    const symbol = 'MNFT'
-    expect(symbol.length).toBeLessThanOrEqual(10)
-  })
-
-  test('should validate URI format', () => {
-    const uri = 'https://arweave.net/abc123'
-    expect(uri.startsWith('https://')).toBe(true)
-  })
-})
-
-describe('Batch Result Aggregation', () => {
-  test('should aggregate successful results', () => {
-    const results = [
-      { success: true },
-      { success: true },
-      { success: false },
-      { success: true },
+  test('returns error for invalid address strings', () => {
+    const recipients: BatchTransferRecipient[] = [
+      { address: 'not-a-valid-pubkey', amount: 50n },
     ]
-
-    const successful = results.filter(r => r.success).length
-    const failed = results.filter(r => !r.success).length
-
-    expect(successful).toBe(3)
-    expect(failed).toBe(1)
+    const result = validateBatchRecipients(recipients)
+    expect(result.valid).toBe(false)
+    expect(result.errors.length).toBe(1)
+    expect(result.errors[0]).toContain('Invalid address at index 0')
   })
 
-  test('should calculate success rate', () => {
-    const successful = 95
-    const total = 100
-    const rate = (successful / total) * 100
-    expect(rate).toBe(95)
+  test('accepts valid PublicKey objects', () => {
+    const pk = Keypair.generate().publicKey
+    const recipients: BatchTransferRecipient[] = [
+      { address: pk, amount: 1000n },
+    ]
+    const result = validateBatchRecipients(recipients)
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+
+  test('returns error for zero amount', () => {
+    const recipients: BatchTransferRecipient[] = [
+      { address: validAddress(), amount: 0n },
+    ]
+    const result = validateBatchRecipients(recipients)
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.includes('must be positive'))).toBe(true)
+  })
+
+  test('returns error for negative amount', () => {
+    const recipients: BatchTransferRecipient[] = [
+      { address: validAddress(), amount: -10n },
+    ]
+    const result = validateBatchRecipients(recipients)
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.includes('must be positive'))).toBe(true)
+  })
+
+  test('collects multiple errors for mixed valid and invalid entries', () => {
+    const recipients: BatchTransferRecipient[] = [
+      { address: validAddress(), amount: 100n },             // valid
+      { address: 'bad-address', amount: 50n },               // invalid address
+      { address: validAddress(), amount: 0n },                // zero amount
+      { address: Keypair.generate().publicKey, amount: 1n },  // valid
+    ]
+    const result = validateBatchRecipients(recipients)
+    expect(result.valid).toBe(false)
+    expect(result.errors).toHaveLength(2)
+    expect(result.errors[0]).toContain('Invalid address at index 1')
+    expect(result.errors[1]).toContain('Invalid amount at index 2')
   })
 })
 
-describe('Batch Error Handling', () => {
-  test('should collect errors', () => {
-    const errors: string[] = []
+// ---------------------------------------------------------------------------
+// calculateTotalMintAmount
+// ---------------------------------------------------------------------------
 
-    try {
-      throw new Error('Test error')
-    } catch (e) {
-      errors.push((e as Error).message)
-    }
-
-    expect(errors.length).toBe(1)
-    expect(errors[0]).toBe('Test error')
+describe('calculateTotalMintAmount', () => {
+  test('returns correct total for a single recipient', () => {
+    const recipients: BatchMintRecipient[] = [
+      { address: validAddress(), amount: 500n },
+    ]
+    expect(calculateTotalMintAmount(recipients)).toBe(500n)
   })
 
-  test('should continue after error', () => {
-    let completed = 0
-    const items = [1, 2, 3, 4, 5]
+  test('sums amounts across multiple recipients', () => {
+    const recipients: BatchMintRecipient[] = [
+      { address: validAddress(), amount: 100n },
+      { address: validAddress(), amount: 200n },
+      { address: validAddress(), amount: 300n },
+    ]
+    expect(calculateTotalMintAmount(recipients)).toBe(600n)
+  })
 
-    for (const item of items) {
-      try {
-        if (item === 3) throw new Error('Skip')
-        completed++
-      } catch {
-        // Continue
-      }
-    }
+  test('returns 0n for empty array', () => {
+    expect(calculateTotalMintAmount([])).toBe(0n)
+  })
+})
 
-    expect(completed).toBe(4)
+// ---------------------------------------------------------------------------
+// validateBatchMintRecipients
+// ---------------------------------------------------------------------------
+
+describe('validateBatchMintRecipients', () => {
+  test('returns error for empty recipients array', () => {
+    const result = validateBatchMintRecipients([])
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContain('No recipients provided')
+  })
+
+  test('returns error for invalid address string', () => {
+    const recipients: BatchMintRecipient[] = [
+      { address: '!!!invalid!!!', amount: 10n },
+    ]
+    const result = validateBatchMintRecipients(recipients)
+    expect(result.valid).toBe(false)
+    expect(result.errors[0]).toContain('Invalid address at index 0')
+  })
+
+  test('returns error for zero amount', () => {
+    const recipients: BatchMintRecipient[] = [
+      { address: validAddress(), amount: 0n },
+    ]
+    const result = validateBatchMintRecipients(recipients)
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.includes('must be positive'))).toBe(true)
+  })
+
+  test('accepts valid recipients with PublicKey objects', () => {
+    const recipients: BatchMintRecipient[] = [
+      { address: Keypair.generate().publicKey, amount: 999n },
+      { address: Keypair.generate().publicKey, amount: 1n },
+    ]
+    const result = validateBatchMintRecipients(recipients)
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// validateBatchNFTItems
+// ---------------------------------------------------------------------------
+
+describe('validateBatchNFTItems', () => {
+  test('returns error for empty items array', () => {
+    const result = validateBatchNFTItems([])
+    expect(result.valid).toBe(false)
+    expect(result.errors).toContain('No items provided')
+  })
+
+  test('returns error when name is missing', () => {
+    const items: BatchNFTMintItem[] = [
+      { name: '', symbol: 'SYM', uri: 'https://example.com/meta.json' },
+    ]
+    const result = validateBatchNFTItems(items)
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.includes('Missing name'))).toBe(true)
+  })
+
+  test('returns error when name exceeds 32 characters', () => {
+    const items: BatchNFTMintItem[] = [
+      { name: 'A'.repeat(33), symbol: 'SYM', uri: 'https://example.com/meta.json' },
+    ]
+    const result = validateBatchNFTItems(items)
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.includes('Name too long'))).toBe(true)
+  })
+
+  test('returns error when symbol is missing', () => {
+    const items: BatchNFTMintItem[] = [
+      { name: 'Cool NFT', symbol: '', uri: 'https://example.com/meta.json' },
+    ]
+    const result = validateBatchNFTItems(items)
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.includes('Missing symbol'))).toBe(true)
+  })
+
+  test('returns error when symbol exceeds 10 characters', () => {
+    const items: BatchNFTMintItem[] = [
+      { name: 'Cool NFT', symbol: 'TOOLONGSYMB', uri: 'https://example.com/meta.json' },
+    ]
+    const result = validateBatchNFTItems(items)
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.includes('Symbol too long'))).toBe(true)
+  })
+
+  test('returns error when URI is missing', () => {
+    const items: BatchNFTMintItem[] = [
+      { name: 'Cool NFT', symbol: 'COOL', uri: '' },
+    ]
+    const result = validateBatchNFTItems(items)
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.includes('Missing URI'))).toBe(true)
+  })
+
+  test('returns error for invalid recipient address', () => {
+    const items: BatchNFTMintItem[] = [
+      { name: 'Cool NFT', symbol: 'COOL', uri: 'https://example.com/meta.json', recipient: 'bad-address' },
+    ]
+    const result = validateBatchNFTItems(items)
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => e.includes('Invalid recipient address'))).toBe(true)
+  })
+
+  test('accepts valid items without recipient', () => {
+    const items: BatchNFTMintItem[] = [
+      { name: 'Cool NFT', symbol: 'COOL', uri: 'https://example.com/meta.json' },
+    ]
+    const result = validateBatchNFTItems(items)
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+
+  test('accepts valid items with a PublicKey recipient', () => {
+    const items: BatchNFTMintItem[] = [
+      {
+        name: 'Cool NFT',
+        symbol: 'COOL',
+        uri: 'https://example.com/meta.json',
+        recipient: Keypair.generate().publicKey,
+      },
+    ]
+    const result = validateBatchNFTItems(items)
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
   })
 })

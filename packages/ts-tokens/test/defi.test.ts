@@ -1,169 +1,342 @@
 /**
  * DeFi Integration Tests
+ *
+ * Tests for Raydium pool helpers and Jupiter swap helpers.
  */
 
 import { describe, test, expect } from 'bun:test'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
+import {
+  calculatePoolPrice,
+  calculateLPValue,
+  calculateSwapOutput,
+  calculateSwapInput,
+  calculatePriceImpact,
+  calculateOptimalLPAmounts,
+  calculateLPTokens,
+  calculateRemoveLiquidity,
+  formatPoolInfo,
+} from '../src/defi/raydium'
+import { calculateMinOutput, formatSwapQuote } from '../src/defi/jupiter'
+import type { LiquidityPool, SwapQuote } from '../src/defi/types'
 
-describe('Swap Calculations', () => {
-  test('should calculate output amount with fee', () => {
-    const inputAmount = 1000n
-    const inputReserve = 100000n
-    const outputReserve = 200000n
-    const feeBps = 25 // 0.25%
+function makePool(overrides: Partial<LiquidityPool> = {}): LiquidityPool {
+  return {
+    address: Keypair.generate().publicKey,
+    protocol: 'raydium',
+    tokenA: Keypair.generate().publicKey,
+    tokenB: Keypair.generate().publicKey,
+    reserveA: 100000n,
+    reserveB: 200000n,
+    lpMint: Keypair.generate().publicKey,
+    lpSupply: 10000n,
+    fee: 0.0025,
+    ...overrides,
+  }
+}
 
-    const inputWithFee = inputAmount * BigInt(10000 - feeBps)
-    const numerator = inputWithFee * outputReserve
-    const denominator = inputReserve * 10000n + inputWithFee
+// ---------------------------------------------------------------------------
+// Raydium pool price
+// ---------------------------------------------------------------------------
 
-    const output = numerator / denominator
-
-    expect(output).toBeGreaterThan(0n)
-    expect(output).toBeLessThan(outputReserve)
+describe('calculatePoolPrice', () => {
+  test('returns reserveB / reserveA for a normal pool', () => {
+    const pool = makePool({ reserveA: 100000n, reserveB: 200000n })
+    expect(calculatePoolPrice(pool)).toBe(2)
   })
 
-  test('should calculate minimum output with slippage', () => {
-    const outputAmount = 1000n
-    const slippageBps = 50 // 0.5%
-
-    const minOutput = outputAmount - (outputAmount * BigInt(slippageBps)) / 10000n
-
-    expect(minOutput).toBe(995n)
-  })
-
-  test('should calculate price impact', () => {
-    const inputAmount = 1000
-    const outputAmount = 1950
-    const inputReserve = 100000
-    const outputReserve = 200000
-
-    const spotPrice = outputReserve / inputReserve
-    const executionPrice = outputAmount / inputAmount
-
-    const impact = Math.abs(1 - executionPrice / spotPrice)
-
-    expect(impact).toBeLessThan(0.05) // Less than 5%
+  test('returns 0 when reserveA is 0', () => {
+    const pool = makePool({ reserveA: 0n, reserveB: 500n })
+    expect(calculatePoolPrice(pool)).toBe(0)
   })
 })
 
-describe('Pool Calculations', () => {
-  test('should calculate pool price', () => {
-    const reserveA = 100000n
-    const reserveB = 200000n
+// ---------------------------------------------------------------------------
+// LP value
+// ---------------------------------------------------------------------------
 
-    const price = Number(reserveB) / Number(reserveA)
-
-    expect(price).toBe(2)
+describe('calculateLPValue', () => {
+  test('returns 0 when lpSupply is 0', () => {
+    const pool = makePool({ lpSupply: 0n })
+    expect(calculateLPValue(pool, 100n, 1, 2)).toBe(0)
   })
 
-  test('should calculate LP tokens for initial liquidity', () => {
-    const amountA = 1000n
-    const amountB = 2000n
-
-    // sqrt(amountA * amountB)
-    const product = amountA * amountB
-    let x = product
-    let y = (x + 1n) / 2n
-    while (y < x) {
-      x = y
-      y = (x + product / x) / 2n
-    }
-
-    expect(x).toBeGreaterThan(0n)
+  test('calculates value for full supply ownership', () => {
+    const pool = makePool({
+      reserveA: 100000n,
+      reserveB: 200000n,
+      lpSupply: 10000n,
+    })
+    // owning 100% of supply: shareA = 100000, shareB = 200000
+    const value = calculateLPValue(pool, 10000n, 1, 2)
+    expect(value).toBe(100000 * 1 + 200000 * 2)
   })
 
-  test('should calculate optimal LP amounts', () => {
-    const reserveA = 100000n
-    const reserveB = 200000n
-    const inputA = 1000n
+  test('calculates value for partial ownership', () => {
+    const pool = makePool({
+      reserveA: 100000n,
+      reserveB: 200000n,
+      lpSupply: 10000n,
+    })
+    // 10% of supply
+    const value = calculateLPValue(pool, 1000n, 1, 2)
+    expect(value).toBe(10000 * 1 + 20000 * 2)
+  })
+})
 
-    const optimalB = (inputA * reserveB) / reserveA
+// ---------------------------------------------------------------------------
+// Swap output (AMM constant-product with fee)
+// ---------------------------------------------------------------------------
 
-    expect(optimalB).toBe(2000n)
+describe('calculateSwapOutput', () => {
+  test('produces output less than output reserve', () => {
+    const output = calculateSwapOutput(1000n, 100000n, 200000n)
+    expect(output).toBeGreaterThan(0n)
+    expect(output).toBeLessThan(200000n)
   })
 
-  test('should calculate remove liquidity amounts', () => {
-    const reserveA = 100000n
-    const reserveB = 200000n
-    const lpSupply = 10000n
-    const lpAmount = 1000n // 10% of supply
+  test('uses the default 25 bps fee', () => {
+    const withDefault = calculateSwapOutput(1000n, 100000n, 200000n)
+    const withExplicit = calculateSwapOutput(1000n, 100000n, 200000n, 25)
+    expect(withDefault).toBe(withExplicit)
+  })
 
-    const amountA = (lpAmount * reserveA) / lpSupply
-    const amountB = (lpAmount * reserveB) / lpSupply
+  test('higher fee yields less output', () => {
+    const lowFee = calculateSwapOutput(1000n, 100000n, 200000n, 10)
+    const highFee = calculateSwapOutput(1000n, 100000n, 200000n, 100)
+    expect(lowFee).toBeGreaterThan(highFee)
+  })
 
+  test('zero input yields zero output', () => {
+    const output = calculateSwapOutput(0n, 100000n, 200000n)
+    expect(output).toBe(0n)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Swap input (reverse AMM)
+// ---------------------------------------------------------------------------
+
+describe('calculateSwapInput', () => {
+  test('roundtrips with calculateSwapOutput within 1 unit', () => {
+    const desiredOutput = 1900n
+    const inputNeeded = calculateSwapInput(desiredOutput, 100000n, 200000n, 25)
+    const actualOutput = calculateSwapOutput(inputNeeded, 100000n, 200000n, 25)
+    // The +1n in calculateSwapInput means actual output >= desired
+    expect(actualOutput).toBeGreaterThanOrEqual(desiredOutput)
+  })
+
+  test('uses default 25 bps fee', () => {
+    const withDefault = calculateSwapInput(1000n, 100000n, 200000n)
+    const withExplicit = calculateSwapInput(1000n, 100000n, 200000n, 25)
+    expect(withDefault).toBe(withExplicit)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Price impact
+// ---------------------------------------------------------------------------
+
+describe('calculatePriceImpact', () => {
+  test('returns near-zero impact for small trade', () => {
+    const output = calculateSwapOutput(100n, 1_000_000_000n, 2_000_000_000n)
+    const impact = calculatePriceImpact(100n, output, 1_000_000_000n, 2_000_000_000n)
+    expect(impact).toBeLessThan(0.01)
+  })
+
+  test('returns higher impact for larger trade', () => {
+    const smallOutput = calculateSwapOutput(100n, 100000n, 200000n)
+    const largeOutput = calculateSwapOutput(50000n, 100000n, 200000n)
+
+    const smallImpact = calculatePriceImpact(100n, smallOutput, 100000n, 200000n)
+    const largeImpact = calculatePriceImpact(50000n, largeOutput, 100000n, 200000n)
+
+    expect(largeImpact).toBeGreaterThan(smallImpact)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Optimal LP amounts
+// ---------------------------------------------------------------------------
+
+describe('calculateOptimalLPAmounts', () => {
+  test('returns proportional amountB for a normal pool', () => {
+    const pool = makePool({ reserveA: 100000n, reserveB: 200000n })
+    const result = calculateOptimalLPAmounts(pool, 1000n)
+    expect(result.amountA).toBe(1000n)
+    expect(result.amountB).toBe(2000n)
+  })
+
+  test('returns equal amounts when reserves are zero', () => {
+    const pool = makePool({ reserveA: 0n, reserveB: 0n })
+    const result = calculateOptimalLPAmounts(pool, 5000n)
+    expect(result.amountA).toBe(5000n)
+    expect(result.amountB).toBe(5000n)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// LP token minting
+// ---------------------------------------------------------------------------
+
+describe('calculateLPTokens', () => {
+  test('uses sqrt for initial liquidity when lpSupply is 0', () => {
+    const pool = makePool({ lpSupply: 0n })
+    const lp = calculateLPTokens(pool, 1000n, 4000n)
+    // sqrt(1000 * 4000) = sqrt(4000000) = 2000
+    expect(lp).toBe(2000n)
+  })
+
+  test('returns minimum of proportional amounts for existing pool', () => {
+    const pool = makePool({
+      reserveA: 100000n,
+      reserveB: 200000n,
+      lpSupply: 10000n,
+    })
+    // lpFromA = 1000 * 10000 / 100000 = 100
+    // lpFromB = 2000 * 10000 / 200000 = 100
+    const lp = calculateLPTokens(pool, 1000n, 2000n)
+    expect(lp).toBe(100n)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Remove liquidity
+// ---------------------------------------------------------------------------
+
+describe('calculateRemoveLiquidity', () => {
+  test('returns proportional amounts', () => {
+    const pool = makePool({
+      reserveA: 100000n,
+      reserveB: 200000n,
+      lpSupply: 10000n,
+    })
+    const { amountA, amountB } = calculateRemoveLiquidity(pool, 1000n)
     expect(amountA).toBe(10000n)
     expect(amountB).toBe(20000n)
   })
-})
 
-describe('Price Formatting', () => {
-  test('should format lamports to SOL', () => {
-    const lamports = 1_500_000_000n // 1.5 SOL
-    const sol = Number(lamports) / 1e9
-
-    expect(sol).toBe(1.5)
-  })
-
-  test('should format with decimals', () => {
-    const amount = 1234567890n
-    const decimals = 6
-    const formatted = Number(amount) / Math.pow(10, decimals)
-
-    expect(formatted).toBe(1234.56789)
+  test('returns zeros when lpSupply is 0', () => {
+    const pool = makePool({ lpSupply: 0n })
+    const { amountA, amountB } = calculateRemoveLiquidity(pool, 1000n)
+    expect(amountA).toBe(0n)
+    expect(amountB).toBe(0n)
   })
 })
 
-describe('Token Price', () => {
-  test('should structure price data', () => {
-    const price = {
-      mint: Keypair.generate().publicKey,
-      priceUsd: 1.5,
-      priceChange24h: 5.2,
-      volume24h: 1000000,
-      source: 'jupiter',
-      timestamp: Date.now(),
+// ---------------------------------------------------------------------------
+// Format pool info
+// ---------------------------------------------------------------------------
+
+describe('formatPoolInfo', () => {
+  test('includes all required fields', () => {
+    const pool = makePool({ fee: 0.0025, apy: 12.5 })
+    const info = formatPoolInfo(pool)
+
+    expect(info).toContain(`Pool: ${pool.address.toBase58()}`)
+    expect(info).toContain('Protocol: raydium')
+    expect(info).toContain(`Token A: ${pool.tokenA.toBase58()}`)
+    expect(info).toContain(`Token B: ${pool.tokenB.toBase58()}`)
+    expect(info).toContain('Price: 2.000000')
+    expect(info).toContain('Fee: 0.25%')
+    expect(info).toContain('APY: 12.50%')
+  })
+
+  test('omits APY line when apy is undefined', () => {
+    const pool = makePool({ apy: undefined })
+    const info = formatPoolInfo(pool)
+    expect(info).not.toContain('APY:')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Jupiter — calculateMinOutput
+// ---------------------------------------------------------------------------
+
+describe('calculateMinOutput', () => {
+  test('subtracts slippage from output', () => {
+    // 50 bps = 0.5%
+    const min = calculateMinOutput(10000n, 50)
+    expect(min).toBe(9950n)
+  })
+
+  test('returns full amount when slippage is 0', () => {
+    expect(calculateMinOutput(10000n, 0)).toBe(10000n)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Jupiter — formatSwapQuote
+// ---------------------------------------------------------------------------
+
+describe('formatSwapQuote', () => {
+  test('formats a single-hop quote correctly', () => {
+    const inputMint = Keypair.generate().publicKey
+    const outputMint = Keypair.generate().publicKey
+
+    const quote: SwapQuote = {
+      inputMint,
+      outputMint,
+      inputAmount: 1_000_000n, // 1 token with 6 decimals
+      outputAmount: 2_000_000n,
+      priceImpact: 0.005,
+      fee: 100n,
+      route: [
+        {
+          protocol: 'Raydium',
+          inputMint,
+          outputMint,
+          inputAmount: 1_000_000n,
+          outputAmount: 2_000_000n,
+          poolAddress: Keypair.generate().publicKey,
+        },
+      ],
+      expiresAt: Date.now() + 30000,
     }
 
-    expect(price.priceUsd).toBe(1.5)
-    expect(price.source).toBe('jupiter')
+    const formatted = formatSwapQuote(quote, 6, 6)
+
+    expect(formatted).toContain('Input: 1.000000')
+    expect(formatted).toContain('Output: 2.000000')
+    expect(formatted).toContain('Rate: 1 = 2.000000')
+    expect(formatted).toContain('Price Impact: 0.50%')
+    expect(formatted).toContain('Route: Raydium')
   })
 
-  test('should calculate price change percentage', () => {
-    const oldPrice = 100
-    const newPrice = 105
+  test('formats multi-hop route with arrow separator', () => {
+    const mintA = Keypair.generate().publicKey
+    const mintB = Keypair.generate().publicKey
+    const mintC = Keypair.generate().publicKey
 
-    const change = ((newPrice - oldPrice) / oldPrice) * 100
-
-    expect(change).toBe(5)
-  })
-})
-
-describe('Swap Route', () => {
-  test('should track multi-hop routes', () => {
-    const route = [
-      { protocol: 'Raydium', inputMint: 'USDC', outputMint: 'SOL' },
-      { protocol: 'Orca', inputMint: 'SOL', outputMint: 'mSOL' },
-    ]
-
-    expect(route.length).toBe(2)
-    expect(route.map(r => r.protocol).join(' → ')).toBe('Raydium → Orca')
-  })
-
-  test('should validate route continuity', () => {
-    const route = [
-      { inputMint: 'A', outputMint: 'B' },
-      { inputMint: 'B', outputMint: 'C' },
-      { inputMint: 'C', outputMint: 'D' },
-    ]
-
-    let valid = true
-    for (let i = 1; i < route.length; i++) {
-      if (route[i].inputMint !== route[i - 1].outputMint) {
-        valid = false
-        break
-      }
+    const quote: SwapQuote = {
+      inputMint: mintA,
+      outputMint: mintC,
+      inputAmount: 1_000_000_000n, // 1 token with 9 decimals
+      outputAmount: 500_000_000n,
+      priceImpact: 0.01,
+      fee: 200n,
+      route: [
+        {
+          protocol: 'Raydium',
+          inputMint: mintA,
+          outputMint: mintB,
+          inputAmount: 1_000_000_000n,
+          outputAmount: 750_000_000n,
+          poolAddress: Keypair.generate().publicKey,
+        },
+        {
+          protocol: 'Orca',
+          inputMint: mintB,
+          outputMint: mintC,
+          inputAmount: 750_000_000n,
+          outputAmount: 500_000_000n,
+          poolAddress: Keypair.generate().publicKey,
+        },
+      ],
+      expiresAt: Date.now() + 30000,
     }
 
-    expect(valid).toBe(true)
+    const formatted = formatSwapQuote(quote, 9, 9)
+    expect(formatted).toContain('Route: Raydium \u2192 Orca')
   })
 })

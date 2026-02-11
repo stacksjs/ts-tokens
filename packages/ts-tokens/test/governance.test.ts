@@ -3,188 +3,305 @@
  */
 
 import { describe, test, expect } from 'bun:test'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair, SystemProgram } from '@solana/web3.js'
+import { validateDAOConfig } from '../src/governance/dao'
+import {
+  calculateProposalResult,
+  canExecuteProposal,
+  treasuryActions,
+  tokenActions,
+} from '../src/governance/proposal'
+import {
+  calculateVoteBreakdown,
+  isVotingOpen,
+  getVotingTimeRemaining,
+} from '../src/governance/vote'
+import type { Proposal } from '../src/governance/types'
 
-describe('DAO Configuration', () => {
-  test('should validate quorum range', () => {
-    const validQuorums = [1, 10, 50, 100]
-    for (const q of validQuorums) {
-      expect(q >= 1 && q <= 100).toBe(true)
-    }
+function makeProposal(overrides: Partial<Proposal> = {}): Proposal {
+  const now = BigInt(Math.floor(Date.now() / 1000))
+  return {
+    address: Keypair.generate().publicKey,
+    dao: Keypair.generate().publicKey,
+    proposer: Keypair.generate().publicKey,
+    title: 'Test Proposal',
+    description: 'A test proposal',
+    status: 'active',
+    forVotes: 0n,
+    againstVotes: 0n,
+    abstainVotes: 0n,
+    startTime: now - 3600n,
+    endTime: now + 3600n,
+    actions: [],
+    createdAt: now - 3600n,
+    ...overrides,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// validateDAOConfig
+// ---------------------------------------------------------------------------
+
+describe('validateDAOConfig', () => {
+  test('valid config returns an empty error array', () => {
+    const errors = validateDAOConfig({
+      votingPeriod: '5 days',
+      quorum: 10,
+      approvalThreshold: 66,
+    })
+    expect(errors).toEqual([])
   })
 
-  test('should reject invalid quorum', () => {
-    const invalidQuorums = [0, -1, 101]
-    for (const q of invalidQuorums) {
-      expect(q >= 1 && q <= 100).toBe(false)
-    }
+  test('quorum of 0 produces an error', () => {
+    const errors = validateDAOConfig({
+      votingPeriod: '5 days',
+      quorum: 0,
+      approvalThreshold: 50,
+    })
+    expect(errors.length).toBeGreaterThan(0)
+    expect(errors.some(e => /quorum/i.test(e))).toBe(true)
   })
 
-  test('should validate approval threshold', () => {
-    const validThresholds = [50, 66, 75, 100]
-    for (const t of validThresholds) {
-      expect(t >= 1 && t <= 100).toBe(true)
-    }
+  test('quorum of 101 produces an error', () => {
+    const errors = validateDAOConfig({
+      votingPeriod: '5 days',
+      quorum: 101,
+      approvalThreshold: 101,
+    })
+    expect(errors.some(e => /quorum/i.test(e))).toBe(true)
   })
 
-  test('should parse duration strings', () => {
-    const durations: Record<string, number> = {
-      '1 second': 1,
-      '5 minutes': 300,
-      '2 hours': 7200,
-      '3 days': 259200,
-      '1 week': 604800,
-    }
-
-    for (const [str, expected] of Object.entries(durations)) {
-      const match = str.match(/^(\d+)\s*(second|minute|hour|day|week)s?$/i)
-      expect(match).not.toBeNull()
-    }
-  })
-})
-
-describe('Proposal Validation', () => {
-  test('should validate title length', () => {
-    const title = 'Fund Marketing Campaign'
-    expect(title.length).toBeLessThanOrEqual(100)
+  test('approval threshold less than 1 produces an error', () => {
+    const errors = validateDAOConfig({
+      votingPeriod: '5 days',
+      quorum: 10,
+      approvalThreshold: 0,
+    })
+    expect(errors.some(e => /approval threshold/i.test(e))).toBe(true)
   })
 
-  test('should reject empty title', () => {
-    const title = ''
-    expect(title.length).toBe(0)
+  test('approval threshold below quorum produces an error', () => {
+    const errors = validateDAOConfig({
+      votingPeriod: '5 days',
+      quorum: 60,
+      approvalThreshold: 40,
+    })
+    expect(errors.some(e => /threshold.*>=.*quorum|threshold should be/i.test(e))).toBe(true)
   })
 
-  test('should require at least one action', () => {
-    const actions: unknown[] = []
-    expect(actions.length).toBe(0)
-  })
-})
-
-describe('Voting', () => {
-  test('should calculate vote breakdown', () => {
-    const forVotes = 60n
-    const againstVotes = 30n
-    const abstainVotes = 10n
-    const total = forVotes + againstVotes + abstainVotes
-
-    const forPct = Number((forVotes * 100n) / total)
-    const againstPct = Number((againstVotes * 100n) / total)
-    const abstainPct = Number((abstainVotes * 100n) / total)
-
-    expect(forPct).toBe(60)
-    expect(againstPct).toBe(30)
-    expect(abstainPct).toBe(10)
-  })
-
-  test('should check quorum', () => {
-    const totalVotes = 1000n
-    const totalSupply = 10000n
-    const quorum = 10 // 10%
-
-    const quorumRequired = (totalSupply * BigInt(quorum)) / 100n
-    const quorumMet = totalVotes >= quorumRequired
-
-    expect(quorumMet).toBe(true)
-  })
-
-  test('should check approval threshold', () => {
-    const forVotes = 700n
-    const totalVotes = 1000n
-    const threshold = 66 // 66%
-
-    const approvalRequired = (totalVotes * BigInt(threshold)) / 100n
-    const passed = forVotes >= approvalRequired
-
-    expect(passed).toBe(true)
-  })
-})
-
-describe('Delegation', () => {
-  test('should track delegations', () => {
-    const delegator = Keypair.generate().publicKey
-    const delegate = Keypair.generate().publicKey
-    const amount = 1000n
-
-    const delegation = {
-      delegator,
-      delegate,
-      amount,
-    }
-
-    expect(delegation.amount).toBe(1000n)
-  })
-
-  test('should calculate total voting power', () => {
-    const ownTokens = 500n
-    const delegatedToMe = 300n
-    const delegatedAway = 100n
-
-    const totalPower = ownTokens + delegatedToMe - delegatedAway
-    expect(totalPower).toBe(700n)
+  test('invalid voting period format produces an error', () => {
+    const errors = validateDAOConfig({
+      votingPeriod: 'not-a-duration',
+      quorum: 10,
+      approvalThreshold: 50,
+    })
+    expect(errors.some(e => /voting period/i.test(e))).toBe(true)
   })
 })
 
-describe('Proposal Status', () => {
-  test('should track status transitions', () => {
-    const validTransitions: Record<string, string[]> = {
-      draft: ['active', 'cancelled'],
-      active: ['succeeded', 'defeated', 'cancelled'],
-      succeeded: ['queued'],
-      queued: ['executed'],
-      defeated: [],
-      executed: [],
-      cancelled: [],
-    }
+// ---------------------------------------------------------------------------
+// calculateProposalResult
+// ---------------------------------------------------------------------------
 
-    expect(validTransitions.active).toContain('succeeded')
-    expect(validTransitions.active).toContain('defeated')
+describe('calculateProposalResult', () => {
+  test('quorum not reached returns passed false', () => {
+    const proposal = makeProposal({
+      forVotes: 5n,
+      againstVotes: 0n,
+      abstainVotes: 0n,
+    })
+    const result = calculateProposalResult(proposal, 10, 50, 1000n)
+    expect(result.passed).toBe(false)
+    expect(result.reason).toMatch(/quorum/i)
   })
 
-  test('should check voting period', () => {
-    const startTime = BigInt(Math.floor(Date.now() / 1000) - 3600) // 1 hour ago
-    const endTime = BigInt(Math.floor(Date.now() / 1000) + 3600) // 1 hour from now
-    const currentTime = BigInt(Math.floor(Date.now() / 1000))
-
-    const isOpen = currentTime >= startTime && currentTime <= endTime
-    expect(isOpen).toBe(true)
+  test('approval threshold not met returns passed false', () => {
+    const proposal = makeProposal({
+      forVotes: 40n,
+      againstVotes: 60n,
+      abstainVotes: 0n,
+    })
+    const result = calculateProposalResult(proposal, 10, 66, 1000n)
+    expect(result.passed).toBe(false)
+    expect(result.reason).toMatch(/threshold/i)
   })
 
-  test('should calculate time remaining', () => {
-    const endTime = BigInt(Math.floor(Date.now() / 1000) + 86400) // 1 day
-    const currentTime = BigInt(Math.floor(Date.now() / 1000))
-    const remaining = endTime - currentTime
-
-    expect(remaining).toBeGreaterThan(0n)
-    expect(remaining).toBeLessThanOrEqual(86400n)
+  test('proposal that meets quorum and threshold passes', () => {
+    const proposal = makeProposal({
+      forVotes: 700n,
+      againstVotes: 200n,
+      abstainVotes: 100n,
+    })
+    const result = calculateProposalResult(proposal, 10, 50, 1000n)
+    expect(result.passed).toBe(true)
+    expect(result.reason).toMatch(/passed/i)
   })
 })
 
-describe('Treasury Actions', () => {
-  test('should create SOL transfer action', () => {
+// ---------------------------------------------------------------------------
+// canExecuteProposal
+// ---------------------------------------------------------------------------
+
+describe('canExecuteProposal', () => {
+  test('proposal not in queued status returns canExecute false', () => {
+    const proposal = makeProposal({ status: 'active' })
+    const result = canExecuteProposal(proposal)
+    expect(result.canExecute).toBe(false)
+    expect(result.reason).toMatch(/not queued/i)
+  })
+
+  test('queued proposal whose execution delay has not passed returns canExecute false', () => {
+    const now = BigInt(Math.floor(Date.now() / 1000))
+    const proposal = makeProposal({
+      status: 'queued',
+      executionTime: now + 86400n, // 1 day in the future
+    })
+    const result = canExecuteProposal(proposal)
+    expect(result.canExecute).toBe(false)
+    expect(result.reason).toMatch(/delay/i)
+  })
+
+  test('queued proposal whose execution time has passed returns canExecute true', () => {
+    const now = BigInt(Math.floor(Date.now() / 1000))
+    const proposal = makeProposal({
+      status: 'queued',
+      executionTime: now - 60n, // 1 minute in the past
+    })
+    const result = canExecuteProposal(proposal)
+    expect(result.canExecute).toBe(true)
+    expect(result.reason).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// calculateVoteBreakdown
+// ---------------------------------------------------------------------------
+
+describe('calculateVoteBreakdown', () => {
+  test('zero votes returns all percentages as 0', () => {
+    const proposal = makeProposal({
+      forVotes: 0n,
+      againstVotes: 0n,
+      abstainVotes: 0n,
+    })
+    const breakdown = calculateVoteBreakdown(proposal)
+    expect(breakdown.forPercentage).toBe(0)
+    expect(breakdown.againstPercentage).toBe(0)
+    expect(breakdown.abstainPercentage).toBe(0)
+    expect(breakdown.totalVotes).toBe(0n)
+  })
+
+  test('votes produce correct percentages', () => {
+    const proposal = makeProposal({
+      forVotes: 60n,
+      againstVotes: 30n,
+      abstainVotes: 10n,
+    })
+    const breakdown = calculateVoteBreakdown(proposal)
+    expect(breakdown.forPercentage).toBe(60)
+    expect(breakdown.againstPercentage).toBe(30)
+    expect(breakdown.abstainPercentage).toBe(10)
+    expect(breakdown.totalVotes).toBe(100n)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// isVotingOpen
+// ---------------------------------------------------------------------------
+
+describe('isVotingOpen', () => {
+  test('active proposal within time range returns true', () => {
+    const proposal = makeProposal({ status: 'active' })
+    expect(isVotingOpen(proposal)).toBe(true)
+  })
+
+  test('active proposal whose endTime has passed returns false', () => {
+    const now = BigInt(Math.floor(Date.now() / 1000))
+    const proposal = makeProposal({
+      status: 'active',
+      startTime: now - 7200n,
+      endTime: now - 60n,
+    })
+    expect(isVotingOpen(proposal)).toBe(false)
+  })
+
+  test('non-active status returns false even if within time range', () => {
+    const proposal = makeProposal({ status: 'succeeded' })
+    expect(isVotingOpen(proposal)).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getVotingTimeRemaining
+// ---------------------------------------------------------------------------
+
+describe('getVotingTimeRemaining', () => {
+  test('past endTime returns 0 seconds and "Ended"', () => {
+    const now = BigInt(Math.floor(Date.now() / 1000))
+    const proposal = makeProposal({ endTime: now - 100n })
+    const remaining = getVotingTimeRemaining(proposal)
+    expect(remaining.seconds).toBe(0n)
+    expect(remaining.formatted).toBe('Ended')
+  })
+
+  test('future endTime returns positive seconds', () => {
+    const now = BigInt(Math.floor(Date.now() / 1000))
+    const proposal = makeProposal({ endTime: now + 7200n }) // 2 hours
+    const remaining = getVotingTimeRemaining(proposal)
+    expect(remaining.seconds).toBeGreaterThan(0n)
+    expect(remaining.formatted).not.toBe('Ended')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// treasuryActions
+// ---------------------------------------------------------------------------
+
+describe('treasuryActions', () => {
+  test('transferSOL returns a ProposalAction with SystemProgram programId', () => {
     const recipient = Keypair.generate().publicKey
-    const amount = 1_000_000_000n // 1 SOL
-
-    const action = {
-      type: 'transferSOL',
-      recipient,
-      amount,
-    }
-
-    expect(action.amount).toBe(1_000_000_000n)
+    const action = treasuryActions.transferSOL(recipient, 1_000_000_000n)
+    expect(action.programId.equals(SystemProgram.programId)).toBe(true)
+    expect(action.accounts.length).toBeGreaterThan(0)
+    expect(action.accounts[0].pubkey.equals(recipient)).toBe(true)
+    expect(Buffer.isBuffer(action.data)).toBe(true)
   })
 
-  test('should create token transfer action', () => {
+  test('transferToken returns a ProposalAction with token program programId', () => {
     const mint = Keypair.generate().publicKey
     const recipient = Keypair.generate().publicKey
-    const amount = 1000_000_000_000n
+    const action = treasuryActions.transferToken(mint, recipient, 500n)
+    expect(action.programId.toBase58()).toBe('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+    expect(action.accounts.length).toBe(2)
+    expect(action.accounts[0].pubkey.equals(mint)).toBe(true)
+    expect(action.accounts[1].pubkey.equals(recipient)).toBe(true)
+  })
+})
 
-    const action = {
-      type: 'transferToken',
-      mint,
-      recipient,
-      amount,
-    }
+// ---------------------------------------------------------------------------
+// tokenActions
+// ---------------------------------------------------------------------------
 
-    expect(action.type).toBe('transferToken')
+describe('tokenActions', () => {
+  test('mint returns a ProposalAction with mint and recipient accounts', () => {
+    const mint = Keypair.generate().publicKey
+    const recipient = Keypair.generate().publicKey
+    const action = tokenActions.mint(mint, recipient, 1000n)
+    expect(action.programId.toBase58()).toBe('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+    expect(action.accounts.length).toBe(2)
+    expect(action.accounts[0].pubkey.equals(mint)).toBe(true)
+    expect(action.accounts[0].isWritable).toBe(true)
+    expect(action.accounts[1].pubkey.equals(recipient)).toBe(true)
+    expect(action.accounts[1].isWritable).toBe(true)
+  })
+
+  test('burn returns a ProposalAction with only the mint account', () => {
+    const mint = Keypair.generate().publicKey
+    const action = tokenActions.burn(mint, 500n)
+    expect(action.programId.toBase58()).toBe('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+    expect(action.accounts.length).toBe(1)
+    expect(action.accounts[0].pubkey.equals(mint)).toBe(true)
+    expect(action.accounts[0].isWritable).toBe(true)
+    expect(Buffer.isBuffer(action.data)).toBe(true)
   })
 })

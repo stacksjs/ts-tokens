@@ -613,7 +613,7 @@
 ### 5.1 CLI Structure
 
 - [x] Restructure `bin/cli.ts` with proper command organization
-- [ ] Create `src/cli/` directory for CLI-specific code
+- [x] Create `src/cli/` directory for CLI-specific code
 - [ ] Create `src/cli/commands/` for command implementations
 - [ ] Create `src/cli/utils/` for CLI utilities
 - [ ] Add colorful output with `chalk`
@@ -853,11 +853,11 @@
 
 ### 8.1 Documentation Site Updates
 
-- [ ] Update `docs/index.md` with new project focus
-- [ ] Update `docs/intro.md` with blockchain token introduction
-- [ ] Update `docs/install.md` with new installation instructions
-- [ ] Update `docs/config.md` with new configuration options
-- [ ] Update `docs/usage.md` with new usage examples
+- [x] Update `docs/index.md` with new project focus
+- [x] Update `docs/intro.md` with blockchain token introduction
+- [x] Update `docs/install.md` with new installation instructions
+- [x] Update `docs/config.md` with new configuration options
+- [x] Update `docs/usage.md` with new usage examples
 
 ### 8.2 API Documentation
 
@@ -932,10 +932,10 @@
 - [x] Test configuration loading and validation
 - [x] Test driver interface implementations
 - [x] Test token creation functions
-- [ ] Test token minting functions
-- [ ] Test token transfer functions
-- [ ] Test NFT creation functions
-- [ ] Test collection management functions
+- [x] Test token minting functions
+- [x] Test token transfer functions
+- [x] Test NFT creation functions
+- [x] Test collection management functions
 - [x] Test Candy Machine functions
 - [x] Test utility functions
 - [x] Test Base58 encoding/decoding (`test/base58.test.ts`)
@@ -987,11 +987,11 @@
 
 ### 9.6 Code Quality
 
-- [ ] Configure ESLint rules for Solana best practices
+- [x] Configure ESLint rules for Solana best practices
 - [ ] Add TypeScript strict mode
 - [ ] Set up Prettier formatting
 - [ ] Add pre-commit hooks for linting
-- [ ] Add CI/CD pipeline for tests
+- [x] Add CI/CD pipeline for tests
 - [ ] Add code coverage reporting
 
 ---
@@ -2695,9 +2695,9 @@ const info = await tokens.multisig.info(ms)
 ### 20.1 pNFT Program Design
 
 - [ ] Create `src/programs/pnft/` directory
-- [ ] Design rule engine for transfer validation
-- [ ] Support composable rules (AND/OR logic)
-- [ ] Maintain compatibility with standard NFT operations
+- [x] Design rule engine for transfer validation
+- [x] Support composable rules (AND/OR logic)
+- [x] Maintain compatibility with standard NFT operations
 
 ### 20.2 Rule Types
 
@@ -2923,8 +2923,8 @@ const rules = await tokens.pnft.rules(pnft)
 - [x] Create `src/governance/` directory
 - [x] Design principles:
   - [x] Token-weighted voting (1 token = 1 vote)
-  - [ ] NFT-based voting (1 NFT = 1 vote or trait-weighted)
-  - [ ] Quadratic voting option
+  - [x] NFT-based voting (1 NFT = 1 vote or trait-weighted)
+  - [x] Quadratic voting option
   - [ ] Time-weighted voting (longer holders = more weight)
   - [x] Delegation support
   - [x] Proposal lifecycle management
@@ -3471,4 +3471,4 @@ const info = await votes.dao.info(dao)
 
 ---
 
-*Last updated: December 2025*
+*Last updated: February 2026*

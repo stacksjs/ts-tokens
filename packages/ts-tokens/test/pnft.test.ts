@@ -1,213 +1,346 @@
 /**
- * Programmable NFT Tests
+ * Programmable NFT Rule Function Tests
+ *
+ * Tests for pure rule builder, validation, formatting, and query functions
+ * exported from src/pnft/rules.ts.
  */
 
 import { describe, test, expect } from 'bun:test'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
+import {
+  createRoyaltyRule,
+  createAllowListRule,
+  createDenyListRule,
+  createCooldownRule,
+  createMaxTransfersRule,
+  createHolderGateRule,
+  validateRule,
+  formatRules,
+  hasRule,
+  getRule,
+} from '../src/pnft/rules'
+import type {
+  ProgrammableNFT,
+  TransferRule,
+  RoyaltyEnforcementRule,
+} from '../src/pnft/types'
 
-describe('Transfer Rules', () => {
-  test('should validate royalty rule', () => {
-    const rule = {
-      type: 'royalty_enforcement' as const,
-      enabled: true,
-      royaltyBps: 500, // 5%
-      recipients: [
-        { address: Keypair.generate().publicKey, share: 100 },
-      ],
-    }
+/**
+ * Helper: build a minimal ProgrammableNFT with the given rules.
+ */
+function makePNFT(rules: TransferRule[] = []): ProgrammableNFT {
+  return {
+    mint: Keypair.generate().publicKey,
+    owner: Keypair.generate().publicKey,
+    rules,
+    state: 'unlocked',
+    lastTransfer: 0,
+    transferCount: 0,
+    metadata: {
+      name: 'Test pNFT',
+      symbol: 'TPNFT',
+      uri: 'https://example.com/metadata.json',
+    },
+  }
+}
 
-    expect(rule.royaltyBps).toBe(500)
-    expect(rule.recipients[0].share).toBe(100)
+// ---------------------------------------------------------------------------
+// Rule builders
+// ---------------------------------------------------------------------------
+
+describe('createRoyaltyRule', () => {
+  test('returns a rule with type royalty_enforcement and enabled true', () => {
+    const recipient = Keypair.generate().publicKey
+    const rule = createRoyaltyRule(500, [{ address: recipient, share: 100 }])
+
+    expect(rule.type).toBe('royalty_enforcement')
+    expect(rule.enabled).toBe(true)
   })
 
-  test('should reject invalid royalty bps', () => {
-    const validateRoyalty = (bps: number): boolean => {
-      return bps >= 0 && bps <= 10000
-    }
+  test('stores the correct bps value', () => {
+    const rule = createRoyaltyRule(250, [
+      { address: Keypair.generate().publicKey, share: 100 },
+    ])
 
-    expect(validateRoyalty(500)).toBe(true)
-    expect(validateRoyalty(0)).toBe(true)
-    expect(validateRoyalty(10000)).toBe(true)
-    expect(validateRoyalty(-1)).toBe(false)
-    expect(validateRoyalty(10001)).toBe(false)
+    expect(rule.royaltyBps).toBe(250)
   })
 
-  test('should validate recipient shares sum to 100', () => {
-    const recipients = [
-      { share: 70 },
-      { share: 20 },
-      { share: 10 },
-    ]
+  test('stores the correct recipients with addresses and shares', () => {
+    const addr1 = Keypair.generate().publicKey
+    const addr2 = Keypair.generate().publicKey
+    const rule = createRoyaltyRule(1000, [
+      { address: addr1, share: 70 },
+      { address: addr2, share: 30 },
+    ])
 
-    const total = recipients.reduce((sum, r) => sum + r.share, 0)
-    expect(total).toBe(100)
+    expect(rule.recipients).toHaveLength(2)
+    expect(rule.recipients[0].address).toBe(addr1)
+    expect(rule.recipients[0].share).toBe(70)
+    expect(rule.recipients[1].address).toBe(addr2)
+    expect(rule.recipients[1].share).toBe(30)
+  })
+})
+
+describe('createAllowListRule', () => {
+  test('returns a rule with type allow_list and enabled true', () => {
+    const rule = createAllowListRule([Keypair.generate().publicKey])
+    expect(rule.type).toBe('allow_list')
+    expect(rule.enabled).toBe(true)
   })
 
-  test('should create allow list rule', () => {
-    const addresses = [
+  test('stores the provided addresses', () => {
+    const addrs = [Keypair.generate().publicKey, Keypair.generate().publicKey]
+    const rule = createAllowListRule(addrs)
+
+    expect(rule.addresses).toHaveLength(2)
+    expect(rule.addresses[0]).toBe(addrs[0])
+    expect(rule.addresses[1]).toBe(addrs[1])
+  })
+})
+
+describe('createDenyListRule', () => {
+  test('returns a rule with type deny_list and enabled true', () => {
+    const rule = createDenyListRule([Keypair.generate().publicKey])
+    expect(rule.type).toBe('deny_list')
+    expect(rule.enabled).toBe(true)
+  })
+
+  test('stores the provided addresses', () => {
+    const addrs = [
       Keypair.generate().publicKey,
       Keypair.generate().publicKey,
+      Keypair.generate().publicKey,
     ]
+    const rule = createDenyListRule(addrs)
 
-    const rule = {
-      type: 'allow_list' as const,
-      enabled: true,
-      addresses,
-    }
+    expect(rule.addresses).toHaveLength(3)
+    expect(rule.addresses).toEqual(addrs)
+  })
+})
 
-    expect(rule.addresses.length).toBe(2)
+describe('createCooldownRule', () => {
+  test('returns a rule with type cooldown_period and enabled true', () => {
+    const rule = createCooldownRule(3600)
+    expect(rule.type).toBe('cooldown_period')
+    expect(rule.enabled).toBe(true)
   })
 
-  test('should create deny list rule', () => {
-    const addresses = [Keypair.generate().publicKey]
-
-    const rule = {
-      type: 'deny_list' as const,
-      enabled: true,
-      addresses,
-    }
-
-    expect(rule.addresses.length).toBe(1)
-  })
-
-  test('should create cooldown rule', () => {
-    const rule = {
-      type: 'cooldown_period' as const,
-      enabled: true,
-      periodSeconds: 86400, // 24 hours
-    }
-
+  test('stores the correct periodSeconds value', () => {
+    const rule = createCooldownRule(86400)
     expect(rule.periodSeconds).toBe(86400)
   })
+})
 
-  test('should create max transfers rule', () => {
-    const rule = {
-      type: 'max_transfers' as const,
-      enabled: true,
-      maxTransfers: 5,
-    }
+describe('createMaxTransfersRule', () => {
+  test('returns a rule with type max_transfers and enabled true', () => {
+    const rule = createMaxTransfersRule(10)
+    expect(rule.type).toBe('max_transfers')
+    expect(rule.enabled).toBe(true)
+  })
 
+  test('stores the correct maxTransfers value', () => {
+    const rule = createMaxTransfersRule(5)
     expect(rule.maxTransfers).toBe(5)
   })
 })
 
-describe('Transfer Validation', () => {
-  test('should check cooldown period', () => {
-    const lastTransfer = Math.floor(Date.now() / 1000) - 3600 // 1 hour ago
-    const cooldownPeriod = 86400 // 24 hours
-    const now = Math.floor(Date.now() / 1000)
-
-    const elapsed = now - lastTransfer
-    const allowed = elapsed >= cooldownPeriod
-
-    expect(allowed).toBe(false)
-    expect(elapsed).toBeLessThan(cooldownPeriod)
+describe('createHolderGateRule', () => {
+  test('returns a rule with type holder_gate and enabled true', () => {
+    const token = Keypair.generate().publicKey
+    const rule = createHolderGateRule(token, 1n)
+    expect(rule.type).toBe('holder_gate')
+    expect(rule.enabled).toBe(true)
   })
 
-  test('should check max transfers', () => {
-    const transferCount = 4
-    const maxTransfers = 5
+  test('stores the correct requiredToken and minAmount', () => {
+    const token = Keypair.generate().publicKey
+    const rule = createHolderGateRule(token, 1_000_000n)
 
-    expect(transferCount < maxTransfers).toBe(true)
-    expect(5 < maxTransfers).toBe(false)
+    expect(rule.requiredToken).toBe(token)
+    expect(rule.minAmount).toBe(1_000_000n)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// validateRule
+// ---------------------------------------------------------------------------
+
+describe('validateRule', () => {
+  test('valid royalty rule passes validation', () => {
+    const rule = createRoyaltyRule(500, [
+      { address: Keypair.generate().publicKey, share: 60 },
+      { address: Keypair.generate().publicKey, share: 40 },
+    ])
+    const result = validateRule(rule)
+
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
   })
 
-  test('should check allow list', () => {
-    const allowList = [
-      Keypair.generate().publicKey,
-      Keypair.generate().publicKey,
+  test('royalty bps below 0 produces an error', () => {
+    const rule = createRoyaltyRule(-1, [
+      { address: Keypair.generate().publicKey, share: 100 },
+    ])
+    const result = validateRule(rule)
+
+    expect(result.valid).toBe(false)
+    expect(result.errors.length).toBeGreaterThanOrEqual(1)
+    expect(result.errors.some(e => /bps/i.test(e) || /royalty/i.test(e))).toBe(true)
+  })
+
+  test('royalty bps above 10000 produces an error', () => {
+    const rule = createRoyaltyRule(10001, [
+      { address: Keypair.generate().publicKey, share: 100 },
+    ])
+    const result = validateRule(rule)
+
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => /royalty/i.test(e) || /10000/i.test(e))).toBe(true)
+  })
+
+  test('royalty recipient shares not summing to 100 produces an error', () => {
+    const rule = createRoyaltyRule(500, [
+      { address: Keypair.generate().publicKey, share: 50 },
+      { address: Keypair.generate().publicKey, share: 30 },
+    ])
+    const result = validateRule(rule)
+
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => /share/i.test(e) || /100/i.test(e))).toBe(true)
+  })
+
+  test('cooldown with 0 seconds produces an error', () => {
+    const rule = createCooldownRule(0)
+    const result = validateRule(rule)
+
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => /cooldown/i.test(e) || /positive/i.test(e))).toBe(true)
+  })
+
+  test('max_transfers with 0 produces an error', () => {
+    const rule = createMaxTransfersRule(0)
+    const result = validateRule(rule)
+
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => /transfer/i.test(e) || /positive/i.test(e))).toBe(true)
+  })
+
+  test('empty allow list produces an error', () => {
+    const rule = createAllowListRule([])
+    const result = validateRule(rule)
+
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => /empty/i.test(e) || /address/i.test(e))).toBe(true)
+  })
+
+  test('empty deny list produces an error', () => {
+    const rule = createDenyListRule([])
+    const result = validateRule(rule)
+
+    expect(result.valid).toBe(false)
+    expect(result.errors.some(e => /empty/i.test(e) || /address/i.test(e))).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// formatRules
+// ---------------------------------------------------------------------------
+
+describe('formatRules', () => {
+  test('returns a string containing rule info for each rule', () => {
+    const rules: TransferRule[] = [
+      createRoyaltyRule(500, [
+        { address: Keypair.generate().publicKey, share: 100 },
+      ]),
+      createCooldownRule(3600),
+      createMaxTransfersRule(10),
     ]
-    const recipient = allowList[0]
-    const notAllowed = Keypair.generate().publicKey
+    const output = formatRules(rules)
 
-    expect(allowList.some(a => a.equals(recipient))).toBe(true)
-    expect(allowList.some(a => a.equals(notAllowed))).toBe(false)
+    expect(typeof output).toBe('string')
+    expect(output).toContain('Royalty')
+    expect(output).toContain('Cooldown')
+    expect(output).toContain('Max Transfers')
   })
 
-  test('should check deny list', () => {
-    const denyList = [Keypair.generate().publicKey]
-    const blocked = denyList[0]
-    const allowed = Keypair.generate().publicKey
+  test('includes enabled marker for enabled rules and disabled marker for disabled', () => {
+    const enabledRule = createCooldownRule(60)
+    const disabledRule = createMaxTransfersRule(5)
+    disabledRule.enabled = false
 
-    expect(!denyList.some(a => a.equals(blocked))).toBe(false)
-    expect(!denyList.some(a => a.equals(allowed))).toBe(true)
-  })
-})
+    const output = formatRules([enabledRule, disabledRule])
 
-describe('Royalty Calculation', () => {
-  test('should calculate royalty amount', () => {
-    const salePrice = 10_000_000_000n // 10 SOL
-    const royaltyBps = 500 // 5%
-
-    const royalty = (salePrice * BigInt(royaltyBps)) / 10000n
-
-    expect(royalty).toBe(500_000_000n) // 0.5 SOL
+    // The implementation uses unicode check/cross marks for status
+    const lines = output.split('\n')
+    // Enabled line should not share the same marker as disabled line
+    expect(lines).toHaveLength(2)
+    expect(lines[0]).not.toEqual(lines[1].replace(/Max Transfers.*/, 'Cooldown.*'))
+    // More concretely, verify the markers differ
+    const enabledMarker = lines[0].charAt(0)
+    const disabledMarker = lines[1].charAt(0)
+    expect(enabledMarker).not.toBe(disabledMarker)
   })
 
-  test('should split royalty among recipients', () => {
-    const totalRoyalty = 500_000_000n
-    const recipients = [
-      { share: 70 },
-      { share: 30 },
-    ]
-
-    const amounts = recipients.map(r => (totalRoyalty * BigInt(r.share)) / 100n)
-
-    expect(amounts[0]).toBe(350_000_000n)
-    expect(amounts[1]).toBe(150_000_000n)
+  test('returns empty string for an empty rules array', () => {
+    const output = formatRules([])
+    expect(output).toBe('')
   })
 })
 
-describe('Soulbound Tokens', () => {
-  test('should identify soulbound rule', () => {
-    const rules = [
-      { type: 'soulbound' as const, enabled: true },
-    ]
+// ---------------------------------------------------------------------------
+// hasRule
+// ---------------------------------------------------------------------------
 
-    const isSoulbound = rules.some(r => r.type === 'soulbound' && r.enabled)
-    expect(isSoulbound).toBe(true)
+describe('hasRule', () => {
+  test('returns true when an enabled rule of the given type exists', () => {
+    const pnft = makePNFT([createCooldownRule(3600)])
+    expect(hasRule(pnft, 'cooldown_period')).toBe(true)
   })
 
-  test('should allow recovery with authority', () => {
-    const rule = {
-      type: 'soulbound' as const,
-      enabled: true,
-      recoveryAuthority: Keypair.generate().publicKey,
-    }
-
-    expect(rule.recoveryAuthority).toBeDefined()
+  test('returns false when no rule of the given type exists', () => {
+    const pnft = makePNFT([createCooldownRule(3600)])
+    expect(hasRule(pnft, 'max_transfers')).toBe(false)
   })
-})
 
-describe('NFT State', () => {
-  test('should track state transitions', () => {
-    type State = 'unlocked' | 'listed' | 'staked' | 'frozen'
+  test('returns false when the rule exists but is disabled', () => {
+    const rule = createCooldownRule(3600)
+    rule.enabled = false
+    const pnft = makePNFT([rule])
 
-    const validTransitions: Record<State, State[]> = {
-      unlocked: ['listed', 'staked', 'frozen'],
-      listed: ['unlocked'],
-      staked: ['unlocked'],
-      frozen: ['unlocked'],
-    }
-
-    expect(validTransitions.unlocked).toContain('listed')
-    expect(validTransitions.listed).toContain('unlocked')
-    expect(validTransitions.staked).toContain('unlocked')
+    expect(hasRule(pnft, 'cooldown_period')).toBe(false)
   })
 })
 
-describe('Rule Formatting', () => {
-  test('should format duration', () => {
-    const formatDuration = (seconds: number): string => {
-      if (seconds < 60) return `${seconds}s`
-      if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
-      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`
-      return `${Math.floor(seconds / 86400)}d`
-    }
+// ---------------------------------------------------------------------------
+// getRule
+// ---------------------------------------------------------------------------
 
-    expect(formatDuration(30)).toBe('30s')
-    expect(formatDuration(120)).toBe('2m')
-    expect(formatDuration(7200)).toBe('2h')
-    expect(formatDuration(172800)).toBe('2d')
+describe('getRule', () => {
+  test('returns the rule when it exists', () => {
+    const royaltyRule = createRoyaltyRule(500, [
+      { address: Keypair.generate().publicKey, share: 100 },
+    ])
+    const pnft = makePNFT([royaltyRule])
+    const found = getRule<RoyaltyEnforcementRule>(pnft, 'royalty_enforcement')
+
+    expect(found).toBeDefined()
+    expect(found!.royaltyBps).toBe(500)
+  })
+
+  test('returns undefined when the rule type is not present', () => {
+    const pnft = makePNFT([createCooldownRule(3600)])
+    const found = getRule<RoyaltyEnforcementRule>(pnft, 'royalty_enforcement')
+
+    expect(found).toBeUndefined()
+  })
+
+  test('returns the rule even if it is disabled', () => {
+    const rule = createMaxTransfersRule(10)
+    rule.enabled = false
+    const pnft = makePNFT([rule])
+
+    const found = getRule(pnft, 'max_transfers')
+    expect(found).toBeDefined()
+    expect(found!.enabled).toBe(false)
   })
 })

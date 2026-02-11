@@ -1,175 +1,257 @@
 /**
- * Security Tests
+ * Security Audit Tests
+ *
+ * Tests for auditToken, auditCollection, and auditWallet functions
+ * in the security/audit module.
  */
 
 import { describe, test, expect } from 'bun:test'
 import { Keypair, PublicKey } from '@solana/web3.js'
+import { auditToken, auditCollection, auditWallet } from '../src/security/audit'
+import { createMockConnection } from './helpers/mock-connection'
 
-describe('Address Validation', () => {
-  test('should validate correct Solana address', () => {
-    const keypair = Keypair.generate()
-    const address = keypair.publicKey.toBase58()
-    expect(() => new PublicKey(address)).not.toThrow()
+/**
+ * Helper: build a mock AccountInfo object with a given data buffer.
+ */
+function mockAccountInfo(data: Buffer) {
+  return {
+    data,
+    executable: false,
+    lamports: 0,
+    owner: PublicKey.default,
+    rentEpoch: 0,
+  }
+}
+
+describe('auditToken', () => {
+  test('returns critical finding and riskScore 100 when account is null', async () => {
+    const conn = createMockConnection({
+      getAccountInfo: async () => null,
+    })
+    const mint = Keypair.generate().publicKey
+
+    const report = await auditToken(conn, mint)
+
+    expect(report.riskScore).toBe(100)
+    expect(report.targetType).toBe('token')
+    expect(report.target).toBe(mint.toBase58())
+    expect(report.findings).toHaveLength(1)
+    expect(report.findings[0].severity).toBe('critical')
+    expect(report.findings[0].title).toBe('Token not found')
+    expect(report.findings[0].category).toBe('existence')
   })
 
-  test('should reject invalid address', () => {
-    const invalidAddress = 'not-a-valid-address'
-    expect(() => new PublicKey(invalidAddress)).toThrow()
+  test('returns medium finding when mint authority is set (byte[0]=1)', async () => {
+    const data = Buffer.alloc(100)
+    data[0] = 1 // mint authority present
+
+    const conn = createMockConnection({
+      getAccountInfo: async () => mockAccountInfo(data),
+    })
+    const mint = Keypair.generate().publicKey
+
+    const report = await auditToken(conn, mint)
+
+    const mintAuthorityFinding = report.findings.find(f => f.title === 'Mint authority is set')
+    expect(mintAuthorityFinding).toBeDefined()
+    expect(mintAuthorityFinding!.severity).toBe('medium')
+    expect(mintAuthorityFinding!.category).toBe('authority')
+    expect(report.riskScore).toBeGreaterThanOrEqual(20)
   })
 
-  test('should reject empty address', () => {
-    expect(() => new PublicKey('')).toThrow()
-  })
-})
+  test('returns high finding when freeze authority is set (byte[36]=1)', async () => {
+    const data = Buffer.alloc(100)
+    data[36] = 1 // freeze authority present
 
-describe('Token Name Validation', () => {
-  test('should accept valid name', () => {
-    const name = 'My Token'
-    expect(name.length).toBeLessThanOrEqual(32)
-    expect(name.length).toBeGreaterThan(0)
-  })
+    const conn = createMockConnection({
+      getAccountInfo: async () => mockAccountInfo(data),
+    })
+    const mint = Keypair.generate().publicKey
 
-  test('should reject name over 32 characters', () => {
-    const name = 'A'.repeat(33)
-    expect(name.length).toBeGreaterThan(32)
-  })
-})
+    const report = await auditToken(conn, mint)
 
-describe('Token Symbol Validation', () => {
-  test('should accept valid symbol', () => {
-    const symbol = 'MTK'
-    expect(symbol.length).toBeLessThanOrEqual(10)
-    expect(symbol.length).toBeGreaterThan(0)
+    const freezeFinding = report.findings.find(f => f.title === 'Freeze authority is set')
+    expect(freezeFinding).toBeDefined()
+    expect(freezeFinding!.severity).toBe('high')
+    expect(freezeFinding!.category).toBe('authority')
+    expect(report.riskScore).toBeGreaterThanOrEqual(30)
   })
 
-  test('should reject symbol over 10 characters', () => {
-    const symbol = 'TOOLONGSYMBOL'
-    expect(symbol.length).toBeGreaterThan(10)
-  })
-})
+  test('returns combined risk when both authorities are set', async () => {
+    const data = Buffer.alloc(100)
+    data[0] = 1  // mint authority
+    data[36] = 1 // freeze authority
 
-describe('Decimals Validation', () => {
-  test('should accept valid decimals', () => {
-    const validDecimals = [0, 1, 6, 9]
-    for (const d of validDecimals) {
-      expect(d).toBeGreaterThanOrEqual(0)
-      expect(d).toBeLessThanOrEqual(9)
-    }
-  })
+    const conn = createMockConnection({
+      getAccountInfo: async () => mockAccountInfo(data),
+    })
+    const mint = Keypair.generate().publicKey
 
-  test('should reject invalid decimals', () => {
-    const invalidDecimals = [-1, 10, 18]
-    for (const d of invalidDecimals) {
-      expect(d < 0 || d > 9).toBe(true)
-    }
-  })
-})
+    const report = await auditToken(conn, mint)
 
-describe('Basis Points Validation', () => {
-  test('should accept valid basis points', () => {
-    const validBps = [0, 100, 500, 1000, 10000]
-    for (const bps of validBps) {
-      expect(bps).toBeGreaterThanOrEqual(0)
-      expect(bps).toBeLessThanOrEqual(10000)
-    }
+    const mintFinding = report.findings.find(f => f.title === 'Mint authority is set')
+    const freezeFinding = report.findings.find(f => f.title === 'Freeze authority is set')
+    expect(mintFinding).toBeDefined()
+    expect(freezeFinding).toBeDefined()
+    // 20 (mint) + 30 (freeze) = 50
+    expect(report.riskScore).toBe(50)
+    expect(report.recommendations).toContain('Revoke mint authority if supply should be fixed')
+    expect(report.recommendations).toContain('Revoke freeze authority to prevent account freezing')
   })
 
-  test('should reject invalid basis points', () => {
-    const invalidBps = [-1, 10001]
-    for (const bps of invalidBps) {
-      expect(bps < 0 || bps > 10000).toBe(true)
-    }
-  })
+  test('includes info finding about supply for valid accounts', async () => {
+    const data = Buffer.alloc(100) // no authorities set
 
-  test('should convert basis points to percentage', () => {
-    expect(500 / 100).toBe(5) // 5%
-    expect(1000 / 100).toBe(10) // 10%
-    expect(250 / 100).toBe(2.5) // 2.5%
-  })
-})
+    const conn = createMockConnection({
+      getAccountInfo: async () => mockAccountInfo(data),
+    })
+    const mint = Keypair.generate().publicKey
 
-describe('Creator Shares Validation', () => {
-  test('should accept shares summing to 100', () => {
-    const shares = [70, 20, 10]
-    const total = shares.reduce((a, b) => a + b, 0)
-    expect(total).toBe(100)
-  })
+    const report = await auditToken(conn, mint)
 
-  test('should reject shares not summing to 100', () => {
-    const shares = [50, 30]
-    const total = shares.reduce((a, b) => a + b, 0)
-    expect(total).not.toBe(100)
-  })
-
-  test('should reject negative shares', () => {
-    const shares = [110, -10]
-    expect(shares.some(s => s < 0)).toBe(true)
-  })
-})
-
-describe('URI Validation', () => {
-  test('should accept valid HTTPS URI', () => {
-    const uri = 'https://arweave.net/abc123'
-    expect(uri.startsWith('https://')).toBe(true)
-  })
-
-  test('should accept valid IPFS URI', () => {
-    const uri = 'ipfs://Qm...'
-    expect(uri.startsWith('ipfs://')).toBe(true)
-  })
-
-  test('should reject invalid URI', () => {
-    const uri = 'not-a-uri'
-    expect(uri.startsWith('http')).toBe(false)
-    expect(uri.startsWith('ipfs')).toBe(false)
+    const infoFinding = report.findings.find(f => f.severity === 'info' && f.category === 'supply')
+    expect(infoFinding).toBeDefined()
+    expect(infoFinding!.title).toBe('Token supply information')
+    expect(report.riskScore).toBe(0)
   })
 })
 
-describe('Amount Validation', () => {
-  test('should accept positive amounts', () => {
-    const amounts = [1n, 100n, 1000000000n]
-    for (const amount of amounts) {
-      expect(amount > 0n).toBe(true)
-    }
+describe('auditCollection', () => {
+  test('returns critical finding and riskScore 100 when collection is null', async () => {
+    const conn = createMockConnection({
+      getAccountInfo: async () => null,
+    })
+    const collectionMint = Keypair.generate().publicKey
+
+    const report = await auditCollection(conn, collectionMint)
+
+    expect(report.riskScore).toBe(100)
+    expect(report.targetType).toBe('collection')
+    expect(report.target).toBe(collectionMint.toBase58())
+    expect(report.findings).toHaveLength(1)
+    expect(report.findings[0].severity).toBe('critical')
+    expect(report.findings[0].title).toBe('Collection not found')
+    expect(report.summary).toBe('Collection not found on chain')
   })
 
-  test('should reject zero amount', () => {
-    const amount = 0n
-    expect(amount > 0n).toBe(false)
-  })
+  test('returns info findings and recommendations for valid collection', async () => {
+    const data = Buffer.alloc(100)
 
-  test('should reject negative amount', () => {
-    const amount = -1n
-    expect(amount > 0n).toBe(false)
+    const conn = createMockConnection({
+      getAccountInfo: async () => mockAccountInfo(data),
+    })
+    const collectionMint = Keypair.generate().publicKey
+
+    const report = await auditCollection(conn, collectionMint)
+
+    expect(report.riskScore).toBe(0)
+    expect(report.targetType).toBe('collection')
+    const metadataFinding = report.findings.find(f => f.category === 'metadata')
+    expect(metadataFinding).toBeDefined()
+    expect(metadataFinding!.severity).toBe('info')
+    expect(report.recommendations).toContain('Verify all NFTs in collection are properly verified')
+    expect(report.recommendations).toContain('Consider making collection immutable after launch')
   })
 })
 
-describe('Security Risk Scoring', () => {
-  test('should calculate risk score', () => {
-    const findings = {
-      critical: 0,
-      high: 1,
-      medium: 2,
-      low: 3,
-    }
+describe('auditWallet', () => {
+  test('returns low risk for default balance (1 SOL) with no token accounts', async () => {
+    const conn = createMockConnection({
+      getBalance: async () => 1_000_000_000, // 1 SOL
+      getParsedTokenAccountsByOwner: async () => ({ value: [] }),
+    })
+    const wallet = Keypair.generate().publicKey
 
-    // Simple risk calculation
-    const riskScore = findings.critical * 40 + findings.high * 20 + findings.medium * 10 + findings.low * 5
-    expect(riskScore).toBe(55)
+    const report = await auditWallet(conn, wallet)
+
+    expect(report.targetType).toBe('wallet')
+    expect(report.riskScore).toBe(0)
+    // Should only have the info summary finding
+    const mediumFindings = report.findings.filter(f => f.severity === 'medium')
+    expect(mediumFindings).toHaveLength(0)
+    const infoFinding = report.findings.find(f => f.category === 'summary')
+    expect(infoFinding).toBeDefined()
+    expect(infoFinding!.description).toContain('1 SOL')
   })
 
-  test('should cap risk score at 100', () => {
-    const findings = {
-      critical: 3,
-      high: 2,
-      medium: 1,
-      low: 0,
-    }
+  test('returns medium finding for large SOL balance (>100 SOL)', async () => {
+    const conn = createMockConnection({
+      getBalance: async () => 200_000_000_000, // 200 SOL
+      getParsedTokenAccountsByOwner: async () => ({ value: [] }),
+    })
+    const wallet = Keypair.generate().publicKey
 
-    const riskScore = Math.min(
-      findings.critical * 40 + findings.high * 20 + findings.medium * 10,
-      100
-    )
-    expect(riskScore).toBe(100)
+    const report = await auditWallet(conn, wallet)
+
+    const balanceFinding = report.findings.find(f => f.title === 'Large SOL balance')
+    expect(balanceFinding).toBeDefined()
+    expect(balanceFinding!.severity).toBe('medium')
+    expect(balanceFinding!.description).toContain('200 SOL')
+    expect(balanceFinding!.recommendation).toBe('Consider using cold storage for large amounts')
+    expect(report.riskScore).toBeGreaterThanOrEqual(15)
+    expect(report.recommendations).toContain('Use hardware wallet or cold storage for large balances')
+  })
+
+  test('returns low finding for many token accounts (>50)', async () => {
+    const conn = createMockConnection({
+      getBalance: async () => 1_000_000_000, // 1 SOL — below large balance threshold
+      getParsedTokenAccountsByOwner: async () => ({
+        value: new Array(60).fill({}),
+      }),
+    })
+    const wallet = Keypair.generate().publicKey
+
+    const report = await auditWallet(conn, wallet)
+
+    const accountsFinding = report.findings.find(f => f.title === 'Many token accounts')
+    expect(accountsFinding).toBeDefined()
+    expect(accountsFinding!.severity).toBe('low')
+    expect(accountsFinding!.description).toContain('60')
+    expect(accountsFinding!.recommendation).toBe('Consider closing unused token accounts to reclaim rent')
+    expect(report.recommendations).toContain('Close unused token accounts to reclaim SOL')
+  })
+})
+
+describe('Audit report structure and edge cases', () => {
+  test('auditToken report includes a timestamp that is a Date', async () => {
+    const conn = createMockConnection({
+      getAccountInfo: async () => null,
+    })
+    const mint = Keypair.generate().publicKey
+
+    const report = await auditToken(conn, mint)
+
+    expect(report.timestamp).toBeInstanceOf(Date)
+    // Timestamp should be recent (within the last 5 seconds)
+    const now = Date.now()
+    expect(now - report.timestamp.getTime()).toBeLessThan(5000)
+  })
+
+  test('auditToken summary string for null account contains "not found"', async () => {
+    const conn = createMockConnection({
+      getAccountInfo: async () => null,
+    })
+    const mint = Keypair.generate().publicKey
+
+    const report = await auditToken(conn, mint)
+
+    expect(report.summary).toBe('Token not found on chain')
+    expect(report.recommendations).toContain('Verify the mint address is correct')
+  })
+
+  test('auditToken summary reflects severity for medium-only findings', async () => {
+    const data = Buffer.alloc(100)
+    data[0] = 1 // only mint authority
+
+    const conn = createMockConnection({
+      getAccountInfo: async () => mockAccountInfo(data),
+    })
+    const mint = Keypair.generate().publicKey
+
+    const report = await auditToken(conn, mint)
+
+    // generateSummary: no critical, no high, medium > 0
+    expect(report.summary).toContain('Medium severity issues found')
+    expect(report.summary).toContain('Consider addressing')
   })
 })
