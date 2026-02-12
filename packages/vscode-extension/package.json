@@ -105,6 +105,6 @@
     "typecheck": "bun --bun tsc --noEmit"
   },
   "devDependencies": {
-    "@types/vscode": "^1.85.0"
+    "@types/vscode": "^1.109.0"
   }
 }
