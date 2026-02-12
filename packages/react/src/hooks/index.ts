@@ -21,3 +21,9 @@ export {
   getLoadingAriaProps,
   getErrorAriaProps,
 } from '../utils/a11y'
+
+// Governance hooks
+export { useDAO } from './useDAO'
+export { useProposals } from './useProposals'
+export { useVotingPower } from './useVotingPower'
+export { useTreasury } from './useTreasury'

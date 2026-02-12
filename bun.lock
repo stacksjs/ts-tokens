@@ -87,6 +87,22 @@
         "react-dom": ">=18.0.0",
       },
     },
+    "packages/ts-governance": {
+      "name": "ts-governance",
+      "version": "0.1.0",
+      "bin": {
+        "governance": "./dist/cli.js",
+      },
+      "dependencies": {
+        "@solana/spl-token": "^0.4.0",
+        "@solana/web3.js": "^1.95.0",
+        "ts-tokens": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "^22.0.0",
+        "better-dx": "^0.2.5",
+      },
+    },
     "packages/ts-tokens": {
       "name": "ts-tokens",
       "version": "0.1.0",
@@ -99,6 +115,7 @@
         "@solana/web3.js": "^1.95.0",
         "chalk": "^5.3.0",
         "ora": "^8.0.0",
+        "ts-governance": "workspace:*",
       },
       "devDependencies": {
         "@types/node": "^22.0.0",
@@ -106,6 +123,13 @@
       },
       "peerDependencies": {
         "bunfig": "^0.5.0",
+      },
+    },
+    "packages/vscode-extension": {
+      "name": "ts-tokens-vscode",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@types/vscode": "^1.85.0",
       },
     },
     "packages/vue": {
@@ -588,6 +612,8 @@
     "@types/stack-utils": ["@types/stack-utils@2.0.3", "", {}, "sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw=="],
 
     "@types/uuid": ["@types/uuid@8.3.4", "", {}, "sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw=="],
+
+    "@types/vscode": ["@types/vscode@1.109.0", "", {}, "sha512-0Pf95rnwEIwDbmXGC08r0B4TQhAbsHQ5UyTIgVgoieDe4cOnf92usuR5dEczb6bTKEp7ziZH4TV1TRGPPCExtw=="],
 
     "@types/whatwg-mimetype": ["@types/whatwg-mimetype@3.0.2", "", {}, "sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA=="],
 
@@ -1627,9 +1653,13 @@
 
     "ts-error-handling": ["ts-error-handling@0.1.0", "", {}, "sha512-v0t9+8PBJkyQoOG2SY/PGKJLPrahsRA/4ZbU/C7+RWVviXtUrXRyGKkHa+2+UwgVFJVdI//D9PINuSfciqNKOQ=="],
 
+    "ts-governance": ["ts-governance@workspace:packages/ts-governance"],
+
     "ts-pkgx": ["ts-pkgx@0.4.38", "", { "dependencies": { "chromium-bidi": "^7.2.0", "electron": "^37.2.4", "js-yaml": "^4.1.0", "playwright": "^1.54.1" }, "bin": { "ts-pkgx": "dist/bin/cli.js" } }, "sha512-UJA8LikwMv+w66ZfMvLn0f6NuG1OZ49jifMaTWn2VjUe68RV8H1nzkO0ZB/QhlhRh5tKs1Htd+YVQNnOWpc7Bw=="],
 
     "ts-tokens": ["ts-tokens@workspace:packages/ts-tokens"],
+
+    "ts-tokens-vscode": ["ts-tokens-vscode@workspace:packages/vscode-extension"],
 
     "tsconfig-paths": ["tsconfig-paths@4.2.0", "", { "dependencies": { "json5": "^2.2.2", "minimist": "^1.2.6", "strip-bom": "^3.0.0" } }, "sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg=="],
 

@@ -4,6 +4,7 @@
 
 import type { Connection} from '@solana/web3.js';
 import { PublicKey, Keypair } from '@solana/web3.js'
+import { getDAOAddress, getTreasuryAddress } from 'ts-governance/programs'
 import type { DAO, DAOConfig, CreateDAOOptions } from './types'
 
 /**
@@ -53,9 +54,9 @@ export async function createDAO(
     throw new Error('Approval threshold must be between 1 and 100')
   }
 
-  // Generate DAO address (in production, would be PDA)
-  const daoKeypair = Keypair.generate()
-  const treasuryKeypair = Keypair.generate()
+  // Derive deterministic PDA addresses from the governance program
+  const daoAddress = getDAOAddress(payer.publicKey, name)
+  const treasury = getTreasuryAddress(daoAddress)
 
   const daoConfig: DAOConfig = {
     votingPeriod,
@@ -67,10 +68,10 @@ export async function createDAO(
   }
 
   const dao: DAO = {
-    address: daoKeypair.publicKey,
+    address: daoAddress,
     name,
     governanceToken,
-    treasury: treasuryKeypair.publicKey,
+    treasury,
     config: daoConfig,
     proposalCount: 0n,
     totalVotingPower: 0n,
@@ -80,7 +81,7 @@ export async function createDAO(
   // In production, would create on-chain accounts
   return {
     dao,
-    signature: `dao_created_${daoKeypair.publicKey.toBase58().slice(0, 8)}`,
+    signature: `dao_created_${daoAddress.toBase58().slice(0, 8)}`,
   }
 }
 

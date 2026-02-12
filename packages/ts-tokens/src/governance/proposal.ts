@@ -4,6 +4,7 @@
 
 import type { Connection} from '@solana/web3.js';
 import { PublicKey, Keypair, SystemProgram } from '@solana/web3.js'
+import { getProposalAddress } from 'ts-governance/programs'
 import type {
   Proposal,
   ProposalStatus,
@@ -41,11 +42,12 @@ export async function createProposal(
   const daoInfo = await getDAO(connection, dao)
   const currentTime = BigInt(Math.floor(Date.now() / 1000))
 
-  // Generate proposal address
-  const proposalKeypair = Keypair.generate()
+  // Derive deterministic PDA address from DAO and proposal index
+  const proposalIndex = daoInfo?.proposalCount ?? 0n
+  const proposalAddress = getProposalAddress(dao, proposalIndex)
 
   const proposal: Proposal = {
-    address: proposalKeypair.publicKey,
+    address: proposalAddress,
     dao,
     proposer: proposer.publicKey,
     title,
@@ -62,7 +64,7 @@ export async function createProposal(
 
   return {
     proposal,
-    signature: `proposal_created_${proposalKeypair.publicKey.toBase58().slice(0, 8)}`,
+    signature: `proposal_created_${proposalAddress.toBase58().slice(0, 8)}`,
   }
 }
 

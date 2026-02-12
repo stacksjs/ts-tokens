@@ -3,6 +3,7 @@
  */
 
 import type { Connection, PublicKey, Keypair } from '@solana/web3.js'
+import { getVoteRecordAddress } from 'ts-governance/programs'
 import type {
   VoteRecord,
   VoteType,

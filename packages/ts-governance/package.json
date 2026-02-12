@@ -1,0 +1,101 @@
+{
+  "name": "ts-governance",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "DAO governance, proposals, voting, delegation, and treasury management for Solana.",
+  "author": "Chris Breuer <chris@stacksjs.org>",
+  "license": "MIT",
+  "homepage": "https://github.com/stacksjs/ts-tokens/tree/main/packages/ts-governance#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stacksjs/ts-tokens.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stacksjs/ts-tokens/issues"
+  },
+  "keywords": [
+    "typescript",
+    "solana",
+    "governance",
+    "dao",
+    "voting",
+    "proposals",
+    "treasury",
+    "delegation",
+    "web3",
+    "stacksjs"
+  ],
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./programs": {
+      "bun": "./src/programs/index.ts",
+      "types": "./dist/programs/index.d.ts",
+      "import": "./dist/programs/index.js"
+    },
+    "./dao": {
+      "bun": "./src/dao/index.ts",
+      "types": "./dist/dao/index.d.ts",
+      "import": "./dist/dao/index.js"
+    },
+    "./proposals": {
+      "bun": "./src/proposals/index.ts",
+      "types": "./dist/proposals/index.d.ts",
+      "import": "./dist/proposals/index.js"
+    },
+    "./voting": {
+      "bun": "./src/voting/index.ts",
+      "types": "./dist/voting/index.d.ts",
+      "import": "./dist/voting/index.js"
+    },
+    "./treasury": {
+      "bun": "./src/treasury/index.ts",
+      "types": "./dist/treasury/index.d.ts",
+      "import": "./dist/treasury/index.js"
+    },
+    "./delegation": {
+      "bun": "./src/delegation/index.ts",
+      "types": "./dist/delegation/index.d.ts",
+      "import": "./dist/delegation/index.js"
+    },
+    "./types": {
+      "bun": "./src/types/index.ts",
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js"
+    },
+    "./*": {
+      "bun": "./src/*",
+      "import": "./dist/*"
+    }
+  },
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "governance": "./dist/cli.js"
+  },
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target node --sourcemap=external",
+    "lint": "bunx --bun eslint .",
+    "lint:fix": "bunx --bun eslint . --fix",
+    "release": "bun publish --access public --provenance",
+    "prepublishOnly": "bun --bun run build",
+    "test": "bun test",
+    "typecheck": "bun --bun tsc --noEmit"
+  },
+  "dependencies": {
+    "ts-tokens": "workspace:*",
+    "@solana/web3.js": "^1.95.0",
+    "@solana/spl-token": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "better-dx": "^0.2.5"
+  }
+}

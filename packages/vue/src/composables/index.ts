@@ -11,6 +11,12 @@ export { useTokenAccounts } from './useTokenAccounts'
 export { useCandyMachine } from './useCandyMachine'
 export { useWallet } from './useWallet'
 
+// Governance composables
+export { useDAO } from './useDAO'
+export { useProposals } from './useProposals'
+export { useVotingPower } from './useVotingPower'
+export { useTreasury } from './useTreasury'
+
 // Accessibility utilities
 export {
   announce,
