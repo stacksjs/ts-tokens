@@ -96,11 +96,11 @@
   },
   "dependencies": {
     "ts-tokens": "workspace:*",
-    "@solana/web3.js": "^1.95.0",
-    "@solana/spl-token": "^0.4.0"
+    "@solana/web3.js": "^1.98.4",
+    "@solana/spl-token": "^0.4.14"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.19.11",
     "better-dx": "^0.2.5"
   }
 }

@@ -59,7 +59,7 @@ jobs:
 
       - name: Create GitHub Release
         id: create_release
-        uses: stacksjs/action-releaser@v1.1.0
+        uses: stacksjs/action-releaser@v1.2.9
         with:
           files: |
             ./packages/ts-tokens/bin/tokens-linux-x64.zip
