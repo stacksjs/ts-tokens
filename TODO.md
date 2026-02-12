@@ -2988,7 +2988,7 @@ const rules = await tokens.pnft.rules(pnft)
 
 #### DAO Management
 
-- [ ] `create_dao` - Create new DAO
+- [x] `create_dao` - Create new DAO
 
   ```ts
   const dao = await votes.dao.create({
@@ -3004,12 +3004,12 @@ const rules = await tokens.pnft.rules(pnft)
   })
   ```
 
-- [ ] `update_dao_config` - Update governance parameters (via proposal)
-- [ ] `set_dao_authority` - Transfer admin (via proposal)
+- [x] `update_dao_config` - Update governance parameters (via proposal)
+- [x] `set_dao_authority` - Transfer admin (via proposal)
 
 #### Proposals
 
-- [ ] `create_proposal` - Create new proposal
+- [x] `create_proposal` - Create new proposal
 
   ```ts
   const proposal = await votes.proposal.create({
@@ -3023,12 +3023,12 @@ const rules = await tokens.pnft.rules(pnft)
   })
   ```
 
-- [ ] `cancel_proposal` - Cancel (proposer or admin only)
-- [ ] `execute_proposal` - Execute passed proposal
+- [x] `cancel_proposal` - Cancel (proposer or admin only)
+- [x] `execute_proposal` - Execute passed proposal
 
 #### Voting
 
-- [ ] `cast_vote` - Vote on proposal
+- [x] `cast_vote` - Vote on proposal
 
   ```ts
   await votes.vote.cast({
@@ -3038,12 +3038,12 @@ const rules = await tokens.pnft.rules(pnft)
   // Automatically calculates voting power from token balance
   ```
 
-- [ ] `change_vote` - Change vote (if allowed)
-- [ ] `withdraw_vote` - Remove vote (if allowed)
+- [x] `change_vote` - Change vote (if allowed)
+- [x] `withdraw_vote` - Remove vote (if allowed)
 
 #### Delegation
 
-- [ ] `delegate_votes` - Delegate voting power
+- [x] `delegate_votes` - Delegate voting power
 
   ```ts
   await votes.delegate({
@@ -3054,8 +3054,8 @@ const rules = await tokens.pnft.rules(pnft)
   })
   ```
 
-- [ ] `undelegate` - Remove delegation
-- [ ] `accept_delegation` - Delegate accepts (optional)
+- [x] `undelegate` - Remove delegation
+- [x] `accept_delegation` - Delegate accepts (optional)
 
 ### 21.5 Voting Mechanisms
 
@@ -3079,9 +3079,9 @@ const rules = await tokens.pnft.rules(pnft)
 
 #### Time-Weighted Voting
 
-- [ ] Longer holders get more weight
-- [ ] Incentivizes long-term alignment
-- [ ] Configurable decay/growth curves
+- [x] Longer holders get more weight
+- [x] Incentivizes long-term alignment
+- [x] Configurable decay/growth curves
 
 ### 21.6 Treasury Management
 
@@ -3178,43 +3178,43 @@ const info = await votes.dao.info(dao)
 
 ### 21.9 React Components for ts-governance
 
-- [ ] Create `packages/ts-governance-react/` package
-- [ ] `<DAOProvider>` - DAO context provider
-- [ ] `<ProposalList>` - List of proposals
-- [ ] `<ProposalCard>` - Single proposal display
-- [ ] `<ProposalDetails>` - Full proposal view
-- [ ] `<VoteButton>` - Vote for/against/abstain
-- [ ] `<VotingPower>` - Display user's voting power
-- [ ] `<DelegateForm>` - Delegate votes UI
-- [ ] `<TreasuryBalance>` - Show treasury holdings
-- [ ] `<CreateProposalForm>` - Proposal creation wizard
-- [ ] `<GovernanceStats>` - DAO statistics
+- [x] Create `packages/ts-governance-react/` package
+- [x] `<DAOProvider>` - DAO context provider
+- [x] `<ProposalList>` - List of proposals
+- [x] `<ProposalCard>` - Single proposal display
+- [x] `<ProposalDetails>` - Full proposal view
+- [x] `<VoteButton>` - Vote for/against/abstain
+- [x] `<VotingPower>` - Display user's voting power
+- [x] `<DelegateForm>` - Delegate votes UI
+- [x] `<TreasuryBalance>` - Show treasury holdings
+- [x] `<CreateProposalForm>` - Proposal creation wizard
+- [x] `<GovernanceStats>` - DAO statistics
 
 ### 21.10 Vue Components for ts-governance
 
-- [ ] Create `packages/ts-governance-vue/` package
-- [ ] Same components as React, Vue 3 syntax
+- [x] Create `packages/ts-governance-vue/` package
+- [x] Same components as React, Vue 3 syntax
 
 ### 21.11 Integration with ts-tokens
 
-- [ ] Seamless token balance → voting power
-- [ ] Staked tokens can vote (optional config)
-- [ ] NFT collection → DAO membership
-- [ ] Multi-sig as DAO admin
-- [ ] Treasury uses ts-tokens for transfers
+- [x] Seamless token balance → voting power
+- [x] Staked tokens can vote (optional config)
+- [x] NFT collection → DAO membership
+- [x] Multi-sig as DAO admin
+- [x] Treasury uses ts-tokens for transfers
 
 ### 21.12 Documentation for ts-governance
 
-- [ ] Create `docs/ts-governance/` directory
-- [ ] `docs/ts-governance/overview.md` - What is ts-governance
-- [ ] `docs/ts-governance/quickstart.md` - Create your first DAO
-- [ ] `docs/ts-governance/dao.md` - DAO configuration
-- [ ] `docs/ts-governance/proposals.md` - Proposal lifecycle
-- [ ] `docs/ts-governance/voting.md` - Voting mechanisms
-- [ ] `docs/ts-governance/delegation.md` - Vote delegation
-- [ ] `docs/ts-governance/treasury.md` - Treasury management
-- [ ] `docs/ts-governance/cli.md` - CLI reference
-- [ ] `docs/ts-governance/components.md` - React/Vue components
+- [x] Create `docs/ts-governance/` directory
+- [x] `docs/ts-governance/overview.md` - What is ts-governance
+- [x] `docs/ts-governance/quickstart.md` - Create your first DAO
+- [x] `docs/ts-governance/dao.md` - DAO configuration
+- [x] `docs/ts-governance/proposals.md` - Proposal lifecycle
+- [x] `docs/ts-governance/voting.md` - Voting mechanisms
+- [x] `docs/ts-governance/delegation.md` - Vote delegation
+- [x] `docs/ts-governance/treasury.md` - Treasury management
+- [x] `docs/ts-governance/cli.md` - CLI reference
+- [x] `docs/ts-governance/components.md` - React/Vue components
 
 ---
 

@@ -66,6 +66,11 @@
       "types": "./dist/types/index.d.ts",
       "import": "./dist/types/index.js"
     },
+    "./votes": {
+      "bun": "./src/votes.ts",
+      "types": "./dist/votes.d.ts",
+      "import": "./dist/votes.js"
+    },
     "./*": {
       "bun": "./src/*",
       "import": "./dist/*"

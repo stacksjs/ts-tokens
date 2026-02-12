@@ -2,6 +2,6 @@
  * Integrations Module
  */
 
-export { getStakedVotingPower } from './staking'
-export { getNFTCollectionMembership } from './nft-membership'
-export { setMultisigAsDAOAdmin } from './multisig-admin'
+export { getStakedVotingPower, isStaked, getStakeEntryAge } from './staking'
+export { getNFTCollectionMembership, isCollectionMember, getNFTVotingPower } from './nft-membership'
+export { setMultisigAsDAOAdmin, isMultisigAuthority, createMultisigProposal } from './multisig-admin'
