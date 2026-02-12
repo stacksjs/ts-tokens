@@ -169,7 +169,8 @@
     "@solana/spl-token": "^0.4.14",
     "chalk": "^5.6.2",
     "ora": "^8.0.0",
-    "@inquirer/prompts": "^7.0.0"
+    "@inquirer/prompts": "^7.0.0",
+    "ts-governance": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
