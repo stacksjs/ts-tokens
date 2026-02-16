@@ -58,23 +58,23 @@
     "ts-tokens": "workspace:*"
   },
   "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0",
-    "@solana/wallet-adapter-react": ">=0.15.0",
-    "@solana/wallet-adapter-react-ui": ">=0.9.0",
-    "@solana/web3.js": ">=1.87.0"
+    "react": ">=18.3.1",
+    "react-dom": ">=18.3.1",
+    "@solana/wallet-adapter-react": ">=0.15.39",
+    "@solana/wallet-adapter-react-ui": ">=0.9.39",
+    "@solana/web3.js": ">=1.98.4"
   },
   "devDependencies": {
     "@storybook/react": "^10.2.8",
     "@storybook/react-vite": "^10.2.8",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
     "better-dx": "^0.2.5",
     "happy-dom": "^20.6.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "storybook": "^10.2.8"
   },
   "lint-staged": {
