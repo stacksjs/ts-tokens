@@ -58,8 +58,8 @@
     "ts-tokens": "workspace:*"
   },
   "peerDependencies": {
-    "react": ">=18.3.1",
-    "react-dom": ">=18.3.1",
+    "react": ">=19.2.4",
+    "react-dom": ">=19.2.4",
     "@solana/wallet-adapter-react": ">=0.15.39",
     "@solana/wallet-adapter-react-ui": ">=0.9.39",
     "@solana/web3.js": ">=1.98.4"
@@ -69,12 +69,12 @@
     "@storybook/react-vite": "^10.2.8",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@types/react": "^18.3.28",
-    "@types/react-dom": "^18.3.7",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "better-dx": "^0.2.5",
     "happy-dom": "^20.6.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "storybook": "^10.2.8"
   },
   "lint-staged": {
