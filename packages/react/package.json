@@ -58,7 +58,7 @@
     "ts-tokens": "workspace:*"
   },
   "peerDependencies": {
-    "react": ">=19.2.4",
+    "react": "^19.2.4",
     "react-dom": ">=19.2.4",
     "@solana/wallet-adapter-react": ">=0.15.39",
     "@solana/wallet-adapter-react-ui": ">=0.9.39",
