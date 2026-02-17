@@ -173,7 +173,7 @@
     "ts-governance": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^22.19.11",
+    "@types/node": "^25.2.3",
     "better-dx": "^0.2.5"
   },
   "peerDependencies": {
