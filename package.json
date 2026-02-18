@@ -36,7 +36,6 @@
     "changelog": "bunx logsmith --verbose",
     "changelog:generate": "bunx logsmith --output CHANGELOG.md",
     "release": "bun run changelog:generate && bunx bumpx prompt --recursive",
-    "postinstall": "bunx git-hooks",
     "dev:docs": "bun --bun bunpress dev docs",
     "build:docs": "bun --bun bunpress build docs",
     "preview:docs": "bun --bun bunpress preview docs",
@@ -44,15 +43,10 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "better-dx": "^0.2.5"
-  },
-  "git-hooks": {
-    "pre-commit": {
-      "staged-lint": {
-        "*.ts": "bunx --bun pickier --fix"
-      }
-    },
-    "commit-msg": "bunx gitlint --edit .git/COMMIT_EDITMSG"
+    "@types/bun": "^1.2.0",
+    "better-dx": "^0.2.5",
+    "happy-dom": "^20.6.2",
+    "typescript": "^5.9.3"
   },
   "workspaces": [
     "packages/*",

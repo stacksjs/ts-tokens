@@ -74,7 +74,7 @@ describe('useTransaction', () => {
   test('send sets error when transaction confirmation fails', async () => {
     mockSendRaw.mockClear()
     mockConfirm.mockImplementationOnce(() =>
-      Promise.resolve({ value: { err: 'InstructionError' } }),
+      Promise.resolve({ value: { err: 'InstructionError' as any } }),
     )
 
     const { send, error, confirmed } = useTransaction()

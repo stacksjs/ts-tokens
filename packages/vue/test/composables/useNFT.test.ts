@@ -122,7 +122,7 @@ describe('useNFT', () => {
   })
 
   test('refetch sets error when getNFTMetadata returns null', async () => {
-    mockGetNFTMetadata.mockImplementationOnce(() => Promise.resolve(null))
+    mockGetNFTMetadata.mockImplementationOnce(() => Promise.resolve(null as any))
 
     const { nft, error, loading, refetch } = useNFT(TEST_MINT)
 
@@ -151,7 +151,7 @@ describe('useNFT', () => {
 
   test('refetch handles missing off-chain fields gracefully', async () => {
     mockFetchOffChainMetadata.mockImplementationOnce(() =>
-      Promise.resolve({}),
+      Promise.resolve({} as any),
     )
 
     const { nft, refetch } = useNFT(TEST_MINT)

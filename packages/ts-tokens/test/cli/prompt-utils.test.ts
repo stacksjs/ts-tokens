@@ -142,13 +142,13 @@ describe('promptNumber', () => {
   })
 
   test('falls back to defaultValue when number returns undefined', async () => {
-    mockNumber.mockImplementationOnce(() => Promise.resolve(undefined))
+    mockNumber.mockImplementationOnce(() => Promise.resolve(undefined as unknown as number))
     const result = await promptNumber('Enter count', 7)
     expect(result).toBe(7)
   })
 
   test('falls back to 0 when both result and defaultValue are undefined', async () => {
-    mockNumber.mockImplementationOnce(() => Promise.resolve(undefined))
+    mockNumber.mockImplementationOnce(() => Promise.resolve(undefined as unknown as number))
     const result = await promptNumber('Enter count')
     expect(result).toBe(0)
   })

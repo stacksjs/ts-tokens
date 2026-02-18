@@ -46,7 +46,7 @@ export function verifyConcurrentMerkleProof(
     return false
   }
 
-  let currentHash = new Uint8Array(leaf)
+  let currentHash: Uint8Array = new Uint8Array(leaf)
   let currentIndex = index
 
   for (const proofNode of proof) {

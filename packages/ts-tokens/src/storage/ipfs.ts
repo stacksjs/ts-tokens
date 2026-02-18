@@ -106,7 +106,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
     }
 
     const formData = new FormData()
-    const blob = new Blob([data], { type: contentType })
+    const blob = new Blob([data as BlobPart], { type: contentType })
     formData.append('file', blob)
 
     if (options?.tags) {
@@ -152,7 +152,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
         Authorization: `Bearer ${this.config.pinningApiKey}`,
         'Content-Type': contentType,
       },
-      body: data,
+      body: data as BodyInit,
       signal: AbortSignal.timeout(this.config.timeout),
     })
 
@@ -183,7 +183,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
         Authorization: `Bearer ${this.config.pinningApiKey}`,
         'X-Content-Type': contentType,
       },
-      body: data,
+      body: data as BodyInit,
       signal: AbortSignal.timeout(this.config.timeout),
     })
 
@@ -211,7 +211,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
     const auth = btoa(`${this.config.pinningApiKey}:${this.config.pinningSecret}`)
 
     const formData = new FormData()
-    const blob = new Blob([data], { type: contentType })
+    const blob = new Blob([data as BlobPart], { type: contentType })
     formData.append('file', blob)
 
     const response = await fetch('https://ipfs.infura.io:5001/api/v0/add', {
@@ -240,7 +240,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
     options?: UploadOptions
   ): Promise<string> {
     const formData = new FormData()
-    const blob = new Blob([data])
+    const blob = new Blob([data as BlobPart])
     formData.append('file', blob)
 
     const response = await fetch(`${this.config.apiEndpoint}/api/v0/add`, {
@@ -636,7 +636,7 @@ export async function uploadDirectory(
   const formData = new FormData()
 
   for (const file of files) {
-    const blob = new Blob([file.data], { type: file.contentType || 'application/octet-stream' })
+    const blob = new Blob([file.data as BlobPart], { type: file.contentType || 'application/octet-stream' })
     formData.append('file', blob, file.name)
   }
 

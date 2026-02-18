@@ -83,7 +83,7 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
 
     // Create form data for upload
     const formData = new FormData()
-    const blob = new Blob([bytes], { type: contentType })
+    const blob = new Blob([bytes as BlobPart], { type: contentType })
     formData.append('file', blob, fileName)
     formData.append('storageAccount', this.config.storageAccount)
     formData.append('message', 'upload')
@@ -338,7 +338,7 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
     const wallet = loadWallet(this.tokenConfig)
     const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data
     const formData = new FormData()
-    const blob = new Blob([bytes])
+    const blob = new Blob([bytes as BlobPart])
     formData.append('file', blob, filename)
     formData.append('storageAccount', account)
 

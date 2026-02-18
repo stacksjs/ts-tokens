@@ -11,12 +11,12 @@
  */
 
 import React from 'react'
-import { render, type RenderOptions } from '@testing-library/react'
+import { render, type RenderOptions, type RenderResult } from '@testing-library/react'
 
 /**
  * Render a component for testing.
  * For pure display components, no wrapper is needed.
  */
-export function renderComponent(ui: React.ReactElement, options?: RenderOptions) {
-  return render(ui, options)
+export function renderComponent(ui: React.ReactElement, options?: RenderOptions): RenderResult {
+  return render(ui as React.ReactNode, options)
 }

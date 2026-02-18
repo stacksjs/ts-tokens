@@ -6,6 +6,7 @@ import type { UpdateNftInput } from '../src/compat/types'
 describe('toMetaplexNft', () => {
   const mockMetadata: NFTMetadata = {
     mint: 'MintAddress123',
+    metadataAddress: 'MetadataAddress123',
     name: 'Cool NFT',
     symbol: 'COOL',
     uri: 'https://arweave.net/abc123',

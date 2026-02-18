@@ -48,6 +48,7 @@ interface OtelApi {
  */
 async function loadOtelApi(): Promise<OtelApi | null> {
   try {
+    // @ts-expect-error -- optional dependency, resolved at runtime
     const otel = await import('@opentelemetry/api')
     return otel as unknown as OtelApi
   } catch {
