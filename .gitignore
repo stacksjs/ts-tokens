@@ -16,3 +16,4 @@ pantry_modules
 packages/react/.storybook
 packages/react/src/**/*.stories.tsx
 storybook-static
+/pantry
