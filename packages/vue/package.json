@@ -63,7 +63,7 @@
   "devDependencies": {
     "@vue/test-utils": "^2.4.6",
     "better-dx": "^0.2.5",
-    "happy-dom": "^20.6.1",
+    "happy-dom": "^20.6.2",
     "vue": "^3.5.28"
   },
   "lint-staged": {
