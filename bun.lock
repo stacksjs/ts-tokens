@@ -1,11 +1,12 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "ts-tokens",
       "devDependencies": {
         "@playwright/test": "^1.58.2",
-        "@types/bun": "^1.2.0",
+        "@types/bun": "^1.3.9",
         "better-dx": "^0.2.5",
         "happy-dom": "^20.6.2",
         "typescript": "^5.9.3",
@@ -116,7 +117,7 @@
       "dependencies": {
         "@inquirer/prompts": "^8.2.1",
         "@solana/spl-token": "^0.4.14",
-        "@solana/web3.js": "^1.98.0",
+        "@solana/web3.js": "^1.98.4",
         "@stacksjs/clapp": "^0.2.0",
         "chalk": "^5.6.2",
         "ora": "^9.3.0",
