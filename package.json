@@ -28,7 +28,7 @@
   "types": "./dist/index.d.ts",
   "files": ["README.md", "dist"],
   "scripts": {
-    "build": "bun --bun build.ts && bun run compile",
+    "build": "bun --filter './packages/*' build",
     "fresh": "bunx rimraf node_modules/ bun.lock && bun i",
     "test": "bun test packages/ test/",
     "lint": "bunx --bun pickier .",

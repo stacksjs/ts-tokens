@@ -167,15 +167,18 @@
   "dependencies": {
     "@solana/web3.js": "^1.98.0",
     "@solana/spl-token": "^0.4.14",
+    "bs58": "^6.0.0",
     "chalk": "^5.6.2",
     "ora": "^9.3.0",
+    "tweetnacl": "^1.0.3",
     "@inquirer/prompts": "^8.2.1",
     "@stacksjs/clapp": "^0.2.0",
     "ts-governance": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.2.3",
-    "better-dx": "^0.2.5"
+    "better-dx": "^0.2.5",
+    "bun-plugin-dtsx": "^0.9.0"
   },
   "peerDependencies": {
     "bunfig": "^0.15.6"

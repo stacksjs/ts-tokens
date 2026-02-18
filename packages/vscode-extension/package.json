@@ -101,7 +101,7 @@
     ]
   },
   "scripts": {
-    "build": "bun build ./src/extension.ts --outdir ./dist --target node --format esm",
+    "build": "bun build ./src/extension.ts --outdir ./dist --target node --format esm --external vscode",
     "typecheck": "bun --bun tsc --noEmit"
   },
   "devDependencies": {

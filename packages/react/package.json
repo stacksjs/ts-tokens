@@ -44,7 +44,7 @@
   ],
   "scripts": {
     "dev": "vite --config vite.config.ts",
-    "build": "bun build ./src/index.ts --outdir ./dist --target browser --sourcemap=external",
+    "build": "bun build ./src/index.ts --outdir ./dist --target browser --sourcemap=external --external ts-tokens --external @solana/web3.js --external @solana/spl-token --external react --external react-dom",
     "lint": "bunx --bun eslint .",
     "lint:fix": "bunx --bun eslint . --fix",
     "release": "bun publish --access public --provenance",
