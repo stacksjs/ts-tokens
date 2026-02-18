@@ -31,7 +31,7 @@ export function useWallet(): UseWalletReturn {
   let walletAdapter: any = null
 
   // Attempt to load wallet adapter
-  // @ts-expect-error -- optional peer dependency, resolved at runtime
+  // @ts-ignore -- optional peer dependency, resolved at runtime
   import('@solana/wallet-adapter-react').then((mod: any) => {
     walletAdapter = mod
   }).catch(() => {
