@@ -169,9 +169,9 @@ export function formatSimulationResult(result: SimulationResult): string {
  * Dry run with detailed output
  */
 export async function dryRun(
-  connection: Connection,
-  transaction: Transaction | VersionedTransaction,
-  options: {
+  _connection: Connection,
+  _transaction: Transaction | VersionedTransaction,
+  _options: {
     showLogs?: boolean
     showAccounts?: boolean
   } = {}

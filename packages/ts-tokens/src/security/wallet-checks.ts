@@ -147,7 +147,7 @@ export function checkSuspiciousTokens(tokenAccounts: Array<{ mint: string; name?
  * Check mint authority exposure for wallet
  */
 export async function checkMintAuthorityExposure(
-  connection: Connection,
+  _connection: Connection,
   wallet: PublicKey
 ): Promise<SecurityCheckResult> {
   const warnings: string[] = []
@@ -164,7 +164,7 @@ export async function checkMintAuthorityExposure(
  * Check freeze authority exposure for wallet
  */
 export async function checkFreezeAuthorityExposure(
-  connection: Connection,
+  _connection: Connection,
   wallet: PublicKey
 ): Promise<SecurityCheckResult> {
   const warnings: string[] = []
@@ -179,7 +179,7 @@ export async function checkFreezeAuthorityExposure(
  * Check update authority exposure for wallet
  */
 export async function checkUpdateAuthorityExposure(
-  connection: Connection,
+  _connection: Connection,
   wallet: PublicKey
 ): Promise<SecurityCheckResult> {
   const warnings: string[] = []

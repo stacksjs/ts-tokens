@@ -32,46 +32,46 @@ You can also try to convince your employer to sponsor Stacks as a business. This
   - *(Exclusive)* Special shoutout and regular retweets of major product launches via Stacks's official social accounts.
   - Most prominent logo placement in all locations from tiers below.
 
-___
+***
 
 - **Diamond (USD$2,500/mo):**
   - Prominent logo placement on the front page of [stacksjs.org](https://stacksjs.org), [audiox](https://stacks-audiox.netlify.app), [buddy.sh](https://buddy.sh), [bunfig](https://bunfig.netlify.app), [bun-plugin-auto-imports](https://github.com/stacksjs/bun-plugin-auto-imports), [bun-plugin-dtsx](https://dtsx.netlify.app/bun-plugin), [bun-plugin-unocss](https://github.com/stacksjs/bun-plugin-unocss), [clarity](https://stacks-clarity.netlify.app), [dnsx](https://dnsx.netlify.app), [docs.stacksjs.org](https://docs.stacksjs.org), [dtsx](https://github.com/stacksjs/dtsx), [httx](https://httx.netflix.app), [imgx](https://imgx.netlify.app), [localtunnel.sh](https://localtunnel.sh), [tokens](https://ts-tokens.dev), [reverse-proxy.sh](https://reverse-proxy.sh), [tlsx.sh](https://tlsx.sh), [ts-collect](https://ts-collect.netlify.app), [ts-spreadsheets](https://ts-spreadsheets.netlify.app), [vite-plugin-local](https://vite-plugin-local.netlify.app), [vidx](https://stacks-vidx.netlify.app).
   - Prominent logo placement in sidebar of all content pages.
   - Prominent logo placement in the README of >70x `stacksjs/core` repos, `stacksjs/stacks`, `audiox`, `buddy.sh`, `bunfig`, `bun-plugin-auto-imports`, `bun-plugin-dtsx`, `bun-plugin-unocss`, `clarity`, `dnsx`, `docs.stacksjs.org`, `dtsx`, `httx`, `imgx`, `localtunnel.sh`, `tokens`, `reverse-proxy.sh`, `tlsx.sh`, `ts-collect`, `ts-spreadsheets`, `vite-plugin-local`, `vidx`.
 
-___
+***
 
 - **Platinum (USD$1,000/mo):**
   - Large logo placement on the front page of [stacksjs.org](https://stacksjs.org), [stacksjs.org](https://stacksjs.org), [audiox](https://stacks-audiox.netlify.app), [buddy.sh](https://buddy.sh), [bunfig](https://bunfig.netlify.app), [bun-plugin-auto-imports](https://github.com/stacksjs/bun-plugin-auto-imports), [bun-plugin-dtsx](https://dtsx.netlify.app/bun-plugin), [bun-plugin-unocss](https://github.com/stacksjs/bun-plugin-unocss), [clarity](https://stacks-clarity.netlify.app), [dnsx](https://dnsx.netlify.app), [docs.stacksjs.org](https://docs.stacksjs.org), [dtsx](https://github.com/stacksjs/dtsx), [httx](https://httx.netflix.app), [imgx](https://imgx.netlify.app), [localtunnel.sh](https://localtunnel.sh), [tokens](https://ts-tokens.dev), [reverse-proxy.sh](https://reverse-proxy.sh), [tlsx.sh](https://tlsx.sh), [ts-collect](https://ts-collect.netlify.app), [ts-spreadsheets](https://ts-spreadsheets.netlify.app), [vite-plugin-local](https://vite-plugin-local.netlify.app), [vidx](https://stacks-vidx.netlify.app).
   - Large logo placement in the README of >70x `stacksjs/core` repos, `stacksjs/stacks`, `audiox`, `buddy.sh`, `bunfig`, `bun-plugin-auto-imports`, `bun-plugin-dtsx`, `bun-plugin-unocss`, `clarity`, `dnsx`, `docs.stacksjs.org`, `dtsx`, `httx`, `imgx`, `localtunnel.sh`, `tokens`, `reverse-proxy.sh`, `tlsx.sh`, `ts-collect`, `ts-spreadsheets`, `vite-plugin-local`, `vidx`.
 
-___
+***
 
 - **Double Gold (USD$500/mo):**
   - Large logo placement on the front page of [stacksjs.org](https://stacksjs.org), [stacksjs.org](https://stacksjs.org), [audiox](https://stacks-audiox.netlify.app), [buddy.sh](https://buddy.sh), [bunfig](https://bunfig.netlify.app), [bun-plugin-auto-imports](https://github.com/stacksjs/bun-plugin-auto-imports), [bun-plugin-dtsx](https://dtsx.netlify.app/bun-plugin), [bun-plugin-unocss](https://github.com/stacksjs/bun-plugin-unocss), [clarity](https://stacks-clarity.netlify.app), [dnsx](https://dnsx.netlify.app), [docs.stacksjs.org](https://docs.stacksjs.org), [dtsx](https://github.com/stacksjs/dtsx), [httx](https://httx.netflix.app), [imgx](https://imgx.netlify.app), [localtunnel.sh](https://localtunnel.sh), [tokens](https://ts-tokens.dev), [reverse-proxy.sh](https://reverse-proxy.sh), [tlsx.sh](https://tlsx.sh), [ts-collect](https://ts-collect.netlify.app), [ts-spreadsheets](https://ts-spreadsheets.netlify.app), [vite-plugin-local](https://vite-plugin-local.netlify.app), [vidx](https://stacks-vidx.netlify.app).
   - Large logo placement in the README of >70x `stacksjs/core` repos, `stacksjs/stacks`, `audiox`, `buddy.sh`, `bunfig`, `bun-plugin-auto-imports`, `bun-plugin-dtsx`, `bun-plugin-unocss`, `clarity`, `dnsx`, `docs.stacksjs.org`, `dtsx`, `httx`, `imgx`, `localtunnel.sh`, `tokens`, `reverse-proxy.sh`, `tlsx.sh`, `ts-collect`, `ts-spreadsheets`, `vite-plugin-local`, `vidx`.
 
-___
+***
 
 - **Gold (USD$250/mo):**
   - Large logo placement on the front page of [stacksjs.org](https://stacksjs.org), [stacksjs.org](https://stacksjs.org), [audiox](https://stacks-audiox.netlify.app), [buddy.sh](https://buddy.sh), [bunfig](https://bunfig.netlify.app), [bun-plugin-auto-imports](https://github.com/stacksjs/bun-plugin-auto-imports), [bun-plugin-dtsx](https://dtsx.netlify.app/bun-plugin), [bun-plugin-unocss](https://github.com/stacksjs/bun-plugin-unocss), [clarity](https://stacks-clarity.netlify.app), [dnsx](https://dnsx.netlify.app), [docs.stacksjs.org](https://docs.stacksjs.org), [dtsx](https://github.com/stacksjs/dtsx), [httx](https://httx.netflix.app), [imgx](https://imgx.netlify.app), [localtunnel.sh](https://localtunnel.sh), [tokens](https://ts-tokens.dev), [reverse-proxy.sh](https://reverse-proxy.sh), [tlsx.sh](https://tlsx.sh), [ts-collect](https://ts-collect.netlify.app), [ts-spreadsheets](https://ts-spreadsheets.netlify.app), [vite-plugin-local](https://vite-plugin-local.netlify.app), [vidx](https://stacks-vidx.netlify.app).
   - Large logo placement in the README of >70x `stacksjs/core` repos, `stacksjs/stacks`, `audiox`, `buddy.sh`, `bunfig`, `bun-plugin-auto-imports`, `bun-plugin-dtsx`, `bun-plugin-unocss`, `clarity`, `dnsx`, `docs.stacksjs.org`, `dtsx`, `httx`, `imgx`, `localtunnel.sh`, `tokens`, `reverse-proxy.sh`, `tlsx.sh`, `ts-collect`, `ts-spreadsheets`, `vite-plugin-local`, `vidx`.
 
-___
+***
 
 - **Silver (USD$100/mo):**
   - Medium logo placement on the front page of [stacksjs.org](https://stacksjs.org), [stacksjs.org](https://stacksjs.org), [audiox](https://stacks-audiox.netlify.app), [buddy.sh](https://buddy.sh), [bunfig](https://bunfig.netlify.app), [bun-plugin-auto-imports](https://github.com/stacksjs/bun-plugin-auto-imports), [bun-plugin-dtsx](https://dtsx.netlify.app/bun-plugin), [bun-plugin-unocss](https://github.com/stacksjs/bun-plugin-unocss), [clarity](https://stacks-clarity.netlify.app), [dnsx](https://dnsx.netlify.app), [docs.stacksjs.org](https://docs.stacksjs.org), [dtsx](https://github.com/stacksjs/dtsx), [httx](https://httx.netflix.app), [imgx](https://imgx.netlify.app), [localtunnel.sh](https://localtunnel.sh), [tokens](https://ts-tokens.dev), [reverse-proxy.sh](https://reverse-proxy.sh), [tlsx.sh](https://tlsx.sh), [ts-collect](https://ts-collect.netlify.app), [ts-spreadsheets](https://ts-spreadsheets.netlify.app), [vite-plugin-local](https://vite-plugin-local.netlify.app), [vidx](https://stacks-vidx.netlify.app).
   - Medium logo placement in the README of >70x `stacksjs/core` repos, `stacksjs/stacks`, `audiox`, `buddy.sh`, `bunfig`, `bun-plugin-auto-imports`, `bun-plugin-dtsx`, `bun-plugin-unocss`, `clarity`, `dnsx`, `docs.stacksjs.org`, `dtsx`, `httx`, `imgx`, `localtunnel.sh`, `tokens`, `reverse-proxy.sh`, `tlsx.sh`, `ts-collect`, `ts-spreadsheets`, `vite-plugin-local`, `vidx`.
   - Medium logo placement in the `BACKERS.md` file of>70x `stacksjs/core` repos, `stacksjs/stacks`, `audiox`, `buddy.sh`, `bunfig`, `bun-plugin-auto-imports`, `bun-plugin-dtsx`, `bun-plugin-unocss`, `clarity`, `dnsx`, `docs.stacksjs.org`, `dtsx`, `httx`, `imgx`, `localtunnel.sh`, `tokens`, `reverse-proxy.sh`, `tlsx.sh`, `ts-collect`, `ts-spreadsheets`, `vite-plugin-local`, `vidx`.
 
-___
+***
 
 - **Bronze (50/mo):**
   - Small logo placement on the front page of [stacksjs.org](https://stacksjs.org), [stacksjs.org](https://stacksjs.org), [audiox](https://stacks-audiox.netlify.app), [buddy.sh](https://buddy.sh), [bunfig](https://bunfig.netlify.app), [bun-plugin-auto-imports](https://github.com/stacksjs/bun-plugin-auto-imports), [bun-plugin-dtsx](https://dtsx.netlify.app/bun-plugin), [bun-plugin-unocss](https://github.com/stacksjs/bun-plugin-unocss), [clarity](https://stacks-clarity.netlify.app), [dnsx](https://dnsx.netlify.app), [docs.stacksjs.org](https://docs.stacksjs.org), [dtsx](https://github.com/stacksjs/dtsx), [httx](https://httx.netflix.app), [imgx](https://imgx.netlify.app), [localtunnel.sh](https://localtunnel.sh), [tokens](https://ts-tokens.dev), [reverse-proxy.sh](https://reverse-proxy.sh), [tlsx.sh](https://tlsx.sh), [ts-collect](https://ts-collect.netlify.app), [ts-spreadsheets](https://ts-spreadsheets.netlify.app), [vite-plugin-local](https://vite-plugin-local.netlify.app), [vidx](https://stacks-vidx.netlify.app).
   - Small logo placement in the README of >70x `stacksjs/core` repos, `stacksjs/stacks`, `audiox`, `buddy.sh`, `bunfig`, `bun-plugin-auto-imports`, `bun-plugin-dtsx`, `bun-plugin-unocss`, `clarity`, `dnsx`, `docs.stacksjs.org`, `dtsx`, `httx`, `imgx`, `localtunnel.sh`, `tokens`, `reverse-proxy.sh`, `tlsx.sh`, `ts-collect`, `ts-spreadsheets`, `vite-plugin-local`, `vidx`.
   - Small logo placement in the `BACKERS.md` file of >70x `stacksjs/core` repos, `stacksjs/stacks`, `audiox`, `buddy.sh`, `bunfig`, `bun-plugin-auto-imports`, `bun-plugin-dtsx`, `bun-plugin-unocss`, `clarity`, `dnsx`, `docs.stacksjs.org`, `dtsx`, `httx`, `imgx`, `localtunnel.sh`, `tokens`, `reverse-proxy.sh`, `tlsx.sh`, `ts-collect`, `ts-spreadsheets`, `vite-plugin-local`, `vidx`.
 
-___
+***
 
 - **Generous Backer (USD$25/mo):**
   - Private Discord channel invite
@@ -79,13 +79,13 @@ ___
   - Social media follow
   - Name listed in the `BACKERS.md` file of >70x `stacksjs/core` repos, `stacksjs/stacks`, `audiox`, `buddy.sh`, `bunfig`, `bun-plugin-auto-imports`, `bun-plugin-dtsx`, `bun-plugin-unocss`, `clarity`, `dnsx`, `docs.stacksjs.org`, `dtsx`, `httx`, `imgx`, `localtunnel.sh`, `tokens`, `reverse-proxy.sh`, `tlsx.sh`, `ts-collect`, `ts-spreadsheets`, `vite-plugin-local`, `vidx` and few others, above other individual backers.
 
-___
+***
 
 - **Sponsorware Tier (USD$10/mo):**
   - Get access to all current sponsorware projects *(i.e. the Stacks DynamoDB ORM driver)*
   - Name listed in the `BACKERS.md` file of >70x `stacksjs/core` repos, `stacksjs/stacks`, `audiox`, `buddy.sh`, `bunfig`, `bun-plugin-auto-imports`, `bun-plugin-dtsx`, `bun-plugin-unocss`, `clarity`, `dnsx`, `docs.stacksjs.org`, `dtsx`, `httx`, `imgx`, `localtunnel.sh`, `tokens`, `reverse-proxy.sh`, `tlsx.sh`, `ts-collect`, `ts-spreadsheets`, `vite-plugin-local`, `vidx`.
 
-___
+***
 
 - **Individual Backer (USD$5/mo):**
   - Name listed in the `BACKERS.md` file of >70x `stacksjs/core` repos, `stacksjs/stacks`, `audiox`, `buddy.sh`, `bunfig`, `bun-plugin-auto-imports`, `bun-plugin-dtsx`, `bun-plugin-unocss`, `clarity`, `dnsx`, `docs.stacksjs.org`, `dtsx`, `httx`, `imgx`, `localtunnel.sh`, `tokens`, `reverse-proxy.sh`, `tlsx.sh`, `ts-collect`, `ts-spreadsheets`, `vite-plugin-local`, `vidx`.
@@ -124,7 +124,7 @@ ___
 
 - Vacant
 
-___
+***
 
 ##### Thanks to Vue.js for the inspiration of this sponsorship page
 

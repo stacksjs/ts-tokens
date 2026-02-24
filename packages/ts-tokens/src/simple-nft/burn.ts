@@ -22,7 +22,7 @@ import type { TokenConfig } from '../types'
  * @returns Burn result with signature, mint, owner
  */
 export async function burnSimpleNFT(
-  connection: Connection,
+  _connection: Connection,
   mint: PublicKey,
   owner: PublicKey,
   config: TokenConfig

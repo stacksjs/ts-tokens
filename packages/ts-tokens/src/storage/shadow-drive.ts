@@ -230,7 +230,7 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
     config: TokenConfig
   ): Promise<string> {
     const wallet = loadWallet(config)
-    const connection = createConnection(config)
+    const _connection = createConnection(config)
 
     // This would require the actual Shadow Drive program interaction
     // For now, throw an informative error

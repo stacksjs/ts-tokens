@@ -146,8 +146,8 @@ export async function closeLookupTable(
  * Get lookup table info
  */
 export async function getLookupTableInfo(
-  tableAddress: string,
-  config: TokenConfig,
+  _tableAddress: string,
+  _config: TokenConfig,
 ): Promise<{
   address: string
   authority: string | null
@@ -179,7 +179,7 @@ export async function getLookupTableInfo(
  * by compressing account addresses from 32 bytes to 1 byte each.
  */
 export async function batchTransferWithALT(
-  options: {
+  _options: {
     mint: string
     recipients: Array<{ address: string; amount: bigint }>
     existingTable?: string

@@ -28,7 +28,7 @@ export async function createMultisigTransaction(
   connection: Connection,
   multisig: PublicKey,
   instruction: TransactionInstruction,
-  description?: string
+  _description?: string
 ): Promise<MultisigTransaction> {
   const multisigAccount = await getMultisig(connection, multisig)
 

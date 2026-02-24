@@ -20,21 +20,25 @@ await voting.castVote(connection, voter, {
 ## Voting Power Calculations
 
 ### Token-Weighted (default)
+
 1 token = 1 vote
 
 ### Quadratic
+
 ```typescript
 const power = voting.calculateQuadraticPower(tokenBalance)
 // 100 tokens = 10 votes, 10000 tokens = 100 votes
 ```
 
 ### NFT-Based
+
 ```typescript
 const power = voting.calculateNFTVotingPower(nftCount)
 // 1 NFT = 1 vote
 ```
 
 ### Time-Weighted
+
 ```typescript
 const power = voting.calculateTimeWeightedPower(baseVotingPower, holdDuration, {
   curve: 'linear', // or 'exponential'

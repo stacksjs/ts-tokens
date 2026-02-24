@@ -113,10 +113,10 @@ export function checkUnusualAmount(
  * Check authority before sensitive operation
  */
 export async function checkAuthority(
-  connection: Connection,
+  _connection: Connection,
   mint: PublicKey,
-  expectedAuthority: PublicKey,
-  authorityType: 'mint' | 'freeze' | 'update'
+  _expectedAuthority: PublicKey,
+  _authorityType: 'mint' | 'freeze' | 'update'
 ): Promise<SecurityCheckResult> {
   const warnings: string[] = []
   const recommendations: string[] = []

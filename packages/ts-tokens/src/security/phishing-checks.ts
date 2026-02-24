@@ -93,7 +93,7 @@ export function checkFakeTokenName(name: string, symbol: string, knownTokens: Ar
 /**
  * Check token against a registry
  */
-export function checkTokenRegistry(mint: string): SecurityCheckResult {
+export function checkTokenRegistry(_mint: string): SecurityCheckResult {
   const warnings: string[] = []
   const recommendations: string[] = []
 
@@ -243,7 +243,7 @@ export function checkDrainerPattern(instructions: Array<{ programId: string; dat
 /**
  * Check address against known scam database
  */
-export function checkKnownScamDatabase(address: string): SecurityCheckResult {
+export function checkKnownScamDatabase(_address: string): SecurityCheckResult {
   const warnings: string[] = []
   const recommendations: string[] = []
 

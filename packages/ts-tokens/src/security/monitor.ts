@@ -29,7 +29,7 @@ export class SecurityMonitor {
   private intervalMs: number
   private webhookUrl: string | null
   private lastSignatures = new Map<string, string>()
-  private notificationDispatcher: ((event: SecurityEvent) => Promise<unknown>) | null = null
+  private notificationDispatcher: ((_event: SecurityEvent) => Promise<unknown>) | null = null
 
   constructor(connection: Connection, options?: {
     intervalMs?: number

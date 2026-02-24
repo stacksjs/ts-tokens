@@ -79,7 +79,7 @@ export function checkTransferHookProgram(programId: string): SecurityCheckResult
 /**
  * Check if transfer hook source code is available
  */
-export function checkTransferHookSource(programId: string): SecurityCheckResult {
+export function checkTransferHookSource(_programId: string): SecurityCheckResult {
   const warnings: string[] = []
   const recommendations: string[] = []
 
@@ -164,7 +164,7 @@ export function checkInterestRate(rate: number): SecurityCheckResult {
  * Run a full Token-2022 security check
  */
 export async function fullToken2022SecurityCheck(
-  connection: Connection,
+  _connection: Connection,
   mint: PublicKey,
   extensions: TokenExtension[]
 ): Promise<AuditReport> {

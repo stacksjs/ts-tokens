@@ -160,7 +160,7 @@ export default defineConfig({
 - [CLI Reference](https://ts-tokens.dev/cli)
 - [API Reference](https://ts-tokens.dev/api)
 
-## Why ts-tokens?
+## Why ts-tokens
 
 **Zero External Dependencies**: Unlike Metaplex SDKs, ts-tokens only depends on official Solana packages (`@solana/web3.js`, `@solana/spl-token`). We implement all program interactions using raw instructions.
 

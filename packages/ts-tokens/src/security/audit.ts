@@ -278,7 +278,7 @@ function generateSummary(findings: AuditFinding[], riskScore: number): string {
 /**
  * Generate a full security report
  */
-export async function generateSecurityReport(options: {
+export async function generateSecurityReport(_options: {
   connection: Connection
   tokens?: PublicKey[]
   collections?: PublicKey[]

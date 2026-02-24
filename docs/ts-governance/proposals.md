@@ -18,16 +18,19 @@ const { proposal } = await proposals.createProposal(connection, proposer, {
 ## Action Builders
 
 ### Treasury Actions
+
 - `treasuryActions.transferSOL(recipient, amount)` - Transfer SOL
 - `treasuryActions.transferToken(mint, recipient, amount)` - Transfer tokens
 - `treasuryActions.transferNFT(mint, recipient)` - Transfer NFT
 
 ### Governance Actions
+
 - `governanceActions.updateConfig(newConfig)` - Update DAO config
 - `governanceActions.addVetoAuthority(authority)` - Add veto authority
 - `governanceActions.removeVetoAuthority()` - Remove veto authority
 
 ### Token Actions
+
 - `tokenActions.mint(mint, recipient, amount)` - Mint tokens
 - `tokenActions.burn(mint, amount)` - Burn tokens
 - `tokenActions.transferAuthority(mint, newAuthority)` - Transfer authority

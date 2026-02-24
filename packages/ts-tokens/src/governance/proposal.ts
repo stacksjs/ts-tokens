@@ -89,9 +89,9 @@ export async function getProposal(
  * Get all proposals for a DAO
  */
 export async function getProposals(
-  connection: Connection,
-  dao: PublicKey,
-  status?: ProposalStatus
+  _connection: Connection,
+  _dao: PublicKey,
+  _status?: ProposalStatus
 ): Promise<Proposal[]> {
   // In production, would use getProgramAccounts with filters
   return []
@@ -101,9 +101,9 @@ export async function getProposals(
  * Cancel a proposal
  */
 export async function cancelProposal(
-  connection: Connection,
+  _connection: Connection,
   proposal: PublicKey,
-  authority: Keypair
+  _authority: Keypair
 ): Promise<{ signature: string }> {
   return {
     signature: `proposal_cancelled_${proposal.toBase58().slice(0, 8)}`,
@@ -114,7 +114,7 @@ export async function cancelProposal(
  * Queue a successful proposal for execution
  */
 export async function queueProposal(
-  connection: Connection,
+  _connection: Connection,
   proposal: PublicKey
 ): Promise<{ signature: string; executionTime: bigint }> {
   const currentTime = BigInt(Math.floor(Date.now() / 1000))
@@ -130,7 +130,7 @@ export async function queueProposal(
  * Execute a queued proposal
  */
 export async function executeProposal(
-  connection: Connection,
+  _connection: Connection,
   options: ExecuteProposalOptions
 ): Promise<{ signature: string }> {
   const { proposal } = options

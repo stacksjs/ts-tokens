@@ -1,6 +1,6 @@
 # Simple NFT Standard
 
-## Why Simple NFT?
+## Why Simple NFT
 
 The Metaplex Token Metadata Program is powerful but complex. Creating a single NFT requires understanding PDAs, multiple accounts (Mint, Metadata, MasterEdition), basis points for royalties, and multi-instruction transactions.
 

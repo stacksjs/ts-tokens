@@ -46,8 +46,8 @@ export interface Token2022CreateOptions {
  * Create a Token-2022 token with multiple extensions in a single transaction
  */
 export async function createToken2022(
-  options: Token2022CreateOptions,
-  config: TokenConfig
+  _options: Token2022CreateOptions,
+  _config: TokenConfig
 ): Promise<{
   mint: string
   signature: string

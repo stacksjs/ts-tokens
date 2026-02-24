@@ -6,23 +6,23 @@ import type { Connection, PublicKey } from '@solana/web3.js'
 import type { VoteRecord, Proposal } from '../types'
 
 /**
- * Get vote record for a voter on a proposal
+ * Get vote record for a _voter on a _proposal
  */
 export async function getVoteRecord(
-  connection: Connection,
-  proposal: PublicKey,
-  voter: PublicKey
+  _connection: Connection,
+  _proposal: PublicKey,
+  _voter: PublicKey
 ): Promise<VoteRecord | null> {
   // In production, would query vote record PDA account
   return null
 }
 
 /**
- * Get all votes for a proposal
+ * Get all votes for a _proposal
  */
 export async function getProposalVotes(
-  connection: Connection,
-  proposal: PublicKey
+  _connection: Connection,
+  _proposal: PublicKey
 ): Promise<VoteRecord[]> {
   // In production, would use getProgramAccounts
   return []

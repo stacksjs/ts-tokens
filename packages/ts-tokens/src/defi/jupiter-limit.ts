@@ -180,7 +180,7 @@ export function formatLimitOrder(order: LimitOrder): string {
   const { account } = order
   const makingAmountNum = Number(account.makingAmount)
   const takingAmountNum = Number(account.takingAmount)
-  const price = takingAmountNum > 0 ? makingAmountNum / takingAmountNum : 0
+  const _price = takingAmountNum > 0 ? makingAmountNum / takingAmountNum : 0
 
   return [
     `Order: ${order.publicKey}`,

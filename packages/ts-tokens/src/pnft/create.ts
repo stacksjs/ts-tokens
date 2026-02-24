@@ -168,8 +168,8 @@ export async function createRuleSet(
  * Get pNFT data
  */
 export async function getPNFT(
-  connection: Connection,
-  mint: PublicKey
+  _connection: Connection,
+  _mint: PublicKey
 ): Promise<ProgrammableNFT | null> {
   // In production, would fetch and parse pNFT account
   return null
@@ -179,8 +179,8 @@ export async function getPNFT(
  * Get rule set
  */
 export async function getRuleSetData(
-  connection: Connection,
-  address: PublicKey
+  _connection: Connection,
+  _address: PublicKey
 ): Promise<RuleSet | null> {
   // In production, would fetch and parse rule set account
   return null
@@ -328,11 +328,11 @@ export async function recoverSoulbound(
 }
 
 /**
- * Get pNFTs by owner
+ * Get pNFTs by _owner
  */
 export async function getPNFTsByOwner(
-  connection: Connection,
-  owner: PublicKey
+  _connection: Connection,
+  _owner: PublicKey
 ): Promise<ProgrammableNFT[]> {
   // In production, would query pNFT accounts
   return []
@@ -342,8 +342,8 @@ export async function getPNFTsByOwner(
  * Get pNFTs by rule set
  */
 export async function getPNFTsByRuleSet(
-  connection: Connection,
-  ruleSet: PublicKey
+  _connection: Connection,
+  _ruleSet: PublicKey
 ): Promise<ProgrammableNFT[]> {
   // In production, would query pNFTs using this rule set
   return []

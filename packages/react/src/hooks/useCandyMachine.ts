@@ -23,7 +23,7 @@ export interface CandyMachineState {
  */
 export function useCandyMachine(address: string): CandyMachineState {
   const connection = useConnection()
-  const config = useConfig()
+  const _config = useConfig()
   const [candyMachine, setCandyMachine] = useState<CandyMachineDisplayInfo | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
@@ -43,7 +43,7 @@ export function useCandyMachine(address: string): CandyMachineState {
       }
 
       // Parse candy machine data (simplified)
-      const data = accountInfo.data
+      const _data = accountInfo._data
       // This would need proper deserialization based on CM version
       const itemsAvailable = 1000 // Placeholder
       const itemsMinted = 0 // Placeholder

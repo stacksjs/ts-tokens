@@ -2,7 +2,7 @@
 
 Learn how to create a Candy Machine for automated NFT minting.
 
-## What is a Candy Machine?
+## What is a Candy Machine
 
 A Candy Machine is a Solana program that automates NFT minting. It handles:
 

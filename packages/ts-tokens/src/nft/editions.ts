@@ -144,7 +144,7 @@ export async function createMasterEdition(
   const masterEditionAddress = getMasterEditionAddress(mintPubkey)
 
   // Get token account
-  const ata = await getAssociatedTokenAddress(mintPubkey, payer.publicKey)
+  const _ata = await getAssociatedTokenAddress(mintPubkey, payer.publicKey)
 
   // Build CreateMasterEditionV3 instruction
   const data = Buffer.alloc(10)

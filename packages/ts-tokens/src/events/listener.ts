@@ -241,10 +241,10 @@ export async function pollEvents(
     onError?: (error: Error) => void
   }
 ): Promise<{ stop: () => void }> {
-  const { interval = 5000, onEvent, onError } = options
+  const { interval = 5000, _onEvent, onError } = options
 
   let running = true
-  let lastSignatures: Map<string, string> = new Map()
+  const lastSignatures: Map<string, string> = new Map()
 
   const poll = async (): Promise<void> => {
     while (running) {

@@ -65,7 +65,7 @@ function generateId(): string {
  */
 export async function createClaimLink(
   options: CreateClaimLinkOptions,
-  config: TokenConfig
+  _config: TokenConfig
 ): Promise<ClaimLink> {
   const ephemeralKeypair = Keypair.generate()
   const baseUrl = options.baseUrl || DEFAULT_BASE_URL

@@ -100,7 +100,6 @@
 
 ## ...main
 
-
 ### 📖 Documentation
 
 - Several minor updates ([877a7d2](https://github.com/stacksjs/qrx/commit/877a7d2))
@@ -118,4 +117,3 @@
 ### ❤️ Contributors
 
 - Chris ([@chrisbbreuer](http://github.com/chrisbbreuer))
-

@@ -143,7 +143,7 @@
 - [x] Implement chunked uploads for large files (>100KB)
 - [x] Implement bundle transactions for batch uploads (ANS-104 spec)
 - [x] Add gateway URL configuration (arweave.net, ar-io.net, etc.)
-- [x] Implement `publicUrl()` returning `https://arweave.net/{txId}`
+- [x] Implement `publicUrl()` returning `<https://arweave.net/{txId}>`
 - [x] Add retry logic with exponential backoff
 
 #### IPFS Driver
@@ -177,13 +177,13 @@
   - [x] `claimStake` - Claim staked SOL
 - [x] Shadow Drive Program ID: `2e1wdyNhUvE76y6yUCvah2KaviavMJYKoRun8acMRBZZ`
 - [x] Implement SHDW token payment handling
-- [x] Implement `publicUrl()` returning `https://shdw-drive.genesysgo.net/{account}/{filename}`
+- [x] Implement `publicUrl()` returning `<https://shdw-drive.genesysgo.net/{account}/{filename}>`
 - [x] Add storage account management utilities
 
 #### Local/Filesystem Driver (Development)
 
 - [x] Ensure existing local driver in `@stacksjs/storage` works for dev/testing
-- [x] Add mock URLs for local development (`file://` or `http://localhost`)
+- [x] Add mock URLs for local development (`file://` or `<http://localhost>`)
 
 #### Driver Factory
 
@@ -1069,7 +1069,7 @@
 
 - [x] Support hardware wallet signing (Ledger via HID)
 - [x] Implement encrypted keypair storage (local keyring)
-- [x] Add environment variable keypair loading (`TOKENS_KEYPAIR`)
+- [x] Add environment variable keypair loading (`TOKENS*KEYPAIR`)
 - [x] Support keypair from stdin (for CI/CD pipelines)
 - [x] Implement session-based signing (sign once, execute many)
 
@@ -2048,9 +2048,9 @@
 │ name: String[32]          // On-chain name                  │
 │ symbol: String[10]        // On-chain symbol                │
 │ uri: String[200]          // Metadata URI                   │
-│ royalty_bps: u16          // Royalty in basis points        │
+│ royalty*bps: u16          // Royalty in basis points        │
 │ creators: Vec<Creator>    // Up to 5 creators with shares   │
-│ is_mutable: bool          // Can metadata be updated        │
+│ is*mutable: bool          // Can metadata be updated        │
 │ edition: Option<Edition>  // Edition info (if applicable)   │
 │ attributes: Vec<Attr>     // On-chain attributes (optional) │
 └─────────────────────────────────────────────────────────────┘
@@ -2065,7 +2065,7 @@
 
 #### Core Instructions
 
-- [x] `create_nft` - Create NFT with all data in one instruction
+- [x] `create*nft` - Create NFT with all data in one instruction
 
   ```ts
   // Metaplex requires: createMint + createMetadataAccountV3 + createMasterEditionV3
@@ -2079,19 +2079,19 @@
   })
   ```
 
-- [x] `update_nft` - Update mutable fields
+- [x] `update*nft` - Update mutable fields
 
   ```ts
   await updateNFT(mint, { name: 'New Name', uri: 'https://new...' })
   ```
 
-- [x] `transfer_nft` - Transfer with royalty tracking
+- [x] `transfer*nft` - Transfer with royalty tracking
 
   ```ts
   await transferNFT(mint, { to: recipient })
   ```
 
-- [x] `burn_nft` - Burn and reclaim rent
+- [x] `burn*nft` - Burn and reclaim rent
 
   ```ts
   await burnNFT(mint) // Returns rent to owner
@@ -2099,7 +2099,7 @@
 
 #### Collection Instructions
 
-- [x] `create_collection` - Create collection
+- [x] `create*collection` - Create collection
 
   ```ts
   await createCollection({
@@ -2111,19 +2111,19 @@
   })
   ```
 
-- [x] `add_to_collection` - Add NFT to collection (no separate verify step)
+- [x] `add*to*collection` - Add NFT to collection (no separate verify step)
 
   ```ts
   await addToCollection(nftMint, collectionMint)
   // Automatically verified if caller is collection authority
   ```
 
-- [x] `remove_from_collection` - Remove NFT from collection
-- [x] `update_collection` - Update collection metadata
+- [x] `remove*from*collection` - Remove NFT from collection
+- [x] `update*collection` - Update collection metadata
 
 #### Edition Instructions
 
-- [x] `create_editions` - Create edition NFT (simplified)
+- [x] `create*editions` - Create edition NFT (simplified)
 
   ```ts
   await createEditions(masterMint, {
@@ -2131,7 +2131,7 @@
   })
   ```
 
-- [x] `print_edition` - Print a single edition
+- [x] `print*edition` - Print a single edition
 
   ```ts
   const edition = await printEdition(masterMint, { to: recipient })
@@ -2140,10 +2140,10 @@
 
 #### Utility Instructions
 
-- [x] `freeze_nft` / `thaw_nft` - Freeze/unfreeze NFT
+- [x] `freeze*nft` / `thaw*nft` - Freeze/unfreeze NFT
 - [x] `delegate` / `revoke` - Delegate authority
-- [x] `set_royalty` - Update royalty (if mutable)
-- [x] `verify_creator` - Creator signs to verify
+- [x] `set*royalty` - Update royalty (if mutable)
+- [x] `verify*creator` - Creator signs to verify
 
 ### 17.5 TypeScript SDK Design
 
@@ -2312,16 +2312,16 @@
 │ StakePool Account                                           │
 ├─────────────────────────────────────────────────────────────┤
 │ authority: Pubkey           // Pool admin                   │
-│ stake_mint: Pubkey          // Token being staked           │
-│ reward_mint: Pubkey         // Reward token (can be same)   │
-│ total_staked: u64           // Total tokens staked          │
-│ reward_rate: u64            // Rewards per second           │
-│ min_stake_amount: u64       // Minimum stake                │
-│ lock_period: i64            // Lock duration (0 = none)     │
-│ early_unstake_penalty: u16  // Penalty bps for early exit   │
-│ last_update_time: i64       // Last reward calculation      │
-│ reward_per_token_stored: u128 // Accumulated rewards        │
-│ is_paused: bool             // Emergency pause              │
+│ stake*mint: Pubkey          // Token being staked           │
+│ reward*mint: Pubkey         // Reward token (can be same)   │
+│ total*staked: u64           // Total tokens staked          │
+│ reward*rate: u64            // Rewards per second           │
+│ min*stake*amount: u64       // Minimum stake                │
+│ lock*period: i64            // Lock duration (0 = none)     │
+│ early*unstake*penalty: u16  // Penalty bps for early exit   │
+│ last*update*time: i64       // Last reward calculation      │
+│ reward*per*token*stored: u128 // Accumulated rewards        │
+│ is*paused: bool             // Emergency pause              │
 └─────────────────────────────────────────────────────────────┘
 
 // User Stake - Individual user's stake position
@@ -2331,10 +2331,10 @@
 │ owner: Pubkey               // Staker                       │
 │ pool: Pubkey                // Stake pool                   │
 │ amount: u64                 // Amount staked                │
-│ stake_time: i64             // When staked                  │
-│ lock_end_time: i64          // When lock expires            │
-│ rewards_earned: u64         // Unclaimed rewards            │
-│ reward_per_token_paid: u128 // Last reward checkpoint       │
+│ stake*time: i64             // When staked                  │
+│ lock*end*time: i64          // When lock expires            │
+│ rewards*earned: u64         // Unclaimed rewards            │
+│ reward*per*token*paid: u128 // Last reward checkpoint       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -2347,7 +2347,7 @@
 
 #### Pool Management
 
-- [x] `create_stake_pool` - Create new staking pool
+- [x] `create*stake*pool` - Create new staking pool
 
   ```ts
   await createStakePool({
@@ -2360,11 +2360,11 @@
   })
   ```
 
-- [x] `update_stake_pool` - Update pool parameters
-- [x] `pause_stake_pool` / `resume_stake_pool` - Emergency controls
-- [x] `fund_rewards` - Add reward tokens to pool
-- [x] `withdraw_rewards` - Remove unfunded rewards (admin)
-- [x] `close_stake_pool` - Close pool and return funds
+- [x] `update*stake*pool` - Update pool parameters
+- [x] `pause*stake*pool` / `resume*stake*pool` - Emergency controls
+- [x] `fund*rewards` - Add reward tokens to pool
+- [x] `withdraw*rewards` - Remove unfunded rewards (admin)
+- [x] `close*stake*pool` - Close pool and return funds
 
 #### User Staking
 
@@ -2385,23 +2385,23 @@
     pool: stakePoolAddress,
     amount: 5000, // Partial unstake supported
   })
-  // Applies penalty if before lock_end_time
+  // Applies penalty if before lock*end*time
   ```
 
-- [x] `claim_rewards` - Claim accumulated rewards
+- [x] `claim*rewards` - Claim accumulated rewards
 
   ```ts
   const rewards = await claimRewards(stakePoolAddress)
   console.log(`Claimed ${rewards} tokens`)
   ```
 
-- [x] `compound_rewards` - Restake rewards (if same token)
-- [x] `emergency_unstake` - Force unstake with max penalty
+- [x] `compound*rewards` - Restake rewards (if same token)
+- [x] `emergency*unstake` - Force unstake with max penalty
 
 ### 18.4 NFT Staking
 
 - [x] Create `src/staking/nft.ts` for NFT-specific staking
-- [x] `create_nft_stake_pool` - Pool for staking NFTs
+- [x] `create*nft*stake*pool` - Pool for staking NFTs
 
   ```ts
   await createNFTStakePool({
@@ -2416,16 +2416,16 @@
   })
   ```
 
-- [x] `stake_nft` - Stake NFT (transfers to escrow)
-- [x] `unstake_nft` - Unstake and return NFT
-- [x] `claim_nft_rewards` - Claim rewards for staked NFTs
+- [x] `stake*nft` - Stake NFT (transfers to escrow)
+- [x] `unstake*nft` - Unstake and return NFT
+- [x] `claim*nft*rewards` - Claim rewards for staked NFTs
 - [x] Support rarity-based reward multipliers
 - [x] Support trait-based reward bonuses
 
 ### 18.5 Token Locking (Vesting)
 
 - [x] Create `src/locking/` directory (covered by existing `src/vesting/` module)
-- [x] `create_lock` - Lock tokens with vesting schedule (via `vesting.createVestingSchedule`)
+- [x] `create*lock` - Lock tokens with vesting schedule (via `vesting.createVestingSchedule`)
 
   ```ts
   await createLock({
@@ -2441,9 +2441,9 @@
   })
   ```
 
-- [x] `claim_vested` - Claim unlocked tokens (via `vesting.claimVestedTokens`)
-- [x] `get_vested_amount` - Calculate currently vested amount (via `vesting.calculateVestedAmount`)
-- [ ] `revoke_lock` - Revoke unvested tokens (if revocable)
+- [x] `claim*vested` - Claim unlocked tokens (via `vesting.claimVestedTokens`)
+- [x] `get*vested*amount` - Calculate currently vested amount (via `vesting.calculateVestedAmount`)
+- [ ] `revoke*lock` - Revoke unvested tokens (if revocable)
 - [x] Support vesting schedules:
   - [x] **Linear** - Continuous unlock over time
   - [x] **Cliff** - Nothing until cliff, then linear
@@ -2453,13 +2453,13 @@
 ### 18.6 Liquid Staking (Advanced)
 
 - [x] Create `src/staking/liquid.ts`
-- [x] `create_liquid_stake_pool` - Pool that issues receipt tokens
+- [x] `create*liquid*stake*pool` - Pool that issues receipt tokens
 
   ```ts
   // User stakes SOL/Token, receives stSOL/stToken
   await createLiquidStakePool({
-    stakeMint: SOL_MINT,
-    receiptMint: stSOL_MINT, // Liquid staking token
+    stakeMint: SOL*MINT,
+    receiptMint: stSOL*MINT, // Liquid staking token
     exchangeRate: 1.0, // Initial 1:1
   })
   ```
@@ -2467,7 +2467,7 @@
 - [x] Receipt tokens represent staked position
 - [x] Receipt tokens can be traded/used in DeFi
 - [x] Exchange rate increases as rewards accrue
-- [x] `liquid_stake` / `liquid_unstake` operations
+- [x] `liquid*stake` / `liquid*unstake` operations
 
 ### 18.7 TypeScript SDK for Staking
 
@@ -2552,20 +2552,20 @@
 │ threshold: u8               // Required signatures (M)      │
 │ owners: Vec<Pubkey>         // Signers (N, max 10)          │
 │ nonce: u64                  // Transaction counter          │
-│ owner_set_seqno: u32        // Owner change tracking        │
+│ owner*set*seqno: u32        // Owner change tracking        │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
 │ Transaction Account                                         │
 ├─────────────────────────────────────────────────────────────┤
 │ multisig: Pubkey            // Parent multisig              │
-│ program_id: Pubkey          // Target program               │
+│ program*id: Pubkey          // Target program               │
 │ accounts: Vec<AccountMeta>  // Transaction accounts         │
 │ data: Vec<u8>               // Instruction data             │
 │ signers: Vec<bool>          // Who has signed               │
-│ did_execute: bool           // Execution status             │
-│ created_at: i64             // Creation timestamp           │
-│ expires_at: Option<i64>     // Optional expiry              │
+│ did*execute: bool           // Execution status             │
+│ created*at: i64             // Creation timestamp           │
+│ expires*at: Option<i64>     // Optional expiry              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -2578,7 +2578,7 @@
 
 #### Setup
 
-- [x] `create_multisig` - Create multi-sig wallet
+- [x] `create*multisig` - Create multi-sig wallet
 
   ```ts
   const multisig = await createMultiSig({
@@ -2587,13 +2587,13 @@
   })
   ```
 
-- [x] `add_owner` - Add new owner (requires threshold)
-- [x] `remove_owner` - Remove owner (requires threshold)
-- [x] `change_threshold` - Change required signatures
+- [x] `add*owner` - Add new owner (requires threshold)
+- [x] `remove*owner` - Remove owner (requires threshold)
+- [x] `change*threshold` - Change required signatures
 
 #### Transactions
 
-- [x] `create_transaction` - Propose a transaction
+- [x] `create*transaction` - Propose a transaction
 
   ```ts
   const tx = await createMultiSigTransaction({
@@ -2616,7 +2616,7 @@
 
 ### 19.4 Multi-Sig Integration with Tokens
 
-- [x] `set_token_authority_multisig` - Transfer authority to multisig
+- [x] `set*token*authority*multisig` - Transfer authority to multisig
 
   ```ts
   // Transfer mint authority to multisig
@@ -2720,11 +2720,11 @@ const info = await tokens.multisig.info(ms)
 ├─────────────────────────────────────────────────────────────┤
 │ mint: Pubkey                // NFT mint                     │
 │ rules: Vec<TransferRule>    // Active rules                 │
-│ rule_set: Option<Pubkey>    // Shared rule set (collection) │
+│ rule*set: Option<Pubkey>    // Shared rule set (collection) │
 │ delegate: Option<Pubkey>    // Transfer delegate            │
 │ state: NFTState             // Unlocked/Listed/Staked       │
-│ last_transfer: i64          // For cooldown tracking        │
-│ transfer_count: u32         // For max transfer tracking    │
+│ last*transfer: i64          // For cooldown tracking        │
+│ transfer*count: u32         // For max transfer tracking    │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -2732,7 +2732,7 @@ const info = await tokens.multisig.info(ms)
 ├─────────────────────────────────────────────────────────────┤
 │ authority: Pubkey           // Who can update rules         │
 │ rules: Vec<TransferRule>    // Default rules for collection │
-│ is_mutable: bool            // Can rules be changed         │
+│ is*mutable: bool            // Can rules be changed         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -2740,41 +2740,41 @@ const info = await tokens.multisig.info(ms)
 
 #### Creation
 
-- [x] `create_pnft` - Create programmable NFT
+- [x] `create*pnft` - Create programmable NFT
 
   ```ts
   await createPNFT({
     name: 'My pNFT',
     uri: 'https://...',
     rules: [
-      { type: 'royalty_enforcement', royalty: 5 },
+      { type: 'royalty*enforcement', royalty: 5 },
       { type: 'cooldown', period: 24 * 60 * 60 }, // 24 hours
     ],
   })
   ```
 
-- [x] `create_rule_set` - Create shared rule set for collection
+- [x] `create*rule*set` - Create shared rule set for collection
 
   ```ts
   await createRuleSet({
     collection: collectionMint,
     rules: [
-      { type: 'royalty_enforcement', royalty: 5 },
-      { type: 'deny_list', addresses: [knownScammer] },
+      { type: 'royalty*enforcement', royalty: 5 },
+      { type: 'deny*list', addresses: [knownScammer] },
     ],
   })
   ```
 
 #### Rule Management
 
-- [x] `add_rule` - Add rule to NFT or rule set
-- [x] `remove_rule` - Remove rule
-- [x] `update_rule` - Update rule parameters
-- [x] `freeze_rules` - Make rules immutable
+- [x] `add*rule` - Add rule to NFT or rule set
+- [x] `remove*rule` - Remove rule
+- [x] `update*rule` - Update rule parameters
+- [x] `freeze*rules` - Make rules immutable
 
 #### Transfers
 
-- [x] `transfer_pnft` - Transfer with rule validation
+- [x] `transfer*pnft` - Transfer with rule validation
 
   ```ts
   await transferPNFT({
@@ -2785,13 +2785,13 @@ const info = await tokens.multisig.info(ms)
   })
   ```
 
-- [x] `delegate_transfer` - Delegate transfer authority
-- [x] `revoke_delegate` - Revoke delegation
+- [x] `delegate*transfer` - Delegate transfer authority
+- [x] `revoke*delegate` - Revoke delegation
 
 #### State Management
 
-- [x] `lock_pnft` - Lock NFT (for staking, listing, etc.)
-- [x] `unlock_pnft` - Unlock NFT
+- [x] `lock*pnft` - Lock NFT (for staking, listing, etc.)
+- [x] `unlock*pnft` - Unlock NFT
 - [ ] State transitions: `Unlocked` ↔ `Listed` ↔ `Staked` (deferred — program deployment)
 
 ### 20.5 Royalty Enforcement
@@ -2804,7 +2804,7 @@ const info = await tokens.multisig.info(ms)
 
 ### 20.6 Soulbound Tokens (SBTs)
 
-- [x] `create_soulbound` - Create non-transferable NFT
+- [x] `create*soulbound` - Create non-transferable NFT
 
   ```ts
   await createSoulbound({
@@ -2925,25 +2925,25 @@ const rules = await tokens.pnft.rules(pnft)
 │ DAO Account                                                 │
 ├─────────────────────────────────────────────────────────────┤
 │ name: String[32]            // DAO name                     │
-│ governance_token: Pubkey    // Token for voting power       │
+│ governance*token: Pubkey    // Token for voting power       │
 │ treasury: Pubkey            // Treasury account             │
 │ config: GovernanceConfig    // Voting parameters            │
-│ proposal_count: u64         // Total proposals created      │
-│ total_voting_power: u64     // Snapshot of total power      │
+│ proposal*count: u64         // Total proposals created      │
+│ total*voting*power: u64     // Snapshot of total power      │
 │ authority: Pubkey           // Admin (can be multisig)      │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
 │ GovernanceConfig                                            │
 ├─────────────────────────────────────────────────────────────┤
-│ voting_period: i64          // How long voting lasts        │
-│ quorum_percentage: u8       // Min participation (e.g., 10%)│
-│ approval_threshold: u8      // Min yes votes (e.g., 51%)    │
-│ proposal_threshold: u64     // Min tokens to propose        │
-│ execution_delay: i64        // Timelock after approval      │
-│ vote_weight_type: VoteWeight // Token/NFT/Quadratic        │
-│ allow_early_execution: bool // Execute before period ends   │
-│ allow_vote_change: bool     // Can voters change vote       │
+│ voting*period: i64          // How long voting lasts        │
+│ quorum*percentage: u8       // Min participation (e.g., 10%)│
+│ approval*threshold: u8      // Min yes votes (e.g., 51%)    │
+│ proposal*threshold: u64     // Min tokens to propose        │
+│ execution*delay: i64        // Timelock after approval      │
+│ vote*weight*type: VoteWeight // Token/NFT/Quadratic        │
+│ allow*early*execution: bool // Execute before period ends   │
+│ allow*vote*change: bool     // Can voters change vote       │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -2952,15 +2952,15 @@ const rules = await tokens.pnft.rules(pnft)
 │ dao: Pubkey                 // Parent DAO                   │
 │ proposer: Pubkey            // Who created proposal         │
 │ title: String[64]           // Proposal title               │
-│ description_uri: String     // IPFS/Arweave link to details │
+│ description*uri: String     // IPFS/Arweave link to details │
 │ instructions: Vec<Instruction> // On-chain actions         │
 │ status: ProposalStatus      // Draft/Active/Passed/Failed   │
-│ votes_for: u64              // Total yes votes              │
-│ votes_against: u64          // Total no votes               │
-│ votes_abstain: u64          // Total abstain votes          │
-│ start_time: i64             // Voting start                 │
-│ end_time: i64               // Voting end                   │
-│ executed_at: Option<i64>    // When executed (if passed)    │
+│ votes*for: u64              // Total yes votes              │
+│ votes*against: u64          // Total no votes               │
+│ votes*abstain: u64          // Total abstain votes          │
+│ start*time: i64             // Voting start                 │
+│ end*time: i64               // Voting end                   │
+│ executed*at: Option<i64>    // When executed (if passed)    │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -2980,7 +2980,7 @@ const rules = await tokens.pnft.rules(pnft)
 │ delegate: Pubkey            // Who receives the power       │
 │ dao: Pubkey                 // Which DAO                    │
 │ amount: u64                 // Delegated voting power       │
-│ expires_at: Option<i64>     // Optional expiry              │
+│ expires*at: Option<i64>     // Optional expiry              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -2988,7 +2988,7 @@ const rules = await tokens.pnft.rules(pnft)
 
 #### DAO Management
 
-- [x] `create_dao` - Create new DAO
+- [x] `create*dao` - Create new DAO
 
   ```ts
   const dao = await votes.dao.create({
@@ -3004,12 +3004,12 @@ const rules = await tokens.pnft.rules(pnft)
   })
   ```
 
-- [x] `update_dao_config` - Update governance parameters (via proposal)
-- [x] `set_dao_authority` - Transfer admin (via proposal)
+- [x] `update*dao*config` - Update governance parameters (via proposal)
+- [x] `set*dao*authority` - Transfer admin (via proposal)
 
 #### Proposals
 
-- [x] `create_proposal` - Create new proposal
+- [x] `create*proposal` - Create new proposal
 
   ```ts
   const proposal = await votes.proposal.create({
@@ -3023,12 +3023,12 @@ const rules = await tokens.pnft.rules(pnft)
   })
   ```
 
-- [x] `cancel_proposal` - Cancel (proposer or admin only)
-- [x] `execute_proposal` - Execute passed proposal
+- [x] `cancel*proposal` - Cancel (proposer or admin only)
+- [x] `execute*proposal` - Execute passed proposal
 
 #### Voting
 
-- [x] `cast_vote` - Vote on proposal
+- [x] `cast*vote` - Vote on proposal
 
   ```ts
   await votes.vote.cast({
@@ -3038,12 +3038,12 @@ const rules = await tokens.pnft.rules(pnft)
   // Automatically calculates voting power from token balance
   ```
 
-- [x] `change_vote` - Change vote (if allowed)
-- [x] `withdraw_vote` - Remove vote (if allowed)
+- [x] `change*vote` - Change vote (if allowed)
+- [x] `withdraw*vote` - Remove vote (if allowed)
 
 #### Delegation
 
-- [x] `delegate_votes` - Delegate voting power
+- [x] `delegate*votes` - Delegate voting power
 
   ```ts
   await votes.delegate({
@@ -3055,7 +3055,7 @@ const rules = await tokens.pnft.rules(pnft)
   ```
 
 - [x] `undelegate` - Remove delegation
-- [x] `accept_delegation` - Delegate accepts (optional)
+- [x] `accept*delegation` - Delegate accepts (optional)
 
 ### 21.5 Voting Mechanisms
 
@@ -3086,7 +3086,7 @@ const rules = await tokens.pnft.rules(pnft)
 ### 21.6 Treasury Management
 
 - [x] Create `src/treasury/` directory
-- [x] `create_treasury` - Create DAO treasury
+- [x] `create*treasury` - Create DAO treasury
 
   ```ts
   const treasury = await votes.treasury.create({
@@ -3095,8 +3095,8 @@ const rules = await tokens.pnft.rules(pnft)
   })
   ```
 
-- [x] `deposit_to_treasury` - Anyone can deposit
-- [x] `withdraw_from_treasury` - Only via passed proposal
+- [x] `deposit*to*treasury` - Anyone can deposit
+- [x] `withdraw*from*treasury` - Only via passed proposal
 - [x] Support multiple token types in treasury
 - [x] Treasury spending proposals with limits
 

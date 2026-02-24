@@ -126,11 +126,11 @@ export function exportStakingData(
 }
 
 /**
- * Get pool-level analytics
+ * Get _pool-level analytics
  */
 export async function getPoolAnalytics(
-  connection: Connection,
-  pool: PublicKey
+  _connection: Connection,
+  _pool: PublicKey
 ): Promise<{
   tvl: bigint
   uniqueStakers: number

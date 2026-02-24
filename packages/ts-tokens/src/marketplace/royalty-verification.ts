@@ -54,7 +54,7 @@ export async function verifyRoyaltyPayment(
   const accounts = tx.transaction.message.accountKeys
 
   let salePrice = BigInt(0)
-  let royaltyPaid = BigInt(0)
+  const royaltyPaid = BigInt(0)
   let seller = ''
   let buyer = ''
 

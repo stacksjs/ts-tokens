@@ -172,7 +172,7 @@ export function formatRelativeTime(
 /**
  * Format duration in seconds to human readable
  */
-export function formatDuration(seconds: number, locale?: Locale): string {
+export function formatDuration(seconds: number, _locale?: Locale): string {
   const days = Math.floor(seconds / 86400)
   const hours = Math.floor((seconds % 86400) / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)

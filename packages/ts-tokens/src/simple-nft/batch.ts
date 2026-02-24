@@ -68,8 +68,8 @@ export async function batchCreateSimpleNFTs(
  * @returns BatchResult with transfer signatures
  */
 export async function batchTransferSimpleNFTs(
-  connection: Connection,
-  from: PublicKey,
+  _connection: Connection,
+  _from: PublicKey,
   options: BatchTransferOptions,
   config: TokenConfig
 ): Promise<BatchResult<{ mint: string; signature: string }>> {

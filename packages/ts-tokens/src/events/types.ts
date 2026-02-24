@@ -170,7 +170,7 @@ export interface EventFilter {
 /**
  * Event listener callback
  */
-export type EventCallback = (event: TokenEvent) => void | Promise<void>
+export type EventCallback = (_event: TokenEvent) => void | Promise<void>
 
 /**
  * Listener options

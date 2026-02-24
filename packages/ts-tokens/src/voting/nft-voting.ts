@@ -42,12 +42,12 @@ export async function calculateNFTVotingPower(
 }
 
 /**
- * Get NFTs in collection owned by address
+ * Get NFTs in _collection owned by address
  */
 async function getNFTsInCollection(
-  connection: Connection,
-  owner: PublicKey,
-  collection: PublicKey
+  _connection: Connection,
+  _owner: PublicKey,
+  _collection: PublicKey
 ): Promise<Array<{ mint: PublicKey; traits: Map<string, string> }>> {
   // In production, would use DAS API or on-chain data
   return []
@@ -128,11 +128,11 @@ export async function isEligibleVoter(
 }
 
 /**
- * Get collection voting stats
+ * Get _collection voting stats
  */
 export async function getCollectionVotingStats(
-  connection: Connection,
-  collection: PublicKey
+  _connection: Connection,
+  _collection: PublicKey
 ): Promise<{
   totalNFTs: number
   totalVotingPower: bigint

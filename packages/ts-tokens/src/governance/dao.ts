@@ -34,7 +34,7 @@ function parseDuration(duration: string | bigint): bigint {
  * Create a new DAO
  */
 export async function createDAO(
-  connection: Connection,
+  _connection: Connection,
   payer: Keypair,
   options: CreateDAOOptions
 ): Promise<{ dao: DAO; signature: string }> {
@@ -107,10 +107,10 @@ export async function getDAO(
  * Update DAO config
  */
 export async function updateDAOConfig(
-  connection: Connection,
+  _connection: Connection,
   dao: PublicKey,
-  authority: Keypair,
-  newConfig: Partial<DAOConfig>
+  _authority: Keypair,
+  _newConfig: Partial<DAOConfig>
 ): Promise<{ signature: string }> {
   // In production, would update on-chain
   return {

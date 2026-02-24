@@ -280,10 +280,10 @@ export function createStorageDriver(config: TokenConfig): StorageAdapter {
  * @returns Upload result from the first successful provider
  */
 export async function uploadWithFallback(
-  data: Uint8Array | string,
-  config: TokenConfig,
-  options?: { contentType?: string },
-  providers: StorageProvider[] = ['arweave', 'ipfs', 'shadow-drive', 'local']
+  _data: Uint8Array | string,
+  _config: TokenConfig,
+  _options?: { contentType?: string },
+  _providers: StorageProvider[] = ['arweave', 'ipfs', 'shadow-drive', 'local']
 ): Promise<{
   id: string
   url: string

@@ -248,7 +248,7 @@ export interface MEListOptions {
 /**
  * Buy an NFT on Magic Eden via instruction API
  */
-export async function buyOnMagicEden(options: MEBuyOptions): Promise<{
+export async function buyOnMagicEden(_options: MEBuyOptions): Promise<{
   transaction: string
 }> {
   const params = new URLSearchParams({
@@ -276,7 +276,7 @@ export async function buyOnMagicEden(options: MEBuyOptions): Promise<{
 /**
  * List an NFT on Magic Eden via instruction API
  */
-export async function listOnMagicEden(options: MEListOptions): Promise<{
+export async function listOnMagicEden(_options: MEListOptions): Promise<{
   transaction: string
 }> {
   const params = new URLSearchParams({

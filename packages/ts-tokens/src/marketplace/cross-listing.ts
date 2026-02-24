@@ -127,7 +127,7 @@ export async function cancelCrossListings(
  * Get the best price across marketplaces for an NFT
  */
 export async function getBestPrice(
-  mint: PublicKey,
+  _mint: PublicKey,
   _marketplaces: SupportedMarketplace[] = ['magiceden', 'tensor'],
 ): Promise<{ marketplace: SupportedMarketplace; price: bigint } | null> {
   // In real implementation, this would fetch from each marketplace API

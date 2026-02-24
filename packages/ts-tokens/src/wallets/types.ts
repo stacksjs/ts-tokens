@@ -76,7 +76,7 @@ export type WalletEvent =
 /**
  * Wallet event listener
  */
-export type WalletEventListener = (event: WalletEvent) => void
+export type WalletEventListener = (_event: WalletEvent) => void
 
 /**
  * Hardware wallet config

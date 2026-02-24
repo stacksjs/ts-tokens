@@ -33,7 +33,7 @@ export function parseDuration(duration: string | bigint): bigint {
  * Create a new DAO using PDA-derived addresses
  */
 export async function createDAO(
-  connection: Connection,
+  _connection: Connection,
   payer: Keypair,
   options: CreateDAOOptions
 ): Promise<{ dao: DAO; signature: string }> {

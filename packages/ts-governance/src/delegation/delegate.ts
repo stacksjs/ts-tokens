@@ -10,7 +10,7 @@ import { getDelegationAddress } from '../programs/program'
  * Delegate voting power
  */
 export async function delegateVotingPower(
-  connection: Connection,
+  _connection: Connection,
   delegator: Keypair,
   options: DelegateOptions
 ): Promise<{ delegation: Delegation; signature: string }> {
@@ -37,7 +37,7 @@ export async function delegateVotingPower(
  * Remove delegation
  */
 export async function undelegateVotingPower(
-  connection: Connection,
+  _connection: Connection,
   delegator: Keypair,
   options: UndelegateOptions
 ): Promise<{ signature: string }> {
@@ -53,8 +53,8 @@ export async function undelegateVotingPower(
  * Accept a delegation (optional confirmation step)
  */
 export async function acceptDelegation(
-  connection: Connection,
-  delegate: Keypair,
+  _connection: Connection,
+  _delegate: Keypair,
   options: AcceptDelegationOptions
 ): Promise<{ signature: string }> {
   const { dao, delegator } = options

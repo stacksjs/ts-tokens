@@ -7,12 +7,12 @@
 import type { Connection, PublicKey } from '@solana/web3.js'
 
 /**
- * Get NFT collection membership (count of NFTs held from a collection)
+ * Get NFT _collection membership (count of NFTs held from a _collection)
  */
 export async function getNFTCollectionMembership(
-  connection: Connection,
-  voter: PublicKey,
-  collection: PublicKey
+  _connection: Connection,
+  _voter: PublicKey,
+  _collection: PublicKey
 ): Promise<{ isMember: boolean; nftCount: number }> {
   // In production, would query NFT accounts from ts-tokens/nft
   return { isMember: false, nftCount: 0 }

@@ -13,8 +13,8 @@ export interface VotingPowerState {
 
 export function useVotingPower(daoAddress: string, voterAddress?: string): VotingPowerState {
   const connection = useConnection()
-  const [ownPower, setOwnPower] = useState<bigint>(0n)
-  const [delegatedPower, setDelegatedPower] = useState<bigint>(0n)
+  const [ownPower, _setOwnPower] = useState<bigint>(0n)
+  const [delegatedPower, _setDelegatedPower] = useState<bigint>(0n)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 

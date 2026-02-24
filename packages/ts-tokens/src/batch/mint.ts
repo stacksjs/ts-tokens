@@ -133,8 +133,8 @@ export async function batchMint(
  * Execute batch NFT minting
  */
 export async function batchMintNFTs(
-  connection: Connection,
-  payer: PublicKey,
+  _connection: Connection,
+  _payer: PublicKey,
   options: BatchNFTMintOptions
 ): Promise<BatchNFTMintResult> {
   const {

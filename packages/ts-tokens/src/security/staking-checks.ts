@@ -12,7 +12,7 @@ import type { AuditReport, AuditFinding } from './audit'
 /**
  * Check reward sustainability
  */
-export function checkRewardSustainability(rate: number, remaining: bigint, duration: number): SecurityCheckResult {
+export function checkRewardSustainability(rate: number, remaining: bigint, _duration: number): SecurityCheckResult {
   const warnings: string[] = []
   const recommendations: string[] = []
 
@@ -140,7 +140,7 @@ export function checkPauseFunction(hasPause: boolean): SecurityCheckResult {
 /**
  * Check staking program audit status
  */
-export function checkStakingProgramAudit(programId: string): SecurityCheckResult {
+export function checkStakingProgramAudit(_programId: string): SecurityCheckResult {
   const warnings: string[] = []
   const recommendations: string[] = []
 

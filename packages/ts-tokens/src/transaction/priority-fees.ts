@@ -96,7 +96,7 @@ export async function getPriorityFeeEstimateHelius(
  */
 export async function getPriorityFeeEstimateRpc(
   connection: Connection,
-  accountKeys?: string[]
+  _accountKeys?: string[]
 ): Promise<PriorityFeeEstimate> {
   try {
     const recentFees = await connection.getRecentPrioritizationFees()

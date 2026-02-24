@@ -9,33 +9,33 @@ import type { Delegation } from '../types'
  * Get delegation info
  */
 export async function getDelegation(
-  connection: Connection,
-  dao: PublicKey,
-  delegator: PublicKey
+  _connection: Connection,
+  _dao: PublicKey,
+  _delegator: PublicKey
 ): Promise<Delegation | null> {
   // In production, would query delegation PDA account
   return null
 }
 
 /**
- * Get all delegations received by a delegate
+ * Get all delegations received by a _delegate
  */
 export async function getDelegationsForDelegate(
-  connection: Connection,
-  dao: PublicKey,
-  delegate: PublicKey
+  _connection: Connection,
+  _dao: PublicKey,
+  _delegate: PublicKey
 ): Promise<Delegation[]> {
   // In production, would use getProgramAccounts with filters
   return []
 }
 
 /**
- * Get all delegations made by a delegator
+ * Get all delegations made by a _delegator
  */
 export async function getDelegationsFromDelegator(
-  connection: Connection,
-  dao: PublicKey,
-  delegator: PublicKey
+  _connection: Connection,
+  _dao: PublicKey,
+  _delegator: PublicKey
 ): Promise<Delegation[]> {
   // In production, would use getProgramAccounts with filters
   return []

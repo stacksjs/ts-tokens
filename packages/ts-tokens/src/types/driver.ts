@@ -353,7 +353,7 @@ export interface ChainDriver {
 /**
  * Driver factory function type
  */
-export type DriverFactory = (config: TokenConfig) => ChainDriver
+export type DriverFactory = (_config: TokenConfig) => ChainDriver
 
 /**
  * Driver registry for managing multiple chain drivers

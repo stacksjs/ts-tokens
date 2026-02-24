@@ -10,8 +10,8 @@ export interface UseTreasuryReturn {
   refetch: () => Promise<void>
 }
 
-export function useTreasury(daoAddress: string): UseTreasuryReturn {
-  const connection = useConnection()
+export function useTreasury(_daoAddress: string): UseTreasuryReturn {
+  const _connection = useConnection()
   const solBalance = ref<number>(0)
   const tokens = ref<Array<{ mint: string; amount: bigint }>>([])
   const loading = ref<boolean>(true)

@@ -27,48 +27,48 @@
   ],
   "exports": {
     ".": {
-      "bun": "./src/index.ts",
       "types": "./dist/index.d.ts",
+      "bun": "./src/index.ts",
       "import": "./dist/index.js"
     },
     "./programs": {
-      "bun": "./src/programs/index.ts",
       "types": "./dist/programs/index.d.ts",
+      "bun": "./src/programs/index.ts",
       "import": "./dist/programs/index.js"
     },
     "./dao": {
-      "bun": "./src/dao/index.ts",
       "types": "./dist/dao/index.d.ts",
+      "bun": "./src/dao/index.ts",
       "import": "./dist/dao/index.js"
     },
     "./proposals": {
-      "bun": "./src/proposals/index.ts",
       "types": "./dist/proposals/index.d.ts",
+      "bun": "./src/proposals/index.ts",
       "import": "./dist/proposals/index.js"
     },
     "./voting": {
-      "bun": "./src/voting/index.ts",
       "types": "./dist/voting/index.d.ts",
+      "bun": "./src/voting/index.ts",
       "import": "./dist/voting/index.js"
     },
     "./treasury": {
-      "bun": "./src/treasury/index.ts",
       "types": "./dist/treasury/index.d.ts",
+      "bun": "./src/treasury/index.ts",
       "import": "./dist/treasury/index.js"
     },
     "./delegation": {
-      "bun": "./src/delegation/index.ts",
       "types": "./dist/delegation/index.d.ts",
+      "bun": "./src/delegation/index.ts",
       "import": "./dist/delegation/index.js"
     },
     "./types": {
-      "bun": "./src/types/index.ts",
       "types": "./dist/types/index.d.ts",
+      "bun": "./src/types/index.ts",
       "import": "./dist/types/index.js"
     },
     "./votes": {
-      "bun": "./src/votes.ts",
       "types": "./dist/votes.d.ts",
+      "bun": "./src/votes.ts",
       "import": "./dist/votes.js"
     },
     "./*": {

@@ -94,7 +94,7 @@ export async function buildSwapTransaction(
  * Execute a swap
  */
 export async function executeSwap(
-  connection: Connection,
+  _connection: Connection,
   options: SwapOptions,
   userPublicKey: PublicKey
 ): Promise<{ quote: SwapQuote; transaction: Transaction }> {

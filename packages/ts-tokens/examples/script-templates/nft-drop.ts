@@ -105,7 +105,7 @@ async function main() {
 
     for (const item of transfers) {
       try {
-        const result = await transferNFT(item.mint, item.recipient!, config)
+        const _result = await transferNFT(item.mint, item.recipient!, config)
         txSuccess++
         console.log(`  Transferred ${item.mint} → ${item.recipient}`)
       } catch (error) {

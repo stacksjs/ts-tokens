@@ -104,7 +104,7 @@ export async function getBestLendingRates(
  */
 export function calculateLiquidationPrice(
   collateralAmount: bigint,
-  collateralPrice: number,
+  _collateralPrice: number,
   borrowAmount: bigint,
   borrowPrice: number,
   liquidationThreshold: number,

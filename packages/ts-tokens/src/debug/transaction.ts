@@ -17,7 +17,7 @@ import type {
 export async function analyzeTransaction(
   connection: Connection,
   signature: string,
-  options: DebugOptions = {}
+  _options: DebugOptions = {}
 ): Promise<TransactionAnalysis> {
   const tx = await connection.getTransaction(signature, {
     maxSupportedTransactionVersion: 0,

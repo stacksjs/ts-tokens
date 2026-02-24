@@ -22,9 +22,9 @@ import type { TokenConfig } from '../types'
  * @returns Master edition result with signature, mint, masterEdition address
  */
 export async function createMasterEditionSimple(
-  connection: Connection,
+  _connection: Connection,
   mint: PublicKey,
-  authority: PublicKey,
+  _authority: PublicKey,
   config: TokenConfig,
   maxSupply?: number
 ): Promise<MasterEditionResult> {
@@ -59,9 +59,9 @@ export async function createMasterEditionSimple(
  * @returns Edition result with mint, metadata, edition address, number, signature
  */
 export async function printEditionSimple(
-  connection: Connection,
+  _connection: Connection,
   masterMint: PublicKey,
-  authority: PublicKey,
+  _authority: PublicKey,
   editionNumber: number,
   config: TokenConfig
 ): Promise<EditionResult> {

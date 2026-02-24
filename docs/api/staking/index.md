@@ -25,8 +25,8 @@ const pool = await createStakingPool({
   stakeMint: tokenMint,
   rewardMint: rewardTokenMint,
   rewardRate: 1_000_000n, // rewards per second
-  rewardDuration: 30n * 24n * 60n * 60n, // 30 days
-  minStakeDuration: 7n * 24n * 60n * 60n, // 7 day lock
+  rewardDuration: 30n _ 24n _ 60n _ 60n, // 30 days
+  minStakeDuration: 7n _ 24n _ 60n _ 60n, // 7 day lock
   earlyUnstakePenalty: 1000, // 10% penalty
 }, config)
 ```
@@ -41,7 +41,7 @@ const config = await getConfig()
 await stake({
   pool: poolAddress,
   amount: 1000_000_000_000n, // 1000 tokens
-  lockDuration: 30n * 24n * 60n * 60n, // 30 days
+  lockDuration: 30n _ 24n _ 60n _ 60n, // 30 days
 }, config)
 ```
 
@@ -121,7 +121,7 @@ const config = await getConfig()
 const info = await getNFTStakeInfo(stakeAccount, config)
 
 console.log('Points earned:', info.pointsEarned)
-console.log('Staked at:', new Date(Number(info.stakedAt) * 1000))
+console.log('Staked at:', new Date(Number(info.stakedAt) _ 1000))
 ```
 
 ### Unstake NFT
@@ -184,10 +184,10 @@ Rewards are calculated using a checkpoint system:
 
 ```
 rewardPerToken = rewardPerTokenStored + (
-  (currentTime - lastUpdateTime) * rewardRate / totalStaked
+  (currentTime - lastUpdateTime) _ rewardRate / totalStaked
 )
 
-earned = (stakedAmount * (rewardPerToken - userRewardPerTokenPaid)) + rewardsEarned
+earned = (stakedAmount _ (rewardPerToken - userRewardPerTokenPaid)) + rewardsEarned
 ```
 
 ## Early Unstake Penalty
@@ -195,7 +195,7 @@ earned = (stakedAmount * (rewardPerToken - userRewardPerTokenPaid)) + rewardsEar
 If unstaking before lock period ends:
 
 ```
-penalty = amount * (remainingLockTime / totalLockTime) * penaltyBps / 10000
+penalty = amount _ (remainingLockTime / totalLockTime) _ penaltyBps / 10000
 ```
 
 ## Related

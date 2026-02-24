@@ -244,8 +244,8 @@ export async function removeRuleFromSet(
  * Get all rules for pNFT (including inherited from rule set)
  */
 export async function getAllRules(
-  connection: Connection,
-  mint: PublicKey
+  _connection: Connection,
+  _mint: PublicKey
 ): Promise<TransferRule[]> {
   // In production, would fetch pNFT rules + rule set rules
   return []

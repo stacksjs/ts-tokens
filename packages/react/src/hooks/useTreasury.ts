@@ -12,8 +12,8 @@ export interface TreasuryState {
 
 export function useTreasury(daoAddress: string): TreasuryState {
   const connection = useConnection()
-  const [solBalance, setSolBalance] = useState<number>(0)
-  const [tokens, setTokens] = useState<Array<{ mint: string; amount: bigint }>>([])
+  const [solBalance, _setSolBalance] = useState<number>(0)
+  const [tokens, _setTokens] = useState<Array<{ mint: string; amount: bigint }>>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 

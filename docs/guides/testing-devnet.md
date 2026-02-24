@@ -2,7 +2,7 @@
 
 Learn how to test your tokens and NFTs on Solana devnet.
 
-## Why Devnet?
+## Why Devnet
 
 - **Free SOL** - Get test SOL via airdrop
 - **No real money** - Safe to experiment

@@ -260,8 +260,8 @@ export async function buildSPLRoyaltyInstructions(
  * without corresponding royalty payments to creators.
  */
 export async function detectRoyaltyBypass(
-  signature: string,
-  config: TokenConfig
+  _signature: string,
+  _config: TokenConfig
 ): Promise<{
   bypassed: boolean
   nftTransferred: boolean
@@ -380,7 +380,7 @@ export async function detectRoyaltyBypass(
 export async function markPrimarySale(
   mint: PublicKey,
   updateAuthority: PublicKey,
-  config: TokenConfig
+  _config: TokenConfig
 ): Promise<TransactionInstruction> {
   const metadataAddress = getMetadataAddress(mint)
 

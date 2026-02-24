@@ -15,6 +15,7 @@
 ### 1. No Global Instance
 
 Metaplex SDK uses a global instance pattern:
+
 ```typescript
 // Metaplex SDK
 const metaplex = Metaplex.make(connection).use(keypairIdentity(wallet))
@@ -22,6 +23,7 @@ const nft = await metaplex.nfts().findByMint(...)
 ```
 
 ts-tokens passes config to each function:
+
 ```typescript
 // ts-tokens
 const config = { rpcUrl, keypair }
@@ -31,6 +33,7 @@ const nft = await getNFTMetadata(mint, config)
 ### 2. String Addresses
 
 Metaplex SDK requires `PublicKey` objects everywhere. ts-tokens accepts plain strings:
+
 ```typescript
 // Metaplex SDK
 const mint = new PublicKey('...')
@@ -43,6 +46,7 @@ await getNFTMetadata('...', config)
 ### 3. Built-in Batch Operations
 
 ts-tokens includes native batch support:
+
 ```typescript
 import { batchUpdateNFTMetadata, batchVerifyCollection, batchBurnNFTs } from 'ts-tokens/legacy'
 ```
@@ -50,6 +54,7 @@ import { batchUpdateNFTMetadata, batchVerifyCollection, batchBurnNFTs } from 'ts
 ### 4. DAS API Integration
 
 ts-tokens can use DAS API for faster queries:
+
 ```typescript
 import { getNFTsInCollection } from 'ts-tokens/legacy'
 // Automatically uses DAS when available, falls back to on-chain
@@ -59,6 +64,7 @@ const nfts = await getNFTsInCollection(collection, config, { useDAS: true })
 ### 5. Collection Discovery
 
 ts-tokens adds discovery capabilities not in Metaplex SDK:
+
 ```typescript
 import { discoverCollectionByCreator, discoverCollectionByCandyMachine } from 'ts-tokens/legacy'
 ```

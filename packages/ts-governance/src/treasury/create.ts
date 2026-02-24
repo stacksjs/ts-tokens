@@ -10,8 +10,8 @@ import { getTreasuryAddress } from '../programs/program'
  * Create a treasury for a DAO
  */
 export async function createTreasury(
-  connection: Connection,
-  authority: Keypair,
+  _connection: Connection,
+  _authority: Keypair,
   options: CreateTreasuryOptions
 ): Promise<{ treasury: Treasury; signature: string }> {
   const { dao } = options

@@ -25,8 +25,8 @@ import { retry } from '../../utils'
  * @returns Account info or null if not found
  */
 export async function getAccountInfo(
-  connection: Connection,
-  address: string
+  _connection: Connection,
+  _address: string
 ): Promise<{
   lamports: bigint
   owner: string
@@ -58,8 +58,8 @@ export async function getAccountInfo(
  * @returns Array of account info (null for non-existent accounts)
  */
 export async function getMultipleAccounts(
-  connection: Connection,
-  addresses: string[]
+  _connection: Connection,
+  _addresses: string[]
 ): Promise<Array<{
   address: string
   lamports: bigint
@@ -268,8 +268,8 @@ export async function tokenAccountExists(
  * @returns Mint info
  */
 export async function getMintInfo(
-  connection: Connection,
-  mint: string
+  _connection: Connection,
+  _mint: string
 ): Promise<{
   address: string
   supply: bigint
@@ -300,9 +300,9 @@ export async function getMintInfo(
  * @returns Array of token holders sorted by balance
  */
 export async function getLargestTokenHolders(
-  connection: Connection,
-  mint: string,
-  limit: number = 20
+  _connection: Connection,
+  _mint: string,
+  _limit: number = 20
 ): Promise<Array<{
   address: string
   balance: bigint

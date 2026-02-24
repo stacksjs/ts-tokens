@@ -197,7 +197,7 @@ function calculateCandyMachineSpace(config: CandyMachineConfig): number {
  */
 function serializeInitializeCandyMachine(
   config: CandyMachineConfig,
-  authority: PublicKey
+  _authority: PublicKey
 ): Buffer {
   const buffer = Buffer.alloc(512)
   let offset = 0

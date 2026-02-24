@@ -11,8 +11,8 @@ import { getTreasuryAddress } from '../programs/program'
  * Deposit to treasury
  */
 export async function depositToTreasury(
-  connection: Connection,
-  depositor: Keypair,
+  _connection: Connection,
+  _depositor: Keypair,
   options: DepositOptions
 ): Promise<{ signature: string }> {
   const { dao, amount } = options
@@ -27,11 +27,11 @@ export async function depositToTreasury(
  * Withdraw from treasury (governance-only)
  */
 export async function withdrawFromTreasury(
-  connection: Connection,
-  authority: Keypair,
+  _connection: Connection,
+  _authority: Keypair,
   options: WithdrawOptions
 ): Promise<{ signature: string }> {
-  const { dao, recipient, amount } = options
+  const { dao, _recipient, amount } = options
   const treasury = getTreasuryAddress(dao)
 
   return {

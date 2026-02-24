@@ -71,10 +71,10 @@ export async function canTransfer(
  * Validate a single rule
  */
 async function validateTransferRule(
-  connection: Connection,
+  _connection: Connection,
   rule: TransferRule,
   pnft: ProgrammableNFT,
-  from: PublicKey,
+  _from: PublicKey,
   to: PublicKey
 ): Promise<{ allowed: boolean; royaltyAmount?: bigint }> {
   switch (rule.type) {
@@ -306,9 +306,9 @@ export async function revokeDelegate(
  * Get transfer history for pNFT
  */
 export async function getTransferHistory(
-  connection: Connection,
-  mint: PublicKey,
-  limit: number = 20
+  _connection: Connection,
+  _mint: PublicKey,
+  _limit: number = 20
 ): Promise<Array<{
   from: PublicKey
   to: PublicKey

@@ -40,10 +40,10 @@ export async function getLegacyEditionInfo(
  * Print a new edition from a master edition
  */
 export async function printLegacyEdition(
-  masterMint: string,
+  _masterMint: string,
   editionNumber: number,
-  config: TokenConfig,
-  options?: TransactionOptions
+  _config: TokenConfig,
+  _options?: TransactionOptions
 ): Promise<{
   mint: string
   metadata: string
@@ -59,9 +59,9 @@ export async function printLegacyEdition(
  * Get all editions printed from a master edition
  */
 export async function getEditionsByMaster(
-  masterMint: string,
-  config: TokenConfig,
-  limit?: number
+  _masterMint: string,
+  _config: TokenConfig,
+  _limit?: number
 ): Promise<Array<{
   mint: string
   parent: string

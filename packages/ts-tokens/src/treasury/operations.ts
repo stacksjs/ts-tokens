@@ -16,7 +16,7 @@ import type {
  * Deposit tokens to treasury
  */
 export async function deposit(
-  connection: Connection,
+  _connection: Connection,
   options: DepositOptions
 ): Promise<string> {
   const { treasury, mint, amount, from } = options
@@ -33,7 +33,7 @@ export async function deposit(
  * Withdraw tokens from treasury (requires governance approval)
  */
 export async function withdraw(
-  connection: Connection,
+  _connection: Connection,
   options: WithdrawalOptions
 ): Promise<string> {
   const { treasury, mint, amount, to, proposalId } = options
@@ -51,12 +51,12 @@ export async function withdraw(
  * Create spending proposal
  */
 export async function createSpendingProposal(
-  connection: Connection,
-  treasury: PublicKey,
-  recipient: PublicKey,
-  mint: PublicKey,
-  amount: bigint,
-  description: string
+  _connection: Connection,
+  _treasury: PublicKey,
+  _recipient: PublicKey,
+  _mint: PublicKey,
+  _amount: bigint,
+  _description: string
 ): Promise<{ proposalId: PublicKey; signature: string }> {
   // In production, would create governance proposal
   return {
@@ -69,8 +69,8 @@ export async function createSpendingProposal(
  * Execute approved spending proposal
  */
 export async function executeSpendingProposal(
-  connection: Connection,
-  proposalId: PublicKey
+  _connection: Connection,
+  _proposalId: PublicKey
 ): Promise<string> {
   // In production, would execute the withdrawal
   return `executed_${Date.now()}`
@@ -80,8 +80,8 @@ export async function executeSpendingProposal(
  * Get spending proposal
  */
 export async function getSpendingProposal(
-  connection: Connection,
-  proposalId: PublicKey
+  _connection: Connection,
+  _proposalId: PublicKey
 ): Promise<SpendingProposal | null> {
   // In production, would fetch proposal
   return null
@@ -91,20 +91,20 @@ export async function getSpendingProposal(
  * Get pending spending proposals
  */
 export async function getPendingProposals(
-  connection: Connection,
-  treasury: PublicKey
+  _connection: Connection,
+  _treasury: PublicKey
 ): Promise<SpendingProposal[]> {
   // In production, would fetch pending proposals
   return []
 }
 
 /**
- * Get treasury transaction history
+ * Get _treasury transaction history
  */
 export async function getTransactionHistory(
-  connection: Connection,
-  treasury: PublicKey,
-  options: { limit?: number; before?: string } = {}
+  _connection: Connection,
+  _treasury: PublicKey,
+  _options: { limit?: number; before?: string } = {}
 ): Promise<TreasuryTransaction[]> {
   // In production, would fetch transaction history
   return []
@@ -114,9 +114,9 @@ export async function getTransactionHistory(
  * Set spending limits
  */
 export async function setSpendingLimits(
-  connection: Connection,
-  treasury: PublicKey,
-  authority: PublicKey,
+  _connection: Connection,
+  _treasury: PublicKey,
+  _authority: PublicKey,
   limits: Omit<SpendingLimit, 'currentDailySpent' | 'currentWeeklySpent' | 'currentMonthlySpent'>
 ): Promise<string> {
   // In production, would set spending limits
@@ -127,9 +127,9 @@ export async function setSpendingLimits(
  * Get spending limits
  */
 export async function getSpendingLimits(
-  connection: Connection,
-  treasury: PublicKey,
-  mint: PublicKey
+  _connection: Connection,
+  _treasury: PublicKey,
+  _mint: PublicKey
 ): Promise<SpendingLimit | null> {
   // In production, would fetch spending limits
   return null
@@ -166,24 +166,24 @@ export async function checkWithdrawalLimits(
 }
 
 /**
- * Get treasury token accounts
+ * Get _treasury token accounts
  */
 export async function getTreasuryTokenAccounts(
-  connection: Connection,
-  treasury: PublicKey
+  _connection: Connection,
+  _treasury: PublicKey
 ): Promise<Array<{ mint: PublicKey; account: PublicKey; balance: bigint }>> {
   // In production, would fetch all token accounts
   return []
 }
 
 /**
- * Close empty treasury token account
+ * Close empty _treasury token account
  */
 export async function closeEmptyTokenAccount(
-  connection: Connection,
-  treasury: PublicKey,
-  tokenAccount: PublicKey,
-  authority: PublicKey
+  _connection: Connection,
+  _treasury: PublicKey,
+  _tokenAccount: PublicKey,
+  _authority: PublicKey
 ): Promise<string> {
   // In production, would close empty account and reclaim rent
   return `closed_${Date.now()}`

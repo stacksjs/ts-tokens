@@ -9,7 +9,7 @@ import { PublicKey, Transaction } from '@solana/web3.js'
 import type { SwapOptions, SwapQuote, LiquidityPool } from './types'
 
 const ORCA_WHIRLPOOL_API = 'https://api.mainnet.orca.so/v1'
-const ORCA_WHIRLPOOL_PROGRAM_ID = new PublicKey('whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc')
+const _ORCA_WHIRLPOOL_PROGRAM_ID = new PublicKey('whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc')
 
 export interface WhirlpoolInfo {
   address: PublicKey
@@ -122,7 +122,7 @@ export async function getWhirlpoolsForPair(
  * Get positions for a wallet in Orca whirlpools
  */
 export async function getOrcaPositions(
-  connection: Connection,
+  _connection: Connection,
   owner: PublicKey,
 ): Promise<WhirlpoolPosition[]> {
   const response = await fetch(

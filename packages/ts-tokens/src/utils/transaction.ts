@@ -84,7 +84,7 @@ export function addComputeLimit(
 export async function estimateComputeUnits(
   connection: Connection,
   transaction: Transaction,
-  payer: PublicKey
+  _payer: PublicKey
 ): Promise<number> {
   try {
     const simulation = await connection.simulateTransaction(transaction)

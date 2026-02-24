@@ -10,86 +10,126 @@ import path from 'node:path'
 
 const config: tokensConfig = {
   /**
-   * The type of the QR code.
-   */
+
+   _ The type of the QR code.
+
+   _/
   type: 'qr', // 'qr' | 'bar'
 
   options: {
     /**
-     * The width of the QR code.
-     */
+
+     _ The width of the QR code.
+
+     _/
     width: 2,
     /**
-     * The height of the QR code.
-     */
+
+     _ The height of the QR code.
+
+     _/
     height: 100,
     /**
-     * The format of the QR code.
-     */
+
+     _ The format of the QR code.
+
+     _/
     format: 'auto',
     /**
-     * Whether to display the value in the QR code.
-     */
+
+     _ Whether to display the value in the QR code.
+
+     _/
     displayValue: true,
     /**
-     * The font options for the QR code.
-     */
+
+     _ The font options for the QR code.
+
+     _/
     fontOptions: '',
     /**
-     * The font for the QR code.
-     */
+
+     _ The font for the QR code.
+
+     _/
     font: 'monospace',
     /**
-     * The text for the QR code.
-     */
+
+     _ The text for the QR code.
+
+     _/
     text: undefined,
     /**
-     * The text alignment for the QR code.
-     */
+
+     _ The text alignment for the QR code.
+
+     _/
     textAlign: 'center', // 'left' | 'center' | 'right'
     /**
-     * The text position for the QR code.
-     */
+
+     _ The text position for the QR code.
+
+     _/
     textPosition: 'bottom', // 'top' | 'bottom' | 'left' | 'right'
     /**
-     * The text margin for the QR code.
-     */
+
+     _ The text margin for the QR code.
+
+     _/
     textMargin: 2,
     /**
-     * The font size for the QR code.
-     */
+
+     _ The font size for the QR code.
+
+     _/
     fontSize: 20,
     /**
-     * The background color for the QR code.
-     */
+
+     _ The background color for the QR code.
+
+     _/
     background: '#ffffff',
     /**
-     * The line color for the QR code.
-     */
+
+     _ The line color for the QR code.
+
+     _/
     lineColor: '#000000',
     /**
-     * The margin for the QR code.
-     */
+
+     _ The margin for the QR code.
+
+     _/
     margin: 10,
     /**
-     * The margin top for the QR code.
-     */
+
+     _ The margin top for the QR code.
+
+     _/
     marginTop: undefined,
     /**
-     * The margin right for the QR code.
-     */
+
+     _ The margin right for the QR code.
+
+     _/
     marginBottom: undefined,
     /**
-     * The margin left for the QR code.
-     */
+
+     _ The margin left for the QR code.
+
+     _/
     marginLeft: undefined,
     /**
-     * The margin right for the QR code.
-     */
+
+     _ The margin right for the QR code.
+
+     _/
     marginRight: undefined,
     /**
-     * The error correction level for the QR code.
-     */
+
+     _ The error correction level for the QR code.
+
+     _/
     valid() { },
   },
 }

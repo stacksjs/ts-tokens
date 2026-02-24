@@ -10,9 +10,9 @@ import type { Connection, PublicKey } from '@solana/web3.js'
  * Get voting power from staked tokens
  */
 export async function getStakedVotingPower(
-  connection: Connection,
-  voter: PublicKey,
-  pool: PublicKey
+  _connection: Connection,
+  _voter: PublicKey,
+  _pool: PublicKey
 ): Promise<bigint> {
   // In production, would read stake entry from ts-tokens/staking
   // and return the staked amount as voting power
@@ -36,9 +36,9 @@ export async function isStaked(
  * Used for time-weighted voting calculations.
  */
 export async function getStakeEntryAge(
-  connection: Connection,
-  voter: PublicKey,
-  pool: PublicKey
+  _connection: Connection,
+  _voter: PublicKey,
+  _pool: PublicKey
 ): Promise<bigint> {
   // In production, would read the stake entry timestamp
   // and compute (now - stakedAt)

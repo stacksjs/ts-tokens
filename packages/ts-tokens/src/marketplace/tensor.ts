@@ -136,13 +136,13 @@ export async function getCollectionStats(collectionId: string): Promise<Collecti
 /**
  * Get NFT info from Tensor
  */
-export async function getNFTInfo(mint: PublicKey): Promise<{
+export async function getNFTInfo(_mint: PublicKey): Promise<{
   listing?: NFTListing
   offers: NFTOffer[]
   lastSale?: { price: bigint; timestamp: number }
 } | null> {
   const query = `
-    query MintInfo($mint: String!) {
+    query MintInfo($_mint: String!) {
       mint(mint: $mint) {
         onchainId
         activeListings {
@@ -206,7 +206,7 @@ export async function getNFTInfo(mint: PublicKey): Promise<{
  * Get trending collections
  */
 export async function getTrendingCollections(
-  options: { period?: '1h' | '24h' | '7d'; limit?: number } = {}
+  _options: { period?: '1h' | '24h' | '7d'; limit?: number } = {}
 ): Promise<Array<{
   slug: string
   name: string
@@ -277,8 +277,8 @@ export function formatPrice(lamports: bigint): string {
 // On-chain Marketplace Instructions (Phase 8)
 // ============================================
 
-const TSWAP_PROGRAM_ID = 'TSWAPaqyCSx2KABk68Shruf4rp7CxcNi8hAsbdwmHbN'
-const TCOMP_PROGRAM_ID = 'TCMPhJdwDryooaGtiocG1u3xcYbRpiJzb283XfCZsDp'
+const _TSWAP_PROGRAM_ID = 'TSWAPaqyCSx2KABk68Shruf4rp7CxcNi8hAsbdwmHbN'
+const _TCOMP_PROGRAM_ID = 'TCMPhJdwDryooaGtiocG1u3xcYbRpiJzb283XfCZsDp'
 
 /**
  * Options for buying an NFT on Tensor
@@ -301,7 +301,7 @@ export interface TensorListOptions {
 /**
  * Build a buy instruction for Tensor TComp
  */
-export async function buyOnTensor(options: TensorBuyOptions): Promise<{
+export async function buyOnTensor(_options: TensorBuyOptions): Promise<{
   transaction: string
 }> {
   // Use Tensor's transaction API to get a pre-built transaction
@@ -327,7 +327,7 @@ export async function buyOnTensor(options: TensorBuyOptions): Promise<{
 /**
  * Build a list instruction for Tensor
  */
-export async function listOnTensor(options: TensorListOptions): Promise<{
+export async function listOnTensor(_options: TensorListOptions): Promise<{
   transaction: string
 }> {
   const response = await fetch('https://api.tensor.so/api/v1/tx/list', {
@@ -351,14 +351,14 @@ export async function listOnTensor(options: TensorListOptions): Promise<{
 /**
  * Build a delist instruction for Tensor
  */
-export async function delistFromTensor(mint: string): Promise<{
+export async function delistFromTensor(_mint: string): Promise<{
   transaction: string
 }> {
   const response = await fetch('https://api.tensor.so/api/v1/tx/delist', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      mint,
+      _mint,
       owner: '',
     }),
   })

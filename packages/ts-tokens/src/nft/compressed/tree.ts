@@ -210,8 +210,8 @@ function serializeCreateTree(maxDepth: number, maxBufferSize: number, isPublic: 
  * Get Merkle tree info
  */
 export async function getMerkleTreeInfo(
-  tree: string,
-  tokenConfig: TokenConfig
+  _tree: string,
+  _tokenConfig: TokenConfig
 ): Promise<{
   authority: string
   maxDepth: number
@@ -268,8 +268,8 @@ export async function getMerkleTreeInfo(
  * Get tree capacity and usage
  */
 export async function getTreeCapacity(
-  tree: string,
-  tokenConfig: TokenConfig
+  _tree: string,
+  _tokenConfig: TokenConfig
 ): Promise<{
   total: number
   used: number

@@ -213,9 +213,9 @@ export async function getTokenHolders(
  * @returns Array of transaction signatures with metadata
  */
 export async function getTokenHistory(
-  mint: string,
-  config: TokenConfig,
-  options?: HistoryOptions
+  _mint: string,
+  _config: TokenConfig,
+  _options?: HistoryOptions
 ): Promise<Array<{
   signature: string
   slot: number

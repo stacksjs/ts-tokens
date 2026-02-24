@@ -150,21 +150,26 @@ ts-tokens/
 ## Design Principles
 
 1. **Zero SDK Dependencies** -- All on-chain program interactions use raw
+
    `TransactionInstruction` builders from `@solana/web3.js`. No Metaplex,
    Serum, or other external SDKs are included.
 
 2. **Driver Abstraction** -- The `ChainDriver` interface in `types/driver.ts`
+
    defines a chain-agnostic API. Currently only Solana is implemented, but
    the registry pattern supports future chains.
 
 3. **Storage Adapter Pattern** -- All storage providers implement the
+
    `StorageAdapter` interface. A factory function auto-selects the adapter
    from config, and a fallback chain tries providers in order.
 
 4. **Layered Architecture** -- Types and config sit at the bottom, programs
+
    and drivers in the middle, high-level modules on top, and fluent/CLI at
    the surface. Dependencies flow downward only.
 
 5. **Barrel Exports** -- Each module has an `index.ts` that re-exports its
+
    public API. The top-level `src/index.ts` re-exports everything for
    consumers who want a single import path.

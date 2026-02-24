@@ -19,8 +19,8 @@ export interface UseProposalsReturn {
   refetch: () => Promise<void>
 }
 
-export function useProposals(daoAddress: string): UseProposalsReturn {
-  const connection = useConnection()
+export function useProposals(_daoAddress: string): UseProposalsReturn {
+  const _connection = useConnection()
   const proposals = ref<ProposalInfo[]>([])
   const loading = ref<boolean>(true)
   const error = ref<Error | null>(null)

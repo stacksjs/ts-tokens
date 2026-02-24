@@ -146,16 +146,16 @@ export async function inspectAccount(
 }
 
 /**
- * Simulate an instruction
+ * Simulate an _instruction
  */
 export async function simulateInstruction(
-  connection: Connection,
-  instruction: {
+  _connection: Connection,
+  _instruction: {
     programId: PublicKey
     keys: Array<{ pubkey: PublicKey; isSigner: boolean; isWritable: boolean }>
     data: Buffer
   },
-  payer: PublicKey
+  _payer: PublicKey
 ): Promise<{
   success: boolean
   logs: string[]

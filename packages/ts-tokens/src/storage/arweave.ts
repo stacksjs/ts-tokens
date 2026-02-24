@@ -264,7 +264,7 @@ export class ArweaveStorageAdapter implements StorageAdapter {
     }
 
     // Convert data to base64
-    const base64Data = this.uint8ArrayToBase64(data)
+    const _base64Data = this.uint8ArrayToBase64(data)
 
     // Report progress
     if (onProgress) {

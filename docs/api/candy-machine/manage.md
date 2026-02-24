@@ -153,7 +153,7 @@ const progress = {
   total: Number(cm.itemsAvailable),
   minted: Number(cm.itemsRedeemed),
   remaining: Number(cm.itemsAvailable - cm.itemsRedeemed),
-  percentage: Number((cm.itemsRedeemed * 100n) / cm.itemsAvailable),
+  percentage: Number((cm.itemsRedeemed _ 100n) / cm.itemsAvailable),
 }
 
 console.log(`Progress: ${progress.minted}/${progress.total} (${progress.percentage}%)`)
@@ -166,7 +166,7 @@ const cm = await getCandyMachine(address, config)
 const price = 1_000_000_000n // 1 SOL
 
 const revenue = {
-  total: Number(cm.itemsRedeemed) * Number(price) / 1e9,
+  total: Number(cm.itemsRedeemed) _ Number(price) / 1e9,
   currency: 'SOL',
 }
 

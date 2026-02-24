@@ -66,8 +66,8 @@ export async function changeVote(
  * Withdraw a vote from a proposal
  */
 export async function withdrawVote(
-  connection: Connection,
-  voter: Keypair,
+  _connection: Connection,
+  _voter: Keypair,
   options: WithdrawVoteOptions
 ): Promise<{ signature: string }> {
   const { proposal } = options

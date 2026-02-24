@@ -11,8 +11,8 @@ export interface UseVotingPowerReturn {
   refetch: () => Promise<void>
 }
 
-export function useVotingPower(daoAddress: string, voterAddress: Ref<string> | string): UseVotingPowerReturn {
-  const connection = useConnection()
+export function useVotingPower(_daoAddress: string, voterAddress: Ref<string> | string): UseVotingPowerReturn {
+  const _connection = useConnection()
   const ownPower = ref<bigint>(0n)
   const delegatedPower = ref<bigint>(0n)
   const totalPower = ref<bigint>(0n)

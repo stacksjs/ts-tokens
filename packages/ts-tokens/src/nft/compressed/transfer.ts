@@ -185,8 +185,8 @@ export async function getAssetProof(
  * Get asset data from DAS API
  */
 export async function getAsset(
-  assetId: string,
-  tokenConfig: TokenConfig
+  _assetId: string,
+  _tokenConfig: TokenConfig
 ): Promise<{
   id: string
   owner: string
@@ -237,7 +237,7 @@ export async function getAsset(
  * Burn a compressed NFT
  */
 export async function burnCompressedNFT(
-  assetId: string,
+  _assetId: string,
   tree: string,
   proof: AssetProof,
   tokenConfig: TokenConfig,

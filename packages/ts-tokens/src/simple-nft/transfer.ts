@@ -21,7 +21,7 @@ import type { TokenConfig } from '../types'
  * @returns Transfer result with signature, from, to, mint
  */
 export async function transferSimpleNFT(
-  connection: Connection,
+  _connection: Connection,
   mint: PublicKey,
   from: PublicKey,
   to: PublicKey,

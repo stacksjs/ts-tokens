@@ -76,7 +76,7 @@ function addMonths(timestamp: number, months: number): number {
  */
 export async function createVestingSchedule(
   vestingConfig: VestingConfig,
-  config: TokenConfig
+  _config: TokenConfig
 ): Promise<VestingSchedule> {
   const startDate = vestingConfig.startDate || Date.now()
   const cliffDate = addMonths(startDate, vestingConfig.cliffMonths)

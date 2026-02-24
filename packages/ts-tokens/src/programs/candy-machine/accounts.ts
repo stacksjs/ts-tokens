@@ -82,7 +82,7 @@ export function deserializeCandyMachine(data: Buffer): CandyMachine {
   const itemsRedeemed = data.readBigUInt64LE(offset)
   offset += 8
 
-  const { data: cmData, offset: newOffset } = parseCandyMachineData(data, offset)
+  const { data: cmData, offset: _newOffset } = parseCandyMachineData(data, offset)
 
   return {
     version,

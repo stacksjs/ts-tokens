@@ -10,9 +10,9 @@ import { parseDuration } from './create'
  * Update DAO configuration
  */
 export async function updateDAOConfig(
-  connection: Connection,
+  _connection: Connection,
   dao: PublicKey,
-  authority: Keypair,
+  _authority: Keypair,
   newConfig: Partial<DAOConfig>
 ): Promise<{ signature: string }> {
   if (newConfig.quorum !== undefined && (newConfig.quorum < 1 || newConfig.quorum > 100)) {
@@ -31,10 +31,10 @@ export async function updateDAOConfig(
  * Set new DAO authority
  */
 export async function setDAOAuthority(
-  connection: Connection,
+  _connection: Connection,
   dao: PublicKey,
-  currentAuthority: Keypair,
-  newAuthority: PublicKey
+  _currentAuthority: Keypair,
+  _newAuthority: PublicKey
 ): Promise<{ signature: string }> {
   return {
     signature: `authority_set_${dao.toBase58().slice(0, 8)}`,

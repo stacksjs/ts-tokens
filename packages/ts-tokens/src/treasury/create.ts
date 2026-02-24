@@ -15,9 +15,9 @@ import type {
  * Create a new treasury for a DAO
  */
 export async function createTreasury(
-  connection: Connection,
-  payer: PublicKey,
-  options: CreateTreasuryOptions
+  _connection: Connection,
+  _payer: PublicKey,
+  _options: CreateTreasuryOptions
 ): Promise<{ address: PublicKey; signature: string }> {
   const treasuryKeypair = Keypair.generate()
 
@@ -36,8 +36,8 @@ export async function createTreasury(
  * Get treasury info
  */
 export async function getTreasury(
-  connection: Connection,
-  address: PublicKey
+  _connection: Connection,
+  _address: PublicKey
 ): Promise<Treasury | null> {
   // In production, would fetch and parse treasury account
   return null
@@ -47,7 +47,7 @@ export async function getTreasury(
  * Get treasury balances
  */
 export async function getTreasuryBalances(
-  connection: Connection,
+  _connection: Connection,
   treasury: PublicKey
 ): Promise<TreasuryBalance[]> {
   // In production, would fetch all token accounts owned by treasury
@@ -67,11 +67,11 @@ export async function getTreasuryBalance(
 }
 
 /**
- * Get treasury stats
+ * Get _treasury stats
  */
 export async function getTreasuryStats(
-  connection: Connection,
-  treasury: PublicKey
+  _connection: Connection,
+  _treasury: PublicKey
 ): Promise<TreasuryStats> {
   // In production, would calculate from transaction history
   return {
@@ -98,8 +98,8 @@ export async function isTreasury(
  * Get treasury by DAO
  */
 export async function getTreasuryByDAO(
-  connection: Connection,
-  dao: PublicKey
+  _connection: Connection,
+  _dao: PublicKey
 ): Promise<Treasury | null> {
   // In production, would derive treasury PDA from DAO
   return null

@@ -27,9 +27,9 @@ export async function getProposal(
  * Get all proposals for a DAO
  */
 export async function getProposals(
-  connection: Connection,
-  dao: PublicKey,
-  status?: ProposalStatus
+  _connection: Connection,
+  _dao: PublicKey,
+  _status?: ProposalStatus
 ): Promise<Proposal[]> {
   // In production, would use getProgramAccounts with filters
   return []

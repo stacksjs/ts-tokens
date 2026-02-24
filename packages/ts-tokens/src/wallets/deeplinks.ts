@@ -166,13 +166,13 @@ export function isMobile(): boolean {
 /**
  * Check if wallet app is installed (mobile)
  */
-export function isWalletAppInstalled(wallet: WalletType): boolean {
+export function isWalletAppInstalled(_wallet: WalletType): boolean {
   // Can't reliably detect on web, return false
   return false
 }
 
 /**
- * Get app store link for wallet
+ * Get app store link for _wallet
  */
 export function getAppStoreLink(wallet: WalletType, platform: 'ios' | 'android'): string {
   const links: Record<WalletType, { ios: string; android: string }> = {

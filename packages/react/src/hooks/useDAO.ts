@@ -21,9 +21,9 @@ export interface DAOState {
 export function useDAO(daoAddress: string): DAOState {
   const connection = useConnection()
   const [name, setName] = useState<string | null>(null)
-  const [proposalCount, setProposalCount] = useState<number>(0)
-  const [totalVotingPower, setTotalVotingPower] = useState<bigint>(0n)
-  const [config, setConfig] = useState<DAOState['config']>(null)
+  const [proposalCount, _setProposalCount] = useState<number>(0)
+  const [totalVotingPower, _setTotalVotingPower] = useState<bigint>(0n)
+  const [config, _setConfig] = useState<DAOState['config']>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 

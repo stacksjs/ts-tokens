@@ -29,6 +29,7 @@ All three approaches produce the **exact same on-chain accounts**:
 ```
 
 NFTs created with ts-tokens Simple NFT are fully compatible with:
+
 - Phantom, Solflare, and all Solana wallets
 - Magic Eden, Tensor, and all NFT marketplaces
 - Metaplex tools and SDKs
@@ -61,6 +62,7 @@ NFTs created with ts-tokens Simple NFT are fully compatible with:
 ## When to Use What
 
 **Use Simple NFT when:**
+
 - Building a new project from scratch
 - You want the simplest possible API
 - You prefer percentages over basis points
@@ -68,12 +70,14 @@ NFTs created with ts-tokens Simple NFT are fully compatible with:
 - You need batch operations with progress
 
 **Use Metaplex SDK when:**
+
 - You need Umi ecosystem plugins
 - You're working with programmable NFTs (pNFTs)
 - You need compressed NFT support via Bubblegum
 - You're integrating with existing Metaplex tooling
 
 **Use Raw Solana when:**
+
 - You need maximum control over transactions
 - You're building a custom program
 - You need optimized compute units

@@ -11,8 +11,8 @@ import type { TimeWeightConfig } from './time-weighted'
  * Get voting power for an address
  */
 export async function getVotingPower(
-  connection: Connection,
-  voter: PublicKey,
+  _connection: Connection,
+  _voter: PublicKey,
   proposal: PublicKey
 ): Promise<bigint> {
   // In production:

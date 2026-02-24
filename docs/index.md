@@ -35,5 +35,3 @@ features:
     icon: "📦"
     details: "Strongly typed."
 ---
-
-<Home />

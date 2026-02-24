@@ -21,9 +21,9 @@ export function setMultisigAsDAOAdmin(
  * Check if a given authority is a multisig-managed authority for a DAO
  */
 export async function isMultisigAuthority(
-  connection: Connection,
+  _connection: Connection,
   authority: PublicKey,
-  dao: PublicKey
+  _dao: PublicKey
 ): Promise<boolean> {
   // In production, would check if the authority is a multisig PDA
   // and if that multisig is configured as the DAO admin
@@ -35,7 +35,7 @@ export async function isMultisigAuthority(
  * Wraps a governance instruction inside a multisig transaction.
  */
 export async function createMultisigProposal(
-  connection: Connection,
+  _connection: Connection,
   multisig: PublicKey,
   dao: PublicKey,
   instruction: { programId: PublicKey; data: Buffer }

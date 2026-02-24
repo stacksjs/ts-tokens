@@ -16,8 +16,8 @@ export interface UseWalletReturn {
   publicKey: PublicKey | null
   connect: () => Promise<void>
   disconnect: () => Promise<void>
-  signTransaction: ((transaction: Transaction) => Promise<Transaction>) | null
-  signMessage: ((message: Uint8Array) => Promise<Uint8Array>) | null
+  signTransaction: ((_transaction: Transaction) => Promise<Transaction>) | null
+  signMessage: ((_message: Uint8Array) => Promise<Uint8Array>) | null
 }
 
 /**

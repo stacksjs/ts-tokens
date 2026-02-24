@@ -622,7 +622,7 @@ export function toCIDv0(cidV1: string): string {
  */
 export async function uploadDirectory(
   files: Array<{ name: string; data: Uint8Array; contentType?: string }>,
-  config: Partial<IPFSConfig>
+  _config: Partial<IPFSConfig>
 ): Promise<{
   directoryCid: string
   files: Array<{ name: string; cid: string }>

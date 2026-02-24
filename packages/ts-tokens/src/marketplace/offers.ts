@@ -121,7 +121,7 @@ export async function acceptOffer(
   )
 
   // Royalty payments from seller (deducted from offer price)
-  const { instructions: royaltyIxs, totalRoyalty } = buildRoyaltyInstructions(
+  const { instructions: royaltyIxs, _totalRoyalty } = buildRoyaltyInstructions(
     seller.publicKey,
     offer.price,
     royaltyInfo
@@ -186,7 +186,7 @@ export async function cancelOffer(
  */
 export async function rejectOffer(
   offerId: string,
-  config: TokenConfig
+  _config: TokenConfig
 ): Promise<void> {
   const offer = getOffer(offerId)
 

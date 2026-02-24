@@ -74,7 +74,9 @@ NFT Info:
   Collection: DEF456...
   Royalty: 5%
   Creators:
+
     - ABC123... (100%)
+
 ```
 
 ## `tokens nft:list`
@@ -90,9 +92,11 @@ tokens nft:list --owner <address>
 
 ```text
 NFTs (3 total):
+
   1. Cool NFT #1 (ABC123...)
   2. Cool NFT #2 (DEF456...)
   3. Rare Item (GHI789...)
+
 ```
 
 ## `tokens collection:create`

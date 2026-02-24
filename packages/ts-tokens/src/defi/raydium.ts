@@ -14,7 +14,7 @@ const RAYDIUM_API = 'https://api.raydium.io/v2'
  * Get pool info
  */
 export async function getPoolInfo(
-  connection: Connection,
+  _connection: Connection,
   poolAddress: PublicKey
 ): Promise<LiquidityPool | null> {
   try {

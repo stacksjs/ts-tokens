@@ -27,13 +27,13 @@ export function checkAddressValid(address: string): SecurityCheckResult {
 /**
  * Check if sending to an exchange without memo
  */
-export function checkExchangeWithoutMemo(address: string): SecurityCheckResult {
+export function checkExchangeWithoutMemo(_address: string): SecurityCheckResult {
   const warnings: string[] = []
   const recommendations: string[] = []
 
   // Known exchange deposit addresses often require memos
   // This is a heuristic check
-  const KNOWN_EXCHANGE_PREFIXES = ['FTX', 'Binance', 'Coinbase']
+  const _KNOWN_EXCHANGE_PREFIXES = ['FTX', 'Binance', 'Coinbase']
   // In production, check against a database
   recommendations.push('If sending to an exchange, ensure a memo is included if required')
 

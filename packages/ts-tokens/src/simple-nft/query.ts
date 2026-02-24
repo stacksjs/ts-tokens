@@ -44,7 +44,7 @@ function toSimpleNFT(metadata: NFTMetadata, owner?: PublicKey, collection?: Publ
  * @returns Array of SimpleNFT objects
  */
 export async function getSimpleNFTsByOwner(
-  connection: Connection,
+  _connection: Connection,
   owner: PublicKey,
   config: TokenConfig
 ): Promise<SimpleNFT[]> {
@@ -66,7 +66,7 @@ export async function getSimpleNFTsByOwner(
  * @returns Array of SimpleNFT objects
  */
 export async function getSimpleNFTsByCollection(
-  connection: Connection,
+  _connection: Connection,
   collectionMint: PublicKey,
   config: TokenConfig,
   limit: number = 100

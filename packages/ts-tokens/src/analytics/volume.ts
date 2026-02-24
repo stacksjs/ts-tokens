@@ -37,7 +37,7 @@ export async function getTradingVolume(
   // In production, would parse transactions to extract volume
   // This is a simplified version
   const trades = relevantSigs.length
-  const uniqueAddresses = new Set<string>()
+  const _uniqueAddresses = new Set<string>()
 
   // Estimate volume (would need actual transaction parsing)
   const estimatedVolume = BigInt(trades * 1000000) // Placeholder
@@ -58,8 +58,8 @@ export async function getTradingVolume(
  * Get volume breakdown by time intervals
  */
 export async function getVolumeBreakdown(
-  connection: Connection,
-  mint: PublicKey,
+  _connection: Connection,
+  _mint: PublicKey,
   intervals: number = 24
 ): Promise<Array<{ timestamp: number; volume: bigint; trades: number }>> {
   const now = Date.now()

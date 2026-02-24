@@ -82,9 +82,9 @@ export async function createSnapshot(
  * Check for double voting via token transfer
  */
 export async function checkDoubleVoting(
-  connection: Connection,
+  _connection: Connection,
   voter: PublicKey,
-  proposal: PublicKey,
+  _proposal: PublicKey,
   snapshot: VotingSnapshot
 ): Promise<{ hasVoted: boolean; transferred: boolean }> {
   // In production, would:
@@ -98,13 +98,13 @@ export async function checkDoubleVoting(
 }
 
 /**
- * Get voting power at specific slot
+ * Get voting power at specific _slot
  */
 export async function getHistoricalVotingPower(
-  connection: Connection,
-  voter: PublicKey,
-  token: PublicKey,
-  slot: number
+  _connection: Connection,
+  _voter: PublicKey,
+  _token: PublicKey,
+  _slot: number
 ): Promise<bigint> {
   // In production, would query historical balance
   // This requires archive node access

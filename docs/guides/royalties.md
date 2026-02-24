@@ -2,7 +2,7 @@
 
 Learn how royalties work on Solana NFTs.
 
-## What Are Royalties?
+## What Are Royalties
 
 Royalties are fees paid to creators when NFTs are resold on secondary markets. On Solana, royalties are:
 
@@ -83,7 +83,7 @@ import { verifyCreator, getConfig } from 'ts-tokens'
 const config = await getConfig()
 
 // Creator signs to verify
-await verifyCreator('NFT_MINT_ADDRESS', config)
+await verifyCreator('NFT*MINT*ADDRESS', config)
 ```
 
 Using CLI:
@@ -101,7 +101,7 @@ import { updateNFTMetadata, getConfig } from 'ts-tokens'
 
 const config = await getConfig()
 
-await updateNFTMetadata('NFT_MINT_ADDRESS', {
+await updateNFTMetadata('NFT*MINT*ADDRESS', {
   sellerFeeBasisPoints: 750, // Change to 7.5%
 }, config)
 ```
@@ -144,7 +144,7 @@ const nft = await createProgrammableNFT({
   symbol: 'PNFT',
   uri: 'https://...',
   sellerFeeBasisPoints: 500,
-  ruleSet: 'RULE_SET_ADDRESS', // Enforces royalties
+  ruleSet: 'RULE*SET*ADDRESS', // Enforces royalties
 }, config)
 ```
 

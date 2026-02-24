@@ -22,7 +22,7 @@ import type { TokenConfig } from '../types'
  * @returns Freeze result with signature, mint, account
  */
 export async function freezeNFT(
-  connection: Connection,
+  _connection: Connection,
   mint: PublicKey,
   tokenAccount: PublicKey,
   config: TokenConfig
@@ -55,7 +55,7 @@ export async function freezeNFT(
  * @returns Freeze result with signature, mint, account
  */
 export async function thawNFT(
-  connection: Connection,
+  _connection: Connection,
   mint: PublicKey,
   tokenAccount: PublicKey,
   config: TokenConfig

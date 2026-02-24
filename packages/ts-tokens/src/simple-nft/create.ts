@@ -38,8 +38,8 @@ import type { TokenConfig } from '../types'
  * ```
  */
 export async function createSimpleNFT(
-  connection: Connection,
-  payer: PublicKey,
+  _connection: Connection,
+  _payer: PublicKey,
   options: CreateSimpleNFTOptions,
   config: TokenConfig
 ): Promise<SimpleNFTResult> {
@@ -181,9 +181,9 @@ export async function getSimpleNFT(
  * Converts royalty percentage to basis points and delegates to updateNFTMetadata.
  */
 export async function updateSimpleNFT(
-  connection: Connection,
+  _connection: Connection,
   mint: PublicKey,
-  authority: PublicKey,
+  _authority: PublicKey,
   updates: UpdateSimpleNFTOptions,
   config: TokenConfig
 ): Promise<string> {
@@ -212,9 +212,9 @@ export async function updateSimpleNFT(
  * Sets isMutable to false via updateNFTMetadata. This is irreversible.
  */
 export async function freezeSimpleNFT(
-  connection: Connection,
+  _connection: Connection,
   mint: PublicKey,
-  authority: PublicKey,
+  _authority: PublicKey,
   config: TokenConfig
 ): Promise<string> {
   const { updateNFTMetadata } = await import('../nft/metadata')

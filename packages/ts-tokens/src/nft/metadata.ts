@@ -92,7 +92,7 @@ function serializeUpdateMetadataV2(
     primarySaleHappened?: boolean
     isMutable?: boolean
   },
-  updateAuthority: PublicKey
+  _updateAuthority: PublicKey
 ): Buffer {
   // This is a simplified version - full implementation would handle all fields
   const buffer = Buffer.alloc(512)
@@ -312,8 +312,8 @@ export async function fetchOffChainMetadata(
  * Get full NFT data (on-chain + off-chain)
  */
 export async function getFullNFTData(
-  mint: string,
-  config: TokenConfig
+  _mint: string,
+  _config: TokenConfig
 ): Promise<{
   onChain: NFTMetadata
   offChain: Record<string, unknown> | null

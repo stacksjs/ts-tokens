@@ -22,8 +22,8 @@ import type { TokenConfig } from '../types'
  * Delegates to `createCollection()` from `nft/create.ts`.
  */
 export async function createSimpleCollection(
-  connection: Connection,
-  payer: PublicKey,
+  _connection: Connection,
+  _payer: PublicKey,
   options: CreateSimpleCollectionOptions,
   config: TokenConfig
 ): Promise<SimpleCollectionResult> {
@@ -90,7 +90,7 @@ export async function createSimpleCollection(
  * Reads collection NFT metadata and transforms to SimpleCollection.
  */
 export async function getSimpleCollection(
-  connection: Connection,
+  _connection: Connection,
   mint: PublicKey,
   config: TokenConfig
 ): Promise<SimpleCollection | null> {
@@ -123,10 +123,10 @@ export async function getSimpleCollection(
  * Verifies an NFT as part of a collection. Delegates to `verifyCollectionItem()`.
  */
 export async function addToCollection(
-  connection: Connection,
+  _connection: Connection,
   nftMint: PublicKey,
   collectionMint: PublicKey,
-  collectionAuthority: PublicKey,
+  _collectionAuthority: PublicKey,
   config: TokenConfig
 ): Promise<string> {
   const { verifyCollectionItem } = await import('../nft/collection')
@@ -146,10 +146,10 @@ export async function addToCollection(
  * Unverifies an NFT from a collection. Delegates to `unverifyCollectionItem()`.
  */
 export async function removeFromCollection(
-  connection: Connection,
+  _connection: Connection,
   nftMint: PublicKey,
   collectionMint: PublicKey,
-  collectionAuthority: PublicKey,
+  _collectionAuthority: PublicKey,
   config: TokenConfig
 ): Promise<string> {
   const { unverifyCollectionItem } = await import('../nft/collection')
@@ -169,7 +169,7 @@ export async function removeFromCollection(
  * Delegates to getNFTsByCollection and transforms results to SimpleNFT[].
  */
 export async function getCollectionNFTs(
-  connection: Connection,
+  _connection: Connection,
   collectionMint: PublicKey,
   config: TokenConfig,
   options: { limit?: number; offset?: number } = {}
@@ -204,7 +204,7 @@ export async function getCollectionNFTs(
  * Returns the number of verified NFTs in a collection.
  */
 export async function getCollectionSize(
-  connection: Connection,
+  _connection: Connection,
   collectionMint: PublicKey,
   config: TokenConfig
 ): Promise<number> {
@@ -219,9 +219,9 @@ export async function getCollectionSize(
  * Delegates to updateCollection() from nft/collection.ts.
  */
 export async function updateCollection(
-  connection: Connection,
+  _connection: Connection,
   collectionMint: PublicKey,
-  authority: PublicKey,
+  _authority: PublicKey,
   updates: {
     name?: string
     symbol?: string
@@ -252,7 +252,7 @@ export async function updateCollection(
 export async function setCollectionSize(
   connection: Connection,
   collectionMint: PublicKey,
-  authority: PublicKey,
+  _authority: PublicKey,
   size: number,
   config: TokenConfig
 ): Promise<string> {
@@ -289,9 +289,9 @@ export async function setCollectionSize(
  * Updates the update authority on the collection metadata account.
  */
 export async function transferCollectionAuthority(
-  connection: Connection,
+  _connection: Connection,
   collectionMint: PublicKey,
-  currentAuthority: PublicKey,
+  _currentAuthority: PublicKey,
   newAuthority: PublicKey,
   config: TokenConfig
 ): Promise<string> {
@@ -335,9 +335,9 @@ export function verifyCollection(collection: SimpleCollection): {
  * Returns size, verified count, and unique owner count.
  */
 export async function getCollectionStats(
-  connection: Connection,
-  collectionMint: PublicKey,
-  config: TokenConfig
+  _connection: Connection,
+  _collectionMint: PublicKey,
+  _config: TokenConfig
 ): Promise<{
   size: number
   verified: number

@@ -2,7 +2,7 @@
 
 Add and manage metadata for fungible tokens.
 
-## Why Token Metadata?
+## Why Token Metadata
 
 Metadata allows tokens to display properly in wallets and explorers:
 

@@ -83,7 +83,7 @@ export function checkUpgradeableByUnknown(upgradeAuth: string): SecurityCheckRes
 /**
  * Check for known vulnerabilities in a program
  */
-export function checkKnownVulnerabilities(programId: string): SecurityCheckResult {
+export function checkKnownVulnerabilities(_programId: string): SecurityCheckResult {
   const warnings: string[] = []
   const recommendations: string[] = []
 
@@ -154,7 +154,7 @@ export function checkSandwichVectors(instructions: Array<{ programId: string; da
 /**
  * Check if program IDL is available
  */
-export function checkIdlAvailable(programId: string): SecurityCheckResult {
+export function checkIdlAvailable(_programId: string): SecurityCheckResult {
   const warnings: string[] = []
   const recommendations: string[] = []
 

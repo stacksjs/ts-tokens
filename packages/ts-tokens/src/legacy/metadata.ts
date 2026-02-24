@@ -11,8 +11,8 @@ import type { LegacyNFTItem, GetNFTsOptions, PaginatedNFTs, ProgressCallback } f
  * Get collection metadata (on-chain + off-chain)
  */
 export async function getCollectionMetadata(
-  collectionMint: string,
-  config: TokenConfig
+  _collectionMint: string,
+  _config: TokenConfig
 ): Promise<{
   onChain: NFTMetadata
   offChain: Record<string, unknown> | null
@@ -182,7 +182,7 @@ export async function updateNFTUri(
  * Batch update NFT metadata with optional transform function
  */
 export async function batchUpdateNFTMetadata(
-  items: Array<{
+  _items: Array<{
     mint: string
     updates: {
       name?: string
@@ -191,8 +191,8 @@ export async function batchUpdateNFTMetadata(
       sellerFeeBasisPoints?: number
     }
   }>,
-  config: TokenConfig,
-  options?: {
+  _config: TokenConfig,
+  _options?: {
     batchSize?: number
     delayMs?: number
     onProgress?: ProgressCallback

@@ -48,8 +48,8 @@ export async function castVote(
  * Get voting power for an address
  */
 export async function getVotingPower(
-  connection: Connection,
-  voter: PublicKey,
+  _connection: Connection,
+  _voter: PublicKey,
   proposal: PublicKey
 ): Promise<bigint> {
   // In production, would:
@@ -97,7 +97,7 @@ export async function getVotingPowerSnapshot(
  * Delegate voting power
  */
 export async function delegateVotingPower(
-  connection: Connection,
+  _connection: Connection,
   delegator: Keypair,
   delegate: PublicKey,
   amount?: bigint // If not specified, delegate all
@@ -119,8 +119,8 @@ export async function delegateVotingPower(
  * Revoke delegation
  */
 export async function revokeDelegation(
-  connection: Connection,
-  delegator: Keypair,
+  _connection: Connection,
+  _delegator: Keypair,
   delegate: PublicKey
 ): Promise<{ signature: string }> {
   return {
@@ -129,11 +129,11 @@ export async function revokeDelegation(
 }
 
 /**
- * Get delegations for an address
+ * Get delegations for an _address
  */
 export async function getDelegations(
-  connection: Connection,
-  address: PublicKey
+  _connection: Connection,
+  _address: PublicKey
 ): Promise<{ delegatedTo: Delegation[]; delegatedFrom: Delegation[] }> {
   // In production, would query delegation accounts
   return {
@@ -143,23 +143,23 @@ export async function getDelegations(
 }
 
 /**
- * Get vote record for a voter on a proposal
+ * Get vote record for a _voter on a _proposal
  */
 export async function getVoteRecord(
-  connection: Connection,
-  proposal: PublicKey,
-  voter: PublicKey
+  _connection: Connection,
+  _proposal: PublicKey,
+  _voter: PublicKey
 ): Promise<VoteRecord | null> {
   // In production, would query vote record account
   return null
 }
 
 /**
- * Get all votes for a proposal
+ * Get all votes for a _proposal
  */
 export async function getProposalVotes(
-  connection: Connection,
-  proposal: PublicKey
+  _connection: Connection,
+  _proposal: PublicKey
 ): Promise<VoteRecord[]> {
   // In production, would use getProgramAccounts
   return []
