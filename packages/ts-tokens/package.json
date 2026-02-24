@@ -177,7 +177,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.2.3",
-    "better-dx": "^0.2.5",
+    "better-dx": "^0.2.6",
     "bun-plugin-dtsx": "^0.9.9"
   },
   "peerDependencies": {
