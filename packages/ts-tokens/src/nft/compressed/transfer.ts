@@ -184,9 +184,10 @@ export async function getAssetProof(
 /**
  * Get asset data from DAS API
  */
+// eslint-disable-next-line no-unused-vars
 export async function getAsset(
-  _assetId: string,
-  _tokenConfig: TokenConfig
+  assetId: string,
+  tokenConfig: TokenConfig
 ): Promise<{
   id: string
   owner: string

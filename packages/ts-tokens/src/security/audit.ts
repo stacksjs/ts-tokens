@@ -278,7 +278,8 @@ function generateSummary(findings: AuditFinding[], riskScore: number): string {
 /**
  * Generate a full security report
  */
-export async function generateSecurityReport(_options: {
+// eslint-disable-next-line no-unused-vars
+export async function generateSecurityReport(options: {
   connection: Connection
   tokens?: PublicKey[]
   collections?: PublicKey[]

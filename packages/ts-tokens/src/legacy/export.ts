@@ -19,9 +19,10 @@ export function exportToJSON(data: unknown): string {
  *
  * Zero-dependency CSV serializer that handles escaping.
  */
+// eslint-disable-next-line no-unused-vars
 export function exportToCSV(
-  _data: Array<Record<string, unknown>>,
-  _options?: { delimiter?: string }
+  data: Array<Record<string, unknown>>,
+  options?: { delimiter?: string }
 ): string {
   if (data.length === 0) return ''
 
@@ -31,8 +32,9 @@ export function exportToCSV(
   const headers = Object.keys(data[0])
 
   // Escape CSV field
-  const escapeField = (_value: unknown): string => {
-    const str = _value === null || value === undefined ? '' : String(value)
+  // eslint-disable-next-line pickier/no-unused-vars
+  const escapeField = (value: unknown): string => {
+    const str = value === null || value === undefined ? '' : String(value)
     // Escape if contains delimiter, quotes, or newlines
     if (str.includes(delimiter) || str.includes('"') || str.includes('\n')) {
       return `"${str.replace(/"/g, '""')}"`

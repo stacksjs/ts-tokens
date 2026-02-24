@@ -311,9 +311,10 @@ export async function fetchOffChainMetadata(
 /**
  * Get full NFT data (on-chain + off-chain)
  */
+// eslint-disable-next-line no-unused-vars
 export async function getFullNFTData(
-  _mint: string,
-  _config: TokenConfig
+  mint: string,
+  config: TokenConfig
 ): Promise<{
   onChain: NFTMetadata
   offChain: Record<string, unknown> | null

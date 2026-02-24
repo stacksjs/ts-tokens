@@ -145,9 +145,10 @@ export async function closeLookupTable(
 /**
  * Get lookup table info
  */
+// eslint-disable-next-line no-unused-vars
 export async function getLookupTableInfo(
-  _tableAddress: string,
-  _config: TokenConfig,
+  tableAddress: string,
+  config: TokenConfig,
 ): Promise<{
   address: string
   authority: string | null
@@ -178,8 +179,9 @@ export async function getLookupTableInfo(
  * For large batches (30+ recipients), ALTs significantly reduce transaction size
  * by compressing account addresses from 32 bytes to 1 byte each.
  */
+// eslint-disable-next-line no-unused-vars
 export async function batchTransferWithALT(
-  _options: {
+  options: {
     mint: string
     recipients: Array<{ address: string; amount: bigint }>
     existingTable?: string

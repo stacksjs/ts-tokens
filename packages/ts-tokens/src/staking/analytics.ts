@@ -126,11 +126,12 @@ export function exportStakingData(
 }
 
 /**
- * Get _pool-level analytics
+ * Get pool-level analytics
  */
+// eslint-disable-next-line no-unused-vars
 export async function getPoolAnalytics(
-  _connection: Connection,
-  _pool: PublicKey
+  connection: Connection,
+  pool: PublicKey
 ): Promise<{
   tvl: bigint
   uniqueStakers: number

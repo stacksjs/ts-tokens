@@ -620,9 +620,10 @@ export function toCIDv0(cidV1: string): string {
  * @param config - IPFS configuration (requires apiEndpoint)
  * @returns Directory CID and individual file CIDs
  */
+// eslint-disable-next-line pickier/no-unused-vars
 export async function uploadDirectory(
   files: Array<{ name: string; data: Uint8Array; contentType?: string }>,
-  _config: Partial<IPFSConfig>
+  config: Partial<IPFSConfig>
 ): Promise<{
   directoryCid: string
   files: Array<{ name: string; cid: string }>

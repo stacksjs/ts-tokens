@@ -212,10 +212,11 @@ export async function getTokenHolders(
  * @param options - History options
  * @returns Array of transaction signatures with metadata
  */
+// eslint-disable-next-line no-unused-vars
 export async function getTokenHistory(
-  _mint: string,
-  _config: TokenConfig,
-  _options?: HistoryOptions
+  mint: string,
+  config: TokenConfig,
+  options?: HistoryOptions
 ): Promise<Array<{
   signature: string
   slot: number

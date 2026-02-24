@@ -45,9 +45,10 @@ export interface Token2022CreateOptions {
 /**
  * Create a Token-2022 token with multiple extensions in a single transaction
  */
+// eslint-disable-next-line no-unused-vars
 export async function createToken2022(
-  _options: Token2022CreateOptions,
-  _config: TokenConfig
+  options: Token2022CreateOptions,
+  config: TokenConfig
 ): Promise<{
   mint: string
   signature: string

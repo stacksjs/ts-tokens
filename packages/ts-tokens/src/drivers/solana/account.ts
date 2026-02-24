@@ -24,9 +24,10 @@ import { retry } from '../../utils'
  * @param address - Account address
  * @returns Account info or null if not found
  */
+// eslint-disable-next-line no-unused-vars
 export async function getAccountInfo(
-  _connection: Connection,
-  _address: string
+  connection: Connection,
+  address: string
 ): Promise<{
   lamports: bigint
   owner: string
@@ -57,9 +58,10 @@ export async function getAccountInfo(
  * @param addresses - Array of account addresses
  * @returns Array of account info (null for non-existent accounts)
  */
+// eslint-disable-next-line no-unused-vars
 export async function getMultipleAccounts(
-  _connection: Connection,
-  _addresses: string[]
+  connection: Connection,
+  addresses: string[]
 ): Promise<Array<{
   address: string
   lamports: bigint
@@ -267,9 +269,10 @@ export async function tokenAccountExists(
  * @param mint - Token mint address
  * @returns Mint info
  */
+// eslint-disable-next-line no-unused-vars
 export async function getMintInfo(
-  _connection: Connection,
-  _mint: string
+  connection: Connection,
+  mint: string
 ): Promise<{
   address: string
   supply: bigint
@@ -299,10 +302,11 @@ export async function getMintInfo(
  * @param limit - Maximum number of holders to return
  * @returns Array of token holders sorted by balance
  */
+// eslint-disable-next-line no-unused-vars
 export async function getLargestTokenHolders(
-  _connection: Connection,
-  _mint: string,
-  _limit: number = 20
+  connection: Connection,
+  mint: string,
+  limit: number = 20
 ): Promise<Array<{
   address: string
   balance: bigint

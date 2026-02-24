@@ -39,11 +39,12 @@ export async function getLegacyEditionInfo(
 /**
  * Print a new edition from a master edition
  */
+// eslint-disable-next-line no-unused-vars
 export async function printLegacyEdition(
-  _masterMint: string,
+  masterMint: string,
   editionNumber: number,
-  _config: TokenConfig,
-  _options?: TransactionOptions
+  config: TokenConfig,
+  options?: TransactionOptions
 ): Promise<{
   mint: string
   metadata: string
@@ -58,10 +59,11 @@ export async function printLegacyEdition(
 /**
  * Get all editions printed from a master edition
  */
+// eslint-disable-next-line no-unused-vars
 export async function getEditionsByMaster(
-  _masterMint: string,
-  _config: TokenConfig,
-  _limit?: number
+  masterMint: string,
+  config: TokenConfig,
+  limit?: number
 ): Promise<Array<{
   mint: string
   parent: string

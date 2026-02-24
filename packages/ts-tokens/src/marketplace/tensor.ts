@@ -136,13 +136,14 @@ export async function getCollectionStats(collectionId: string): Promise<Collecti
 /**
  * Get NFT info from Tensor
  */
-export async function getNFTInfo(_mint: PublicKey): Promise<{
+// eslint-disable-next-line no-unused-vars
+export async function getNFTInfo(mint: PublicKey): Promise<{
   listing?: NFTListing
   offers: NFTOffer[]
   lastSale?: { price: bigint; timestamp: number }
 } | null> {
   const query = `
-    query MintInfo($_mint: String!) {
+    query MintInfo($mint: String!) {
       mint(mint: $mint) {
         onchainId
         activeListings {
@@ -205,8 +206,9 @@ export async function getNFTInfo(_mint: PublicKey): Promise<{
 /**
  * Get trending collections
  */
+// eslint-disable-next-line no-unused-vars
 export async function getTrendingCollections(
-  _options: { period?: '1h' | '24h' | '7d'; limit?: number } = {}
+  options: { period?: '1h' | '24h' | '7d'; limit?: number } = {}
 ): Promise<Array<{
   slug: string
   name: string
@@ -301,7 +303,8 @@ export interface TensorListOptions {
 /**
  * Build a buy instruction for Tensor TComp
  */
-export async function buyOnTensor(_options: TensorBuyOptions): Promise<{
+// eslint-disable-next-line no-unused-vars
+export async function buyOnTensor(options: TensorBuyOptions): Promise<{
   transaction: string
 }> {
   // Use Tensor's transaction API to get a pre-built transaction
@@ -327,7 +330,8 @@ export async function buyOnTensor(_options: TensorBuyOptions): Promise<{
 /**
  * Build a list instruction for Tensor
  */
-export async function listOnTensor(_options: TensorListOptions): Promise<{
+// eslint-disable-next-line no-unused-vars
+export async function listOnTensor(options: TensorListOptions): Promise<{
   transaction: string
 }> {
   const response = await fetch('https://api.tensor.so/api/v1/tx/list', {

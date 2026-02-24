@@ -31,7 +31,8 @@ export async function withdrawFromTreasury(
   _authority: Keypair,
   options: WithdrawOptions
 ): Promise<{ signature: string }> {
-  const { dao, _recipient, amount } = options
+  // eslint-disable-next-line no-unused-vars
+  const { dao, recipient, amount } = options
   const treasury = getTreasuryAddress(dao)
 
   return {

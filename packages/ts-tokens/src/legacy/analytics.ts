@@ -19,7 +19,8 @@ export async function getCollectionStats(
   collectionMint: string,
   config: TokenConfig
 ): Promise<CollectionStats> {
-  const { createDASClient, _getAssetCollection } = await import('../indexer/das')
+  // eslint-disable-next-line no-unused-vars
+  const { createDASClient, getAssetCollection } = await import('../indexer/das')
   const rpcUrl = config.rpcUrl || 'https://api.mainnet-beta.solana.com'
   const client = createDASClient(rpcUrl)
 

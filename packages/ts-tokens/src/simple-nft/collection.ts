@@ -334,10 +334,11 @@ export function verifyCollection(collection: SimpleCollection): {
  *
  * Returns size, verified count, and unique owner count.
  */
+// eslint-disable-next-line no-unused-vars
 export async function getCollectionStats(
   _connection: Connection,
-  _collectionMint: PublicKey,
-  _config: TokenConfig
+  collectionMint: PublicKey,
+  config: TokenConfig
 ): Promise<{
   size: number
   verified: number

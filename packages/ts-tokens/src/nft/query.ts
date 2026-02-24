@@ -154,9 +154,10 @@ export async function getNFTsByCreator(
 /**
  * Get collection info
  */
+// eslint-disable-next-line no-unused-vars
 export async function getCollectionInfo(
-  _collection: string,
-  _config: TokenConfig
+  collection: string,
+  config: TokenConfig
 ): Promise<{
   metadata: NFTMetadata | null
   size: number
@@ -260,10 +261,11 @@ export async function getNFTHolder(
 /**
  * Get NFT transaction history
  */
+// eslint-disable-next-line no-unused-vars
 export async function getNFTHistory(
-  _mint: string,
-  _config: TokenConfig,
-  _limit: number = 20
+  mint: string,
+  config: TokenConfig,
+  limit: number = 20
 ): Promise<Array<{
   signature: string
   slot: number

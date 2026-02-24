@@ -121,7 +121,8 @@ export async function acceptOffer(
   )
 
   // Royalty payments from seller (deducted from offer price)
-  const { instructions: royaltyIxs, _totalRoyalty } = buildRoyaltyInstructions(
+  // eslint-disable-next-line no-unused-vars
+  const { instructions: royaltyIxs, totalRoyalty } = buildRoyaltyInstructions(
     seller.publicKey,
     offer.price,
     royaltyInfo

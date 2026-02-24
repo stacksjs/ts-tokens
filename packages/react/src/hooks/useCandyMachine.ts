@@ -43,7 +43,8 @@ export function useCandyMachine(address: string): CandyMachineState {
       }
 
       // Parse candy machine data (simplified)
-      const _data = accountInfo._data
+      // eslint-disable-next-line no-unused-vars
+      const _data = accountInfo.data
       // This would need proper deserialization based on CM version
       const itemsAvailable = 1000 // Placeholder
       const itemsMinted = 0 // Placeholder

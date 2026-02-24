@@ -314,7 +314,8 @@ export async function getAllStakedNFTs(
     ],
   })
 
-  return accounts.map(({ _pubkey, account }) => ({
+  // eslint-disable-next-line no-unused-vars
+  return accounts.map(({ pubkey, account }) => ({
     owner: new PublicKey(account.data.subarray(8, 40)),
     pool: new PublicKey(account.data.subarray(40, 72)),
     mint: new PublicKey(account.data.subarray(72, 104)),

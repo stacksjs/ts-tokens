@@ -168,10 +168,11 @@ export function formatSimulationResult(result: SimulationResult): string {
 /**
  * Dry run with detailed output
  */
+// eslint-disable-next-line no-unused-vars
 export async function dryRun(
-  _connection: Connection,
-  _transaction: Transaction | VersionedTransaction,
-  _options: {
+  connection: Connection,
+  transaction: Transaction | VersionedTransaction,
+  options: {
     showLogs?: boolean
     showAccounts?: boolean
   } = {}

@@ -259,9 +259,10 @@ export async function buildSPLRoyaltyInstructions(
  * Analyzes a confirmed transaction to check if an NFT transfer occurred
  * without corresponding royalty payments to creators.
  */
+// eslint-disable-next-line no-unused-vars
 export async function detectRoyaltyBypass(
-  _signature: string,
-  _config: TokenConfig
+  signature: string,
+  config: TokenConfig
 ): Promise<{
   bypassed: boolean
   nftTransferred: boolean

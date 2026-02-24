@@ -172,9 +172,10 @@ export async function getBalanceHistory(
 /**
  * Compare account state before and after transaction
  */
+// eslint-disable-next-line no-unused-vars
 export async function diffAccountState(
-  _connection: Connection,
-  _address: PublicKey,
+  connection: Connection,
+  address: PublicKey,
   _beforeSlot: number,
   _afterSlot: number
 ): Promise<{
@@ -195,9 +196,10 @@ export async function diffAccountState(
 /**
  * Find related accounts
  */
+// eslint-disable-next-line no-unused-vars
 export async function findRelatedAccounts(
-  _connection: Connection,
-  _address: PublicKey
+  connection: Connection,
+  address: PublicKey
 ): Promise<{
   tokenAccounts: PublicKey[]
   ownedAccounts: PublicKey[]

@@ -10,9 +10,10 @@ import type { LegacyNFTItem, GetNFTsOptions, PaginatedNFTs, ProgressCallback } f
 /**
  * Get collection metadata (on-chain + off-chain)
  */
+// eslint-disable-next-line no-unused-vars
 export async function getCollectionMetadata(
-  _collectionMint: string,
-  _config: TokenConfig
+  collectionMint: string,
+  config: TokenConfig
 ): Promise<{
   onChain: NFTMetadata
   offChain: Record<string, unknown> | null
@@ -181,8 +182,9 @@ export async function updateNFTUri(
 /**
  * Batch update NFT metadata with optional transform function
  */
+// eslint-disable-next-line no-unused-vars
 export async function batchUpdateNFTMetadata(
-  _items: Array<{
+  items: Array<{
     mint: string
     updates: {
       name?: string
@@ -191,8 +193,8 @@ export async function batchUpdateNFTMetadata(
       sellerFeeBasisPoints?: number
     }
   }>,
-  _config: TokenConfig,
-  _options?: {
+  config: TokenConfig,
+  options?: {
     batchSize?: number
     delayMs?: number
     onProgress?: ProgressCallback

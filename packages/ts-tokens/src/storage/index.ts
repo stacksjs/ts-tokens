@@ -279,11 +279,12 @@ export function createStorageDriver(config: TokenConfig): StorageAdapter {
  * @param providers - Custom provider order (optional)
  * @returns Upload result from the first successful provider
  */
+// eslint-disable-next-line no-unused-vars
 export async function uploadWithFallback(
-  _data: Uint8Array | string,
-  _config: TokenConfig,
-  _options?: { contentType?: string },
-  _providers: StorageProvider[] = ['arweave', 'ipfs', 'shadow-drive', 'local']
+  data: Uint8Array | string,
+  config: TokenConfig,
+  options?: { contentType?: string },
+  providers: StorageProvider[] = ['arweave', 'ipfs', 'shadow-drive', 'local']
 ): Promise<{
   id: string
   url: string

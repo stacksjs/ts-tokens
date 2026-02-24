@@ -241,7 +241,8 @@ export async function pollEvents(
     onError?: (error: Error) => void
   }
 ): Promise<{ stop: () => void }> {
-  const { interval = 5000, _onEvent, onError } = options
+  // eslint-disable-next-line no-unused-vars
+  const { interval = 5000, onEvent, onError } = options
 
   let running = true
   const lastSignatures: Map<string, string> = new Map()
