@@ -10,6 +10,57 @@ import { Window } from 'happy-dom'
 
 const window = new Window({ url: 'http://localhost' })
 
+// Bun does not fully support Node.js vm module, so happy-dom's
+// VMGlobalPropertyScript never runs. We must manually assign native
+// error constructors that happy-dom's internals (e.g. SelectorParser)
+// expect to find on the Window object.
+const nativeGlobals: Record<string, unknown> = {
+  Error,
+  EvalError,
+  RangeError,
+  ReferenceError,
+  SyntaxError,
+  TypeError,
+  URIError,
+  Array,
+  Object,
+  Function,
+  RegExp,
+  Number,
+  String,
+  Boolean,
+  Symbol,
+  Map,
+  Set,
+  WeakMap,
+  WeakSet,
+  Promise,
+  ArrayBuffer,
+  DataView,
+  Float32Array,
+  Float64Array,
+  Int8Array,
+  Int16Array,
+  Int32Array,
+  Uint8Array,
+  Uint16Array,
+  Uint32Array,
+  Uint8ClampedArray,
+  JSON,
+  Math,
+  Reflect,
+  Intl,
+  Date,
+  AbortController,
+  AbortSignal,
+}
+
+for (const [key, value] of Object.entries(nativeGlobals)) {
+  if ((window as any)[key] === undefined) {
+    ;(window as any)[key] = value
+  }
+}
+
 // Assign essential DOM globals to globalThis
 const domGlobals = [
   'document',
