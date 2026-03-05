@@ -14,7 +14,14 @@
   "bugs": {
     "url": "https://github.com/stacksjs/ts-tokens/issues"
   },
-  "keywords": ["typescript", "token", "tokens", "lightweight", "powerful", "stacksjs"],
+  "keywords": [
+    "typescript",
+    "token",
+    "tokens",
+    "lightweight",
+    "powerful",
+    "stacksjs"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -26,13 +33,18 @@
   },
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["README.md", "dist"],
+  "files": [
+    "README.md",
+    "dist"
+  ],
   "scripts": {
     "build": "bun --filter './packages/*' build",
     "fresh": "bunx rimraf node_modules/ bun.lock && bun i",
     "test": "bun test packages/ test/",
     "lint": "bunx --bun pickier .",
     "lint:fix": "bunx --bun pickier . --fix",
+    "format": "bunx --bun pickier . --format",
+    "format:fix": "bunx --bun pickier . --format --write",
     "changelog": "bunx logsmith --verbose",
     "changelog:generate": "bunx logsmith --output CHANGELOG.md",
     "release": "bun run changelog:generate && bunx bumpx prompt --recursive",
