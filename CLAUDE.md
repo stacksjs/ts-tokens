@@ -2,7 +2,7 @@
 
 ## About
 
-Generate your own fungible or non-fungible tokens.
+ts-tokens is a TypeScript library, CLI, and component suite for managing fungible and non-fungible tokens on Solana. It supports SPL token creation/minting/transfer, NFT collection lifecycle management, Candy Machine drops with guards, and compressed NFTs via Merkle trees. The project includes React and Vue component packages (`@ts-tokens/react`, `@ts-tokens/vue`) and depends only on official Solana packages (`@solana/web3.js`, `@solana/spl-token`), implementing all program interactions via raw instructions.
 
 ## Linting
 
