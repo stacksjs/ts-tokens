@@ -65,19 +65,19 @@
     "@solana/web3.js": "^1.98.4"
   },
   "devDependencies": {
-    "@storybook/react": "^10.2.10",
-    "@storybook/react-vite": "^10.2.10",
+    "@storybook/react": "^10.2.19",
+    "@storybook/react-vite": "^10.2.19",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "better-dx": "^0.2.6",
+    "better-dx": "^0.2.7",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
-    "happy-dom": "^20.6.2",
+    "happy-dom": "^20.8.4",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "storybook": "^10.2.10"
+    "storybook": "^10.2.19"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": "bunx --bun eslint . --fix"
