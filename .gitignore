@@ -17,3 +17,5 @@ packages/react/.storybook
 packages/react/src/**/*.stories.tsx
 storybook-static
 /pantry
+.zed
+.cursor
