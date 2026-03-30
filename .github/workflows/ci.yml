@@ -118,6 +118,6 @@ jobs:
 
       - name: Publish Commit
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: pantry publish:commit './packages/ts-tokens' './packages/react' './packages/vue'
+        run: pantry publish:commit './packages/ts-tokens' && pantry publish:commit './packages/react' && pantry publish:commit './packages/vue'
         env:
           PANTRY_REGISTRY_TOKEN: ${{ secrets.PANTRY_TOKEN }}
