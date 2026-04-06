@@ -62,11 +62,11 @@
   },
   "devDependencies": {
     "@vue/test-utils": "^2.4.6",
-    "better-dx": "^0.2.6",
+    "better-dx": "^0.2.7",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
-    "happy-dom": "^20.6.2",
-    "vue": "^3.5.28"
+    "happy-dom": "^20.8.9",
+    "vue": "^3.5.32"
   },
   "lint-staged": {
     "*.{js,ts,vue}": "bunx --bun eslint . --fix"
