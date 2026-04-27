@@ -169,16 +169,16 @@
     "@solana/spl-token": "^0.4.14",
     "bs58": "^6.0.0",
     "chalk": "^5.6.2",
-    "ora": "^9.3.0",
+    "ora": "^9.4.0",
     "tweetnacl": "^1.0.3",
-    "@inquirer/prompts": "^8.2.1",
+    "@inquirer/prompts": "^8.4.2",
     "@stacksjs/clapp": "^0.2.0",
     "ts-governance": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^25.2.3",
-    "better-dx": "^0.2.6",
-    "bun-plugin-dtsx": "^0.9.9"
+    "@types/node": "^25.6.0",
+    "better-dx": "^0.2.7",
+    "bun-plugin-dtsx": "^0.21.17"
   },
   "peerDependencies": {
     "bunfig": "^0.15.6"
