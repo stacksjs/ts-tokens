@@ -57,16 +57,16 @@
     "ts-tokens": "workspace:*"
   },
   "peerDependencies": {
-    "vue": "^3.5.28",
+    "vue": "^3.5.33",
     "@solana/web3.js": "^1.98.4"
   },
   "devDependencies": {
-    "@vue/test-utils": "^2.4.6",
-    "better-dx": "^0.2.6",
+    "@vue/test-utils": "^2.4.9",
+    "better-dx": "^0.2.7",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
-    "happy-dom": "^20.6.2",
-    "vue": "^3.5.28"
+    "happy-dom": "^20.9.0",
+    "vue": "^3.5.33"
   },
   "lint-staged": {
     "*.{js,ts,vue}": "bunx --bun eslint . --fix"
