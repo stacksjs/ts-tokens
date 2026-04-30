@@ -5,7 +5,7 @@
 COLLECTION=$1
 COUNT=${2:-10}
 
-if [ -z "$COLLECTION" ]; then
+if [[ -z "$COLLECTION" ]]; then
   echo "Usage: ./batch-mint.sh <collection-mint> [count]"
   exit 1
 fi
@@ -17,12 +17,12 @@ for i in $(seq 1 $COUNT); do
   echo "[$i/$COUNT] Minting NFT #$i..."
 
   tokens nft:create \
-    --name "NFT #$i" \
-    --symbol "MNFT" \
-    --uri "https://arweave.net/placeholder" \
-    --collection "$COLLECTION"
+  --name "NFT #$i" \
+  --symbol "MNFT" \
+  --uri "https://arweave.net/placeholder" \
+  --collection "$COLLECTION"
 
-  if [ $? -eq 0 ]; then
+  if [[ $? -eq 0 ]]; then
     echo "   ✅ Success"
   else
     echo "   ❌ Failed"

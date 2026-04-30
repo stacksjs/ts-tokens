@@ -8,7 +8,7 @@ BIN_DIR="$SCRIPT_DIR/../bin"
 BINARY="$BIN_DIR/tokens"
 
 # Detect platform-specific binary if the generic one doesn't exist
-if [ ! -f "$BINARY" ]; then
+if [[ ! -f "$BINARY" ]]; then
   OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
   ARCH="$(uname -m)"
 
@@ -18,7 +18,7 @@ if [ ! -f "$BINARY" ]; then
   esac
 
   BINARY="$BIN_DIR/tokens-${OS}-${ARCH}"
-  if [ ! -f "$BINARY" ]; then
+  if [[ ! -f "$BINARY" ]]; then
     echo "FAIL: No binary found at $BIN_DIR/tokens or $BINARY"
     exit 1
   fi
@@ -41,7 +41,7 @@ fi
 # Test 2: --version flag
 echo -n "  --version ... "
 VERSION_OUTPUT=$("$BINARY" --version 2>&1 || true)
-if [ -n "$VERSION_OUTPUT" ]; then
+if [[ -n "$VERSION_OUTPUT" ]]; then
   echo "PASS ($VERSION_OUTPUT)"
   PASS=$((PASS + 1))
 else
@@ -62,4 +62,4 @@ fi
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
-[ "$FAIL" -eq 0 ] || exit 1
+[[ "$FAIL" -eq 0 ]] || exit 1

@@ -21,11 +21,11 @@ echo ""
 echo "Creating Candy Machine..."
 
 CM_OUTPUT=$(tokens cm:create \
-  --collection "$COLLECTION" \
-  --items "$ITEMS" \
-  --price "$PRICE" \
-  --symbol "MNFT" \
-  --json)
+--collection "$COLLECTION" \
+--items "$ITEMS" \
+--price "$PRICE" \
+--symbol "MNFT" \
+--json)
 
 CM_ADDRESS=$(echo "$CM_OUTPUT" | jq -r '.address')
 
@@ -36,23 +36,23 @@ echo "Adding guards..."
 
 # Add SOL payment guard
 tokens cm:guards "$CM_ADDRESS" \
-  --add sol-payment \
-  --amount "$PRICE" \
-  --destination "$TREASURY"
+--add sol-payment \
+--amount "$PRICE" \
+--destination "$TREASURY"
 
 echo "✅ SOL payment guard added"
 
 # Add start date guard
 tokens cm:guards "$CM_ADDRESS" \
-  --add start-date \
-  --timestamp "$GO_LIVE_TS"
+--add start-date \
+--timestamp "$GO_LIVE_TS"
 
 echo "✅ Start date guard added"
 
 # Add mint limit guard
 tokens cm:guards "$CM_ADDRESS" \
-  --add mint-limit \
-  --limit 3
+--add mint-limit \
+--limit 3
 
 echo "✅ Mint limit guard added (3 per wallet)"
 

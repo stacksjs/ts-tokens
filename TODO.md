@@ -3460,4 +3460,4 @@ const info = await votes.dao.info(dao)
 
 ---
 
-*Last updated: February 2026*
+### Last updated: February 2026

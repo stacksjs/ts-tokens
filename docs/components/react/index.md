@@ -103,7 +103,7 @@ Or style with Tailwind:
 <TokenBalance
   mint={mint}
   owner={owner}
-  className="text-lg font-bold"
+  className="font-bold text-lg"
 />
 ```
 

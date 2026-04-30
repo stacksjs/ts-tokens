@@ -299,7 +299,7 @@ export async function getTransactionStatus(
 
     return {
       confirmed: status.value.confirmationStatus === 'confirmed' ||
-                 status.value.confirmationStatus === 'finalized',
+                status.value.confirmationStatus === 'finalized',
       slot: status.value.slot,
     }
   } catch (error) {

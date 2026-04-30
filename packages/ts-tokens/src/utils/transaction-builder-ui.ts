@@ -82,7 +82,7 @@ export function generateTransactionBuilderHTML(
             <h4>Data</h4>
             <code class="data-hex">${escapeHtml(ix.data)}</code>
             <span class="data-size">${ix.data.length / 2} bytes</span>
-           </div>`
+          </div>`
         : ''
 
       return `
@@ -113,7 +113,7 @@ export function generateTransactionBuilderHTML(
         ${options.recentBlockhash ? `<div class="meta-item"><span class="meta-label">Blockhash:</span> <code>${escapeHtml(options.recentBlockhash)}</code></div>` : ''}
         <div class="meta-item"><span class="meta-label">Instructions:</span> ${instructions.length}</div>
         <div class="meta-item"><span class="meta-label">Total Accounts:</span> ${countUniqueAccounts(instructions)}</div>
-       </div>`
+      </div>`
     : ''
 
   return `<!DOCTYPE html>
