@@ -35,4 +35,3 @@ features:
     icon: "📦"
     details: "Strongly typed."
 ---
-

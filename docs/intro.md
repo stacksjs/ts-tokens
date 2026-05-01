@@ -66,4 +66,3 @@ Made with 💙
 <!-- Badges -->
 
 <!-- [codecov-src]: https://img.shields.io/codecov/c/gh/stacksjs/tokens/main?style=flat-square
-[codecov-href]: https://codecov.io/gh/stacksjs/tokens -->
