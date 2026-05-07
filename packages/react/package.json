@@ -45,8 +45,8 @@
   "scripts": {
     "dev": "vite --config vite.config.ts",
     "build": "bun build ./src/index.ts --outdir ./dist --target browser --sourcemap=external --external ts-tokens --external @solana/web3.js --external @solana/spl-token --external react --external react-dom",
-    "lint": "bunx --bun eslint .",
-    "lint:fix": "bunx --bun eslint . --fix",
+    "lint": "bunx --bun pickier .",
+    "lint:fix": "bunx --bun pickier . --fix",
     "release": "bun publish --access public --provenance",
     "prepublishOnly": "bun --bun run build",
     "test": "bun test",
@@ -80,6 +80,6 @@
     "storybook": "^10.2.10"
   },
   "lint-staged": {
-    "*.{js,ts,tsx}": "bunx --bun eslint . --fix"
+    "*.{js,ts,tsx}": "bunx --bun pickier . --fix"
   }
 }

@@ -46,8 +46,8 @@
   "scripts": {
     "dev": "vite --config vite.config.ts",
     "build": "bun build ./src/index.ts --outdir ./dist --target browser --sourcemap=external --external ts-tokens --external @solana/web3.js --external @solana/spl-token --external vue",
-    "lint": "bunx --bun eslint .",
-    "lint:fix": "bunx --bun eslint . --fix",
+    "lint": "bunx --bun pickier .",
+    "lint:fix": "bunx --bun pickier . --fix",
     "release": "bun publish --access public --provenance",
     "prepublishOnly": "bun --bun run build",
     "test": "bun test",
@@ -69,6 +69,6 @@
     "vue": "^3.5.28"
   },
   "lint-staged": {
-    "*.{js,ts,vue}": "bunx --bun eslint . --fix"
+    "*.{js,ts,vue}": "bunx --bun pickier . --fix"
   }
 }
