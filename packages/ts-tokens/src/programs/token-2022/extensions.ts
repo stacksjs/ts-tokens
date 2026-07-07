@@ -224,20 +224,24 @@ export function parseGroupMemberPointer(data: Buffer, offset: number): GroupMemb
  */
 export function parseExtensions(data: Buffer): TokenExtension[] {
   const extensions: TokenExtension[] = []
-  const BASE_MINT_SIZE = 82
+  // Mints with extensions are zero-padded to the legacy account size (165),
+  // followed by a 1-byte account type, then the TLV entries.
+  const ACCOUNT_SIZE = 165
 
-  if (data.length <= BASE_MINT_SIZE + 1) {
+  if (data.length <= ACCOUNT_SIZE + 1) {
     return extensions
   }
 
-  let offset = BASE_MINT_SIZE + 1 // Skip base mint + account type
+  let offset = ACCOUNT_SIZE + 1 // Skip padded base mint + account type
 
-  while (offset < data.length - 4) {
+  while (offset + 4 <= data.length) {
     const type = data.readUInt16LE(offset) as ExtensionType
     const length = data.readUInt16LE(offset + 2)
     offset += 4
 
-    if (length === 0 || offset + length > data.length) {
+    // Uninitialized (type 0) terminates the TLV list; zero-length entries
+    // like NonTransferable and ImmutableOwner are valid and must not break
+    if (type === ExtensionType.Uninitialized || offset + length > data.length) {
       break
     }
 

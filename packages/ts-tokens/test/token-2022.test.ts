@@ -277,21 +277,21 @@ describe('Extension Parsing', () => {
   })
 
   test('parseExtensions parses from full mint buffer', () => {
-    const BASE_MINT_SIZE = 82
-    // Build a buffer: base mint (82) + account type (1) + extension header (4) + data
+    const ACCOUNT_SIZE = 165
+    // Build a buffer: base mint padded to 165 + account type (1) + extension header (4) + data
     const extSize = getExtensionSize(ExtensionType.DefaultAccountState) // 1 byte
-    const totalSize = BASE_MINT_SIZE + 1 + 4 + extSize
+    const totalSize = ACCOUNT_SIZE + 1 + 4 + extSize
     const buf = Buffer.alloc(totalSize)
 
     // Account type byte
-    buf[BASE_MINT_SIZE] = 1
+    buf[ACCOUNT_SIZE] = 1
 
-    // Extension type at offset 83
-    buf.writeUInt16LE(ExtensionType.DefaultAccountState, BASE_MINT_SIZE + 1)
+    // Extension type at offset 166
+    buf.writeUInt16LE(ExtensionType.DefaultAccountState, ACCOUNT_SIZE + 1)
     // Extension length
-    buf.writeUInt16LE(extSize, BASE_MINT_SIZE + 3)
+    buf.writeUInt16LE(extSize, ACCOUNT_SIZE + 3)
     // Extension data: Frozen state
-    buf[BASE_MINT_SIZE + 5] = AccountState.Frozen
+    buf[ACCOUNT_SIZE + 5] = AccountState.Frozen
 
     const extensions = parseExtensions(buf)
     expect(extensions).toHaveLength(1)
@@ -300,13 +300,13 @@ describe('Extension Parsing', () => {
   })
 
   test('parseExtensions handles multiple extensions', () => {
-    const BASE_MINT_SIZE = 82
+    const ACCOUNT_SIZE = 165
     // DefaultAccountState (1 byte) + CpiGuard (1 byte)
-    const totalSize = BASE_MINT_SIZE + 1 + (4 + 1) + (4 + 1)
+    const totalSize = ACCOUNT_SIZE + 1 + (4 + 1) + (4 + 1)
     const buf = Buffer.alloc(totalSize)
-    buf[BASE_MINT_SIZE] = 1
+    buf[ACCOUNT_SIZE] = 1
 
-    let offset = BASE_MINT_SIZE + 1
+    let offset = ACCOUNT_SIZE + 1
     // DefaultAccountState
     buf.writeUInt16LE(ExtensionType.DefaultAccountState, offset)
     buf.writeUInt16LE(1, offset + 2)
