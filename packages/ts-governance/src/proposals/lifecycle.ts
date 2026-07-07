@@ -80,13 +80,15 @@ export function calculateProposalResult(
 ): { passed: boolean; reason: string } {
   const totalVotes = proposal.forVotes + proposal.againstVotes + proposal.abstainVotes
 
-  const quorumRequired = (totalVotingPower * BigInt(quorum)) / 100n
-  if (totalVotes < quorumRequired) {
+  // Compare via cross-multiplication to avoid floor-division rounding that
+  // would let a proposal just below the bar pass.
+  if (totalVotes * 100n < totalVotingPower * BigInt(quorum)) {
     return { passed: false, reason: 'Quorum not reached' }
   }
 
-  const approvalRequired = (totalVotes * BigInt(approvalThreshold)) / 100n
-  if (proposal.forVotes < approvalRequired) {
+  // Abstain votes are neutral for the approval threshold
+  const decidingVotes = proposal.forVotes + proposal.againstVotes
+  if (proposal.forVotes * 100n < decidingVotes * BigInt(approvalThreshold)) {
     return { passed: false, reason: 'Approval threshold not met' }
   }
 
