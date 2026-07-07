@@ -10,23 +10,36 @@
 export const MPL_CORE_PROGRAM_ID = 'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d'
 
 /**
- * Instruction discriminators for MPL Core
+ * Instruction discriminators for MPL Core.
+ *
+ * These are the single-byte instruction ordinals from the MPL Core IDL. They are
+ * NOT contiguous by "kind" — the V1 ops occupy 0-19 and the V2 create ops are 20
+ * and 21. Getting these wrong makes each builder invoke a different instruction
+ * (e.g. CreateV2 as CreateV1, or RemovePluginV1 as RemoveCollectionPluginV1).
  */
 export enum MplCoreInstruction {
-  CreateV2 = 0,
-  CreateCollectionV2 = 1,
+  CreateV1 = 0,
+  CreateCollectionV1 = 1,
   AddPluginV1 = 2,
-  RemovePluginV1 = 3,
-  UpdatePluginV1 = 4,
-  ApprovePluginAuthorityV1 = 5,
-  RevokePluginAuthorityV1 = 6,
-  TransferV1 = 14,
+  AddCollectionPluginV1 = 3,
+  RemovePluginV1 = 4,
+  RemoveCollectionPluginV1 = 5,
+  UpdatePluginV1 = 6,
+  UpdateCollectionPluginV1 = 7,
+  ApprovePluginAuthorityV1 = 8,
+  ApproveCollectionPluginAuthorityV1 = 9,
+  RevokePluginAuthorityV1 = 10,
+  RevokeCollectionPluginAuthorityV1 = 11,
   BurnV1 = 12,
+  BurnCollectionV1 = 13,
+  TransferV1 = 14,
   UpdateV1 = 15,
-  AddCollectionPluginV1 = 7,
-  RemoveCollectionPluginV1 = 8,
-  UpdateCollectionPluginV1 = 9,
   UpdateCollectionV1 = 16,
+  CompressV1 = 17,
+  DecompressV1 = 18,
+  Collect = 19,
+  CreateV2 = 20,
+  CreateCollectionV2 = 21,
 }
 
 /**

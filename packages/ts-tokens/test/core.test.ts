@@ -156,6 +156,10 @@ describe('createV2 instruction', () => {
     expect(ix.programId.toBase58()).toBe(MPL_CORE_PROGRAM_ID)
     expect(ix.keys.length).toBeGreaterThanOrEqual(5)
     expect(ix.data[0]).toBe(MplCoreInstruction.CreateV2)
+    // Regression: CreateV2 is IDL ordinal 20 (not 0), and the args begin with a
+    // dataState byte before the name.
+    expect(MplCoreInstruction.CreateV2).toBe(20)
+    expect(ix.data[1]).toBe(0) // dataState = AccountState
   })
 
   test('includes collection account when provided', () => {
@@ -192,6 +196,7 @@ describe('createCollectionV2 instruction', () => {
 
     expect(ix.programId.toBase58()).toBe(MPL_CORE_PROGRAM_ID)
     expect(ix.data[0]).toBe(MplCoreInstruction.CreateCollectionV2)
+    expect(MplCoreInstruction.CreateCollectionV2).toBe(21) // IDL ordinal 21, not 1
   })
 })
 
@@ -209,9 +214,14 @@ describe('transferV1 instruction', () => {
 
     expect(ix.programId.toBase58()).toBe(MPL_CORE_PROGRAM_ID)
     expect(ix.data[0]).toBe(MplCoreInstruction.TransferV1)
+    // data carries the compression_proof None byte
+    expect(ix.data[1]).toBe(0)
+    // Account order: asset, collection?, payer, authority?, newOwner, system.
     expect(ix.keys[0].pubkey.equals(asset.publicKey)).toBe(true)
     expect(ix.keys[0].isWritable).toBe(true)
-    expect(ix.keys[1].pubkey.equals(newOwner.publicKey)).toBe(true)
+    expect(ix.keys[2].pubkey.equals(payer.publicKey)).toBe(true)
+    expect(ix.keys[2].isWritable).toBe(true)
+    expect(ix.keys[4].pubkey.equals(newOwner.publicKey)).toBe(true)
   })
 })
 

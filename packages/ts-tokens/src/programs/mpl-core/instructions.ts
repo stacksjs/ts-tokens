@@ -153,11 +153,13 @@ function serializePluginsList(plugins: CorePlugin[]): Buffer {
   return Buffer.concat([
     Buffer.from([1]), // Some option
     serializeU32(plugins.length),
+    // PluginAuthorityPair is { plugin: Plugin, authority: Option<PluginAuthority> }
+    // — the plugin comes FIRST, then an Option-wrapped authority (None = default).
     ...plugins.map(p => {
-      const authority = ('authority' in p && p.authority)
-        ? serializeAuthority(p.authority as CorePluginAuthority)
-        : serializeU8(AuthorityType.UpdateAuthority)
-      return Buffer.concat([authority, serializePlugin(p)])
+      const authorityOption = ('authority' in p && p.authority)
+        ? Buffer.concat([Buffer.from([1]), serializeAuthority(p.authority as CorePluginAuthority)])
+        : Buffer.from([0]) // None => plugin gets its default authority
+      return Buffer.concat([serializePlugin(p), authorityOption])
     }),
   ])
 }
@@ -188,13 +190,20 @@ export function createV2(params: {
     plugins = [],
   } = params
 
+  // CreateV2Args: { dataState: DataState (u8, 0=AccountState), name, uri,
+  //   plugins: Option<Vec<PluginAuthorityPair>>,
+  //   externalPluginAdapters: Option<Vec<...>> }
   const data = Buffer.concat([
     serializeU8(MplCoreInstruction.CreateV2),
+    serializeU8(0), // dataState = AccountState (uncompressed)
     serializeString(name),
     serializeString(uri),
     serializePluginsList(plugins),
+    Buffer.from([0]), // externalPluginAdapters: None
   ])
 
+  // Account order (CreateV2): asset, collection?, authority?, payer, owner?,
+  // updateAuthority?, systemProgram. For Create, authority precedes payer.
   const keys = [
     { pubkey: asset, isSigner: true, isWritable: true },
     { pubkey: collection ?? PROGRAM_ID, isSigner: false, isWritable: collection ? true : false },
@@ -232,17 +241,20 @@ export function createCollectionV2(params: {
     plugins = [],
   } = params
 
+  // CreateCollectionV2Args: { name, uri, plugins: Option<Vec<...>>,
+  //   externalPluginAdapters: Option<Vec<...>> } — no dataState for collections.
   const data = Buffer.concat([
     serializeU8(MplCoreInstruction.CreateCollectionV2),
     serializeString(name),
     serializeString(uri),
     serializePluginsList(plugins),
+    Buffer.from([0]), // externalPluginAdapters: None
   ])
 
   const keys = [
     { pubkey: collection, isSigner: true, isWritable: true },
-    { pubkey: payer, isSigner: true, isWritable: true },
     { pubkey: updateAuthority ?? payer, isSigner: false, isWritable: false },
+    { pubkey: payer, isSigner: true, isWritable: true },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 
@@ -265,16 +277,20 @@ export function transferV1(params: {
 }): TransactionInstruction {
   const { asset, collection, payer, authority, newOwner } = params
 
+  // TransferV1Args: { compressionProof: Option<CompressionProof> } -> None
   const data = Buffer.concat([
     serializeU8(MplCoreInstruction.TransferV1),
+    Buffer.from([0]),
   ])
 
+  // Account order (TransferV1): asset, collection?, payer, authority?, newOwner,
+  // systemProgram. newOwner is NOT in the collection slot.
   const keys = [
     { pubkey: asset, isSigner: false, isWritable: true },
-    { pubkey: newOwner, isSigner: false, isWritable: false },
     { pubkey: collection ?? PROGRAM_ID, isSigner: false, isWritable: collection ? true : false },
-    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
+    { pubkey: newOwner, isSigner: false, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 
@@ -296,15 +312,18 @@ export function burnV1(params: {
 }): TransactionInstruction {
   const { asset, collection, payer, authority } = params
 
+  // BurnV1Args: { compressionProof: Option<CompressionProof> } -> None
   const data = Buffer.concat([
     serializeU8(MplCoreInstruction.BurnV1),
+    Buffer.from([0]),
   ])
 
+  // Account order (BurnV1): asset, collection?, payer, authority?, systemProgram.
   const keys = [
     { pubkey: asset, isSigner: false, isWritable: true },
     { pubkey: collection ?? PROGRAM_ID, isSigner: false, isWritable: collection ? true : false },
-    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 
@@ -339,11 +358,12 @@ export function updateV1(params: {
     ),
   ])
 
+  // Account order (UpdateV1): asset, collection?, payer, authority?, systemProgram.
   const keys = [
     { pubkey: asset, isSigner: false, isWritable: true },
     { pubkey: collection ?? PROGRAM_ID, isSigner: false, isWritable: collection ? true : false },
-    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 
@@ -377,10 +397,11 @@ export function updateCollectionV1(params: {
     ),
   ])
 
+  // Account order (UpdateCollectionV1): collection, payer, authority?, systemProgram.
   const keys = [
     { pubkey: collection, isSigner: false, isWritable: true },
-    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 
@@ -403,21 +424,25 @@ export function addPluginV1(params: {
 }): TransactionInstruction {
   const { asset, collection, payer, authority, plugin } = params
 
-  const pluginAuthority = ('authority' in plugin && plugin.authority)
-    ? serializeAuthority(plugin.authority as CorePluginAuthority)
-    : serializeU8(AuthorityType.UpdateAuthority)
+  // AddPluginV1Args: { plugin: Plugin, initAuthority: Option<PluginAuthority> }.
+  // The caller's plugin.authority must be forwarded (the old code always wrote
+  // None, silently discarding it).
+  const initAuthority = ('authority' in plugin && plugin.authority)
+    ? Buffer.concat([Buffer.from([1]), serializeAuthority(plugin.authority as CorePluginAuthority)])
+    : Buffer.from([0])
 
   const data = Buffer.concat([
     serializeU8(MplCoreInstruction.AddPluginV1),
     serializePlugin(plugin),
-    serializeOption(undefined, () => pluginAuthority), // init authority (None = default)
+    initAuthority,
   ])
 
+  // Account order (AddPluginV1): asset, collection?, payer, authority?, systemProgram.
   const keys = [
     { pubkey: asset, isSigner: false, isWritable: true },
     { pubkey: collection ?? PROGRAM_ID, isSigner: false, isWritable: collection ? true : false },
-    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 
@@ -445,11 +470,12 @@ export function removePluginV1(params: {
     serializeU8(getPluginTypeDiscriminator(pluginType)),
   ])
 
+  // Account order (RemovePluginV1): asset, collection?, payer, authority?, systemProgram.
   const keys = [
     { pubkey: asset, isSigner: false, isWritable: true },
     { pubkey: collection ?? PROGRAM_ID, isSigner: false, isWritable: collection ? true : false },
-    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 
@@ -477,10 +503,11 @@ export function addCollectionPluginV1(params: {
     Buffer.from([0]), // init authority = None
   ])
 
+  // Account order (AddCollectionPluginV1): collection, payer, authority?, systemProgram.
   const keys = [
     { pubkey: collection, isSigner: false, isWritable: true },
-    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 
@@ -507,10 +534,11 @@ export function removeCollectionPluginV1(params: {
     serializeU8(getPluginTypeDiscriminator(pluginType)),
   ])
 
+  // Account order (RemoveCollectionPluginV1): collection, payer, authority?, systemProgram.
   const keys = [
     { pubkey: collection, isSigner: false, isWritable: true },
-    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: payer, isSigner: true, isWritable: true },
+    { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 
