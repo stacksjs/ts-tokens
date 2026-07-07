@@ -58,8 +58,8 @@ export async function getQuadraticVotingPower(
 
   let totalBalance = 0n
   for (const { account } of tokenAccounts.value) {
-    // Would parse account data
-    totalBalance += 0n
+    // SPL token account: amount is the u64 LE at offset 64.
+    totalBalance += account.data.readBigUInt64LE(64)
   }
 
   const quadraticPower = calculateQuadraticPower(totalBalance, config.decimals ?? 0)

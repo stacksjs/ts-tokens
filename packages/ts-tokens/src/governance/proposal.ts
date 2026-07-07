@@ -4,7 +4,6 @@
 
 import type { Connection} from '@solana/web3.js';
 import { PublicKey, Keypair, SystemProgram } from '@solana/web3.js'
-import { getProposalAddress } from 'ts-governance/programs'
 import type {
   Proposal,
   ProposalStatus,
@@ -15,17 +14,16 @@ import type {
   GovernanceActions,
   TokenActions,
 } from './types'
-import { getDAO } from './dao'
 
 /**
  * Create a new proposal
  */
 export async function createProposal(
-  connection: Connection,
-  proposer: Keypair,
+  _connection: Connection,
+  _proposer: Keypair,
   options: CreateProposalOptions
 ): Promise<{ proposal: Proposal; signature: string }> {
-  const { dao, title, description, actions } = options
+  const { title, actions } = options
 
   // Validate
   if (!title || title.length === 0) {
@@ -38,38 +36,21 @@ export async function createProposal(
     throw new Error('At least one action is required')
   }
 
-  // Get DAO info
-  const daoInfo = await getDAO(connection, dao)
-  const currentTime = BigInt(Math.floor(Date.now() / 1000))
-
-  // Derive deterministic PDA address from DAO and proposal index
-  const proposalIndex = daoInfo?.proposalCount ?? 0n
-  const proposalAddress = getProposalAddress(dao, proposalIndex)
-
-  const proposal: Proposal = {
-    address: proposalAddress,
-    dao,
-    proposer: proposer.publicKey,
-    title,
-    description,
-    status: 'active',
-    forVotes: 0n,
-    againstVotes: 0n,
-    abstainVotes: 0n,
-    startTime: currentTime,
-    endTime: currentTime + (daoInfo?.config.votingPeriod ?? 432000n), // 5 days default
-    actions,
-    createdAt: currentTime,
-  }
-
-  return {
-    proposal,
-    signature: `proposal_created_${proposalAddress.toBase58().slice(0, 8)}`,
-  }
+  // The governance program that stores proposals is not deployed. Deriving a PDA
+  // and returning a fabricated signature would let callers believe a proposal
+  // exists on-chain (and, because getDAO can't return proposalCount, every
+  // proposal would collide at index 0). Fail loudly after validation.
+  throw new Error(
+    'createProposal is not implemented: the governance program is not deployed.'
+  )
 }
 
 /**
- * Get proposal info
+ * Get proposal info.
+ *
+ * Returns null when the account does not exist; throws when it exists but cannot
+ * be deserialized (governance program/layout unavailable) rather than silently
+ * returning null for a live proposal.
  */
 export async function getProposal(
   connection: Connection,
@@ -81,64 +62,66 @@ export async function getProposal(
     return null
   }
 
-  // In production, would deserialize from account data
-  return null
+  throw new Error(
+    `getProposal cannot deserialize ${address.toBase58()}: the governance ` +
+    `program and its account layout are not available (program not deployed).`
+  )
 }
 
 /**
- * Get all proposals for a DAO
+ * Get all proposals for a DAO.
+ *
+ * Not implemented — enumerating proposals needs the undeployed governance
+ * program's account layout. Returning [] would be indistinguishable from a DAO
+ * with no proposals.
  */
 export async function getProposals(
   _connection: Connection,
   _dao: PublicKey,
   _status?: ProposalStatus
 ): Promise<Proposal[]> {
-  // In production, would use getProgramAccounts with filters
-  return []
+  throw new Error(
+    'getProposals is not implemented: the governance program is not deployed.'
+  )
 }
 
 /**
- * Cancel a proposal
+ * Cancel a proposal. Not implemented — governance program undeployed.
  */
 export async function cancelProposal(
   _connection: Connection,
-  proposal: PublicKey,
+  _proposal: PublicKey,
   _authority: Keypair
 ): Promise<{ signature: string }> {
-  return {
-    signature: `proposal_cancelled_${proposal.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'cancelProposal is not implemented: the governance program is not deployed.'
+  )
 }
 
 /**
- * Queue a successful proposal for execution
+ * Queue a successful proposal for execution. Not implemented — governance
+ * program undeployed (the real implementation must read the DAO's configured
+ * executionDelay rather than assume a fixed 1-day timelock).
  */
 export async function queueProposal(
   _connection: Connection,
-  proposal: PublicKey
+  _proposal: PublicKey
 ): Promise<{ signature: string; executionTime: bigint }> {
-  const currentTime = BigInt(Math.floor(Date.now() / 1000))
-  const executionDelay = 86400n // 1 day
-
-  return {
-    signature: `proposal_queued_${proposal.toBase58().slice(0, 8)}`,
-    executionTime: currentTime + executionDelay,
-  }
+  throw new Error(
+    'queueProposal is not implemented: the governance program is not deployed.'
+  )
 }
 
 /**
- * Execute a queued proposal
+ * Execute a queued proposal. Not implemented — governance program undeployed.
  */
 export async function executeProposal(
   _connection: Connection,
-  options: ExecuteProposalOptions
+  _options: ExecuteProposalOptions
 ): Promise<{ signature: string }> {
-  const { proposal } = options
-
-  // In production, would execute all proposal actions
-  return {
-    signature: `proposal_executed_${proposal.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'executeProposal is not implemented: the governance program is not deployed.'
+  )
 }
 
 /**
@@ -179,8 +162,13 @@ export function calculateProposalResult(
     return { passed: false, reason: 'Quorum not reached' }
   }
 
-  // Check approval threshold (abstain votes are neutral)
+  // Check approval threshold (abstain votes are neutral). If nobody voted for or
+  // against (all-abstain), there is no majority to pass — guard against the
+  // 0 < 0 degenerate case that would otherwise skip the threshold check.
   const decidingVotes = proposal.forVotes + proposal.againstVotes
+  if (decidingVotes === 0n) {
+    return { passed: false, reason: 'No deciding (for/against) votes cast' }
+  }
   if (proposal.forVotes * 100n < decidingVotes * BigInt(approvalThreshold)) {
     return { passed: false, reason: 'Approval threshold not met' }
   }
@@ -251,11 +239,16 @@ export const treasuryActions: TreasuryActions = {
  * Governance action builders
  */
 export const governanceActions: GovernanceActions = {
-  updateConfig: (newConfig): ProposalAction => ({
-    programId: PublicKey.default, // Would be governance program
-    accounts: [],
-    data: Buffer.from(JSON.stringify(newConfig)),
-  }),
+  updateConfig: (_newConfig): ProposalAction => {
+    // The old implementation encoded the config as JSON — which throws outright
+    // on the bigint fields (votingPeriod/executionDelay/minProposalThreshold) and
+    // is not a valid instruction encoding for any program (the target was
+    // PublicKey.default). Refuse rather than emit a broken/crashing action.
+    throw new Error(
+      'governanceActions.updateConfig is not implemented: the governance program ' +
+      'is not deployed, so a config-update instruction cannot be encoded.'
+    )
+  },
 
   addVetoAuthority: (authority: PublicKey): ProposalAction => ({
     programId: PublicKey.default,

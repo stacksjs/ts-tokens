@@ -33,10 +33,8 @@ export async function calculateTokenWeightedPower(
     })
 
     for (const { account } of tokenAccounts.value) {
-      const data = account.data
-      // Parse token account data to get balance
-      // Simplified - in production would properly decode
-      ownPower += 0n
+      // SPL token account: amount is the u64 LE at offset 64.
+      ownPower += account.data.readBigUInt64LE(64)
     }
   }
 

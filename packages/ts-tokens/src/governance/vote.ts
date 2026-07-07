@@ -3,10 +3,8 @@
  */
 
 import type { Connection, PublicKey, Keypair } from '@solana/web3.js'
-import { getVoteRecordAddress } from 'ts-governance/programs'
 import type {
   VoteRecord,
-  VoteType,
   VoteOptions,
   Proposal,
   Delegation,
@@ -14,64 +12,55 @@ import type {
 } from './types'
 
 /**
- * Cast a vote on a proposal
+ * Cast a vote on a proposal.
+ *
+ * Not implemented — recording a vote (and computing the proposal-start snapshot
+ * power) requires the undeployed governance program. Returning a fabricated
+ * signature would let callers believe their vote was recorded on-chain.
  */
 export async function castVote(
-  connection: Connection,
-  voter: Keypair,
-  options: VoteOptions
+  _connection: Connection,
+  _voter: Keypair,
+  _options: VoteOptions
 ): Promise<{ voteRecord: VoteRecord; signature: string }> {
-  const { proposal, voteType } = options
-
-  // Get voter's voting power
-  const votingPower = await getVotingPower(connection, voter.publicKey, proposal)
-
-  if (votingPower === 0n) {
-    throw new Error('No voting power')
-  }
-
-  const voteRecord: VoteRecord = {
-    proposal,
-    voter: voter.publicKey,
-    voteType,
-    votingPower,
-    timestamp: BigInt(Math.floor(Date.now() / 1000)),
-  }
-
-  return {
-    voteRecord,
-    signature: `vote_cast_${proposal.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'castVote is not implemented: the governance program is not deployed, so a ' +
+    'vote cannot be recorded on-chain.'
+  )
 }
 
 /**
- * Get voting power for an address
+ * Get voting power for an address on a proposal.
+ *
+ * Not implemented — a per-proposal snapshot needs the governance token mint and
+ * snapshot slot from the proposal/DAO, which live in the undeployed program.
+ * Use getVotingPowerSnapshot for a live (non-historical) token-balance read.
  */
 export async function getVotingPower(
   _connection: Connection,
   _voter: PublicKey,
-  proposal: PublicKey
+  _proposal: PublicKey
 ): Promise<bigint> {
-  // In production, would:
-  // 1. Get token balance at proposal start time (snapshot)
-  // 2. Add delegated voting power
-  // 3. Subtract any power delegated to others
-
-  // Simplified: just get current token balance
-  // Would need governance token mint from proposal/DAO
-  return 0n
+  throw new Error(
+    'getVotingPower is not implemented: a proposal-scoped snapshot requires the ' +
+    'undeployed governance program. Use getVotingPowerSnapshot for live balance.'
+  )
 }
 
 /**
- * Get voting power snapshot
+ * Get a voter's LIVE governance-token balance as a voting-power snapshot.
+ *
+ * Note: this reads the CURRENT balance — it does NOT resolve the balance at
+ * `snapshotTime` (that needs an archive node / on-chain snapshot the program
+ * would enforce), and delegated power is not included. Both are surfaced so
+ * callers can see what is and isn't accounted for.
  */
 export async function getVotingPowerSnapshot(
   connection: Connection,
   voter: PublicKey,
   governanceToken: PublicKey,
   snapshotTime: bigint
-): Promise<VotingPowerSnapshot> {
-  // In production, would query historical balance
+): Promise<VotingPowerSnapshot & { isLive: boolean }> {
   const tokenAccounts = await connection.getParsedTokenAccountsByOwner(voter, {
     mint: governanceToken,
   })
@@ -81,7 +70,7 @@ export async function getVotingPowerSnapshot(
     ownPower += BigInt(account.account.data.parsed.info.tokenAmount.amount)
   }
 
-  // Get delegated power (simplified)
+  // Delegated power is not resolvable without the governance program.
   const delegatedPower = 0n
 
   return {
@@ -90,11 +79,13 @@ export async function getVotingPowerSnapshot(
     delegatedPower,
     totalPower: ownPower + delegatedPower,
     snapshotTime,
+    isLive: true,
   }
 }
 
 /**
- * Delegate voting power
+ * Delegate voting power. Not implemented — governance program undeployed.
+ * Inputs are validated first so misuse is reported clearly.
  */
 export async function delegateVotingPower(
   _connection: Connection,
@@ -102,67 +93,67 @@ export async function delegateVotingPower(
   delegate: PublicKey,
   amount?: bigint // If not specified, delegate all
 ): Promise<{ delegation: Delegation; signature: string }> {
-  const delegation: Delegation = {
-    delegator: delegator.publicKey,
-    delegate,
-    amount: amount ?? 0n, // 0 means all
-    timestamp: BigInt(Math.floor(Date.now() / 1000)),
+  if (delegate.equals(delegator.publicKey)) {
+    throw new Error('Cannot delegate voting power to yourself')
   }
-
-  return {
-    delegation,
-    signature: `delegated_${delegate.toBase58().slice(0, 8)}`,
+  if (amount !== undefined && amount < 0n) {
+    throw new Error('Delegation amount cannot be negative')
   }
+  throw new Error(
+    'delegateVotingPower is not implemented: the governance program is not deployed.'
+  )
 }
 
 /**
- * Revoke delegation
+ * Revoke delegation. Not implemented — governance program undeployed.
  */
 export async function revokeDelegation(
   _connection: Connection,
   _delegator: Keypair,
-  delegate: PublicKey
+  _delegate: PublicKey
 ): Promise<{ signature: string }> {
-  return {
-    signature: `delegation_revoked_${delegate.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'revokeDelegation is not implemented: the governance program is not deployed.'
+  )
 }
 
 /**
- * Get delegations for an _address
+ * Get delegations for an address. Not implemented — governance program
+ * undeployed (returning empty arrays would hide real delegations).
  */
 export async function getDelegations(
   _connection: Connection,
   _address: PublicKey
 ): Promise<{ delegatedTo: Delegation[]; delegatedFrom: Delegation[] }> {
-  // In production, would query delegation accounts
-  return {
-    delegatedTo: [],
-    delegatedFrom: [],
-  }
+  throw new Error(
+    'getDelegations is not implemented: the governance program is not deployed.'
+  )
 }
 
 /**
- * Get vote record for a _voter on a _proposal
+ * Get vote record for a voter on a proposal. Not implemented — governance
+ * program undeployed. Returning null made double-vote prevention silently pass.
  */
 export async function getVoteRecord(
   _connection: Connection,
   _proposal: PublicKey,
   _voter: PublicKey
 ): Promise<VoteRecord | null> {
-  // In production, would query vote record account
-  return null
+  throw new Error(
+    'getVoteRecord is not implemented: the governance program is not deployed.'
+  )
 }
 
 /**
- * Get all votes for a _proposal
+ * Get all votes for a proposal. Not implemented — governance program undeployed.
  */
 export async function getProposalVotes(
   _connection: Connection,
   _proposal: PublicKey
 ): Promise<VoteRecord[]> {
-  // In production, would use getProgramAccounts
-  return []
+  throw new Error(
+    'getProposalVotes is not implemented: the governance program is not deployed.'
+  )
 }
 
 /**

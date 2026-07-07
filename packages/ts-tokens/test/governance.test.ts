@@ -80,13 +80,16 @@ describe('validateDAOConfig', () => {
     expect(errors.some(e => /approval threshold/i.test(e))).toBe(true)
   })
 
-  test('approval threshold below quorum produces an error', () => {
+  test('approvalThreshold below quorum is VALID (different denominators)', () => {
+    // quorum = % of total supply that must participate; approvalThreshold = % of
+    // cast for/against votes required to pass. They are not comparable, so
+    // quorum 60% / threshold 51% must NOT be flagged as an error.
     const errors = validateDAOConfig({
       votingPeriod: '5 days',
       quorum: 60,
-      approvalThreshold: 40,
+      approvalThreshold: 51,
     })
-    expect(errors.some(e => /threshold.*>=.*quorum|threshold should be/i.test(e))).toBe(true)
+    expect(errors).toHaveLength(0)
   })
 
   test('invalid voting period format produces an error', () => {
@@ -135,6 +138,19 @@ describe('calculateProposalResult', () => {
     const result = calculateProposalResult(proposal, 10, 50, 1000n)
     expect(result.passed).toBe(true)
     expect(result.reason).toMatch(/passed/i)
+  })
+
+  test('all-abstain proposal does NOT pass even when quorum is met', () => {
+    // Regression: with 0 for/against, the threshold check was 0 < 0 = false,
+    // so the gate was skipped and the proposal was reported as passed.
+    const proposal = makeProposal({
+      forVotes: 0n,
+      againstVotes: 0n,
+      abstainVotes: 500n,
+    })
+    const result = calculateProposalResult(proposal, 10, 50, 1000n)
+    expect(result.passed).toBe(false)
+    expect(result.reason).toMatch(/no deciding/i)
   })
 })
 

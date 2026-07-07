@@ -4,7 +4,6 @@
 
 import type { Connection} from '@solana/web3.js';
 import { PublicKey, Keypair } from '@solana/web3.js'
-import { getDAOAddress, getTreasuryAddress } from 'ts-governance/programs'
 import type { DAO, DAOConfig, CreateDAOOptions } from './types'
 
 /**
@@ -38,55 +37,38 @@ export async function createDAO(
   payer: Keypair,
   options: CreateDAOOptions
 ): Promise<{ dao: DAO; signature: string }> {
-  const { name, governanceToken, config } = options
+  const { name, config } = options
 
-  // Parse durations
-  const votingPeriod = parseDuration(config.votingPeriod)
-  const executionDelay = config.executionDelay
-    ? parseDuration(config.executionDelay)
-    : 86400n // 1 day default
-
-  // Validate config
+  // Validate inputs up front so callers get a precise error before the
+  // not-implemented failure below.
+  parseDuration(config.votingPeriod)
+  if (config.executionDelay) parseDuration(config.executionDelay)
   if (config.quorum < 1 || config.quorum > 100) {
     throw new Error('Quorum must be between 1 and 100')
   }
   if (config.approvalThreshold < 1 || config.approvalThreshold > 100) {
     throw new Error('Approval threshold must be between 1 and 100')
   }
-
-  // Derive deterministic PDA addresses from the governance program
-  const daoAddress = getDAOAddress(payer.publicKey, name)
-  const treasury = getTreasuryAddress(daoAddress)
-
-  const daoConfig: DAOConfig = {
-    votingPeriod,
-    quorum: config.quorum,
-    approvalThreshold: config.approvalThreshold,
-    executionDelay,
-    minProposalThreshold: config.minProposalThreshold ?? 0n,
-    vetoAuthority: config.vetoAuthority,
+  if (Buffer.byteLength(name, 'utf8') > 32) {
+    throw new Error('DAO name must be at most 32 bytes (it is used as a PDA seed)')
   }
 
-  const dao: DAO = {
-    address: daoAddress,
-    name,
-    governanceToken,
-    treasury,
-    config: daoConfig,
-    proposalCount: 0n,
-    totalVotingPower: 0n,
-    createdAt: BigInt(Math.floor(Date.now() / 1000)),
-  }
-
-  // In production, would create on-chain accounts
-  return {
-    dao,
-    signature: `dao_created_${daoAddress.toBase58().slice(0, 8)}`,
-  }
+  // The governance program that stores DAO accounts is not deployed, so there is
+  // nothing to create the account against. Returning a fabricated signature and
+  // a locally-built DAO object would let callers believe a DAO exists on-chain.
+  throw new Error(
+    'createDAO is not implemented: the governance program is not deployed. ' +
+    'No DAO account can be created on-chain.'
+  )
 }
 
 /**
- * Get DAO info
+ * Get DAO info.
+ *
+ * Returns null when the account does not exist. When it DOES exist we cannot
+ * deserialize it without the (undeployed) governance program's account layout,
+ * so we throw rather than silently returning null (which previously made a live
+ * DAO indistinguishable from a missing one).
  */
 export async function getDAO(
   connection: Connection,
@@ -98,24 +80,26 @@ export async function getDAO(
     return null
   }
 
-  // Parse DAO data (simplified)
-  // In production, would deserialize from account data
-  return null
+  throw new Error(
+    `getDAO cannot deserialize ${address.toBase58()}: the governance program ` +
+    `and its account layout are not available (program not deployed).`
+  )
 }
 
 /**
- * Update DAO config
+ * Update DAO config.
+ *
+ * Not implemented — depends on the undeployed governance program.
  */
 export async function updateDAOConfig(
   _connection: Connection,
-  dao: PublicKey,
+  _dao: PublicKey,
   _authority: Keypair,
   _newConfig: Partial<DAOConfig>
 ): Promise<{ signature: string }> {
-  // In production, would update on-chain
-  return {
-    signature: `config_updated_${dao.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'updateDAOConfig is not implemented: the governance program is not deployed.'
+  )
 }
 
 /**
@@ -169,9 +153,10 @@ export function validateDAOConfig(config: CreateDAOOptions['config']): string[] 
     errors.push('Approval threshold must be between 1 and 100')
   }
 
-  if (config.approvalThreshold < config.quorum) {
-    errors.push('Approval threshold should be >= quorum')
-  }
+  // Note: quorum and approvalThreshold are percentages of DIFFERENT
+  // denominators — quorum is % of total supply that must participate, threshold
+  // is % of the cast for/against votes required to pass — so they are not
+  // comparable (e.g. quorum 60% / threshold 51% is perfectly valid).
 
   try {
     parseDuration(config.votingPeriod)
