@@ -163,11 +163,13 @@ export async function createSpendingProposal(
   _amount: bigint,
   _description: string
 ): Promise<{ proposalId: PublicKey; signature: string }> {
-  // In production, would create governance proposal
-  return {
-    proposalId: PublicKey.default,
-    signature: `proposal_${Date.now()}`,
-  }
+  // Depends on the governance program (undeployed) to persist proposal state.
+  // Returning a fabricated proposalId/signature would let callers record a
+  // proposal that does not exist on-chain, so fail loudly instead.
+  throw new Error(
+    'createSpendingProposal is not implemented: the governance program that ' +
+    'stores spending proposals is not deployed.'
+  )
 }
 
 /**
@@ -309,8 +311,15 @@ export async function closeEmptyTokenAccount(
   _tokenAccount: PublicKey,
   _authority: PublicKey
 ): Promise<string> {
-  // In production, would close empty account and reclaim rent
-  return `closed_${Date.now()}`
+  // This overload only receives public keys, so there is no signer to
+  // authorize the close. Returning a fabricated signature would imply an
+  // account was closed when nothing happened — use closeTokenAccount(account,
+  // config) from the token module, which loads a wallet and sends a real
+  // CloseAccount instruction.
+  throw new Error(
+    'closeEmptyTokenAccount is not implemented here (no signer available); ' +
+    'use closeTokenAccount from ts-tokens/token with a configured wallet.'
+  )
 }
 
 /**
