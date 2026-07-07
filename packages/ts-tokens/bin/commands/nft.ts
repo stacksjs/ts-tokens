@@ -68,7 +68,7 @@ export function register(cli: any): void {
 
   cli
     .command('collection:items <address>', 'List NFTs in a collection')
-    .option('--limit <limit>', 'Maximum items to list', '50')
+    .option('--limit <limit>', 'Maximum items to list', { default: '50' })
     .action(async (address: string, options: { limit?: string }) => {
       await collectionItems(address, options)
     })

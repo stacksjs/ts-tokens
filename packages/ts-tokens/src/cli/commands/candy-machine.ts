@@ -147,12 +147,18 @@ export async function candyInfo(candyMachine: string): Promise<void> {
   }
 }
 
+/**
+ * Withdraw all lamports from a Candy Machine account, closing it. Candy Machine
+ * v3 has a single `withdraw` instruction that both drains rent and closes the
+ * account — there is no separate "collect balance without closing" operation.
+ */
 export async function candyWithdraw(candyMachine: string): Promise<void> {
   try {
     const config = await getConfig()
     const { createConnection } = await import('../../drivers/solana/connection')
     const { loadWallet } = await import('../../drivers/solana/wallet')
-    const { PublicKey } = await import('@solana/web3.js')
+    const { withdraw } = await import('../../programs/candy-machine/instructions')
+    const { PublicKey, Transaction } = await import('@solana/web3.js')
 
     const connection = createConnection(config)
     const payer = loadWallet(config)
@@ -164,47 +170,46 @@ export async function candyWithdraw(candyMachine: string): Promise<void> {
       process.exit(1)
     }
 
-    header('Candy Machine Balance')
+    header('Candy Machine Withdrawal')
     keyValue('Address', candyMachine)
-    keyValue('Balance', formatSol(accountInfo.lamports))
-    keyValue('Owner', payer.publicKey.toBase58())
-    info('Full withdrawal requires closing the Candy Machine account on-chain.')
+    keyValue('Rent to reclaim', formatSol(accountInfo.lamports))
+    keyValue('Authority', payer.publicKey.toBase58())
+
+    const signature = await withSpinner('Withdrawing and closing Candy Machine', async () => {
+      const instruction = withdraw({ candyMachine: pubkey, authority: payer.publicKey })
+      const transaction = new Transaction().add(instruction)
+      transaction.feePayer = payer.publicKey
+      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+      transaction.sign(payer)
+
+      const sig = await connection.sendRawTransaction(transaction.serialize())
+      await connection.confirmTransaction(sig)
+      return sig
+    }, 'Candy Machine withdrawn and closed')
+
+    keyValue('Signature', signature)
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)
   }
 }
 
+/**
+ * Delete a Candy Machine. Candy Machine v3 exposes no dedicated delete/close
+ * instruction distinct from `withdraw` — withdrawing drains the rent and closes
+ * the account. This command therefore delegates to the same on-chain path.
+ */
 export async function candyDelete(candyMachine: string): Promise<void> {
-  try {
-    const config = await getConfig()
-    const { createConnection } = await import('../../drivers/solana/connection')
-    const { PublicKey } = await import('@solana/web3.js')
-
-    const connection = createConnection(config)
-    const pubkey = new PublicKey(candyMachine)
-    const accountInfo = await connection.getAccountInfo(pubkey)
-
-    if (!accountInfo) {
-      error('Candy Machine not found')
-      process.exit(1)
-    }
-
-    header('Candy Machine Deletion')
-    keyValue('Address', candyMachine)
-    keyValue('Rent to reclaim', formatSol(accountInfo.lamports))
-    info('Deletion requires sending a close instruction to the Candy Machine program.')
-    info('This will reclaim the rent and close the account permanently.')
-  } catch (err) {
-    error(err instanceof Error ? err.message : String(err))
-    process.exit(1)
-  }
+  info('Candy Machine v3 has no separate delete instruction; closing via withdraw.')
+  await candyWithdraw(candyMachine)
 }
 
 export async function candyUpload(assetsPath: string, options: { storage?: string }): Promise<void> {
   try {
+    const config = await getConfig()
     const fs = await import('node:fs')
     const path = await import('node:path')
+    const { getStorageAdapter } = await import('../../storage')
 
     const resolved = path.resolve(assetsPath)
     if (!fs.existsSync(resolved)) {
@@ -212,32 +217,43 @@ export async function candyUpload(assetsPath: string, options: { storage?: strin
       process.exit(1)
     }
 
-    const stats = fs.statSync(resolved)
-    const provider = options.storage || 'arweave'
+    const provider = options.storage || config.storageProvider || 'arweave'
 
-    if (stats.isDirectory()) {
-      const files = fs.readdirSync(resolved)
-
-      header('Assets Upload')
-      keyValue('Directory', resolved)
-      keyValue('Files', String(files.length))
-      keyValue('Storage provider', provider)
-
-      info('Files to upload:')
-      for (const file of files.slice(0, 10)) {
-        info(`  ${file}`)
-      }
-      if (files.length > 10) {
-        info(`  ... and ${files.length - 10} more`)
-      }
-    } else {
-      header('Asset Upload')
-      keyValue('File', resolved)
-      keyValue('Size', `${stats.size} bytes`)
-      keyValue('Storage provider', provider)
+    let adapter
+    try {
+      adapter = getStorageAdapter(provider as any, config)
+    } catch (err) {
+      error(`Storage provider "${provider}" is not available: ${err instanceof Error ? err.message : String(err)}`)
+      process.exit(1)
     }
 
-    info('Upload requires a funded storage provider account.')
+    const stats = fs.statSync(resolved)
+    const filePaths: string[] = stats.isDirectory()
+      ? fs.readdirSync(resolved)
+          .map((f: string) => path.join(resolved, f))
+          .filter((p: string) => fs.statSync(p).isFile())
+      : [resolved]
+
+    header('Assets Upload')
+    keyValue('Source', resolved)
+    keyValue('Files', String(filePaths.length))
+    keyValue('Storage provider', provider)
+
+    const results: Array<{ file: string; uri: string }> = []
+    for (const filePath of filePaths) {
+      const uri = await withSpinner(`Uploading ${path.basename(filePath)}`, async () => {
+        // Storage adapters read the file themselves and return { url, ... }.
+        const uploaded = await adapter.uploadFile(filePath)
+        return uploaded.url
+      }, `Uploaded ${path.basename(filePath)}`)
+      results.push({ file: path.basename(filePath), uri })
+    }
+
+    header('Upload Results')
+    for (const r of results) {
+      keyValue(r.file, r.uri)
+    }
+    success(`Uploaded ${results.length} file(s)`)
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)
@@ -249,20 +265,50 @@ export async function candyGuards(candyMachine: string): Promise<void> {
     const config = await getConfig()
     const { createConnection } = await import('../../drivers/solana/connection')
     const { PublicKey } = await import('@solana/web3.js')
+    const { findCandyGuardPda } = await import('../../programs/candy-machine/pda')
+    const { parseCandyGuard } = await import('../../programs/candy-machine/accounts')
+    const { GuardType } = await import('../../programs/candy-machine/guards')
 
     const connection = createConnection(config)
     const pubkey = new PublicKey(candyMachine)
-    const accountInfo = await connection.getAccountInfo(pubkey)
 
-    if (!accountInfo) {
-      error('Candy Machine not found')
+    // The candy machine itself is wrapped by a Candy Guard PDA derived from its
+    // address; that PDA holds the enabled guards.
+    const [guardPda] = findCandyGuardPda(pubkey)
+    const guardAccount = await connection.getAccountInfo(guardPda)
+
+    if (!guardAccount) {
+      error('No Candy Guard account found for this Candy Machine')
+      info(`Expected guard PDA: ${guardPda.toBase58()}`)
       process.exit(1)
     }
 
+    const guard = parseCandyGuard(guardAccount.data)
+
+    // The first 8 bytes of the guard data are the features bitmap: bit N set
+    // means guard N (GuardType) is enabled.
+    let features = 0n
+    if (guard.guardData.length >= 8) {
+      features = guard.guardData.readBigUInt64LE(0)
+    }
+
+    const enabled: string[] = []
+    for (const [name, value] of Object.entries(GuardType)) {
+      if (typeof value !== 'number') continue
+      if ((features & (1n << BigInt(value))) !== 0n) {
+        enabled.push(name)
+      }
+    }
+
     header('Candy Machine Guards')
-    keyValue('Address', candyMachine)
-    keyValue('Data Size', `${accountInfo.data.length} bytes`)
-    info('Guard parsing requires decoding the Candy Guard account data.')
+    keyValue('Candy Machine', candyMachine)
+    keyValue('Guard PDA', guardPda.toBase58())
+    keyValue('Authority', guard.authority.toBase58())
+    if (enabled.length === 0) {
+      info('No guards enabled')
+    } else {
+      keyValue('Enabled guards', enabled.join(', '))
+    }
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)

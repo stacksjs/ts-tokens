@@ -53,7 +53,7 @@ export function register(cli: any): void {
   cli
     .command('wallet:unlock', 'Start a signing session')
     .option('--password <password>', 'Keyring password')
-    .option('--timeout <minutes>', 'Session timeout in minutes', '30')
+    .option('--timeout <minutes>', 'Session timeout in minutes', { default: '30' })
     .action(async (options: { password?: string; timeout?: string }) => {
       await walletUnlock(options)
     })

@@ -3,7 +3,7 @@ import { configInit, configShow, configNetwork, configSet, configGet } from '../
 export function register(cli: any): void {
   cli
     .command('config:init', 'Initialize configuration file')
-    .option('--network <network>', 'Network to use (mainnet-beta, devnet, testnet, localnet)', 'devnet')
+    .option('--network <network>', 'Network to use (mainnet-beta, devnet, testnet, localnet)', { default: 'devnet' })
     .action(async (options: { network?: string }) => {
       await configInit(options)
     })

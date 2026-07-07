@@ -10,12 +10,12 @@ export function register(cli: any): void {
     .command('create', 'Create a new fungible token')
     .option('--name <name>', 'Token name')
     .option('--symbol <symbol>', 'Token symbol')
-    .option('--decimals <decimals>', 'Decimal places', '9')
+    .option('--decimals <decimals>', 'Decimal places', { default: '9' })
     .option('--supply <supply>', 'Initial supply')
     .option('--metadata-uri <uri>', 'Metadata URI')
     .option('--token-2022', 'Use Token-2022 program')
     .option('--transfer-fee <bps>', 'Enable transfer fees (basis points)')
-    .option('--max-fee <amount>', 'Maximum transfer fee', '1000000000')
+    .option('--max-fee <amount>', 'Maximum transfer fee', { default: '1000000000' })
     .option('--interest-rate <rate>', 'Interest-bearing rate (basis points)')
     .option('--soulbound', 'Non-transferable (soulbound)')
     .option('--confidential', 'Enable confidential transfers')
@@ -73,7 +73,7 @@ export function register(cli: any): void {
     .command('token:create-2022', 'Create a Token-2022 token with extensions')
     .option('--name <name>', 'Token name')
     .option('--symbol <symbol>', 'Token symbol')
-    .option('--decimals <decimals>', 'Decimal places', '9')
+    .option('--decimals <decimals>', 'Decimal places', { default: '9' })
     .option('--extensions <list>', 'Comma-separated extensions (transferFee,metadata,nonTransferable,permanentDelegate)')
     .option('--transfer-fee-bps <bps>', 'Transfer fee basis points')
     .option('--max-fee <amount>', 'Max transfer fee')
@@ -92,7 +92,7 @@ export function register(cli: any): void {
 
   cli
     .command('token:group <mint>', 'Initialize a token group')
-    .option('--max-size <size>', 'Maximum group size', '100')
+    .option('--max-size <size>', 'Maximum group size', { default: '100' })
     .action(async (mint: string, options: { maxSize?: string }) => {
       await tokenGroup(mint, options)
     })
@@ -107,7 +107,7 @@ export function register(cli: any): void {
 
   cli
     .command('holders <mint>', 'List token holders')
-    .option('--limit <limit>', 'Maximum number of holders to show', '20')
+    .option('--limit <limit>', 'Maximum number of holders to show', { default: '20' })
     .action(async (mint: string, options: { limit?: string }) => {
       await tokenHolders(mint, options)
     })

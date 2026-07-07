@@ -6,7 +6,7 @@ import {
 export function register(cli: any): void {
   cli
     .command('nft:sell <mint>', 'List an NFT for sale')
-    .option('--price <sol>', 'Price in SOL', '1')
+    .option('--price <sol>', 'Price in SOL', { default: '1' })
     .option('--expiry <hours>', 'Expiry in hours')
     .option('--escrow', 'Use escrow-based sale')
     .action(async (mint: string, options: { price?: string; expiry?: string; escrow?: boolean }) => {
@@ -27,7 +27,7 @@ export function register(cli: any): void {
 
   cli
     .command('nft:offer <mint>', 'Make an offer on an NFT')
-    .option('--price <sol>', 'Offer price in SOL', '1')
+    .option('--price <sol>', 'Offer price in SOL', { default: '1' })
     .option('--expiry <hours>', 'Expiry in hours')
     .action(async (mint: string, options: { price?: string; expiry?: string }) => {
       await nftOffer(mint, options)
@@ -35,10 +35,10 @@ export function register(cli: any): void {
 
   cli
     .command('nft:auction <mint>', 'Create an auction for an NFT')
-    .option('--type <type>', 'Auction type (english or dutch)', 'english')
-    .option('--start <sol>', 'Starting price in SOL', '1')
+    .option('--type <type>', 'Auction type (english or dutch)', { default: 'english' })
+    .option('--start <sol>', 'Starting price in SOL', { default: '1' })
     .option('--reserve <sol>', 'Reserve price in SOL')
-    .option('--duration <hours>', 'Duration in hours', '24')
+    .option('--duration <hours>', 'Duration in hours', { default: '24' })
     .option('--decrement <sol>', 'Price decrement for Dutch auctions')
     .option('--interval <minutes>', 'Decrement interval in minutes for Dutch auctions')
     .action(async (mint: string, options: any) => {

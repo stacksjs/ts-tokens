@@ -1,18 +1,59 @@
 /** CLI config command handlers. */
 
 import { success, error, header, keyValue, info } from '../utils'
-import { getConfig, setConfig } from '../../config'
+import { getConfig, saveConfigOverlay, getConfigOverlayPath } from '../../config'
 import type { SolanaNetwork } from '../../types'
 
 const VALID_NETWORKS = ['mainnet-beta', 'devnet', 'testnet', 'localnet']
 
 export async function configInit(options: { network?: string }): Promise<void> {
   const network = options.network || 'devnet'
-  info(`Initializing tokens configuration...`)
-  keyValue('Network', network)
-  info('Create a tokens.config.ts file in your project root.')
-  info('See https://ts-tokens.dev/config for all options.')
-  success('Config initialized')
+
+  if (!VALID_NETWORKS.includes(network)) {
+    error(`Invalid network: ${network}`)
+    error(`Valid networks: ${VALID_NETWORKS.join(', ')}`)
+    process.exit(1)
+  }
+
+  try {
+    const fs = await import('node:fs')
+    const path = await import('node:path')
+
+    const target = path.resolve('tokens.config.json')
+    // A project may already be configured via any of these files (bunfig
+    // resolves several extensions). If one exists, don't clobber or duplicate it.
+    const existing = ['tokens.config.ts', 'tokens.config.js', 'tokens.config.json', 'tokens.config.mjs']
+      .map(f => path.resolve(f))
+      .find(p => fs.existsSync(p))
+
+    info(`Initializing tokens configuration...`)
+    keyValue('Network', network)
+    keyValue('Config file', existing ?? target)
+
+    if (existing) {
+      info('Config file already exists; leaving it unchanged.')
+      info('Edit this file or run `tokens config:set <key> <value>` to change settings.')
+      success('Config already initialized')
+      return
+    }
+
+    const starter = {
+      network,
+      commitment: 'confirmed',
+      storageProvider: 'arweave',
+      wallet: {
+        keypairPath: '~/.config/solana/id.json',
+      },
+    }
+
+    fs.writeFileSync(target, `${JSON.stringify(starter, null, 2)}\n`)
+
+    info('Edit this file or run `tokens config:set <key> <value>` to change settings.')
+    success('Config initialized')
+  } catch (err) {
+    error(err instanceof Error ? err.message : String(err))
+    process.exit(1)
+  }
 }
 
 export async function configShow(): Promise<void> {
@@ -29,8 +70,9 @@ export async function configNetwork(network: string): Promise<void> {
     error(`Valid networks: ${VALID_NETWORKS.join(', ')}`)
     process.exit(1)
   }
-  setConfig({ network: network as SolanaNetwork })
+  saveConfigOverlay({ network: network as SolanaNetwork })
   success(`Switched to ${network}`)
+  info(`Persisted to ${getConfigOverlayPath()}`)
 }
 
 export async function configSet(key: string, value: string): Promise<void> {
@@ -52,8 +94,9 @@ export async function configSet(key: string, value: string): Promise<void> {
       obj[keys[keys.length - 1]] = value
     }
 
-    setConfig(updates)
+    saveConfigOverlay(updates)
     success(`Set ${key} = ${value}`)
+    info(`Persisted to ${getConfigOverlayPath()}`)
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)

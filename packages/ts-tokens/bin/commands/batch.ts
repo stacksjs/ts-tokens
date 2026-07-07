@@ -17,8 +17,8 @@ export function register(cli: any): void {
 
   cli
     .command('batch:metadata <json-file>', 'Batch update metadata from JSON file')
-    .option('--batch-size <size>', 'Items per batch', '5')
-    .option('--delay <ms>', 'Delay between batches (ms)', '500')
+    .option('--batch-size <size>', 'Items per batch', { default: '5' })
+    .option('--delay <ms>', 'Delay between batches (ms)', { default: '500' })
     .option('--alt', 'Use Address Lookup Tables')
     .action(async (jsonFile: string, options: { batchSize?: string; delay?: string; alt?: boolean }) => {
       await batchMetadata(jsonFile, options)

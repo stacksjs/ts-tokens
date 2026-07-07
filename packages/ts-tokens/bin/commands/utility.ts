@@ -4,7 +4,7 @@ export function register(cli: any): void {
   cli
     .command('airdrop <mint> <recipients-file>', 'Airdrop tokens to recipients')
     .option('--amount <amount>', 'Amount per recipient (for fungible tokens)')
-    .option('--delay <ms>', 'Delay between transactions in ms', '500')
+    .option('--delay <ms>', 'Delay between transactions in ms', { default: '500' })
     .action(async (mint: string, recipientsFile: string, options: { amount?: string; delay?: string }) => {
       await airdrop(mint, recipientsFile, options)
     })
@@ -25,7 +25,7 @@ export function register(cli: any): void {
 
   cli
     .command('decode <data>', 'Decode transaction or account data')
-    .option('--type <type>', 'Data type (transaction/account/base58/base64)', 'base64')
+    .option('--type <type>', 'Data type (transaction/account/base58/base64)', { default: 'base64' })
     .action(async (data: string, options: { type?: string }) => {
       await decode(data, options)
     })

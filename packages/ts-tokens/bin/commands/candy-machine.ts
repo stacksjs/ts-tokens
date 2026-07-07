@@ -23,7 +23,7 @@ export function register(cli: any): void {
 
   cli
     .command('candy:mint <candy-machine>', 'Mint from Candy Machine')
-    .option('--count <n>', 'Number to mint', '1')
+    .option('--count <n>', 'Number to mint', { default: '1' })
     .action(async (candyMachine: string, options: { count?: string }) => {
       await candyMint(candyMachine, options)
     })
@@ -48,7 +48,7 @@ export function register(cli: any): void {
 
   cli
     .command('candy:upload <path>', 'Upload assets and create config lines')
-    .option('--storage <provider>', 'Storage provider (arweave/ipfs/shadow)', 'arweave')
+    .option('--storage <provider>', 'Storage provider (arweave/ipfs/shadow)', { default: 'arweave' })
     .action(async (assetsPath: string, options: { storage?: string }) => {
       await candyUpload(assetsPath, options)
     })

@@ -427,13 +427,18 @@ export async function tokenHarvestFees(mint: string, options: {
   }
 }
 
+// Token-2022 transfer-fee accounts carry the TransferFeeAmount extension, so
+// their data is larger than the base 165-byte account. The withheld amount is
+// stored in the extension; we filter client-side rather than by dataSize.
+const MAX_HARVEST_SOURCES_PER_TX = 30
+
 export async function feesCollect(mint: string, options: { accounts?: string }): Promise<void> {
   const config = await getConfig()
   const { createConnection } = await import('../../drivers/solana/connection')
   const { loadWallet } = await import('../../drivers/solana/wallet')
   const { harvestWithheldTokensToMint } = await import('../../programs/token-2022/instructions')
   const { PublicKey, Transaction } = await import('@solana/web3.js')
-  const { TOKEN_2022_PROGRAM_ID } = await import('@solana/spl-token')
+  const { TOKEN_2022_PROGRAM_ID, unpackAccount, getTransferFeeAmount } = await import('@solana/spl-token')
 
   try {
     const connection = createConnection(config)
@@ -446,37 +451,66 @@ export async function feesCollect(mint: string, options: { accounts?: string }):
       sources = options.accounts.split(',').map(a => new PublicKey(a.trim()))
     } else {
       info('Discovering token accounts with withheld fees...')
+      // Do NOT filter on dataSize: transfer-fee accounts carry the
+      // TransferFeeAmount extension and are larger than 165 bytes. Only pin
+      // the mint (offset 0) and filter for withheld amounts client-side.
       const accounts = await connection.getProgramAccounts(TOKEN_2022_PROGRAM_ID, {
         filters: [
-          { dataSize: 165 },
           { memcmp: { offset: 0, bytes: mint } },
         ],
       })
-      sources = accounts.map(a => a.pubkey)
+      for (const { pubkey, account } of accounts) {
+        try {
+          const parsed = unpackAccount(pubkey, account, TOKEN_2022_PROGRAM_ID)
+          const feeAmount = getTransferFeeAmount(parsed)
+          if (feeAmount && feeAmount.withheldAmount > 0n) {
+            sources.push(pubkey)
+          }
+        } catch {
+          // Not a valid Token-2022 account (or no transfer-fee extension) — skip.
+          continue
+        }
+      }
     }
 
     if (sources.length === 0) {
-      info('No token accounts found to harvest from')
+      info('No token accounts with withheld fees found to harvest from')
       return
     }
 
-    const signature = await withSpinner(`Harvesting fees from ${sources.length} account(s)`, async () => {
-      const instruction = harvestWithheldTokensToMint({
-        mint: mintPubkey,
-        sources,
-      })
+    // Chunk sources across transactions to stay under account-per-tx limits.
+    const chunks: InstanceType<typeof PublicKey>[][] = []
+    for (let i = 0; i < sources.length; i += MAX_HARVEST_SOURCES_PER_TX) {
+      chunks.push(sources.slice(i, i + MAX_HARVEST_SOURCES_PER_TX))
+    }
 
-      const transaction = new Transaction().add(instruction)
-      transaction.feePayer = payer.publicKey
-      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
-      transaction.sign(payer)
+    const signatures = await withSpinner(
+      `Harvesting fees from ${sources.length} account(s) in ${chunks.length} transaction(s)`,
+      async () => {
+        const sigs: string[] = []
+        for (const chunk of chunks) {
+          const instruction = harvestWithheldTokensToMint({
+            mint: mintPubkey,
+            sources: chunk,
+          })
 
-      const sig = await connection.sendRawTransaction(transaction.serialize())
-      await connection.confirmTransaction(sig)
-      return sig
-    }, 'Fees harvested successfully')
+          const transaction = new Transaction().add(instruction)
+          transaction.feePayer = payer.publicKey
+          transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+          transaction.sign(payer)
 
-    keyValue('Signature', signature)
+          const sig = await connection.sendRawTransaction(transaction.serialize())
+          await connection.confirmTransaction(sig)
+          sigs.push(sig)
+        }
+        return sigs
+      },
+      'Fees harvested successfully',
+    )
+
+    for (const sig of signatures) {
+      keyValue('Signature', sig)
+    }
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)
@@ -487,7 +521,7 @@ export async function feesWithdraw(mint: string, options: { destination?: string
   const config = await getConfig()
   const { createConnection } = await import('../../drivers/solana/connection')
   const { loadWallet } = await import('../../drivers/solana/wallet')
-  const { withdrawWithheldTokensFromAccounts } = await import('../../programs/token-2022/instructions')
+  const { withdrawWithheldTokensFromMint } = await import('../../programs/token-2022/instructions')
   const { PublicKey, Transaction } = await import('@solana/web3.js')
   const { getAssociatedTokenAddress, TOKEN_2022_PROGRAM_ID } = await import('@solana/spl-token')
 
@@ -502,12 +536,15 @@ export async function feesWithdraw(mint: string, options: { destination?: string
 
     keyValue('Destination', destination.toBase58())
 
+    // Withdraw fees that have been harvested onto the mint (via `fees:collect`)
+    // to the destination. Withdrawing directly from source accounts uses a
+    // different instruction and requires enumerating those accounts; the
+    // harvest-to-mint flow is the supported path here.
     const signature = await withSpinner(`Withdrawing fees from mint ${formatAddress(mint)}`, async () => {
-      const instruction = withdrawWithheldTokensFromAccounts({
+      const instruction = withdrawWithheldTokensFromMint({
         mint: mintPubkey,
         destination,
         authority: payer.publicKey,
-        sources: [],
       })
 
       const transaction = new Transaction().add(instruction)

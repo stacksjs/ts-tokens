@@ -6,7 +6,7 @@ import {
 export function register(cli: any): void {
   cli
     .command('defi:limit-buy <output-mint> <amount> <price>', 'Create a limit buy order')
-    .option('--input-mint <mint>', 'Input token mint', 'So11111111111111111111111111111111111111112')
+    .option('--input-mint <mint>', 'Input token mint', { default: 'So11111111111111111111111111111111111111112' })
     .option('--expire <seconds>', 'Expiry in seconds')
     .action(async (outputMint: string, amount: string, price: string, options: { inputMint?: string; expire?: string }) => {
       await defiLimitBuy(outputMint, amount, price, options)
@@ -14,7 +14,7 @@ export function register(cli: any): void {
 
   cli
     .command('defi:limit-sell <input-mint> <amount> <price>', 'Create a limit sell order')
-    .option('--output-mint <mint>', 'Output token mint', 'So11111111111111111111111111111111111111112')
+    .option('--output-mint <mint>', 'Output token mint', { default: 'So11111111111111111111111111111111111111112' })
     .option('--expire <seconds>', 'Expiry in seconds')
     .action(async (inputMint: string, amount: string, price: string, options: { outputMint?: string; expire?: string }) => {
       await defiLimitSell(inputMint, amount, price, options)

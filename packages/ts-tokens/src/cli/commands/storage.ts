@@ -143,14 +143,25 @@ export async function storageBalance(options: { provider?: string }): Promise<vo
   try {
     const config = await getConfig()
     const { getPublicKey } = await import('../../drivers/solana/wallet')
+    const { getStorageAdapter } = await import('../../storage')
 
     const provider = options.provider || config.storageProvider || 'arweave'
     const wallet = getPublicKey(config)
+    const adapter = getStorageAdapter(provider as any, config)
 
     header('Storage Balance')
     keyValue('Provider', provider)
     keyValue('Wallet', wallet)
-    info('Balance checking depends on the specific storage provider.')
+
+    if (typeof adapter.getBalance !== 'function') {
+      throw new Error(
+        `Balance checking is not implemented for the "${provider}" storage provider: `
+        + 'this adapter does not expose a getBalance() method.',
+      )
+    }
+
+    const balance = await withSpinner('Fetching storage balance', () => adapter.getBalance!())
+    keyValue('Balance', String(balance))
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)
@@ -161,15 +172,27 @@ export async function storageFund(amount: string, options: { provider?: string }
   try {
     const config = await getConfig()
     const { getPublicKey } = await import('../../drivers/solana/wallet')
+    const { getStorageAdapter } = await import('../../storage')
 
     const provider = options.provider || config.storageProvider || 'arweave'
     const wallet = getPublicKey(config)
+    const adapter = getStorageAdapter(provider as any, config)
 
     header('Fund Storage Account')
     keyValue('Provider', provider)
     keyValue('Amount', amount)
     keyValue('Wallet', wallet)
-    info('Funding requires a transaction to the storage provider.')
+
+    if (typeof adapter.fund !== 'function') {
+      throw new Error(
+        `Funding is not implemented for the "${provider}" storage provider: `
+        + 'this adapter does not expose a fund() method.',
+      )
+    }
+
+    const signature = await withSpinner('Funding storage account', () => adapter.fund!(BigInt(amount)))
+    keyValue('Signature', signature)
+    success('Storage account funded')
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)

@@ -2,7 +2,7 @@
 
 import { success, error, keyValue, header, info, formatSol } from '../utils'
 import { withSpinner } from '../utils/spinner'
-import { getConfig, setConfig } from '../../config'
+import { getConfig, saveConfigOverlay, getConfigOverlayPath } from '../../config'
 
 export async function walletGenerate(options: { output?: string }): Promise<void> {
   try {
@@ -92,10 +92,11 @@ export async function walletImport(keypairPath: string): Promise<void> {
   try {
     const { loadKeypairFromFile } = await import('../../drivers/solana/wallet')
     const keypair = loadKeypairFromFile(keypairPath)
-    setConfig({ wallet: { keypairPath } })
+    saveConfigOverlay({ wallet: { keypairPath } })
 
     success(`Imported keypair from ${keypairPath}`)
     keyValue('Public Key', keypair.publicKey.toBase58())
+    info(`Persisted to ${getConfigOverlayPath()}`)
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)
@@ -139,8 +140,10 @@ export async function walletDecrypt(options: { password?: string }): Promise<voi
     const keypair = loadKeypairFromKeyring(options.password)
     setWallet(keypair)
 
-    success('Wallet loaded from keyring')
+    success('Wallet loaded from keyring (this process only)')
     keyValue('Public Key', keypair.publicKey.toBase58())
+    info('This decrypted wallet lives in memory for the current command only.')
+    info('It is NOT persisted — a new CLI invocation will require the password again.')
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)
@@ -158,7 +161,9 @@ export async function walletUnlock(options: { password?: string; timeout?: strin
     const timeoutMs = parseInt(options.timeout || '30') * 60 * 1000
     startSession(options.password, { timeoutMs })
 
-    success(`Signing session started (timeout: ${options.timeout || '30'} minutes)`)
+    success('Signing session started (this process only)')
+    info(`In-memory session expires after ${options.timeout || '30'} minutes OR when this command exits — whichever comes first.`)
+    info('There is no persistent daemon: a separate CLI invocation will not see this session.')
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)
