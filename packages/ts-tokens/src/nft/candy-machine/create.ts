@@ -152,44 +152,26 @@ export async function createCandyMachine(
  * Calculate space needed for candy machine account
  */
 function calculateCandyMachineSpace(config: CandyMachineConfig): number {
-  let space = 8 + // discriminator
-    32 + // authority
-    32 + // mint authority
-    32 + // collection mint
-    8 + // items redeemed
-    1 + // items available option
-    8 + // items available
-    1 + // config line settings option
-    1 + // hidden settings option
-    2 + // seller fee basis points
-    4 + // symbol length
-    10 + // symbol
-    1 + // max edition supply option
-    8 + // max edition supply
-    1 + // is mutable
-    1 + // creators option
-    4 // creators length
+  // The on-chain program reserves a fixed hidden section sized with the MAX
+  // lengths for every header field (symbol, creators, config-line prefixes),
+  // regardless of the actual string lengths — see
+  // CandyMachineData::get_space_for_candy in mpl-candy-machine.
+  const HIDDEN_SECTION = 850
 
-  // Add space for creators
-  space += config.creators.length * (32 + 1 + 1) // pubkey + verified + share
-
-  // Add space for config line settings if present
-  if (config.configLineSettings) {
-    space += 4 + config.configLineSettings.prefixName.length +
-      4 + // name length
-      4 + config.configLineSettings.prefixUri.length +
-      4 + // uri length
-      1 // is sequential
-  }
-
-  // Add space for hidden settings if present
+  // Hidden-settings drops store no config lines on-chain
   if (config.hiddenSettings) {
-    space += 4 + config.hiddenSettings.name.length +
-      4 + config.hiddenSettings.uri.length +
-      32 // hash
+    return HIDDEN_SECTION
   }
 
-  return space
+  const items = config.itemsAvailable
+  const nameLength = config.configLineSettings?.nameLength ?? 32
+  const uriLength = config.configLineSettings?.uriLength ?? 200
+
+  return HIDDEN_SECTION +
+    4 + // config lines vec length
+    items * (nameLength + uriLength) + // config lines
+    Math.floor(items / 8) + 1 + // taken bitmask
+    items * 4 // mint indices
 }
 
 /**
