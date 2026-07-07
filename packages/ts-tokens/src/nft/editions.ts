@@ -326,8 +326,8 @@ export async function getEditionInfo(
   const data = accountInfo.data
   const key = data[0]
 
-  // Key 1 = MasterEditionV1, Key 6 = MasterEditionV2, Key 2 = Edition
-  if (key === 1 || key === 6) {
+  // Key 1 = EditionV1 (print), Key 2 = MasterEditionV1, Key 6 = MasterEditionV2
+  if (key === 2 || key === 6) {
     // Master edition
     const supply = data.readBigUInt64LE(1)
     const hasMaxSupply = data[9] === 1
@@ -340,7 +340,7 @@ export async function getEditionInfo(
       maxSupply,
       supply: Number(supply),
     }
-  } else if (key === 2) {
+  } else if (key === 1) {
     // Print edition
     const parent = new PublicKey(data.slice(1, 33)).toBase58()
     const edition = Number(data.readBigUInt64LE(33))
@@ -374,7 +374,9 @@ export async function getEditionsByMaster(
     throw new Error('Not a master edition')
   }
 
-  // Search for edition accounts that reference this master
+  // Search for edition accounts that reference this master.
+  // Edition.parent stores the master edition PDA, not the master mint.
+  const masterEditionAddress = getMasterEditionAddress(masterMintPubkey)
   const accounts = await connection.getProgramAccounts(
     TOKEN_METADATA_PROGRAM_ID,
     {
@@ -383,7 +385,7 @@ export async function getEditionsByMaster(
         {
           memcmp: {
             offset: 1, // Parent offset
-            bytes: masterMintPubkey.toBase58(),
+            bytes: masterEditionAddress.toBase58(),
           },
         },
       ],
@@ -394,7 +396,7 @@ export async function getEditionsByMaster(
 
   for (const { account } of accounts.slice(0, limit)) {
     const data = account.data
-    if (data[0] === 2) { // Edition key
+    if (data[0] === 1) { // EditionV1 key
       const parent = new PublicKey(data.slice(1, 33)).toBase58()
       const edition = Number(data.readBigUInt64LE(33))
 
