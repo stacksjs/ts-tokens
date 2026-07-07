@@ -4,8 +4,8 @@
  * Fetch NFT metadata and display info.
  */
 
-import { ref, onMounted, type Ref } from 'vue'
-import { useConnection, useConfig } from './useConnection'
+import { ref, watch, onMounted, toValue, type MaybeRefOrGetter, type Ref } from 'vue'
+import { useConfig } from './useConnection'
 import type { NFTDisplayInfo } from '../types'
 
 /**
@@ -21,28 +21,36 @@ export interface UseNFTReturn {
 /**
  * useNFT composable
  */
-export function useNFT(mint: string): UseNFTReturn {
+export function useNFT(mint: MaybeRefOrGetter<string>): UseNFTReturn {
   const config = useConfig()
   const nft = ref<NFTDisplayInfo | null>(null)
   const loading = ref<boolean>(true)
   const error = ref<Error | null>(null)
 
+  // Cancellation guard so a slow older response can't overwrite newer state.
+  let requestId = 0
+
   const fetchNFT = async (): Promise<void> => {
+    const currentRequest = ++requestId
+    const mintValue = toValue(mint)
+
     try {
       loading.value = true
       error.value = null
 
       const { getNFTMetadata, fetchOffChainMetadata } = await import('ts-tokens')
 
-      const metadata = await getNFTMetadata(mint, config)
+      const metadata = await getNFTMetadata(mintValue, config)
+      if (currentRequest !== requestId) return
       if (!metadata) {
         throw new Error('NFT not found')
       }
 
       const offChain = await fetchOffChainMetadata(metadata.uri)
+      if (currentRequest !== requestId) return
 
       nft.value = {
-        mint,
+        mint: mintValue,
         name: metadata.name,
         symbol: metadata.symbol,
         uri: metadata.uri,
@@ -51,13 +59,17 @@ export function useNFT(mint: string): UseNFTReturn {
         attributes: (offChain as any)?.attributes,
       }
     } catch (err) {
+      if (currentRequest !== requestId) return
       error.value = err as Error
     } finally {
-      loading.value = false
+      if (currentRequest === requestId) {
+        loading.value = false
+      }
     }
   }
 
   onMounted(fetchNFT)
+  watch(() => toValue(mint), fetchNFT)
 
   return {
     nft,

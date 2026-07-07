@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps<{
   targetDate: Date
@@ -29,19 +29,36 @@ const formatTime = (ms: number): string => {
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
 }
 
-onMounted(() => {
+const stopTimer = () => {
+  if (intervalId) {
+    clearInterval(intervalId)
+    intervalId = null
+  }
+}
+
+const startTimer = () => {
+  stopTimer()
+  remaining.value = props.targetDate.getTime() - Date.now()
+  if (remaining.value <= 0) {
+    emit('complete')
+    return
+  }
   intervalId = setInterval(() => {
     remaining.value = props.targetDate.getTime() - Date.now()
     if (remaining.value <= 0) {
-      if (intervalId) clearInterval(intervalId)
+      stopTimer()
       emit('complete')
     }
   }, 1000)
-})
+}
 
-onUnmounted(() => {
-  if (intervalId) clearInterval(intervalId)
-})
+onMounted(startTimer)
+
+// Reset the countdown whenever the target date changes so it never keeps
+// counting toward a stale target.
+watch(() => props.targetDate, startTimer)
+
+onUnmounted(stopTimer)
 </script>
 
 <template>

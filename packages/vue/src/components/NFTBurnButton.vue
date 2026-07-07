@@ -1,27 +1,36 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useTransaction } from '../composables'
 
-defineProps<{
+const props = defineProps<{
   mint: string
   disabled?: boolean
+  /**
+   * Caller-supplied handler that performs the real burn transaction and
+   * resolves with its signature. Required — this component does not build or
+   * send transactions itself.
+   */
+  onBurn: (mint: string) => Promise<string>
 }>()
 
 const emit = defineEmits<{
   burn: [signature: string]
 }>()
 
-const { pending, error, send, reset } = useTransaction()
+const pending = ref(false)
+const error = ref<Error | null>(null)
 const showConfirm = ref(false)
 
 const handleBurn = async () => {
-  reset()
+  error.value = null
+  pending.value = true
   try {
-    const sig = await send(new Uint8Array())
+    const sig = await props.onBurn(props.mint)
     emit('burn', sig)
     showConfirm.value = false
-  } catch {
-    // Error captured in composable
+  } catch (err) {
+    error.value = err as Error
+  } finally {
+    pending.value = false
   }
 }
 </script>

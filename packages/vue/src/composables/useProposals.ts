@@ -1,5 +1,4 @@
 import { ref, onMounted, type Ref } from 'vue'
-import { PublicKey } from '@solana/web3.js'
 import { useConnection } from './useConnection'
 
 export interface ProposalInfo {
@@ -19,22 +18,24 @@ export interface UseProposalsReturn {
   refetch: () => Promise<void>
 }
 
-export function useProposals(_daoAddress: string): UseProposalsReturn {
-  const _connection = useConnection()
+const GOVERNANCE_UNSUPPORTED
+  = 'Proposals are not available: no on-chain governance program is deployed for this build.'
+
+// eslint-disable-next-line no-unused-vars
+export function useProposals(daoAddress: string): UseProposalsReturn {
+  // eslint-disable-next-line no-unused-vars
+  const connection = useConnection()
   const proposals = ref<ProposalInfo[]>([])
   const loading = ref<boolean>(true)
   const error = ref<Error | null>(null)
 
   const fetchProposals = async (): Promise<void> => {
-    try {
-      loading.value = true
-      error.value = null
-      proposals.value = []
-    } catch (err) {
-      error.value = err as Error
-    } finally {
-      loading.value = false
-    }
+    loading.value = true
+    // No governance program to query — surface an honest unsupported error
+    // rather than returning a believable empty list.
+    proposals.value = []
+    error.value = new Error(GOVERNANCE_UNSUPPORTED)
+    loading.value = false
   }
 
   onMounted(fetchProposals)

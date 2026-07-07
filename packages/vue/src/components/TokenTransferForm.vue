@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useTokenBalance, useTransaction } from '../composables'
+import { useTokenBalance } from '../composables'
 
 const props = defineProps<{
   mint: string
   owner: string
+  /**
+   * Caller-supplied handler that performs the real transfer transaction and
+   * resolves with its signature. Required — this component does not build or
+   * send transactions itself.
+   */
+  onTransfer: (params: { mint: string, recipient: string, amount: number }) => Promise<string>
 }>()
 
 const emit = defineEmits<{
@@ -12,14 +18,15 @@ const emit = defineEmits<{
 }>()
 
 const { uiBalance, decimals, loading: balanceLoading } = useTokenBalance(props.mint, props.owner)
-const { pending, error, send, reset } = useTransaction()
+const pending = ref(false)
+const error = ref<Error | null>(null)
 const recipient = ref('')
 const amount = ref('')
 const validationError = ref<string | null>(null)
 
 const handleSubmit = async () => {
   validationError.value = null
-  reset()
+  error.value = null
 
   if (!recipient.value.trim()) {
     validationError.value = 'Recipient address is required'
@@ -37,11 +44,18 @@ const handleSubmit = async () => {
     return
   }
 
+  pending.value = true
   try {
-    const sig = await send(new Uint8Array())
+    const sig = await props.onTransfer({
+      mint: props.mint,
+      recipient: recipient.value.trim(),
+      amount: numAmount,
+    })
     emit('transfer', sig)
-  } catch {
-    // Error captured in composable
+  } catch (err) {
+    error.value = err as Error
+  } finally {
+    pending.value = false
   }
 }
 </script>

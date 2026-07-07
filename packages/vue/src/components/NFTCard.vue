@@ -8,7 +8,7 @@ const props = withDefaults(defineProps<{
   showDetails: false,
 })
 
-const { nft, loading, error } = useNFT(props.mint)
+const { nft, loading, error } = useNFT(() => props.mint)
 </script>
 
 <template>

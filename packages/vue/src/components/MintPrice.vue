@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCandyMachine } from '../composables'
+import { formatUnits } from '../utils/format'
 
 const props = withDefaults(defineProps<{
   candyMachine: string
@@ -11,11 +12,14 @@ const props = withDefaults(defineProps<{
   decimals: 4,
 })
 
-const { candyMachine: cm, loading } = useCandyMachine(props.candyMachine)
+const LAMPORTS_DECIMALS = 9
+
+const { candyMachine: cm, loading } = useCandyMachine(() => props.candyMachine)
 
 const price = computed(() => {
   if (!cm.value) return null
-  return (Number(cm.value.price) / 1e9).toFixed(props.decimals)
+  // price is in lamports — convert without floating-point precision loss.
+  return formatUnits(cm.value.price, LAMPORTS_DECIMALS, props.decimals)
 })
 </script>
 

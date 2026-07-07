@@ -12,7 +12,7 @@ const emit = defineEmits<{
 }>()
 
 const { publicKey } = useWallet()
-const { loading } = useCandyMachine(props.candyMachine)
+const { loading } = useCandyMachine(() => props.candyMachine)
 const eligible = ref<boolean | null>(null)
 
 watch([publicKey, loading], () => {

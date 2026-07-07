@@ -15,5 +15,8 @@ export * from './components'
 // Types
 export * from './types'
 
+// Utils
+export { formatUnits } from './utils/format'
+
 // Plugin
 export { TokensPlugin, createTokens } from './plugin'

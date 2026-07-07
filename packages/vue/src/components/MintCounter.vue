@@ -5,7 +5,7 @@ const props = defineProps<{
   candyMachine: string
 }>()
 
-const { candyMachine: cm, loading } = useCandyMachine(props.candyMachine)
+const { candyMachine: cm, loading } = useCandyMachine(() => props.candyMachine)
 </script>
 
 <template>

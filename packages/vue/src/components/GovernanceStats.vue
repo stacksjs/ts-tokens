@@ -2,7 +2,7 @@
 import { useDAO } from '../composables/useDAO'
 
 const props = defineProps<{ daoAddress: string }>()
-const { name, proposalCount, totalVotingPower, config, loading, error } = useDAO(props.daoAddress)
+const { name, proposalCount, totalVotingPower, config, loading, error } = useDAO(() => props.daoAddress)
 </script>
 
 <template>

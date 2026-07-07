@@ -116,12 +116,18 @@ export function useKeyboardNavigation(options?: {
     }
   }
 
+  // Capture the element attached in onMounted so cleanup can remove the
+  // listener even after a v-if has already set containerRef.value to null.
+  let attachedEl: HTMLElement | null = null
+
   onMounted(() => {
-    containerRef.value?.addEventListener('keydown', handleKeyDown)
+    attachedEl = containerRef.value
+    attachedEl?.addEventListener('keydown', handleKeyDown)
   })
 
   onUnmounted(() => {
-    containerRef.value?.removeEventListener('keydown', handleKeyDown)
+    attachedEl?.removeEventListener('keydown', handleKeyDown)
+    attachedEl = null
   })
 
   return containerRef

@@ -13,7 +13,7 @@ const emit = defineEmits<{
   mint: []
 }>()
 
-const { candyMachine: cm, loading } = useCandyMachine(props.candyMachine)
+const { candyMachine: cm, loading } = useCandyMachine(() => props.candyMachine)
 const minting = ref(false)
 
 const handleMint = async () => {

@@ -3,7 +3,7 @@ import { provide } from 'vue'
 import { useDAO } from '../composables/useDAO'
 
 const props = defineProps<{ daoAddress: string }>()
-const daoState = useDAO(props.daoAddress)
+const daoState = useDAO(() => props.daoAddress)
 provide('dao', daoState)
 </script>
 

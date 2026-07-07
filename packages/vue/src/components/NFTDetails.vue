@@ -5,7 +5,7 @@ const props = defineProps<{
   mint: string
 }>()
 
-const { nft, loading, error } = useNFT(props.mint)
+const { nft, loading, error } = useNFT(() => props.mint)
 </script>
 
 <template>

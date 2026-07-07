@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { formatUnits } from '../utils/format'
 
 const props = withDefaults(defineProps<{
   amount: number | bigint
@@ -10,9 +11,14 @@ const props = withDefaults(defineProps<{
   showSymbol: true,
 })
 
+const LAMPORTS_DECIMALS = 9
+
 const value = computed(() => {
-  const num = typeof props.amount === 'bigint' ? Number(props.amount) / 1e9 : props.amount
-  return num.toFixed(props.decimals)
+  // bigint amounts are lamports — convert without floating-point precision loss.
+  if (typeof props.amount === 'bigint') {
+    return formatUnits(props.amount, LAMPORTS_DECIMALS, props.decimals)
+  }
+  return props.amount.toFixed(props.decimals)
 })
 </script>
 

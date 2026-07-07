@@ -1,23 +1,29 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useTransaction } from '../composables'
 
 const props = defineProps<{
   mint: string
+  /**
+   * Caller-supplied handler that performs the real mint transaction and
+   * resolves with its signature. Required — this component does not build or
+   * send transactions itself.
+   */
+  onMint: (params: { mint: string, amount: number, destination: string | null }) => Promise<string>
 }>()
 
 const emit = defineEmits<{
   mint: [signature: string]
 }>()
 
-const { pending, error, send, reset } = useTransaction()
+const pending = ref(false)
+const error = ref<Error | null>(null)
 const amount = ref('')
 const destination = ref('')
 const validationError = ref<string | null>(null)
 
 const handleSubmit = async () => {
   validationError.value = null
-  reset()
+  error.value = null
 
   const numAmount = Number(amount.value)
   if (!amount.value || isNaN(numAmount) || numAmount <= 0) {
@@ -25,11 +31,18 @@ const handleSubmit = async () => {
     return
   }
 
+  pending.value = true
   try {
-    const sig = await send(new Uint8Array())
+    const sig = await props.onMint({
+      mint: props.mint,
+      amount: numAmount,
+      destination: destination.value.trim() || null,
+    })
     emit('mint', sig)
-  } catch {
-    // Error captured in composable
+  } catch (err) {
+    error.value = err as Error
+  } finally {
+    pending.value = false
   }
 }
 </script>

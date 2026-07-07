@@ -6,7 +6,7 @@ const props = defineProps<{
   candyMachine: string
 }>()
 
-const state = useCandyMachine(props.candyMachine)
+const state = useCandyMachine(() => props.candyMachine)
 
 provide('candy-machine', state)
 </script>

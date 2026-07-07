@@ -1,4 +1,5 @@
 import { describe, test, expect, mock, beforeEach } from 'bun:test'
+import * as splTokenActual from '@solana/spl-token'
 
 const mockGetAccount = mock(() =>
   Promise.resolve({
@@ -26,8 +27,15 @@ const mockGetParsedAccountInfo = mock(() =>
   }),
 )
 
-// Mock @solana/spl-token
+// Use the REAL TokenAccountNotFoundError (empty message) so the composable's
+// instanceof check is exercised faithfully.
+const { TokenAccountNotFoundError } = splTokenActual
+
+// Mock @solana/spl-token. bun's mock.module is process-global and persists
+// across files, so spread the real module and override only what we need —
+// otherwise every other test file loses the rest of spl-token's exports.
 mock.module('@solana/spl-token', () => ({
+  ...splTokenActual,
   getAssociatedTokenAddress: mockGetAssociatedTokenAddress,
   getAccount: mockGetAccount,
 }))
@@ -104,11 +112,13 @@ describe('useTokenBalance', () => {
   })
 
   test('refetch handles account-not-found by setting balance to 0', async () => {
+    // TokenAccountNotFoundError has an EMPTY message — a substring check on the
+    // message would never match, so the composable must detect it by type/name.
     mockGetAccount.mockImplementationOnce(() =>
-      Promise.reject(new Error('could not find account')),
+      Promise.reject(new TokenAccountNotFoundError()),
     )
 
-    const { balance, uiBalance, error, loading, refetch } = useTokenBalance(
+    const { balance, uiBalance, decimals, error, loading, refetch } = useTokenBalance(
       TEST_MINT,
       TEST_OWNER,
     )
@@ -118,6 +128,8 @@ describe('useTokenBalance', () => {
     expect(loading.value).toBe(false)
     expect(balance.value).toBe(0n)
     expect(uiBalance.value).toBe(0)
+    // Decimals are still fetched even when the token account is missing.
+    expect(decimals.value).toBe(9)
     expect(error.value).toBeNull()
   })
 

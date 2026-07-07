@@ -6,7 +6,7 @@ const props = defineProps<{
   candyMachine: string
 }>()
 
-const { candyMachine: cm, loading } = useCandyMachine(props.candyMachine)
+const { candyMachine: cm, loading } = useCandyMachine(() => props.candyMachine)
 
 const progress = computed(() => {
   if (!cm.value) return 0
