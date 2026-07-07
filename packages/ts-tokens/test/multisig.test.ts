@@ -28,7 +28,9 @@ import {
 } from '../src/multisig/instructions'
 import {
   validateMultisigConfig,
+  createMultisig,
 } from '../src/multisig/create'
+import { createMockConnection } from './helpers/mock-connection'
 import type {
   MultisigResult,
   OnChainMultisig,
@@ -394,6 +396,47 @@ describe('validateMultisigConfig', () => {
     })
     expect(errors.length).toBeGreaterThan(0)
     expect(errors.some(e => e.toLowerCase().includes('duplicate'))).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 5b. createMultisig inline validation
+// ---------------------------------------------------------------------------
+
+describe('createMultisig validation', () => {
+  // A connection whose getMinimumBalanceForRentExemption would resolve — but
+  // validation runs before it, so invalid configs reject before any RPC.
+  const connection = createMockConnection({
+    getMinimumBalanceForRentExemption: async () => 2_039_280,
+  })
+  const payer = Keypair.generate()
+
+  test('rejects threshold greater than signer count', async () => {
+    const signers = [Keypair.generate().publicKey, Keypair.generate().publicKey]
+    expect(
+      createMultisig(connection, payer, { signers, threshold: 3 })
+    ).rejects.toThrow('exceed')
+  })
+
+  test('rejects threshold below 1', async () => {
+    const signers = [Keypair.generate().publicKey, Keypair.generate().publicKey]
+    expect(
+      createMultisig(connection, payer, { signers, threshold: 0 })
+    ).rejects.toThrow('at least 1')
+  })
+
+  test('rejects duplicate signers', async () => {
+    const dup = Keypair.generate().publicKey
+    expect(
+      createMultisig(connection, payer, { signers: [dup, dup], threshold: 1 })
+    ).rejects.toThrow('Duplicate')
+  })
+
+  test('rejects more than 11 signers', async () => {
+    const signers = Array.from({ length: 12 }, () => Keypair.generate().publicKey)
+    expect(
+      createMultisig(connection, payer, { signers, threshold: 2 })
+    ).rejects.toThrow('11')
   })
 })
 

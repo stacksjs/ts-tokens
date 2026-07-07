@@ -9,10 +9,12 @@ import {
   Keypair,
   Transaction,
   SystemProgram,
-  TransactionInstruction,
+  sendAndConfirmTransaction as web3SendAndConfirmTransaction,
 } from '@solana/web3.js'
 import {
   TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
+  createInitializeMultisigInstruction,
   createSetAuthorityInstruction,
   AuthorityType,
 } from '@solana/spl-token'
@@ -39,16 +41,27 @@ export async function createMultisig(
 ): Promise<{ address: PublicKey; signature: string }> {
   const { signers, threshold } = options
 
-  if (threshold > signers.length) {
-    throw new Error('Threshold cannot exceed number of signers')
+  if (signers.length < 1) {
+    throw new Error('At least 1 signer required')
+  }
+
+  if (signers.length > 11) {
+    throw new Error('Maximum 11 signers allowed')
   }
 
   if (threshold < 1) {
     throw new Error('Threshold must be at least 1')
   }
 
-  if (signers.length > 11) {
-    throw new Error('Maximum 11 signers allowed')
+  if (threshold > signers.length) {
+    throw new Error('Threshold cannot exceed number of signers')
+  }
+
+  // Reject duplicate signers — the SPL Token program would otherwise create
+  // a multisig where the same key is counted multiple times toward the threshold
+  const uniqueSigners = new Set(signers.map(s => s.toBase58()))
+  if (uniqueSigners.size !== signers.length) {
+    throw new Error('Duplicate signers not allowed')
   }
 
   // Create new account for multisig
@@ -65,47 +78,28 @@ export async function createMultisig(
     programId: TOKEN_PROGRAM_ID,
   })
 
-  // Initialize multisig instruction
+  // Initialize multisig instruction (SPL Token InitializeMultisig)
   const initMultisigIx = createInitializeMultisigInstruction(
     multisigAccount.publicKey,
     signers,
-    threshold
+    threshold,
+    TOKEN_PROGRAM_ID
   )
 
   const transaction = new Transaction().add(createAccountIx, initMultisigIx)
 
-  // Note: In production, would sign and send
-  // This is a simplified version
+  // The SPL Token program is deployed, so this is a real transaction: sign
+  // with both the payer and the new multisig account and submit it.
+  const signature = await web3SendAndConfirmTransaction(
+    connection,
+    transaction,
+    [payer, multisigAccount]
+  )
 
   return {
     address: multisigAccount.publicKey,
-    signature: 'multisig_created',
+    signature,
   }
-}
-
-/**
- * Create initialize multisig instruction
- */
-function createInitializeMultisigInstruction(
-  multisig: PublicKey,
-  signers: PublicKey[],
-  m: number
-): TransactionInstruction {
-  const keys = [
-    { pubkey: multisig, isSigner: false, isWritable: true },
-    ...signers.map(s => ({ pubkey: s, isSigner: false, isWritable: false })),
-  ]
-
-  // Instruction data: [2 (InitializeMultisig), m]
-  const data = Buffer.alloc(2)
-  data[0] = 2 // InitializeMultisig instruction
-  data[1] = m
-
-  return new TransactionInstruction({
-    keys,
-    programId: TOKEN_PROGRAM_ID,
-    data,
-  })
 }
 
 /**
@@ -202,8 +196,12 @@ export async function isMultisig(
     return false
   }
 
-  // Check if owned by token program and has correct size
-  if (!accountInfo.owner.equals(TOKEN_PROGRAM_ID)) {
+  // Check if owned by a token program (classic SPL or Token-2022) and has
+  // the correct size
+  if (
+    !accountInfo.owner.equals(TOKEN_PROGRAM_ID) &&
+    !accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)
+  ) {
     return false
   }
 

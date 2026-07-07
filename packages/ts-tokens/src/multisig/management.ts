@@ -12,19 +12,24 @@ import type {
   RemoveOwnerOptions,
   ChangeThresholdOptions,
   OnChainMultisig,
-  CreateMultisigOptions,
 } from './types'
-import { createConnection } from '../drivers/solana/connection'
 import { loadWallet } from '../drivers/solana/wallet'
-import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
 import { getMultisigAddress, MULTISIG_PROGRAM_ID } from './program'
-import {
-  createCreateMultisigInstruction,
-  createAddOwnerInstruction,
-  createRemoveOwnerInstruction,
-  createChangeThresholdInstruction,
-} from './instructions'
 import { validateMultisigConfig } from './create'
+
+/**
+ * The custom on-chain multisig program is a placeholder that has not been
+ * deployed. Any attempt to submit a transaction against MULTISIG_PROGRAM_ID
+ * would fail on-chain, so these entry points throw instead of sending a doomed
+ * transaction (which could still burn fees or return a misleading result).
+ */
+function programNotDeployedError(): Error {
+  return new Error(
+    `On-chain multisig program is not deployed (placeholder id ` +
+    `${MULTISIG_PROGRAM_ID.toBase58()}). This operation is unavailable until ` +
+    `the program is deployed; use SPL token multisig via createMultisig instead.`
+  )
+}
 
 /**
  * Create a new on-chain multisig account
@@ -33,144 +38,55 @@ export async function createOnChainMultisig(
   owners: PublicKey[],
   threshold: number,
   config: TokenConfig,
-  txOptions?: TransactionOptions
+  _txOptions?: TransactionOptions,
+  nonce: bigint = 0n
 ): Promise<MultisigResult> {
   const errors = validateMultisigConfig({ signers: owners, threshold })
   if (errors.length > 0) {
     throw new Error(`Invalid multisig config: ${errors.join(', ')}`)
   }
 
-  const connection = createConnection(config)
+  // Previously this always derived the PDA with a hardcoded nonce of 0, so a
+  // creator's second multisig collided with their first. The nonce is now a
+  // parameter; the derivation stays deterministic for a given (creator, nonce).
   const payer = loadWallet(config)
+  getMultisigAddress(payer.publicKey, nonce)
 
-  // Derive PDA using nonce 0 (first multisig for this creator)
-  const nonce = 0n
-  const multisigPda = getMultisigAddress(payer.publicKey, nonce)
-
-  const instruction = createCreateMultisigInstruction(
-    payer.publicKey,
-    multisigPda,
-    owners,
-    threshold
-  )
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    multisig: multisigPda.toBase58(),
-  }
+  // The custom multisig program is undeployed — refuse rather than sending.
+  throw programNotDeployedError()
 }
 
 /**
  * Add an owner to an existing multisig
  */
 export async function addOwner(
-  options: AddOwnerOptions,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _options: AddOwnerOptions,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<MultisigResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-
-  const instruction = createAddOwnerInstruction(
-    options.multisig,
-    payer.publicKey,
-    options.newOwner
-  )
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    multisig: options.multisig.toBase58(),
-  }
+  throw programNotDeployedError()
 }
 
 /**
  * Remove an owner from a multisig
  */
 export async function removeOwner(
-  options: RemoveOwnerOptions,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _options: RemoveOwnerOptions,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<MultisigResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-
-  const instruction = createRemoveOwnerInstruction(
-    options.multisig,
-    payer.publicKey,
-    options.ownerToRemove
-  )
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    multisig: options.multisig.toBase58(),
-  }
+  throw programNotDeployedError()
 }
 
 /**
  * Change the signature threshold of a multisig
  */
 export async function changeThreshold(
-  options: ChangeThresholdOptions,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _options: ChangeThresholdOptions,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<MultisigResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-
-  const instruction = createChangeThresholdInstruction(
-    options.multisig,
-    payer.publicKey,
-    options.newThreshold
-  )
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    multisig: options.multisig.toBase58(),
-  }
+  throw programNotDeployedError()
 }
 
 /**

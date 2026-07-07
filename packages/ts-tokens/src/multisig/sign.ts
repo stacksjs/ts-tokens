@@ -6,10 +6,6 @@ import type {
   Connection,
   PublicKey,
   TransactionInstruction} from '@solana/web3.js';
-import {
-  Keypair,
-  Transaction
-} from '@solana/web3.js'
 import type {
   MultisigTransaction,
   PendingSignature,
@@ -17,6 +13,14 @@ import type {
   ExecuteMultisigOptions,
 } from './types'
 import { getMultisig } from './create'
+
+/**
+ * Error thrown by the in-memory multisig flow: the custom on-chain multisig
+ * program it targets is not deployed, so signing/execution cannot happen here.
+ */
+const PROGRAM_NOT_DEPLOYED =
+  'On-chain multisig program is not deployed; use SPL token multisig via ' +
+  'createMultisig/setTokenAuthorityMultisig'
 
 // In-memory storage for pending transactions (in production, use database)
 const pendingTransactions = new Map<string, MultisigTransaction>()
@@ -57,7 +61,7 @@ export async function createMultisigTransaction(
  * Sign a multi-sig transaction
  */
 export async function signMultisigTransaction(
-  connection: Connection,
+  _connection: Connection,
   options: SignTransactionOptions
 ): Promise<{ signed: boolean; remainingSignatures: number }> {
   const { transactionId, signer } = options
@@ -83,19 +87,10 @@ export async function signMultisigTransaction(
     throw new Error('Already signed by this signer')
   }
 
-  // Add signature (simplified - in production would sign actual transaction)
-  const signature = Buffer.from(`sig_${signer.publicKey.toBase58().slice(0, 8)}`)
-  transaction.signatures.set(signer.publicKey.toBase58(), signature)
-
-  const multisigAccount = await getMultisig(connection, transaction.multisig)
-  const remainingSignatures = multisigAccount
-    ? multisigAccount.m - transaction.signatures.size
-    : 0
-
-  return {
-    signed: true,
-    remainingSignatures: Math.max(0, remainingSignatures),
-  }
+  // The underlying custom multisig program is undeployed, so there is nothing
+  // to accumulate a real ed25519 signature against. Refuse rather than storing
+  // a fabricated signature that would falsely count toward the threshold.
+  throw new Error(PROGRAM_NOT_DEPLOYED)
 }
 
 /**
@@ -123,20 +118,10 @@ export async function executeMultisigTransaction(
     throw new Error('Multisig account not found')
   }
 
-  // Check if enough signatures
-  if (transaction.signatures.size < multisigAccount.m) {
-    throw new Error(
-      `Not enough signatures: ${transaction.signatures.size}/${multisigAccount.m}`
-    )
-  }
-
-  // Mark as executed
-  transaction.executed = true
-
-  // In production, would actually execute the transaction
-  return {
-    signature: `executed_${transactionId}`,
-  }
+  // Since signMultisigTransaction never accumulates real signatures, there is
+  // nothing to submit. Refuse rather than marking the transaction executed and
+  // returning a fabricated signature.
+  throw new Error(PROGRAM_NOT_DEPLOYED)
 }
 
 /**

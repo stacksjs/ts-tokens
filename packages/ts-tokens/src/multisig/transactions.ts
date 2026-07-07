@@ -13,210 +13,77 @@ import type {
   OnChainTransaction,
   MultisigHistoryEntry,
 } from './types'
-import { createConnection } from '../drivers/solana/connection'
-import { loadWallet } from '../drivers/solana/wallet'
-import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
 import { getTransactionAddress, MULTISIG_PROGRAM_ID } from './program'
 import { getOnChainMultisig } from './management'
-import {
-  createProposeTransactionInstruction,
-  createApproveTransactionInstruction,
-  createRejectTransactionInstruction,
-  createExecuteTransactionInstruction,
-  createCancelTransactionInstruction,
-} from './instructions'
+
+/**
+ * The custom on-chain multisig program is a placeholder that has not been
+ * deployed. Submitting a transaction against MULTISIG_PROGRAM_ID would fail
+ * on-chain, so the propose/approve/reject/execute/cancel entry points throw
+ * rather than attempting a doomed send. The read helpers below still work: they
+ * only parse account data if any such account happens to exist.
+ */
+function programNotDeployedError(): Error {
+  return new Error(
+    `On-chain multisig program is not deployed (placeholder id ` +
+    `${MULTISIG_PROGRAM_ID.toBase58()}). This operation is unavailable until ` +
+    `the program is deployed; use SPL token multisig via createMultisig instead.`
+  )
+}
 
 /**
  * Propose a new multisig transaction
  */
 export async function proposeTransaction(
-  options: ProposeTransactionOptions,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _options: ProposeTransactionOptions,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<MultisigResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-
-  const multisigData = await getOnChainMultisig(connection, options.multisig)
-  if (!multisigData) {
-    throw new Error('Multisig account not found')
-  }
-
-  const txIndex = multisigData.transactionCount
-  const transactionPda = getTransactionAddress(options.multisig, txIndex)
-
-  const expiresAt = options.expiresIn
-    ? BigInt(Math.floor(Date.now() / 1000) + options.expiresIn)
-    : undefined
-
-  const instruction = createProposeTransactionInstruction(
-    payer.publicKey,
-    options.multisig,
-    transactionPda,
-    options.instructionData,
-    expiresAt
-  )
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    multisig: options.multisig.toBase58(),
-    transaction: transactionPda.toBase58(),
-  }
+  throw programNotDeployedError()
 }
 
 /**
  * Approve a multisig transaction
  */
 export async function approveTransaction(
-  options: TransactionActionOptions,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _options: TransactionActionOptions,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<MultisigResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-
-  const transactionPda = getTransactionAddress(options.multisig, options.transactionIndex)
-
-  const instruction = createApproveTransactionInstruction(
-    payer.publicKey,
-    options.multisig,
-    transactionPda
-  )
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    transaction: transactionPda.toBase58(),
-  }
+  throw programNotDeployedError()
 }
 
 /**
  * Reject a multisig transaction
  */
 export async function rejectTransaction(
-  options: TransactionActionOptions,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _options: TransactionActionOptions,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<MultisigResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-
-  const transactionPda = getTransactionAddress(options.multisig, options.transactionIndex)
-
-  const instruction = createRejectTransactionInstruction(
-    payer.publicKey,
-    options.multisig,
-    transactionPda
-  )
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    transaction: transactionPda.toBase58(),
-  }
+  throw programNotDeployedError()
 }
 
 /**
  * Execute an approved multisig transaction
  */
 export async function executeTransaction(
-  options: TransactionActionOptions,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _options: TransactionActionOptions,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<MultisigResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-
-  const transactionPda = getTransactionAddress(options.multisig, options.transactionIndex)
-
-  const instruction = createExecuteTransactionInstruction(
-    payer.publicKey,
-    options.multisig,
-    transactionPda
-  )
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    transaction: transactionPda.toBase58(),
-  }
+  throw programNotDeployedError()
 }
 
 /**
  * Cancel a pending multisig transaction (proposer only)
  */
 export async function cancelTransaction(
-  options: TransactionActionOptions,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _options: TransactionActionOptions,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<MultisigResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-
-  const transactionPda = getTransactionAddress(options.multisig, options.transactionIndex)
-
-  const instruction = createCancelTransactionInstruction(
-    payer.publicKey,
-    options.multisig,
-    transactionPda
-  )
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    transaction: transactionPda.toBase58(),
-  }
+  throw programNotDeployedError()
 }
 
 /**

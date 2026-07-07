@@ -4,6 +4,16 @@
 
 import type { Connection} from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js'
+import {
+  createTransferCheckedInstruction,
+  getAssociatedTokenAddress,
+  createAssociatedTokenAccountIdempotentInstruction,
+} from '@solana/spl-token'
+import type { TokenConfig } from '../types'
+import { createConnection } from '../drivers/solana/connection'
+import { loadWallet } from '../drivers/solana/wallet'
+import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { getMintWithProgram } from '../token/program'
 import type {
   DepositOptions,
   WithdrawalOptions,
@@ -13,38 +23,133 @@ import type {
 } from './types'
 
 /**
- * Deposit tokens to treasury
+ * Deposit tokens to a treasury.
+ *
+ * Performs a real SPL token transfer from the depositor's associated token
+ * account into the treasury's associated token account. The loaded wallet
+ * (from config) must be the owner of the source account and signs the transfer.
+ *
+ * @returns The confirmed transaction signature
  */
 export async function deposit(
-  _connection: Connection,
+  config: TokenConfig,
   options: DepositOptions
 ): Promise<string> {
   const { treasury, mint, amount, from } = options
 
-  // In production, would:
-  // 1. Get or create treasury token account
-  // 2. Transfer tokens from depositor
-  // 3. Record deposit
+  const connection = createConnection(config)
+  const payer = loadWallet(config)
 
-  return `deposit_${Date.now()}`
+  const { mint: mintInfo, programId } = await getMintWithProgram(connection, mint)
+
+  const sourceAta = await getAssociatedTokenAddress(mint, from, false, programId)
+  const treasuryAta = await getAssociatedTokenAddress(mint, treasury, true, programId)
+
+  // Idempotently ensure the treasury's token account exists, then transfer.
+  const instructions = [
+    createAssociatedTokenAccountIdempotentInstruction(
+      payer.publicKey,
+      treasuryAta,
+      treasury,
+      mint,
+      programId
+    ),
+    createTransferCheckedInstruction(
+      sourceAta,
+      mint,
+      treasuryAta,
+      from,
+      amount,
+      mintInfo.decimals,
+      [],
+      programId
+    ),
+  ]
+
+  const transaction = await buildTransaction(connection, instructions, payer.publicKey)
+  transaction.partialSign(payer)
+
+  const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(`Deposit failed: ${result.error ?? 'transaction not confirmed'}`)
+  }
+  return result.signature
 }
 
 /**
- * Withdraw tokens from treasury (requires governance approval)
+ * Withdraw tokens from a treasury.
+ *
+ * Performs a real SPL token transfer from the treasury's associated token
+ * account to the recipient. The loaded wallet (from config) must be the
+ * treasury authority and signs the transfer.
+ *
+ * A withdrawal must be authorised by an approved spending proposal. Because the
+ * governance program that stores proposal state is not deployed, the approval
+ * cannot be verified on-chain — so this refuses rather than moving funds on an
+ * unverifiable proposal.
+ *
+ * @returns The confirmed transaction signature
  */
 export async function withdraw(
-  _connection: Connection,
+  config: TokenConfig,
   options: WithdrawalOptions
 ): Promise<string> {
   const { treasury, mint, amount, to, proposalId } = options
 
-  // In production, would:
-  // 1. Verify proposal is approved
-  // 2. Check spending limits
-  // 3. Transfer tokens
-  // 4. Record withdrawal
+  const connection = createConnection(config)
 
-  return `withdrawal_${Date.now()}`
+  // A withdrawal is gated on an approved proposal. getSpendingProposal is a
+  // stub (governance program undeployed), so approval cannot be confirmed.
+  // Refuse rather than releasing funds against an unverifiable proposal.
+  const proposal = await getSpendingProposal(connection, proposalId)
+  if (!proposal) {
+    throw new Error(
+      `Cannot verify spending proposal ${proposalId.toBase58()}: the governance ` +
+      `program that stores proposal state is not deployed. Withdrawal refused.`
+    )
+  }
+  if (proposal.status !== 'approved') {
+    throw new Error(
+      `Spending proposal ${proposalId.toBase58()} is not approved ` +
+      `(status: ${proposal.status})`
+    )
+  }
+
+  const payer = loadWallet(config)
+
+  const { mint: mintInfo, programId } = await getMintWithProgram(connection, mint)
+
+  const treasuryAta = await getAssociatedTokenAddress(mint, treasury, true, programId)
+  const destAta = await getAssociatedTokenAddress(mint, to, false, programId)
+
+  const instructions = [
+    createAssociatedTokenAccountIdempotentInstruction(
+      payer.publicKey,
+      destAta,
+      to,
+      mint,
+      programId
+    ),
+    createTransferCheckedInstruction(
+      treasuryAta,
+      mint,
+      destAta,
+      payer.publicKey,
+      amount,
+      mintInfo.decimals,
+      [],
+      programId
+    ),
+  ]
+
+  const transaction = await buildTransaction(connection, instructions, payer.publicKey)
+  transaction.partialSign(payer)
+
+  const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(`Withdrawal failed: ${result.error ?? 'transaction not confirmed'}`)
+  }
+  return result.signature
 }
 
 /**
@@ -66,14 +171,20 @@ export async function createSpendingProposal(
 }
 
 /**
- * Execute approved spending proposal
+ * Execute approved spending proposal.
+ *
+ * Depends on the governance program (undeployed) to load and validate proposal
+ * state before releasing funds. Throws rather than returning a fabricated
+ * signature for a withdrawal that never happened.
  */
 export async function executeSpendingProposal(
   _connection: Connection,
-  _proposalId: PublicKey
+  proposalId: PublicKey
 ): Promise<string> {
-  // In production, would execute the withdrawal
-  return `executed_${Date.now()}`
+  throw new Error(
+    `executeSpendingProposal is not implemented: the governance program that ` +
+    `stores proposal ${proposalId.toBase58()} is not deployed.`
+  )
 }
 
 /**
@@ -117,10 +228,15 @@ export async function setSpendingLimits(
   _connection: Connection,
   _treasury: PublicKey,
   _authority: PublicKey,
-  limits: Omit<SpendingLimit, 'currentDailySpent' | 'currentWeeklySpent' | 'currentMonthlySpent'>
+  _limits: Omit<SpendingLimit, 'currentDailySpent' | 'currentWeeklySpent' | 'currentMonthlySpent'>
 ): Promise<string> {
-  // In production, would set spending limits
-  return `limits_set_${Date.now()}`
+  // Spending limits live in governance program state, which is not deployed.
+  // Throw rather than returning a fabricated signature that implies the limits
+  // were persisted on-chain.
+  throw new Error(
+    'setSpendingLimits is not implemented: the governance program that stores ' +
+    'spending limits is not deployed.'
+  )
 }
 
 /**
@@ -146,8 +262,16 @@ export async function checkWithdrawalLimits(
 ): Promise<{ allowed: boolean; reason?: string }> {
   const limits = await getSpendingLimits(connection, treasury, mint)
 
+  // getSpendingLimits is a stub (governance program undeployed) and always
+  // returns null, meaning the limits are unknown. Fail closed rather than
+  // silently allowing an unbounded withdrawal.
   if (!limits) {
-    return { allowed: true }
+    return {
+      allowed: false,
+      reason:
+        'Spending limits are unknown (governance program not deployed); ' +
+        'withdrawal cannot be authorised.',
+    }
   }
 
   if (limits.currentDailySpent + amount > limits.dailyLimit) {
@@ -202,7 +326,12 @@ export async function calculateTreasuryValue(
   let totalValue = 0
   for (const account of accounts) {
     const price = await getPriceUsd(account.mint)
-    totalValue += Number(account.balance) * price
+    // balance is in base units; convert to whole tokens using the mint's
+    // decimals before applying the USD price. Skipping this inflates the value
+    // by 10^decimals.
+    const { mint: mintInfo } = await getMintWithProgram(connection, account.mint)
+    const uiAmount = Number(account.balance) / 10 ** mintInfo.decimals
+    totalValue += uiAmount * price
   }
 
   return totalValue
