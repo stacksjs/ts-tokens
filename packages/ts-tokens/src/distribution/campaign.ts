@@ -104,9 +104,15 @@ export async function fundCampaign(
     }
   }
 
-  // Update campaign state
-  campaign.fundedLinks = (campaign.fundedLinks ?? 0) + funded
-  saveDistributionState(state)
+  // Re-load the state: fundClaimLink mutated and saved per-link status on its
+  // own copy, so saving our pre-loop snapshot here would revert those updates
+  // and leave links re-fundable.
+  const freshState = loadDistributionState()
+  const freshCampaign = freshState.campaigns[campaignId]
+  if (freshCampaign) {
+    freshCampaign.fundedLinks = (freshCampaign.fundedLinks ?? 0) + funded
+    saveDistributionState(freshState)
+  }
 
   return { funded, failed, signatures }
 }
