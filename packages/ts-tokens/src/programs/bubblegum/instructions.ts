@@ -38,7 +38,7 @@ const BURN_DISCRIMINATOR = Buffer.from([116, 110, 29, 56, 107, 219, 42, 93])
 const DECOMPRESS_V1_DISCRIMINATOR = Buffer.from([54, 85, 76, 70, 228, 250, 164, 81])
 const DELEGATE_DISCRIMINATOR = Buffer.from([90, 147, 75, 178, 85, 88, 4, 137])
 const REDEEM_DISCRIMINATOR = Buffer.from([184, 12, 86, 149, 70, 196, 97, 225])
-const CANCEL_REDEEM_DISCRIMINATOR = Buffer.from([111, 76, 232, 50, 39, 175, 48, 101])
+const CANCEL_REDEEM_DISCRIMINATOR = Buffer.from([111, 76, 232, 50, 39, 175, 48, 242])
 
 /**
  * Create a Merkle tree for compressed NFTs
