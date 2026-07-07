@@ -243,7 +243,7 @@ export async function devAirdrop(
  * @param options - `{ network, count, fund }`
  */
 export async function devRehearse(
-  options: { network?: SolanaNetwork; count?: number; fund?: number } = {}
+  options: { network?: SolanaNetwork; count?: number; fund?: number; keypair?: string } = {}
 ): Promise<void> {
   header('NFT Drop Dress Rehearsal')
 
@@ -256,9 +256,20 @@ export async function devRehearse(
     const { rehearseNftDrop, formatRehearsalReport } = await import('../../testing/rehearsal')
     const config = mergeConfig({ network })
 
+    // A pre-funded keypair lets the rehearsal run without the public faucet —
+    // the recommended path for a real launch dress rehearsal. When funded, the
+    // airdrop step is a no-op.
+    let wallet
+    if (options.keypair) {
+      const { loadKeypairFromFile } = await import('../../drivers/solana/wallet')
+      wallet = loadKeypairFromFile(options.keypair)
+      keyValue('Wallet', wallet.publicKey.toBase58())
+    }
+
     const report = await rehearseNftDrop(config, {
       count,
       fundSol: options.fund ?? 1,
+      wallet,
       logger: info,
     })
 

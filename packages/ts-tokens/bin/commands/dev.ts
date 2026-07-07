@@ -39,11 +39,13 @@ export function register(cli: any): void {
     .option('--network <network>', 'Cluster: devnet | testnet | localnet', { default: 'devnet' })
     .option('--count <count>', 'Number of NFTs to mint into the collection', { default: '3' })
     .option('--fund <sol>', 'SOL to airdrop to the rehearsal wallet', { default: '1' })
+    .option('--keypair <path>', 'Path to a funded keypair JSON (skips the faucet)')
     .action(async (options: any) => {
       await devRehearse({
         network: options.network,
         count: Number(options.count),
         fund: Number(options.fund),
+        keypair: options.keypair,
       })
     })
 }
