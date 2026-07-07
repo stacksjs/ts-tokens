@@ -31,7 +31,7 @@ enum MetadataInstruction {
   VerifyCollection = 18,
   UnverifyCollection = 22,
   SetAndVerifyCollection = 25,
-  VerifyCreator = 4,
+  SignMetadata = 7,
   BurnNft = 29,
   MintNewEditionFromMasterEditionViaToken = 11,
   VerifySizedCollectionItem = 30,
@@ -196,7 +196,7 @@ export function verifyCreator(
     { pubkey: creator, isSigner: true, isWritable: false },
   ]
 
-  const data = Buffer.from([MetadataInstruction.VerifyCreator])
+  const data = Buffer.from([MetadataInstruction.SignMetadata])
 
   return new TransactionInstruction({
     keys,
