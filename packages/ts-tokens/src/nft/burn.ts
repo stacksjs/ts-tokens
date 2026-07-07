@@ -135,26 +135,9 @@ export async function burnNFTFull(
 
   const instructions: TransactionInstruction[] = []
 
-  // 1. Burn the token
-  instructions.push(
-    createBurnInstruction(
-      ata,
-      mintPubkey,
-      payer.publicKey,
-      1n
-    )
-  )
-
-  // 2. Close the token account
-  instructions.push(
-    createCloseAccountInstruction(
-      ata,
-      payer.publicKey,
-      payer.publicKey
-    )
-  )
-
-  // 3. Burn NFT instruction (closes metadata and edition)
+  // BurnNft burns the token, closes the token account, and closes the
+  // metadata + edition accounts itself — it requires the token account to
+  // still hold the NFT, so no separate SPL burn/close instructions.
   // BurnNft instruction discriminator: 29
   const burnNftData = Buffer.alloc(1)
   burnNftData.writeUInt8(29, 0)
