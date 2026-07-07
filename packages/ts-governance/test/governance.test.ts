@@ -303,22 +303,45 @@ describe('getVotingTimeRemaining', () => {
 
 describe('treasuryActions', () => {
   test('transferSOL returns a ProposalAction with SystemProgram programId', () => {
+    const from = Keypair.generate().publicKey
     const recipient = Keypair.generate().publicKey
-    const action = treasuryActions.transferSOL(recipient, 1_000_000_000n)
+    const action = treasuryActions.transferSOL(from, recipient, 1_000_000_000n)
     expect(action.programId.equals(SystemProgram.programId)).toBe(true)
-    expect(action.accounts.length).toBeGreaterThan(0)
-    expect(action.accounts[0].pubkey.equals(recipient)).toBe(true)
+    expect(action.accounts.length).toBe(2)
+    expect(action.accounts[0].pubkey.equals(from)).toBe(true)
+    expect(action.accounts[0].isSigner).toBe(true)
+    expect(action.accounts[0].isWritable).toBe(true)
+    expect(action.accounts[1].pubkey.equals(recipient)).toBe(true)
+    expect(action.accounts[1].isWritable).toBe(true)
     expect(Buffer.isBuffer(action.data)).toBe(true)
   })
 
-  test('transferToken returns a ProposalAction with token program programId', () => {
-    const mint = Keypair.generate().publicKey
+  test('transferSOL encodes a 4-byte u32 LE index (2) followed by u64 LE lamports', () => {
+    const from = Keypair.generate().publicKey
     const recipient = Keypair.generate().publicKey
-    const action = treasuryActions.transferToken(mint, recipient, 500n)
+    const lamports = 1_234_567_890n
+    const action = treasuryActions.transferSOL(from, recipient, lamports)
+
+    expect(action.data.length).toBe(12)
+    expect(action.data.readUInt32LE(0)).toBe(2)
+    expect(action.data.readBigUInt64LE(4)).toBe(lamports)
+  })
+
+  test('transferToken uses source/dest token accounts and an owner signer', () => {
+    const source = Keypair.generate().publicKey
+    const dest = Keypair.generate().publicKey
+    const owner = Keypair.generate().publicKey
+    const action = treasuryActions.transferToken(source, dest, owner, 500n)
     expect(action.programId.toBase58()).toBe('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
-    expect(action.accounts.length).toBe(2)
-    expect(action.accounts[0].pubkey.equals(mint)).toBe(true)
-    expect(action.accounts[1].pubkey.equals(recipient)).toBe(true)
+    expect(action.accounts.length).toBe(3)
+    expect(action.accounts[0].pubkey.equals(source)).toBe(true)
+    expect(action.accounts[0].isWritable).toBe(true)
+    expect(action.accounts[1].pubkey.equals(dest)).toBe(true)
+    expect(action.accounts[1].isWritable).toBe(true)
+    expect(action.accounts[2].pubkey.equals(owner)).toBe(true)
+    expect(action.accounts[2].isSigner).toBe(true)
+    expect(action.data[0]).toBe(3)
+    expect(action.data.readBigUInt64LE(1)).toBe(500n)
   })
 })
 
@@ -327,26 +350,56 @@ describe('treasuryActions', () => {
 // ---------------------------------------------------------------------------
 
 describe('tokenActions', () => {
-  test('mint returns a ProposalAction with mint and recipient accounts', () => {
+  test('mint (MintTo) returns mint, destination token account, and authority signer', () => {
     const mint = Keypair.generate().publicKey
-    const recipient = Keypair.generate().publicKey
-    const action = tokenActions.mint(mint, recipient, 1000n)
+    const destination = Keypair.generate().publicKey
+    const authority = Keypair.generate().publicKey
+    const action = tokenActions.mint(mint, destination, authority, 1000n)
+    expect(action.programId.toBase58()).toBe('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+    expect(action.accounts.length).toBe(3)
+    expect(action.accounts[0].pubkey.equals(mint)).toBe(true)
+    expect(action.accounts[0].isWritable).toBe(true)
+    expect(action.accounts[1].pubkey.equals(destination)).toBe(true)
+    expect(action.accounts[1].isWritable).toBe(true)
+    expect(action.accounts[2].pubkey.equals(authority)).toBe(true)
+    expect(action.accounts[2].isSigner).toBe(true)
+    expect(action.data[0]).toBe(7)
+    expect(action.data.readBigUInt64LE(1)).toBe(1000n)
+  })
+
+  test('burn (Burn) returns token account, mint, and owner signer', () => {
+    const tokenAccount = Keypair.generate().publicKey
+    const mint = Keypair.generate().publicKey
+    const owner = Keypair.generate().publicKey
+    const action = tokenActions.burn(tokenAccount, mint, owner, 500n)
+    expect(action.programId.toBase58()).toBe('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+    expect(action.accounts.length).toBe(3)
+    expect(action.accounts[0].pubkey.equals(tokenAccount)).toBe(true)
+    expect(action.accounts[0].isWritable).toBe(true)
+    expect(action.accounts[1].pubkey.equals(mint)).toBe(true)
+    expect(action.accounts[1].isWritable).toBe(true)
+    expect(action.accounts[2].pubkey.equals(owner)).toBe(true)
+    expect(action.accounts[2].isSigner).toBe(true)
+    expect(action.data[0]).toBe(8)
+    expect(action.data.readBigUInt64LE(1)).toBe(500n)
+  })
+
+  test('transferAuthority (SetAuthority) encodes [6, 0, 1] + newAuthority bytes', () => {
+    const mint = Keypair.generate().publicKey
+    const currentAuthority = Keypair.generate().publicKey
+    const newAuthority = Keypair.generate().publicKey
+    const action = tokenActions.transferAuthority(mint, currentAuthority, newAuthority)
     expect(action.programId.toBase58()).toBe('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
     expect(action.accounts.length).toBe(2)
     expect(action.accounts[0].pubkey.equals(mint)).toBe(true)
     expect(action.accounts[0].isWritable).toBe(true)
-    expect(action.accounts[1].pubkey.equals(recipient)).toBe(true)
-    expect(action.accounts[1].isWritable).toBe(true)
-  })
-
-  test('burn returns a ProposalAction with only the mint account', () => {
-    const mint = Keypair.generate().publicKey
-    const action = tokenActions.burn(mint, 500n)
-    expect(action.programId.toBase58()).toBe('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
-    expect(action.accounts.length).toBe(1)
-    expect(action.accounts[0].pubkey.equals(mint)).toBe(true)
-    expect(action.accounts[0].isWritable).toBe(true)
-    expect(Buffer.isBuffer(action.data)).toBe(true)
+    expect(action.accounts[1].pubkey.equals(currentAuthority)).toBe(true)
+    expect(action.accounts[1].isSigner).toBe(true)
+    expect(action.data.length).toBe(3 + 32)
+    expect(action.data[0]).toBe(6)
+    expect(action.data[1]).toBe(0)
+    expect(action.data[2]).toBe(1)
+    expect(Buffer.from(action.data.subarray(3)).equals(newAuthority.toBuffer())).toBe(true)
   })
 })
 

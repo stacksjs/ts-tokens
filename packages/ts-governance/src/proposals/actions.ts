@@ -8,31 +8,50 @@ import { GOVERNANCE_PROGRAM_ID } from '../programs/program'
 
 const TOKEN_PROGRAM = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
 
+/**
+ * Encode a u64 as 8 little-endian bytes. Uses writeBigUInt64LE so the byte
+ * order is fixed regardless of host endianness (a raw BigUint64Array buffer is
+ * platform-endian-dependent and would corrupt the amount on big-endian hosts).
+ */
+function u64le(value: bigint): Buffer {
+  const buf = Buffer.alloc(8)
+  buf.writeBigUInt64LE(value)
+  return buf
+}
+
 export const treasuryActions: TreasuryActions = {
-  transferSOL: (recipient, amount) => ({
+  transferSOL: (from, recipient, amount) => ({
     programId: SystemProgram.programId,
     accounts: [
+      { pubkey: from, isSigner: true, isWritable: true },
       { pubkey: recipient, isSigner: false, isWritable: true },
     ],
-    data: Buffer.from([2, ...new Uint8Array(new BigUint64Array([amount]).buffer)]),
+    // System Program Transfer: 4-byte u32 LE instruction index (2) + u64 LE lamports.
+    data: Buffer.concat([Buffer.from([2, 0, 0, 0]), u64le(amount)]),
   }),
 
-  transferToken: (mint, recipient, amount) => ({
+  // source/destination are SPL token accounts (ATAs); owner signs for source.
+  transferToken: (source, destination, owner, amount) => ({
     programId: TOKEN_PROGRAM,
     accounts: [
-      { pubkey: mint, isSigner: false, isWritable: false },
-      { pubkey: recipient, isSigner: false, isWritable: true },
+      { pubkey: source, isSigner: false, isWritable: true },
+      { pubkey: destination, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: true, isWritable: false },
     ],
-    data: Buffer.from([3, ...new Uint8Array(new BigUint64Array([amount]).buffer)]),
+    // SPL Token Transfer (3) + u64 LE amount.
+    data: Buffer.concat([Buffer.from([3]), u64le(amount)]),
   }),
 
-  transferNFT: (mint, recipient) => ({
+  // source/destination are SPL token accounts (ATAs); owner signs for source.
+  transferNFT: (source, destination, owner) => ({
     programId: TOKEN_PROGRAM,
     accounts: [
-      { pubkey: mint, isSigner: false, isWritable: false },
-      { pubkey: recipient, isSigner: false, isWritable: true },
+      { pubkey: source, isSigner: false, isWritable: true },
+      { pubkey: destination, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: true, isWritable: false },
     ],
-    data: Buffer.from([3, 1, 0, 0, 0, 0, 0, 0, 0]),
+    // SPL Token Transfer (3) of exactly 1 token.
+    data: Buffer.concat([Buffer.from([3]), u64le(1n)]),
   }),
 }
 
@@ -57,29 +76,38 @@ export const governanceActions: GovernanceActions = {
 }
 
 export const tokenActions: TokenActions = {
-  mint: (mint, recipient, amount) => ({
+  // destination is the SPL token account (ATA) that receives minted tokens.
+  mint: (mint, destination, mintAuthority, amount) => ({
     programId: TOKEN_PROGRAM,
     accounts: [
       { pubkey: mint, isSigner: false, isWritable: true },
-      { pubkey: recipient, isSigner: false, isWritable: true },
+      { pubkey: destination, isSigner: false, isWritable: true },
+      { pubkey: mintAuthority, isSigner: true, isWritable: false },
     ],
-    data: Buffer.from([7, ...new Uint8Array(new BigUint64Array([amount]).buffer)]),
+    // SPL Token MintTo (7) + u64 LE amount.
+    data: Buffer.concat([Buffer.from([7]), u64le(amount)]),
   }),
 
-  burn: (mint, amount) => ({
+  // tokenAccount holds the tokens being burned; owner signs for it.
+  burn: (tokenAccount, mint, owner, amount) => ({
     programId: TOKEN_PROGRAM,
     accounts: [
+      { pubkey: tokenAccount, isSigner: false, isWritable: true },
       { pubkey: mint, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: true, isWritable: false },
     ],
-    data: Buffer.from([8, ...new Uint8Array(new BigUint64Array([amount]).buffer)]),
+    // SPL Token Burn (8) + u64 LE amount.
+    data: Buffer.concat([Buffer.from([8]), u64le(amount)]),
   }),
 
-  transferAuthority: (mint, newAuthority) => ({
+  transferAuthority: (mint, currentAuthority, newAuthority) => ({
     programId: TOKEN_PROGRAM,
     accounts: [
       { pubkey: mint, isSigner: false, isWritable: true },
-      { pubkey: newAuthority, isSigner: false, isWritable: false },
+      { pubkey: currentAuthority, isSigner: true, isWritable: false },
     ],
-    data: Buffer.from([6, 0]),
+    // SPL Token SetAuthority (6): [instruction, authorityType (0=MintTokens),
+    // newAuthority option (1=Some)] followed by the 32-byte new authority.
+    data: Buffer.concat([Buffer.from([6, 0, 1]), newAuthority.toBuffer()]),
   }),
 }

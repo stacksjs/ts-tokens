@@ -75,9 +75,24 @@ export interface ProposalStatusResult {
 // ---------------------------------------------------------------------------
 
 export interface TransferFromTreasuryInput {
+  /**
+   * The treasury source. For a SOL transfer this is the wallet debited (and
+   * signer). For a token transfer this is the *source token account* (ATA).
+   */
+  from: PublicKey
+  /**
+   * The recipient. For a SOL transfer this is the destination wallet. For a
+   * token transfer this is the *destination token account* (ATA).
+   */
   to: PublicKey
   amount: bigint | number
+  /**
+   * When set, builds an SPL token transfer instead of a SOL transfer. Ignored
+   * for the accounts (which are `from`/`to` token accounts); `owner` signs.
+   */
   token?: PublicKey
+  /** Owner authority that signs for the source token account (token transfers). */
+  owner?: PublicKey
 }
 
 // ---------------------------------------------------------------------------
@@ -121,8 +136,18 @@ export interface Votes {
   actions: {
     transferFromTreasury(input: TransferFromTreasuryInput): ProposalAction
     updateConfig(newConfig: Partial<DAOConfig>): ProposalAction
-    mintTokens(mint: PublicKey, recipient: PublicKey, amount: bigint): ProposalAction
-    burnTokens(mint: PublicKey, amount: bigint): ProposalAction
+    mintTokens(
+      mint: PublicKey,
+      destination: PublicKey,
+      mintAuthority: PublicKey,
+      amount: bigint
+    ): ProposalAction
+    burnTokens(
+      tokenAccount: PublicKey,
+      mint: PublicKey,
+      owner: PublicKey,
+      amount: bigint
+    ): ProposalAction
   }
 
   vote(proposal: PublicKey, voteType: VoteType): Promise<{ voteRecord: VoteRecord; signature: string }>

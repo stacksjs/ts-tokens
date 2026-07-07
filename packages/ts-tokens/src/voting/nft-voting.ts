@@ -27,10 +27,20 @@ export async function calculateNFTVotingPower(
     // Simple: 1 NFT = 1 vote
     totalPower = BigInt(nfts.length)
   } else if (config.traitWeights) {
-    // Trait-weighted: sum up trait values
+    // Trait-weighted: sum up trait values. calculateTraitWeight returns weights
+    // scaled by TRAIT_WEIGHT_SCALE (to preserve fractional weights as integers),
+    // so divide back out to land on a "Common NFT ≈ 1 vote" scale.
+    let scaledPower = 0n
     for (const nft of nfts) {
-      totalPower += calculateTraitWeight(nft.traits, config.traitWeights)
+      scaledPower += calculateTraitWeight(nft.traits, config.traitWeights)
     }
+    totalPower = scaledPower / TRAIT_WEIGHT_SCALE
+  } else {
+    // oneNftOneVote is false but no trait weights were supplied — there is no
+    // way to weight the vote, so this is a configuration error.
+    throw new Error(
+      'NFT voting config requires traitWeights when oneNftOneVote is false'
+    )
   }
 
   return {
@@ -54,20 +64,31 @@ async function getNFTsInCollection(
 }
 
 /**
- * Calculate trait weight for an NFT
+ * Fixed-point scale for trait weights. Weights are multiplied by this factor so
+ * fractional weights (e.g. 1.5x) survive as integers; callers divide the summed
+ * result back out by the same factor.
+ */
+const TRAIT_WEIGHT_SCALE = 100n
+
+/**
+ * Calculate trait weight for an NFT, scaled by TRAIT_WEIGHT_SCALE.
+ *
+ * The base weight is one full "vote" (TRAIT_WEIGHT_SCALE), and each matching
+ * trait adds its own scaled weight. Divide the result by TRAIT_WEIGHT_SCALE to
+ * get whole-vote power, so an NFT with no extra trait weights ≈ 1 vote.
  */
 function calculateTraitWeight(
   traits: Map<string, string>,
   weights: Map<string, Map<string, number>>
 ): bigint {
-  let totalWeight = 1n // Base weight
+  let totalWeight = TRAIT_WEIGHT_SCALE // Base weight of 1 vote, scaled.
 
   for (const [traitType, traitValue] of traits) {
     const traitWeights = weights.get(traitType)
     if (traitWeights) {
       const weight = traitWeights.get(traitValue)
       if (weight !== undefined) {
-        totalWeight += BigInt(Math.floor(weight * 100)) // Scale to avoid decimals
+        totalWeight += BigInt(Math.floor(weight * Number(TRAIT_WEIGHT_SCALE)))
       }
     }
   }
@@ -200,6 +221,7 @@ export function simulateTraitWeightedVoting(
 ): Array<{ nftIndex: number; weight: bigint }> {
   return nfts.map((nft, i) => ({
     nftIndex: i,
-    weight: calculateTraitWeight(nft.traits, weights),
+    // Divide out the fixed-point scale so weights are whole-vote units.
+    weight: calculateTraitWeight(nft.traits, weights) / TRAIT_WEIGHT_SCALE,
   }))
 }

@@ -5,7 +5,7 @@
  */
 
 import { describe, test, expect } from 'bun:test'
-import { Keypair } from '@solana/web3.js'
+import { Keypair, PublicKey } from '@solana/web3.js'
 import {
   calculateQuadraticPower,
   calculateVoteCost,
@@ -18,7 +18,13 @@ import {
 import {
   validateTokenWeightedVote,
   formatTokenWeightedPower,
+  createSnapshot,
 } from '../src/voting/token-weighted'
+import {
+  calculateNFTVotingPower,
+  createRarityWeights,
+  simulateTraitWeightedVoting,
+} from '../src/voting/nft-voting'
 import type { VotingPower } from '../src/voting/types'
 
 describe('calculateQuadraticPower', () => {
@@ -45,6 +51,36 @@ describe('calculateQuadraticPower', () => {
     expect(calculateQuadraticPower(2n)).toBe(1n)
     expect(calculateQuadraticPower(99n)).toBe(9n)
     expect(calculateQuadraticPower(101n)).toBe(10n)
+  })
+
+  test('should default to decimals=0 (raw units treated as whole tokens)', () => {
+    expect(calculateQuadraticPower(10000n)).toBe(100n)
+  })
+
+  test('should convert base units to whole tokens using decimals', () => {
+    // 100 tokens at 9 decimals = 100 * 10^9 base units → √100 = 10 votes,
+    // NOT √(100e9) which would be ~316,227.
+    const baseUnits = 100n * 10n ** 9n
+    expect(calculateQuadraticPower(baseUnits, 9)).toBe(10n)
+
+    // 10,000 tokens at 6 decimals → √10000 = 100 votes.
+    expect(calculateQuadraticPower(10000n * 10n ** 6n, 6)).toBe(100n)
+  })
+
+  test('should align with calculateVoteCost after decimals scaling', () => {
+    // A voter with 25 whole tokens (6 decimals) should get 5 votes, and 5 votes
+    // should cost 25 tokens.
+    const decimals = 6
+    const tokens = 25n
+    const baseUnits = tokens * 10n ** BigInt(decimals)
+    const votes = calculateQuadraticPower(baseUnits, decimals)
+    expect(votes).toBe(5n)
+    expect(calculateVoteCost(votes)).toBe(tokens)
+  })
+
+  test('should return 0 when balance is below one whole token', () => {
+    // 0.5 tokens at 9 decimals rounds down to 0 whole tokens.
+    expect(calculateQuadraticPower(5n * 10n ** 8n, 9)).toBe(0n)
   })
 })
 
@@ -170,6 +206,12 @@ describe('formatQuadraticPower', () => {
     const result = formatQuadraticPower(1000000000n)
     expect(result).toContain('Token Balance: 1')
   })
+
+  test('should not produce NaN% for a zero balance', () => {
+    const result = formatQuadraticPower(0n, 9)
+    expect(result).not.toContain('NaN')
+    expect(result).toContain('Effective Rate: 0.00%')
+  })
 })
 
 describe('validateTokenWeightedVote', () => {
@@ -252,5 +294,101 @@ describe('formatTokenWeightedPower', () => {
     const result = formatTokenWeightedPower(power)
     expect(result).toContain('Own: 1')
     expect(result).toContain('Total: 1')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// createSnapshot — owner aggregation
+// ---------------------------------------------------------------------------
+
+/**
+ * Build a 165-byte SPL token account buffer with the given mint, owner, and
+ * amount at their canonical offsets (0, 32, 64).
+ */
+function makeTokenAccountData(mint: PublicKey, owner: PublicKey, amount: bigint): Buffer {
+  const data = Buffer.alloc(165)
+  mint.toBuffer().copy(data, 0)
+  owner.toBuffer().copy(data, 32)
+  data.writeBigUInt64LE(amount, 64)
+  return data
+}
+
+describe('createSnapshot', () => {
+  test('aggregates balances by owner wallet and keys the map by wallet', async () => {
+    const mint = Keypair.generate().publicKey
+    const walletA = Keypair.generate().publicKey
+    const walletB = Keypair.generate().publicKey
+
+    // walletA holds two token accounts; walletB holds one.
+    const programAccounts = [
+      { account: { data: makeTokenAccountData(mint, walletA, 100n) } },
+      { account: { data: makeTokenAccountData(mint, walletA, 50n) } },
+      { account: { data: makeTokenAccountData(mint, walletB, 25n) } },
+    ]
+
+    const connection = {
+      getSlot: async () => 123,
+      getProgramAccounts: async () => programAccounts,
+      getTokenSupply: async () => ({ value: { amount: '175' } }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any
+
+    const snapshot = await createSnapshot(connection, Keypair.generate().publicKey, mint)
+
+    // Keyed by wallet, not token-account address, and balances summed.
+    expect(snapshot.holders.get(walletA.toBase58())).toBe(150n)
+    expect(snapshot.holders.get(walletB.toBase58())).toBe(25n)
+    expect(snapshot.totalSupply).toBe(175n)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// NFT trait-weighted voting
+// ---------------------------------------------------------------------------
+
+describe('calculateNFTVotingPower (trait-weighted)', () => {
+  test('a Common NFT yields ~1 vote (not ~100x inflated)', () => {
+    const weights = createRarityWeights()
+    const nfts = [{ traits: new Map([['Rarity', 'Common']]) }]
+    const result = simulateTraitWeightedVoting(nfts, weights)
+    // Base 1 + Common weight 1 = 2 votes on the whole-vote scale.
+    expect(result[0].weight).toBe(2n)
+  })
+
+  test('rarer NFTs scale up but stay on a sane whole-vote scale', () => {
+    const weights = createRarityWeights()
+    const nfts = [
+      { traits: new Map([['Rarity', 'Common']]) },
+      { traits: new Map([['Rarity', 'Legendary']]) },
+    ]
+    const result = simulateTraitWeightedVoting(nfts, weights)
+    // Common: base 1 + 1 = 2. Legendary: base 1 + 25 = 26.
+    expect(result[0].weight).toBe(2n)
+    expect(result[1].weight).toBe(26n)
+    // Not the pre-fix inflated values (would have been ~101 and ~2501).
+    expect(result[1].weight).toBeLessThan(100n)
+  })
+
+  test('supports fractional trait weights via the fixed-point scale', () => {
+    const weights = new Map([
+      ['Boost', new Map([['Half', 0.5]])],
+    ])
+    const nfts = [{ traits: new Map([['Boost', 'Half']]) }]
+    const result = simulateTraitWeightedVoting(nfts, weights)
+    // Base 100 + 50 = 150 scaled → 1 whole vote after integer division.
+    expect(result[0].weight).toBe(1n)
+  })
+
+  test('throws when oneNftOneVote is false and traitWeights is missing', async () => {
+    const collection = Keypair.generate().publicKey
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const connection = {} as any
+
+    await expect(
+      calculateNFTVotingPower(connection, Keypair.generate().publicKey, {
+        collection,
+        oneNftOneVote: false,
+      })
+    ).rejects.toThrow(/traitWeights/i)
   })
 })

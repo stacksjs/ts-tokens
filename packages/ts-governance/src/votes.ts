@@ -155,21 +155,34 @@ export function createVotes(config: VotesConfig): Votes {
           : input.amount
 
         if (input.token) {
-          return treasuryActions.transferToken(input.token, input.to, amount)
+          // For token transfers, `from`/`to` are the source/destination token
+          // accounts and `owner` (defaulting to the source) signs.
+          const owner = input.owner ?? input.from
+          return treasuryActions.transferToken(input.from, input.to, owner, amount)
         }
-        return treasuryActions.transferSOL(input.to, amount)
+        return treasuryActions.transferSOL(input.from, input.to, amount)
       },
 
       updateConfig(newConfig: Partial<DAOConfig>) {
         return governanceActions.updateConfig(newConfig)
       },
 
-      mintTokens(mint: PublicKey, recipient: PublicKey, amount: bigint) {
-        return tokenActions.mint(mint, recipient, amount)
+      mintTokens(
+        mint: PublicKey,
+        destination: PublicKey,
+        mintAuthority: PublicKey,
+        amount: bigint
+      ) {
+        return tokenActions.mint(mint, destination, mintAuthority, amount)
       },
 
-      burnTokens(mint: PublicKey, amount: bigint) {
-        return tokenActions.burn(mint, amount)
+      burnTokens(
+        tokenAccount: PublicKey,
+        mint: PublicKey,
+        owner: PublicKey,
+        amount: bigint
+      ) {
+        return tokenActions.burn(tokenAccount, mint, owner, amount)
       },
     },
 

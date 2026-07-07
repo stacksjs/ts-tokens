@@ -308,39 +308,51 @@ describe('votes.proposal.status', () => {
 describe('votes.actions.transferFromTreasury', () => {
   test('dispatches to SOL transfer when no token specified', () => {
     const votes = createVotes(makeConfig())
+    const from = Keypair.generate().publicKey
     const to = Keypair.generate().publicKey
 
     const action = votes.actions.transferFromTreasury({
+      from,
       to,
       amount: 1_000_000_000n,
     })
 
     expect(action.programId.equals(SystemProgram.programId)).toBe(true)
-    expect(action.accounts[0].pubkey.equals(to)).toBe(true)
+    // [from (signer), to]
+    expect(action.accounts[0].pubkey.equals(from)).toBe(true)
+    expect(action.accounts[0].isSigner).toBe(true)
+    expect(action.accounts[1].pubkey.equals(to)).toBe(true)
   })
 
   test('dispatches to token transfer when token specified', () => {
     const votes = createVotes(makeConfig())
+    const from = Keypair.generate().publicKey
     const to = Keypair.generate().publicKey
     const token = Keypair.generate().publicKey
 
     const action = votes.actions.transferFromTreasury({
+      from,
       to,
       amount: 500n,
       token,
     })
 
     expect(action.programId.toBase58()).toBe('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
-    expect(action.accounts[0].pubkey.equals(token)).toBe(true)
+    // source token account, dest token account, owner (defaults to `from`)
+    expect(action.accounts[0].pubkey.equals(from)).toBe(true)
     expect(action.accounts[1].pubkey.equals(to)).toBe(true)
+    expect(action.accounts[2].pubkey.equals(from)).toBe(true)
+    expect(action.accounts[2].isSigner).toBe(true)
   })
 
   test('converts number amount to bigint', () => {
     const votes = createVotes(makeConfig())
+    const from = Keypair.generate().publicKey
     const to = Keypair.generate().publicKey
 
     // Should not throw — number gets converted to bigint
     const action = votes.actions.transferFromTreasury({
+      from,
       to,
       amount: 1000,
     })
@@ -590,20 +602,28 @@ describe('votes.actions', () => {
   test('mintTokens creates a ProposalAction', () => {
     const votes = createVotes(makeConfig())
     const mint = Keypair.generate().publicKey
-    const recipient = Keypair.generate().publicKey
+    const destination = Keypair.generate().publicKey
+    const authority = Keypair.generate().publicKey
 
-    const action = votes.actions.mintTokens(mint, recipient, 1000n)
-    expect(action.accounts.length).toBe(2)
+    const action = votes.actions.mintTokens(mint, destination, authority, 1000n)
+    expect(action.accounts.length).toBe(3)
     expect(action.accounts[0].pubkey.equals(mint)).toBe(true)
-    expect(action.accounts[1].pubkey.equals(recipient)).toBe(true)
+    expect(action.accounts[1].pubkey.equals(destination)).toBe(true)
+    expect(action.accounts[2].pubkey.equals(authority)).toBe(true)
+    expect(action.accounts[2].isSigner).toBe(true)
   })
 
   test('burnTokens creates a ProposalAction', () => {
     const votes = createVotes(makeConfig())
+    const tokenAccount = Keypair.generate().publicKey
     const mint = Keypair.generate().publicKey
+    const owner = Keypair.generate().publicKey
 
-    const action = votes.actions.burnTokens(mint, 500n)
-    expect(action.accounts.length).toBe(1)
-    expect(action.accounts[0].pubkey.equals(mint)).toBe(true)
+    const action = votes.actions.burnTokens(tokenAccount, mint, owner, 500n)
+    expect(action.accounts.length).toBe(3)
+    expect(action.accounts[0].pubkey.equals(tokenAccount)).toBe(true)
+    expect(action.accounts[1].pubkey.equals(mint)).toBe(true)
+    expect(action.accounts[2].pubkey.equals(owner)).toBe(true)
+    expect(action.accounts[2].isSigner).toBe(true)
   })
 })

@@ -4,7 +4,8 @@
  * 1 token = 1 vote
  */
 
-import type { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection } from '@solana/web3.js'
+import { PublicKey } from '@solana/web3.js'
 import type {
   VotingPower,
   TokenWeightedConfig,
@@ -47,8 +48,15 @@ export async function calculateTokenWeightedPower(
   }
 }
 
+// SPL Token program id (owns standard token accounts).
+const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+
 /**
  * Create voting snapshot
+ *
+ * Enumerates *every* token account for the mint (not just the largest 20) and
+ * aggregates balances by owner wallet, so the resulting map is keyed by wallet
+ * address — matching how calculateTokenWeightedPower looks holders up.
  */
 export async function createSnapshot(
   connection: Connection,
@@ -57,12 +65,26 @@ export async function createSnapshot(
 ): Promise<VotingSnapshot> {
   const slot = await connection.getSlot()
 
-  // Get all token holders
-  const accounts = await connection.getTokenLargestAccounts(token)
+  // Enumerate all SPL token accounts for this mint. A standard token account is
+  // exactly 165 bytes and stores the mint at offset 0.
+  const accounts = await connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
+    filters: [
+      { dataSize: 165 },
+      { memcmp: { offset: 0, bytes: token.toBase58() } },
+    ],
+  })
+
+  // Aggregate balances by owner wallet. Token account layout:
+  //   offset 0:  mint      (32 bytes)
+  //   offset 32: owner     (32 bytes)
+  //   offset 64: amount    (u64 little-endian)
   const holders = new Map<string, bigint>()
 
-  for (const account of accounts.value) {
-    holders.set(account.address.toBase58(), BigInt(account.amount))
+  for (const { account } of accounts) {
+    const data = account.data
+    const owner = new PublicKey(data.subarray(32, 64)).toBase58()
+    const amount = data.readBigUInt64LE(64)
+    holders.set(owner, (holders.get(owner) ?? 0n) + amount)
   }
 
   // Get total supply
@@ -83,14 +105,17 @@ export async function createSnapshot(
  */
 export async function checkDoubleVoting(
   _connection: Connection,
-  voter: PublicKey,
+  _voter: PublicKey,
   _proposal: PublicKey,
-  snapshot: VotingSnapshot
+  _snapshot: VotingSnapshot
 ): Promise<{ hasVoted: boolean; transferred: boolean }> {
-  // In production, would:
-  // 1. Check if voter has already voted
-  // 2. Check if tokens were transferred after snapshot
-
+  // TODO: implement double-voting detection. This requires on-chain state that
+  // is not available client-side without a deployed governance program:
+  //   1. Read the voter's vote-record PDA to see if they already voted.
+  //   2. Compare the voter's current balance against the snapshot balance to
+  //      detect tokens transferred after the snapshot slot.
+  // Until that program exists, this conservatively reports "not voted" rather
+  // than falsely blocking a legitimate voter.
   return {
     hasVoted: false,
     transferred: false,

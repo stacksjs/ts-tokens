@@ -134,11 +134,32 @@ export interface ExecuteProposalOptions {
 
 /**
  * Treasury action builders
+ *
+ * Token transfers operate on SPL token *accounts*, not wallets. Callers must
+ * pass the source/destination associated token accounts (ATAs) and the owner
+ * authorized to move the tokens.
  */
 export interface TreasuryActions {
-  transferSOL: (recipient: PublicKey, amount: bigint) => ProposalAction
-  transferToken: (mint: PublicKey, recipient: PublicKey, amount: bigint) => ProposalAction
-  transferNFT: (mint: PublicKey, recipient: PublicKey) => ProposalAction
+  /**
+   * System Program transfer of lamports from `from` (the treasury/source, which
+   * signs and is debited) to `recipient`.
+   */
+  transferSOL: (from: PublicKey, recipient: PublicKey, amount: bigint) => ProposalAction
+  /**
+   * SPL Token transfer. `source` and `destination` are token accounts (ATAs),
+   * and `owner` is the authority that signs for the source account.
+   */
+  transferToken: (
+    source: PublicKey,
+    destination: PublicKey,
+    owner: PublicKey,
+    amount: bigint
+  ) => ProposalAction
+  /**
+   * SPL Token transfer of a single NFT (amount = 1). `source`/`destination` are
+   * token accounts and `owner` signs for the source account.
+   */
+  transferNFT: (source: PublicKey, destination: PublicKey, owner: PublicKey) => ProposalAction
 }
 
 /**
@@ -154,9 +175,35 @@ export interface GovernanceActions {
  * Token action builders
  */
 export interface TokenActions {
-  mint: (mint: PublicKey, recipient: PublicKey, amount: bigint) => ProposalAction
-  burn: (mint: PublicKey, amount: bigint) => ProposalAction
-  transferAuthority: (mint: PublicKey, newAuthority: PublicKey) => ProposalAction
+  /**
+   * SPL Token MintTo. `destination` is the token account (ATA) that receives
+   * the minted tokens and `mintAuthority` signs.
+   */
+  mint: (
+    mint: PublicKey,
+    destination: PublicKey,
+    mintAuthority: PublicKey,
+    amount: bigint
+  ) => ProposalAction
+  /**
+   * SPL Token Burn. `tokenAccount` holds the tokens being burned and `owner`
+   * signs for it.
+   */
+  burn: (
+    tokenAccount: PublicKey,
+    mint: PublicKey,
+    owner: PublicKey,
+    amount: bigint
+  ) => ProposalAction
+  /**
+   * SPL Token SetAuthority for a mint's MintTokens authority. `currentAuthority`
+   * signs; `newAuthority` becomes the new mint authority.
+   */
+  transferAuthority: (
+    mint: PublicKey,
+    currentAuthority: PublicKey,
+    newAuthority: PublicKey
+  ) => ProposalAction
 }
 
 /**

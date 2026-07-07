@@ -12,22 +12,35 @@ import type {
 } from './types'
 
 /**
- * Calculate quadratic voting power
- * Vote weight = √(token balance)
+ * Integer square root using Newton's method.
  */
-export function calculateQuadraticPower(tokenBalance: bigint): bigint {
-  if (tokenBalance <= 0n) return 0n
+function isqrt(value: bigint): bigint {
+  if (value <= 0n) return 0n
 
-  // Integer square root using Newton's method
-  let x = tokenBalance
+  let x = value
   let y = (x + 1n) / 2n
 
   while (y < x) {
     x = y
-    y = (x + tokenBalance / x) / 2n
+    y = (x + value / x) / 2n
   }
 
   return x
+}
+
+/**
+ * Calculate quadratic voting power
+ * Vote weight = √(tokens), where `tokenBalance` is in raw base units and
+ * `decimals` converts it to whole tokens first. This keeps voting power on the
+ * same scale as calculateVoteCost / calculateTokensNeeded (which are costed in
+ * whole tokens). Without the conversion, √(base units) inflates power by
+ * 10^(decimals/2).
+ */
+export function calculateQuadraticPower(tokenBalance: bigint, decimals: number = 0): bigint {
+  if (tokenBalance <= 0n) return 0n
+
+  const wholeTokens = tokenBalance / (10n ** BigInt(decimals))
+  return isqrt(wholeTokens)
 }
 
 /**
@@ -49,7 +62,7 @@ export async function getQuadraticVotingPower(
     totalBalance += 0n
   }
 
-  const quadraticPower = calculateQuadraticPower(totalBalance)
+  const quadraticPower = calculateQuadraticPower(totalBalance, config.decimals ?? 0)
 
   // Apply max votes limit if configured
   let finalPower = quadraticPower
@@ -164,11 +177,17 @@ export function formatQuadraticPower(
   decimals: number = 9
 ): string {
   const tokens = Number(tokenBalance) / Math.pow(10, decimals)
-  const votes = calculateQuadraticPower(tokenBalance)
+  // Vote power is computed on the whole-token scale so it matches the displayed
+  // balance (and calculateVoteCost).
+  const votes = calculateQuadraticPower(tokenBalance, decimals)
+
+  // Guard against divide-by-zero: a zero (or sub-1-token) balance has no
+  // meaningful effective rate rather than NaN%.
+  const effectiveRate = tokens > 0 ? (Number(votes) / tokens) * 100 : 0
 
   return [
     `Token Balance: ${tokens.toLocaleString()}`,
     `Voting Power: ${votes.toString()}`,
-    `Effective Rate: ${(Number(votes) / tokens * 100).toFixed(2)}%`,
+    `Effective Rate: ${effectiveRate.toFixed(2)}%`,
   ].join('\n')
 }

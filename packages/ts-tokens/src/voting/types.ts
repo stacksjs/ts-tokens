@@ -70,6 +70,8 @@ export interface TokenWeightedConfig {
  */
 export interface QuadraticVotingConfig {
   token: PublicKey
+  /** Token mint decimals, used to convert raw base units to whole tokens. */
+  decimals?: number
   maxVotesPerVoter?: bigint
   costPerVote?: bigint
 }
