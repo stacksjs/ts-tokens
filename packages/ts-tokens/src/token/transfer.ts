@@ -9,7 +9,7 @@ import {
   createTransferInstruction,
   createTransferCheckedInstruction,
   getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   getAccount,
   getMint,
   TOKEN_PROGRAM_ID,
@@ -64,22 +64,22 @@ export async function transferTokens(
 
   const instructions = []
 
-  // Check if destination ATA exists
-  try {
-    await getAccount(connection, destAta, undefined, programId)
-  } catch {
-    // Create destination ATA
-    if (config.autoCreateAccounts) {
-      instructions.push(
-        createAssociatedTokenAccountInstruction(
-          payer.publicKey,
-          destAta,
-          to,
-          mint,
-          programId
-        )
+  if (config.autoCreateAccounts) {
+    // Idempotent create avoids the check-then-create race: it is a no-op
+    // when the ATA already exists
+    instructions.push(
+      createAssociatedTokenAccountIdempotentInstruction(
+        payer.publicKey,
+        destAta,
+        to,
+        mint,
+        programId
       )
-    } else {
+    )
+  } else {
+    try {
+      await getAccount(connection, destAta, undefined, programId)
+    } catch {
       throw new Error(
         `Destination token account ${destAta.toBase58()} does not exist. ` +
         `Set autoCreateAccounts: true in config to create it automatically.`
@@ -146,17 +146,18 @@ export async function transferTokensToMany(
 
   const instructions = []
 
+  const createdAtas = new Set<string>()
+
   for (const recipient of recipients) {
     const to = new PublicKey(recipient.address)
     const destAta = await getAssociatedTokenAddress(mintPubkey, to, false, programId)
 
-    // Check if destination ATA exists
-    try {
-      await getAccount(connection, destAta, undefined, programId)
-    } catch {
-      // Create destination ATA
+    // Idempotent create is a no-op when the ATA exists; dedupe so duplicate
+    // recipients don't add redundant instructions
+    if (!createdAtas.has(destAta.toBase58())) {
+      createdAtas.add(destAta.toBase58())
       instructions.push(
-        createAssociatedTokenAccountInstruction(
+        createAssociatedTokenAccountIdempotentInstruction(
           payer.publicKey,
           destAta,
           to,

@@ -8,6 +8,7 @@ import { Connection, PublicKey } from '@solana/web3.js'
 import {
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   getAccount,
   getMint,
   createCloseAccountInstruction,
@@ -59,8 +60,9 @@ export async function getOrCreateAssociatedTokenAccount(
     await getAccount(connection, ata, undefined, programId)
     return { address: ata.toBase58(), created: false }
   } catch {
-    // Create the account
-    const instruction = createAssociatedTokenAccountInstruction(
+    // Create the account — idempotent so a concurrent creation between the
+    // check above and the transaction landing doesn't fail the transaction
+    const instruction = createAssociatedTokenAccountIdempotentInstruction(
       payer.publicKey,
       ata,
       ownerPubkey,

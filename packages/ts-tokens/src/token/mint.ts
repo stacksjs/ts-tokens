@@ -8,7 +8,7 @@ import { Connection, PublicKey } from '@solana/web3.js'
 import {
   createMintToInstruction,
   getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   getAccount,
   TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
@@ -60,22 +60,22 @@ export async function mintTokens(
 
   const instructions = []
 
-  // Check if ATA exists
-  try {
-    await getAccount(connection, ata, undefined, programId)
-  } catch {
-    // ATA doesn't exist, create it
-    if (config.autoCreateAccounts) {
-      instructions.push(
-        createAssociatedTokenAccountInstruction(
-          payer.publicKey,
-          ata,
-          destination,
-          mint,
-          programId
-        )
+  if (config.autoCreateAccounts) {
+    // Idempotent create avoids the check-then-create race: it is a no-op
+    // when the ATA already exists
+    instructions.push(
+      createAssociatedTokenAccountIdempotentInstruction(
+        payer.publicKey,
+        ata,
+        destination,
+        mint,
+        programId
       )
-    } else {
+    )
+  } else {
+    try {
+      await getAccount(connection, ata, undefined, programId)
+    } catch {
       throw new Error(
         `Associated token account ${ata.toBase58()} does not exist. ` +
         `Set autoCreateAccounts: true in config to create it automatically.`
@@ -133,18 +133,18 @@ export async function mintTokensToMany(
     : TOKEN_PROGRAM_ID
 
   const instructions = []
+  const createdAtas = new Set<string>()
 
   for (const recipient of recipients) {
     const destination = new PublicKey(recipient.address)
     const ata = await getAssociatedTokenAddress(mintPubkey, destination, false, programId)
 
-    // Check if ATA exists
-    try {
-      await getAccount(connection, ata, undefined, programId)
-    } catch {
-      // Create ATA
+    // Idempotent create is a no-op when the ATA exists; dedupe so duplicate
+    // recipients don't add redundant instructions
+    if (!createdAtas.has(ata.toBase58())) {
+      createdAtas.add(ata.toBase58())
       instructions.push(
-        createAssociatedTokenAccountInstruction(
+        createAssociatedTokenAccountIdempotentInstruction(
           payer.publicKey,
           ata,
           destination,
