@@ -149,6 +149,9 @@ export class MemoryCache<T = unknown> {
 export class AccountCache {
   private cache: MemoryCache
 
+  // Token account address → mint, so invalidateMint can find token entries
+  private tokenMints = new Map<string, string>()
+
   // TTLs for different account types (in ms)
   private ttls = {
     mint: 60000, // 1 minute
@@ -175,9 +178,14 @@ export class AccountCache {
 
   /**
    * Cache a token account
+   *
+   * Pass the account's mint so invalidateMint can evict it.
    */
-  setTokenAccount(address: string, data: unknown): void {
+  setTokenAccount(address: string, data: unknown, mint?: string): void {
     this.cache.set(`token:${address}`, data, this.ttls.tokenAccount)
+    if (mint) {
+      this.tokenMints.set(address, mint)
+    }
   }
 
   getTokenAccount(address: string): unknown | null {
@@ -212,7 +220,13 @@ export class AccountCache {
   invalidateMint(mint: string): void {
     this.cache.delete(`mint:${mint}`)
     this.cache.delete(`metadata:${mint}`)
-    this.cache.invalidatePattern(new RegExp(`token:.*${mint}`))
+    // Token account addresses don't embed the mint, so use the index
+    for (const [address, tokenMint] of this.tokenMints) {
+      if (tokenMint === mint) {
+        this.cache.delete(`token:${address}`)
+        this.tokenMints.delete(address)
+      }
+    }
   }
 
   /**
@@ -220,6 +234,7 @@ export class AccountCache {
    */
   clear(): void {
     this.cache.clear()
+    this.tokenMints.clear()
   }
 }
 
