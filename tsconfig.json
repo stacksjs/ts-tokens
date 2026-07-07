@@ -32,6 +32,7 @@
   },
   "exclude": [
     "node_modules",
+    "pantry",
     "**/dist",
     "buddy-bot.config.ts",
     "docs",
