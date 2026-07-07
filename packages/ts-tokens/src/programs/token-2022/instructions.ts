@@ -275,10 +275,11 @@ export function setTransferFee(options: {
     { pubkey: options.authority, isSigner: true, isWritable: false },
   ]
 
-  const data = Buffer.alloc(11)
-  data[0] = 27 // SetTransferFee instruction
-  data.writeUInt16LE(options.transferFeeBasisPoints, 1)
-  data.writeBigUInt64LE(options.maximumFee, 3)
+  const data = Buffer.alloc(12)
+  data[0] = 26 // TransferFeeExtension instruction
+  data[1] = 5 // SetTransferFee sub-instruction
+  data.writeUInt16LE(options.transferFeeBasisPoints, 2)
+  data.writeBigUInt64LE(options.maximumFee, 4)
 
   return new TransactionInstruction({
     keys,
@@ -303,9 +304,10 @@ export function withdrawWithheldTokensFromAccounts(options: {
     ...options.sources.map(s => ({ pubkey: s, isSigner: false, isWritable: true })),
   ]
 
-  const data = Buffer.alloc(2)
-  data[0] = 29 // WithdrawWithheldTokensFromAccounts instruction
-  data[1] = options.sources.length
+  const data = Buffer.alloc(3)
+  data[0] = 26 // TransferFeeExtension instruction
+  data[1] = 3 // WithdrawWithheldTokensFromAccounts sub-instruction
+  data[2] = options.sources.length
 
   return new TransactionInstruction({
     keys,
@@ -327,9 +329,10 @@ export function updateRateInterestBearingMint(options: {
     { pubkey: options.rateAuthority, isSigner: true, isWritable: false },
   ]
 
-  const data = Buffer.alloc(3)
-  data[0] = 34 // UpdateRateInterestBearingMint instruction
-  data.writeInt16LE(options.rate, 1)
+  const data = Buffer.alloc(4)
+  data[0] = 33 // InterestBearingMintExtension instruction
+  data[1] = 1 // UpdateRate sub-instruction
+  data.writeInt16LE(options.rate, 2)
 
   return new TransactionInstruction({
     keys,
@@ -394,11 +397,12 @@ export function uiAmountToAmount(options: {
     { pubkey: options.mint, isSigner: false, isWritable: false },
   ]
 
+  // The program parses all remaining instruction bytes as the UTF-8 string —
+  // a NUL terminator would make the f64 parse fail
   const uiAmountBytes = Buffer.from(options.uiAmount, 'utf-8')
-  const data = Buffer.alloc(1 + uiAmountBytes.length + 1) // opcode + string + null terminator
+  const data = Buffer.alloc(1 + uiAmountBytes.length)
   data[0] = 24 // UiAmountToAmount instruction
   uiAmountBytes.copy(data, 1)
-  data[1 + uiAmountBytes.length] = 0 // null terminator
 
   return new TransactionInstruction({
     keys,
