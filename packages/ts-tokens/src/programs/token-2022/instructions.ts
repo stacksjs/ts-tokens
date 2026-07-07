@@ -317,6 +317,32 @@ export function withdrawWithheldTokensFromAccounts(options: {
 }
 
 /**
+ * Withdraw withheld tokens accumulated on the mint (via harvest) to a
+ * destination account
+ */
+export function withdrawWithheldTokensFromMint(options: {
+  mint: PublicKey
+  destination: PublicKey
+  authority: PublicKey
+}): TransactionInstruction {
+  const keys = [
+    { pubkey: options.mint, isSigner: false, isWritable: true },
+    { pubkey: options.destination, isSigner: false, isWritable: true },
+    { pubkey: options.authority, isSigner: true, isWritable: false },
+  ]
+
+  const data = Buffer.alloc(2)
+  data[0] = 26 // TransferFeeExtension instruction
+  data[1] = 2 // WithdrawWithheldTokensFromMint sub-instruction
+
+  return new TransactionInstruction({
+    keys,
+    programId: TOKEN_2022_PROGRAM_ID,
+    data,
+  })
+}
+
+/**
  * Update interest rate
  */
 export function updateRateInterestBearingMint(options: {

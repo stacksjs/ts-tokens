@@ -10,7 +10,7 @@ import type { TokenConfig } from '../types'
 import { createConnection } from '../drivers/solana/connection'
 import { loadWallet } from '../drivers/solana/wallet'
 import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
-import { harvestWithheldTokensToMint, withdrawWithheldTokensFromAccounts } from '../programs/token-2022/instructions'
+import { harvestWithheldTokensToMint, withdrawWithheldTokensFromMint } from '../programs/token-2022/instructions'
 
 /**
  * Harvest result
@@ -32,9 +32,11 @@ export async function findAccountsWithWithheldFees(
   const connection = createConnection(config)
   const mintPubkey = new PublicKey(mint)
 
+  // Token accounts of a transfer-fee mint always carry the TransferFeeAmount
+  // extension, so they are larger than the legacy 165-byte layout — filtering
+  // on dataSize 165 would match nothing. Match only on the mint at offset 0.
   const accounts = await connection.getProgramAccounts(TOKEN_2022_PROGRAM_ID, {
     filters: [
-      { dataSize: 165 },
       { memcmp: { offset: 0, bytes: mint } },
     ],
   })
@@ -109,11 +111,11 @@ export async function harvestTransferFees(
       : undefined
 
     if (destination) {
-      const withdrawInstruction = withdrawWithheldTokensFromAccounts({
+      // Fees were harvested to the mint above, so withdraw from the mint
+      const withdrawInstruction = withdrawWithheldTokensFromMint({
         mint: mintPubkey,
         destination,
         authority: payer.publicKey,
-        sources: [],
       })
 
       const withdrawTx = await buildTransaction(
