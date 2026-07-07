@@ -10,12 +10,14 @@ import {
   getAccount,
   getAssociatedTokenAddress,
   getMint,
+  unpackAccount,
   TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token'
 import type { Account as TokenAccount } from '@solana/spl-token'
 import type { TokenConfig, TokenAccountInfo } from '../../types'
 import { retry } from '../../utils'
+import { getMintWithProgram } from '../../token/program'
 
 /**
  * Get account info for any account
@@ -118,11 +120,21 @@ export async function getTokenBalance(
   const ownerPubkey = new PublicKey(owner)
   const mintPubkey = new PublicKey(mint)
 
-  // Try to get the associated token account
-  const ata = await getAssociatedTokenAddress(mintPubkey, ownerPubkey)
+  // Determine which token program owns the mint so we derive the correct ATA
+  // and parse the account with the right program. Deriving with the classic
+  // token defaults reads Token-2022 balances as 0.
+  let programId: PublicKey
+  try {
+    programId = (await getMintWithProgram(connection, mintPubkey)).programId
+  } catch {
+    // Mint doesn't exist (or can't be read) — treat balance as 0.
+    return 0n
+  }
+
+  const ata = await getAssociatedTokenAddress(mintPubkey, ownerPubkey, false, programId)
 
   try {
-    const account = await getAccount(connection, ata)
+    const account = await getAccount(connection, ata, undefined, programId)
     return account.amount
   } catch {
     // Account doesn't exist, balance is 0
@@ -153,13 +165,20 @@ export async function getTokenAccounts(
     }),
   ])
 
-  const allAccounts = [...splAccounts.value, ...token2022Accounts.value]
+  // Tag each already-fetched account with its owning program so we can parse
+  // the buffer we already have (no N+1 re-fetch) with the correct program.
+  // Re-fetching Token-2022 accounts via getAccount() with the classic program
+  // throws, which previously dropped every 2022 account.
+  const allAccounts = [
+    ...splAccounts.value.map(a => ({ ...a, programId: TOKEN_PROGRAM_ID })),
+    ...token2022Accounts.value.map(a => ({ ...a, programId: TOKEN_2022_PROGRAM_ID })),
+  ]
   const result: TokenAccountInfo[] = []
 
-  for (const { pubkey, account } of allAccounts) {
+  for (const { pubkey, account, programId } of allAccounts) {
     try {
-      // Parse the account data
-      const tokenAccount = await getAccount(connection, pubkey)
+      // Parse the buffer we already fetched with the correct program.
+      const tokenAccount = unpackAccount(pubkey, account, programId)
 
       result.push({
         address: pubkey.toBase58(),

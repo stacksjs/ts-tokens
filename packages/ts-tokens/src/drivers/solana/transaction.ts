@@ -236,11 +236,27 @@ export async function sendTransactionWithRetry(
 ): Promise<TransactionResult> {
   const maxRetries = options?.maxRetries ?? 3
 
-  return retry(
-    () => sendAndConfirmTransaction(connection, transaction, options),
+  // sendAndConfirmTransaction returns { confirmed, error } rather than
+  // throwing, so retry() would never see a failure and never retry. Throw on
+  // failure inside the retried fn so retry() actually re-attempts the send.
+  //
+  // NOTE: we deliberately do NOT rewrite recentBlockhash between attempts —
+  // the transaction is already signed by the caller, and mutating the
+  // blockhash would invalidate that signature. Callers that need blockhash
+  // rotation across retries should re-sign and call this again.
+  const result = await retry(
+    async () => {
+      const res = await sendAndConfirmTransaction(connection, transaction, options)
+      if (!res.confirmed || res.error) {
+        throw new Error(res.error ?? 'Transaction was not confirmed')
+      }
+      return res
+    },
     maxRetries,
-    1000
+    1000,
   )
+
+  return result
 }
 
 /**

@@ -14,6 +14,7 @@ import * as os from 'node:os'
 import { getSessionKeypair } from '../../security/session'
 import { loadEncryptedKeypair, keyringExists } from '../../security/keyring'
 import type { KeyringOptions } from '../../security/keyring'
+import nacl from 'tweetnacl'
 
 /**
  * Wallet explicitly set via setWallet()
@@ -293,8 +294,7 @@ export function signAllTransactions<T extends Transaction | VersionedTransaction
  */
 export function signMessage(message: Uint8Array, config: TokenConfig): Uint8Array {
   const wallet = loadWallet(config)
-  const { sign } = require('tweetnacl')
-  return sign.detached(message, wallet.secretKey)
+  return nacl.sign.detached(message, wallet.secretKey)
 }
 
 /**
