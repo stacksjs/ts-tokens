@@ -45,18 +45,27 @@ export async function getWhirlpool(
     throw new Error(`Whirlpool not found: ${whirlpoolAddress.toBase58()}`)
   }
 
-  // Parse whirlpool account data (simplified — real impl would decode from Anchor IDL)
   const data = accountInfo.data
+
+  // Orca Whirlpool account layout (little-endian):
+  //   discriminator(8) @0, whirlpoolsConfig(32) @8, whirlpoolBump(1) @40,
+  //   tickSpacing(u16) @41, tickSpacingSeed(2) @43, feeRate(u16) @45,
+  //   protocolFeeRate(u16) @47, liquidity(u128) @49, sqrtPrice(u128) @65,
+  //   tickCurrentIndex(i32) @81, protocolFeeOwedA/B(u64,u64) @85/@93,
+  //   tokenMintA(32) @101, tokenVaultA(32) @133, feeGrowthGlobalA(u128) @165,
+  //   tokenMintB(32) @181, ...
+  const readU128LE = (off: number): bigint =>
+    (data.readBigUInt64LE(off + 8) << 64n) | data.readBigUInt64LE(off)
 
   return {
     address: whirlpoolAddress,
-    tokenMintA: new PublicKey(data.subarray(8, 40)),
-    tokenMintB: new PublicKey(data.subarray(40, 72)),
-    tickSpacing: data.readUInt16LE(72),
-    liquidity: BigInt('0x' + Buffer.from(data.subarray(74, 90)).toString('hex')),
-    sqrtPrice: BigInt('0x' + Buffer.from(data.subarray(90, 106)).toString('hex')),
-    feeRate: data.readUInt16LE(106),
-    protocolFeeRate: data.readUInt16LE(108),
+    tokenMintA: new PublicKey(data.subarray(101, 133)),
+    tokenMintB: new PublicKey(data.subarray(181, 213)),
+    tickSpacing: data.readUInt16LE(41),
+    liquidity: readU128LE(49),
+    sqrtPrice: readU128LE(65),
+    feeRate: data.readUInt16LE(45),
+    protocolFeeRate: data.readUInt16LE(47),
   }
 }
 

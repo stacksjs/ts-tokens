@@ -9,6 +9,7 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import type { TokenConfig, NFTMetadata } from '../types'
 import { createConnection } from '../drivers/solana/connection'
 import { getNFTMetadata } from './metadata'
+import { deserializeMetadata } from '../programs/token-metadata/accounts'
 
 /**
  * Token Metadata Program ID
@@ -60,48 +61,20 @@ export async function getNFTsByOwner(
  * Get all NFTs in a collection
  */
 export async function getNFTsByCollection(
-  collection: string,
-  config: TokenConfig,
-  limit: number = 100
+  _collection: string,
+  _config: TokenConfig,
+  _limit: number = 100
 ): Promise<NFTMetadata[]> {
-  const connection = createConnection(config)
-  const collectionPubkey = new PublicKey(collection)
-
-  // Get metadata accounts that reference this collection
-  // This requires searching through metadata accounts
-  const accounts = await connection.getProgramAccounts(
-    TOKEN_METADATA_PROGRAM_ID,
-    {
-      filters: [
-        { dataSize: 679 }, // Metadata account size
-        {
-          memcmp: {
-            offset: 326, // Collection key offset in metadata
-            bytes: collectionPubkey.toBase58(),
-          },
-        },
-      ],
-    }
+  // The collection field lives AFTER the variable-length creators array in the
+  // metadata account, so it has no fixed offset and cannot be located with a
+  // getProgramAccounts memcmp (the old offset 326 actually matched the first
+  // creator's pubkey, returning wrong/empty results). Enumerating a collection's
+  // members requires the DAS API (getAssetsByGroup with groupKey 'collection').
+  throw new Error(
+    'getNFTsByCollection is not implemented via RPC: the metadata collection ' +
+    'field is at a variable offset and cannot be memcmp-filtered. Use the DAS API ' +
+    '(getAssetsByGroup groupKey=collection) — see src/nft/compressed/query.ts.'
   )
-
-  const nfts: NFTMetadata[] = []
-
-  for (const { pubkey, account } of accounts.slice(0, limit)) {
-    try {
-      // Extract mint from metadata account
-      const mintBytes = account.data.slice(33, 65)
-      const mint = new PublicKey(mintBytes).toBase58()
-
-      const metadata = await getNFTMetadata(mint, config)
-      if (metadata) {
-        nfts.push(metadata)
-      }
-    } catch {
-      // Skip if parsing fails
-    }
-  }
-
-  return nfts
 }
 
 /**
@@ -115,8 +88,9 @@ export async function getNFTsByCreator(
   const connection = createConnection(config)
   const creatorPubkey = new PublicKey(creator)
 
-  // Search for metadata accounts with this creator
-  // First creator is at offset 326 + 1 (after collection option)
+  // The first creator's pubkey is at offset 326: key(1)+updateAuth(32)+mint(32)
+  // +name(4+32)+symbol(4+10)+uri(4+200)+sellerFee(2)+creatorsOption(1)+vecLen(4)
+  // = 326. This matches NFTs whose FIRST creator is the given address.
   const accounts = await connection.getProgramAccounts(
     TOKEN_METADATA_PROGRAM_ID,
     {
@@ -124,7 +98,7 @@ export async function getNFTsByCreator(
         { dataSize: 679 },
         {
           memcmp: {
-            offset: 326 + 1 + 4, // After collection option + creators vec length
+            offset: 326,
             bytes: creatorPubkey.toBase58(),
           },
         },
@@ -152,60 +126,39 @@ export async function getNFTsByCreator(
 }
 
 /**
- * Get collection info
+ * Get collection info.
+ *
+ * Returns the collection NFT's own metadata. The member `size` cannot be counted
+ * via RPC (the collection field is at a variable offset — see
+ * getNFTsByCollection), so it is reported as `null` rather than a wrong number;
+ * use the DAS API to count collection members.
  */
-// eslint-disable-next-line no-unused-vars
 export async function getCollectionInfo(
   collection: string,
   config: TokenConfig
 ): Promise<{
   metadata: NFTMetadata | null
-  size: number
+  size: number | null
 }> {
   const metadata = await getNFTMetadata(collection, config)
-
-  // Count NFTs in collection
-  const connection = createConnection(config)
-  const collectionPubkey = new PublicKey(collection)
-
-  const accounts = await connection.getProgramAccounts(
-    TOKEN_METADATA_PROGRAM_ID,
-    {
-      filters: [
-        { dataSize: 679 },
-        {
-          memcmp: {
-            offset: 326,
-            bytes: collectionPubkey.toBase58(),
-          },
-        },
-      ],
-      dataSlice: { offset: 0, length: 0 }, // Don't fetch data, just count
-    }
-  )
-
   return {
     metadata,
-    size: accounts.length,
+    size: null,
   }
 }
 
 /**
- * Check if an NFT belongs to a collection
+ * Check if an NFT belongs to a collection.
+ *
+ * Fully deserializes the NFT's metadata account and compares the verified
+ * collection key — the old code read a fixed byte offset (326) that actually
+ * points into the creators array, not the collection field.
  */
 export async function isInCollection(
   mint: string,
   collection: string,
   config: TokenConfig
 ): Promise<boolean> {
-  const metadata = await getNFTMetadata(mint, config)
-  if (!metadata) {
-    return false
-  }
-
-  // Check if metadata has collection field matching
-  // This would require parsing the collection field from on-chain data
-  // For now, we'll do a simple check via the metadata
   const connection = createConnection(config)
   const mintPubkey = new PublicKey(mint)
 
@@ -223,14 +176,8 @@ export async function isInCollection(
     return false
   }
 
-  // Check collection field at offset 326
-  const hasCollection = accountInfo.data[326] === 1
-  if (!hasCollection) {
-    return false
-  }
-
-  const collectionKey = new PublicKey(accountInfo.data.slice(327, 359))
-  return collectionKey.toBase58() === collection
+  const parsed = deserializeMetadata(accountInfo.data)
+  return parsed.collection?.key.toBase58() === collection
 }
 
 /**

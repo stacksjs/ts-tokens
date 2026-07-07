@@ -223,49 +223,24 @@ export function burn(options: BurnOptions): TransactionInstruction {
 }
 
 /**
- * Decompress a compressed NFT to a regular NFT
+ * Decompress a compressed NFT to a regular NFT.
+ *
+ * NOT IMPLEMENTED. Bubblegum's `decompress_v1` does NOT operate on the Merkle
+ * tree with a proof (that is the redeem shape this function previously built,
+ * which the program always rejects). Decompression is a two-step flow: `redeem`
+ * moves the leaf into a Voucher account, then `decompress_v1` consumes that
+ * Voucher and takes a full `MetadataArgs` payload plus the voucher, mint,
+ * token account, metadata, master edition, token/associated-token/token-metadata
+ * programs, log wrapper and rent. Building the redeem-shaped instruction here
+ * only burns fees on a doomed transaction, so refuse until the real
+ * voucher-based builder (with MetadataArgs serialization) is implemented.
  */
-export function decompressV1(options: DecompressOptions): TransactionInstruction {
-  const keys = [
-    { pubkey: options.treeAuthority, isSigner: false, isWritable: false },
-    { pubkey: options.leafOwner, isSigner: true, isWritable: true },
-    { pubkey: options.leafDelegate, isSigner: false, isWritable: false },
-    { pubkey: options.merkleTree, isSigner: false, isWritable: true },
-    { pubkey: options.mint, isSigner: false, isWritable: true },
-    { pubkey: options.mintAuthority, isSigner: false, isWritable: false },
-    { pubkey: options.metadata, isSigner: false, isWritable: true },
-    { pubkey: options.masterEdition, isSigner: false, isWritable: true },
-    { pubkey: options.tokenAccount, isSigner: false, isWritable: true },
-    { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-    { pubkey: TOKEN_METADATA_PROGRAM_ID, isSigner: false, isWritable: false },
-    { pubkey: SPL_NOOP_PROGRAM_ID, isSigner: false, isWritable: false },
-    { pubkey: ACCOUNT_COMPRESSION_PROGRAM_ID, isSigner: false, isWritable: false },
-    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
-    // Add proof accounts
-    ...options.proof.map(p => ({ pubkey: p, isSigner: false, isWritable: false })),
-  ]
-
-  const nonceBuffer = Buffer.alloc(8)
-  nonceBuffer.writeBigUInt64LE(options.nonce)
-
-  const indexBuffer = Buffer.alloc(4)
-  indexBuffer.writeUInt32LE(options.index)
-
-  const data = Buffer.concat([
-    DECOMPRESS_V1_DISCRIMINATOR,
-    Buffer.from(options.root),
-    Buffer.from(options.dataHash),
-    Buffer.from(options.creatorHash),
-    nonceBuffer,
-    indexBuffer,
-  ])
-
-  return new TransactionInstruction({
-    keys,
-    programId: BUBBLEGUM_PROGRAM_ID,
-    data,
-  })
+export function decompressV1(_options: DecompressOptions): TransactionInstruction {
+  throw new Error(
+    'decompressV1 is not implemented: Bubblegum decompression requires the ' +
+    'redeem -> Voucher -> decompress_v1 flow with a MetadataArgs payload, not a ' +
+    'Merkle proof. The previous instruction shape could never succeed.'
+  )
 }
 
 /**
