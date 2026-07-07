@@ -65,6 +65,8 @@ import {
   calculateExchangeRate,
   calculateReceiptAmount,
   calculateRedeemAmount,
+  calculateReceiptAmountExact,
+  calculateRedeemAmountExact,
 } from '../src/staking/liquid'
 import {
   exportStakingData,
@@ -407,6 +409,25 @@ describe('calculatePenalty', () => {
     const penalty = calculatePenalty(1000n, 1000, 0n, 100n, 50n)
     expect(penalty).toBe(50n)
   })
+
+  test('lock-aware: self-locked longer than minStakeDuration still penalizes', () => {
+    // A stake self-locked from t=0 to t=1000 while the pool minStakeDuration is
+    // only 100. At t=500 the staker has passed minStakeDuration but is still
+    // inside their own lock. canUnstake now penalizes against the actual lock
+    // window (lockEndTime - stakedAt = 1000), not minStakeDuration.
+    const stakedAt = 0n
+    const lockEndTime = 1000n
+    const currentTime = 500n
+    const lockDuration = lockEndTime - stakedAt
+
+    // Against minStakeDuration (the OLD, buggy behavior) the penalty is 0
+    // because 500 >= 100.
+    expect(calculatePenalty(1000n, 1000, stakedAt, 100n, currentTime)).toBe(0n)
+
+    // Against the real lock window it is proportional to remaining lock time.
+    // remainingTime=500, penaltyRatio=(500*1000)/1000=500, penalty=1000*500/10000=50
+    expect(calculatePenalty(1000n, 1000, stakedAt, lockDuration, currentTime)).toBe(50n)
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -579,6 +600,86 @@ describe('Liquid staking', () => {
 
   test('calculateReceiptAmount returns 0 for zero rate', () => {
     expect(calculateReceiptAmount(1000n, 0)).toBe(0n)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 10b. Liquid staking — exact bigint conversions
+// ---------------------------------------------------------------------------
+
+describe('Liquid staking (exact bigint)', () => {
+  test('mints receipts 1:1 when receipt supply is 0', () => {
+    expect(calculateReceiptAmountExact(1000n, 0n, 0n)).toBe(1000n)
+    // Also 1:1 when the pool has never accrued (totalStaked 0)
+    expect(calculateReceiptAmountExact(1000n, 0n, 500n)).toBe(1000n)
+  })
+
+  test('receipt = stakeAmount * totalReceiptSupply / totalStaked', () => {
+    // 1100 staked backing 1000 receipts => depositing 1100 mints 1000
+    expect(calculateReceiptAmountExact(1100n, 1100n, 1000n)).toBe(1000n)
+    // depositing 550 into that pool mints 500
+    expect(calculateReceiptAmountExact(550n, 1100n, 1000n)).toBe(500n)
+  })
+
+  test('redeem = receiptAmount * totalStaked / totalReceiptSupply', () => {
+    expect(calculateRedeemAmountExact(1000n, 1100n, 1000n)).toBe(1100n)
+    expect(calculateRedeemAmountExact(500n, 1100n, 1000n)).toBe(550n)
+  })
+
+  test('redeem returns 0 when receipt supply is 0', () => {
+    expect(calculateRedeemAmountExact(1000n, 0n, 0n)).toBe(0n)
+  })
+
+  test('receipt/redeem round-trips at a 1:1 rate', () => {
+    const staked = 1_000_000n
+    const supply = 1_000_000n
+    const receipt = calculateReceiptAmountExact(12345n, staked, supply)
+    expect(calculateRedeemAmountExact(receipt, staked, supply)).toBe(12345n)
+  })
+
+  test('exact variant is correct for u64 base units above 2^53 that the float version loses', () => {
+    // Base units well beyond Number.MAX_SAFE_INTEGER (2^53 - 1).
+    const totalStaked = 9_000_000_000_000_000_001n
+    const totalReceiptSupply = 9_000_000_000_000_000_000n
+    const stakeAmount = 9_000_000_000_000_000_000n
+
+    // Exact bigint math: 9e18 * 9e18 / (9e18 + 1) = 8999999999999999999
+    const exact = calculateReceiptAmountExact(stakeAmount, totalStaked, totalReceiptSupply)
+    expect(exact).toBe(8_999_999_999_999_999_999n)
+
+    // The float variant rounds the exchange rate to 1 and returns the input
+    // unchanged, disagreeing with the exact (correct) result.
+    const rate = calculateExchangeRate(totalStaked, totalReceiptSupply)
+    const floaty = calculateReceiptAmount(stakeAmount, rate)
+    expect(floaty).not.toBe(exact)
+    expect(floaty).toBe(9_000_000_000_000_000_000n)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 10c. Decimal-aware APR
+// ---------------------------------------------------------------------------
+
+describe('calculateAPR (decimal-aware)', () => {
+  test('equal decimals divide out to a plain base-unit ratio', () => {
+    // rewardsPerYear = 2 * 31536000; stake normalized identically => same as
+    // using raw base units when decimals match.
+    const apr = calculateAPR(2n, 31536000n, 6, 6)
+    expect(apr).toBeCloseTo(200, 0)
+  })
+
+  test('reward decimals smaller than stake decimals inflates APR by 10^delta', () => {
+    // reward has 6 decimals, stake has 9 => reward base units are worth 10^3
+    // more per whole token, so the APR is 1000x the equal-decimals case.
+    const equal = calculateAPR(1n, 31536000n, 9, 9)
+    const skewed = calculateAPR(1n, 31536000n, 6, 9)
+    expect(skewed).toBeCloseTo(equal * 1000, 5)
+  })
+
+  test('reward decimals larger than stake decimals deflates APR by 10^delta', () => {
+    const equal = calculateAPR(1n, 31536000n, 9, 9)
+    const skewed = calculateAPR(1n, 31536000n, 9, 6)
+    expect(skewed).toBeCloseTo(equal / 1000, 10)
   })
 })
 

@@ -51,9 +51,21 @@ export async function getStakingPerformance(
   const stakeInfo = await getStakeInfo(connection, stakeEntry)
 
   const currentlyStaked = stakeInfo?.amount ?? 0n
-  const apr = poolData
-    ? calculateAPR(poolData.rewardRate, poolData.totalStaked, 9, 9)
-    : 0
+
+  let apr = 0
+  if (poolData) {
+    const { getMintWithProgram } = await import('../token/program')
+    const [stakeMintInfo, rewardMintInfo] = await Promise.all([
+      getMintWithProgram(connection, poolData.stakeMint),
+      getMintWithProgram(connection, poolData.rewardMint),
+    ])
+    apr = calculateAPR(
+      poolData.rewardRate,
+      poolData.totalStaked,
+      rewardMintInfo.mint.decimals,
+      stakeMintInfo.mint.decimals
+    )
+  }
 
   const history = await getStakingHistory(connection, pool, owner)
   const avgDuration = history.length > 0

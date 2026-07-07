@@ -14,7 +14,7 @@ import type {
   UnstakeNFTOptions,
   RewardsCalculation,
 } from './types'
-import { getPool, calculatePendingRewards, calculatePenalty } from './pool'
+import { getPool, calculatePendingRewards, calculatePenalty, calculateAPR } from './pool'
 
 /**
  * Get stake info for a user
@@ -50,7 +50,7 @@ export async function getUserStakes(
   pool: PublicKey,
   owner: PublicKey
 ): Promise<StakeInfo[]> {
-  const { STAKING_PROGRAM_ID } = await import('./program')
+  const { STAKING_PROGRAM_ID, isAccountNotFoundError } = await import('./program')
   try {
     const accounts = await connection.getProgramAccounts(STAKING_PROGRAM_ID, {
       filters: [
@@ -69,8 +69,11 @@ export async function getUserStakes(
       lastClaimTime: account.data.readBigUInt64LE(96),
       lockEndTime: account.data.readBigUInt64LE(104),
     }))
-  } catch {
-    return []
+  } catch (error) {
+    if (isAccountNotFoundError(error)) {
+      return []
+    }
+    throw error
   }
 }
 
@@ -105,12 +108,19 @@ export async function calculateRewards(
   const claimableRewards = isLocked ? 0n : pendingRewards
   const lockedRewards = isLocked ? pendingRewards : 0n
 
-  // Calculate APR
-  const yearInSeconds = 365n * 24n * 60n * 60n
-  const rewardsPerYear = pool.rewardRate * yearInSeconds
-  const apr = pool.totalStaked > 0n
-    ? Number((rewardsPerYear * 10000n) / pool.totalStaked) / 100
-    : 0
+  // Calculate APR using the real mint decimals so reward-token and
+  // stake-token base units are normalized before the ratio is taken.
+  const { getMintWithProgram } = await import('../token/program')
+  const [stakeMintInfo, rewardMintInfo] = await Promise.all([
+    getMintWithProgram(connection, pool.stakeMint),
+    getMintWithProgram(connection, pool.rewardMint),
+  ])
+  const apr = calculateAPR(
+    pool.rewardRate,
+    pool.totalStaked,
+    rewardMintInfo.mint.decimals,
+    stakeMintInfo.mint.decimals
+  )
 
   return {
     pendingRewards,
@@ -147,11 +157,15 @@ export async function canUnstake(
   const currentTime = BigInt(Math.floor(Date.now() / 1000))
 
   if (currentTime < stakeInfo.lockEndTime) {
+    // Penalize against the stake's actual lock window (stakedAt -> lockEndTime),
+    // not the pool-wide minStakeDuration. A user who self-locked for longer than
+    // minStakeDuration is still inside their lock, so must see a real penalty.
+    const lockDuration = stakeInfo.lockEndTime - stakeInfo.stakedAt
     const penalty = calculatePenalty(
       stakeInfo.amount,
       pool.earlyUnstakePenalty,
       stakeInfo.stakedAt,
-      pool.minStakeDuration,
+      lockDuration,
       currentTime
     )
 
@@ -215,7 +229,7 @@ export async function getUserStakedNFTs(
   pool: PublicKey,
   owner: PublicKey
 ): Promise<NFTStakeInfo[]> {
-  const { STAKING_PROGRAM_ID } = await import('./program')
+  const { STAKING_PROGRAM_ID, isAccountNotFoundError } = await import('./program')
   try {
     const accounts = await connection.getProgramAccounts(STAKING_PROGRAM_ID, {
       filters: [
@@ -234,8 +248,11 @@ export async function getUserStakedNFTs(
       lockEndTime: account.data.readBigUInt64LE(120),
       pointsEarned: account.data.readBigUInt64LE(128),
     }))
-  } catch {
-    return []
+  } catch (error) {
+    if (isAccountNotFoundError(error)) {
+      return []
+    }
+    throw error
   }
 }
 

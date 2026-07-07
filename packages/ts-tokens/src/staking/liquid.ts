@@ -209,7 +209,12 @@ export async function getLiquidPool(
 // ---------------------------------------------------------------------------
 
 /**
- * Calculate the exchange rate between staked tokens and receipt tokens
+ * Calculate the exchange rate between staked tokens and receipt tokens.
+ *
+ * APPROXIMATE — this rounds u64 base units through float and is only safe for
+ * display. For any on-chain-amount path use the bigint variants
+ * ({@link calculateReceiptAmountExact} / {@link calculateRedeemAmountExact}),
+ * which compute against totalStaked/totalReceiptSupply without float loss.
  */
 export function calculateExchangeRate(
   totalStaked: bigint,
@@ -220,7 +225,10 @@ export function calculateExchangeRate(
 }
 
 /**
- * Calculate receipt tokens received for a stake amount
+ * Calculate receipt tokens received for a stake amount.
+ *
+ * APPROXIMATE — rounds through float; for display only. Prefer
+ * {@link calculateReceiptAmountExact} in on-chain-amount paths.
  */
 export function calculateReceiptAmount(
   stakeAmount: bigint,
@@ -231,13 +239,53 @@ export function calculateReceiptAmount(
 }
 
 /**
- * Calculate underlying tokens redeemed for receipt tokens
+ * Calculate underlying tokens redeemed for receipt tokens.
+ *
+ * APPROXIMATE — rounds through float; for display only. Prefer
+ * {@link calculateRedeemAmountExact} in on-chain-amount paths.
  */
 export function calculateRedeemAmount(
   receiptAmount: bigint,
   exchangeRate: number
 ): bigint {
   return BigInt(Math.floor(Number(receiptAmount) * exchangeRate))
+}
+
+/**
+ * Exact bigint receipt-amount conversion.
+ *
+ * receipt = stakeAmount * totalReceiptSupply / totalStaked, minting 1:1 when
+ * the pool is empty (totalReceiptSupply === 0n). Computes entirely in bigint so
+ * it stays correct for u64 base units above 2^53 that the float variant loses.
+ */
+export function calculateReceiptAmountExact(
+  stakeAmount: bigint,
+  totalStaked: bigint,
+  totalReceiptSupply: bigint
+): bigint {
+  // Empty pool: mint receipts 1:1 with the deposited amount.
+  if (totalReceiptSupply === 0n || totalStaked === 0n) {
+    return stakeAmount
+  }
+  return (stakeAmount * totalReceiptSupply) / totalStaked
+}
+
+/**
+ * Exact bigint redeem-amount conversion.
+ *
+ * redeem = receiptAmount * totalStaked / totalReceiptSupply. Computes entirely
+ * in bigint so it stays correct for u64 base units above 2^53 that the float
+ * variant loses.
+ */
+export function calculateRedeemAmountExact(
+  receiptAmount: bigint,
+  totalStaked: bigint,
+  totalReceiptSupply: bigint
+): bigint {
+  if (totalReceiptSupply === 0n) {
+    return 0n
+  }
+  return (receiptAmount * totalStaked) / totalReceiptSupply
 }
 
 /**

@@ -57,22 +57,34 @@ export async function getPoolStats(
     return null
   }
 
-  // Calculate APR
-  const yearInSeconds = 365n * 24n * 60n * 60n
-  const rewardsPerYear = pool.rewardRate * yearInSeconds
-  const apr = pool.totalStaked > 0n
-    ? Number((rewardsPerYear * 10000n) / pool.totalStaked) / 100
-    : 0
+  // Calculate APR using the real mint decimals so reward-token and stake-token
+  // base units are normalized before the ratio is taken (they differ by
+  // 10^(decimalsΔ) when the mints have different decimals).
+  const { getMintWithProgram } = await import('../token/program')
+  const [stakeMintInfo, rewardMintInfo] = await Promise.all([
+    getMintWithProgram(connection, pool.stakeMint),
+    getMintWithProgram(connection, pool.rewardMint),
+  ])
+  const apr = calculateAPR(
+    pool.rewardRate,
+    pool.totalStaked,
+    rewardMintInfo.mint.decimals,
+    stakeMintInfo.mint.decimals
+  )
 
   // Fetch actual reward vault balance
   const { getRewardVaultAddress } = await import('./program')
   const rewardVaultAddress = getRewardVaultAddress(poolAddress)
+  const { isAccountNotFoundError } = await import('./program')
   let rewardBalance = 0n
   try {
     const vaultBalance = await connection.getTokenAccountBalance(rewardVaultAddress)
     rewardBalance = BigInt(vaultBalance.value.amount)
-  } catch {
-    // Vault may not exist yet
+  } catch (error) {
+    // A genuinely-absent vault means zero balance; rethrow real RPC failures.
+    if (!isAccountNotFoundError(error)) {
+      throw error
+    }
   }
 
   const timeUntilEmpty = pool.rewardRate > 0n
@@ -91,8 +103,12 @@ export async function getPoolStats(
       dataSlice: { offset: 0, length: 0 },
     })
     totalStakers = stakeAccounts.length
-  } catch {
-    // Program may not be deployed yet
+  } catch (error) {
+    // No stake accounts yet is fine; rethrow real RPC failures so an outage is
+    // not silently reported as zero stakers.
+    if (!isAccountNotFoundError(error)) {
+      throw error
+    }
   }
 
   return {

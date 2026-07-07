@@ -11,6 +11,21 @@ import { PublicKey } from '@solana/web3.js'
  */
 export const STAKING_PROGRAM_ID = new PublicKey('StakeProgram1111111111111111111111111111111')
 
+/**
+ * Return true when an error represents a genuinely-absent account rather than
+ * an RPC/network failure. Used to distinguish "no stakes yet" (return []) from
+ * transient failures that must be rethrown so callers do not treat an outage as
+ * an empty result.
+ */
+export function isAccountNotFoundError(error: unknown): boolean {
+  const message = (error instanceof Error ? error.message : String(error)).toLowerCase()
+  return (
+    message.includes('account not found') ||
+    message.includes('could not find account') ||
+    message.includes('does not exist')
+  )
+}
+
 // ---------------------------------------------------------------------------
 // PDA derivation
 // ---------------------------------------------------------------------------
