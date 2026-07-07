@@ -68,8 +68,9 @@ function createMetadataInstructionData(
   creators: Array<{ address: string; verified: boolean; share: number }> | null = null,
   isMutable: boolean = true
 ): Buffer {
-  // Instruction discriminator for CreateMetadataAccountV3
-  const discriminator = Buffer.from([33, 0, 0, 0, 0, 0, 0, 0])
+  // Instruction discriminator for CreateMetadataAccountV3 — mpl-token-metadata
+  // uses a single-byte borsh enum discriminant, not an 8-byte anchor sighash
+  const discriminator = Buffer.from([33])
 
   // Encode the data struct
   const nameBuffer = Buffer.from(name)
@@ -77,7 +78,7 @@ function createMetadataInstructionData(
   const uriBuffer = Buffer.from(uri)
 
   // Calculate total size
-  let size = 8 + // discriminator
+  let size = 1 + // discriminator
     4 + nameBuffer.length + // name (string with length prefix)
     4 + symbolBuffer.length + // symbol
     4 + uriBuffer.length + // uri
@@ -97,7 +98,7 @@ function createMetadataInstructionData(
 
   // Write discriminator
   discriminator.copy(buffer, offset)
-  offset += 8
+  offset += 1
 
   // Write name
   buffer.writeUInt32LE(nameBuffer.length, offset)
