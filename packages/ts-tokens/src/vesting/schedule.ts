@@ -67,7 +67,12 @@ function generateId(): string {
  */
 function addMonths(timestamp: number, months: number): number {
   const date = new Date(timestamp)
-  date.setMonth(date.getMonth() + months)
+  const targetDay = date.getDate()
+  // setMonth on e.g. Jan 31 + 1 rolls over to Mar 3; clamp to the last day of
+  // the target month so cliff/end dates land where users expect.
+  date.setMonth(date.getMonth() + months, 1)
+  const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  date.setDate(Math.min(targetDay, lastDayOfMonth))
   return date.getTime()
 }
 
@@ -78,7 +83,7 @@ export async function createVestingSchedule(
   vestingConfig: VestingConfig,
   _config: TokenConfig
 ): Promise<VestingSchedule> {
-  const startDate = vestingConfig.startDate || Date.now()
+  const startDate = vestingConfig.startDate ?? Date.now()
   const cliffDate = addMonths(startDate, vestingConfig.cliffMonths)
   const endDate = addMonths(startDate, vestingConfig.cliffMonths + vestingConfig.vestingMonths)
 
