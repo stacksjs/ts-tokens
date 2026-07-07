@@ -147,7 +147,8 @@ export async function createMasterEdition(
   const _ata = await getAssociatedTokenAddress(mintPubkey, payer.publicKey)
 
   // Build CreateMasterEditionV3 instruction
-  const data = Buffer.alloc(10)
+  // None must not leave trailing bytes — borsh rejects unconsumed input
+  const data = Buffer.alloc(maxSupply !== null ? 10 : 2)
   data.writeUInt8(17, 0) // Discriminator
 
   if (maxSupply !== null) {

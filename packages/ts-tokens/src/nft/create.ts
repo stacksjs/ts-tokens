@@ -147,7 +147,8 @@ function createMasterEditionInstruction(
   maxSupply: bigint | null
 ): TransactionInstruction {
   // CreateMasterEditionV3 instruction discriminator: 17
-  const data = Buffer.alloc(10)
+  // None must not leave trailing bytes — borsh rejects unconsumed input
+  const data = Buffer.alloc(maxSupply !== null ? 10 : 2)
   data.writeUInt8(17, 0) // Discriminator
 
   // Max supply option
@@ -421,7 +422,8 @@ export async function createNFT(
       payer.publicKey,
       payer.publicKey,
       metadataAddress,
-      options.maxSupply != null ? BigInt(options.maxSupply) : 0n
+      // undefined → Some(0) (1-of-1, no prints); explicit null → None (unlimited prints)
+      options.maxSupply === null ? null : BigInt(options.maxSupply ?? 0)
     )
   )
 
