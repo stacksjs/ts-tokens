@@ -550,9 +550,10 @@ describe('Instruction Builders', () => {
     })
 
     expect(ix.programId.toBase58()).toBe(TOKEN_2022_PROGRAM_ID.toBase58())
-    expect(ix.data[0]).toBe(27)
-    expect(ix.data.readUInt16LE(1)).toBe(300)
-    expect(ix.data.readBigUInt64LE(3)).toBe(500000n)
+    expect(ix.data[0]).toBe(26) // TransferFeeExtension
+    expect(ix.data[1]).toBe(5) // SetTransferFee sub-instruction
+    expect(ix.data.readUInt16LE(2)).toBe(300)
+    expect(ix.data.readBigUInt64LE(4)).toBe(500000n)
   })
 
   test('withdrawWithheldTokensFromAccounts creates correct instruction', () => {
@@ -567,8 +568,9 @@ describe('Instruction Builders', () => {
 
     expect(ix.programId.toBase58()).toBe(TOKEN_2022_PROGRAM_ID.toBase58())
     expect(ix.keys).toHaveLength(4) // mint + destination + authority + 1 source
-    expect(ix.data[0]).toBe(29)
-    expect(ix.data[1]).toBe(1) // sources count
+    expect(ix.data[0]).toBe(26) // TransferFeeExtension
+    expect(ix.data[1]).toBe(3) // WithdrawWithheldTokensFromAccounts sub-instruction
+    expect(ix.data[2]).toBe(1) // sources count
   })
 })
 
