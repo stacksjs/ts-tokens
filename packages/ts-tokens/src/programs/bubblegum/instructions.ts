@@ -45,8 +45,8 @@ const CANCEL_REDEEM_DISCRIMINATOR = Buffer.from([111, 76, 232, 50, 39, 175, 48, 
  */
 export function createTree(options: CreateTreeOptions): TransactionInstruction {
   const keys = [
-    { pubkey: options.merkleTree, isSigner: false, isWritable: true },
     { pubkey: options.treeAuthority, isSigner: false, isWritable: true },
+    { pubkey: options.merkleTree, isSigner: false, isWritable: true },
     { pubkey: options.payer, isSigner: true, isWritable: true },
     { pubkey: options.treeCreator, isSigner: true, isWritable: false },
     { pubkey: SPL_NOOP_PROGRAM_ID, isSigner: false, isWritable: false },
@@ -54,11 +54,23 @@ export function createTree(options: CreateTreeOptions): TransactionInstruction {
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 
+  // max_depth and max_buffer_size are u32 (4 bytes each, little-endian).
+  const maxDepthBuffer = Buffer.alloc(4)
+  maxDepthBuffer.writeUInt32LE(options.maxDepth)
+  const maxBufferSizeBuffer = Buffer.alloc(4)
+  maxBufferSizeBuffer.writeUInt32LE(options.maxBufferSize)
+
+  // `public` is an Option<bool>: 1-byte Some/None flag followed by the bool
+  // when present.
+  const publicBuffer = options.public === undefined
+    ? Buffer.from([0])
+    : Buffer.from([1, options.public ? 1 : 0])
+
   const data = Buffer.concat([
     CREATE_TREE_DISCRIMINATOR,
-    Buffer.from([options.maxDepth]),
-    Buffer.from([options.maxBufferSize]),
-    Buffer.from([options.public ? 1 : 0]),
+    maxDepthBuffer,
+    maxBufferSizeBuffer,
+    publicBuffer,
   ])
 
   return new TransactionInstruction({

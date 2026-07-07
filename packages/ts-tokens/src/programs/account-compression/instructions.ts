@@ -14,11 +14,11 @@ import {
 const ACCOUNT_COMPRESSION_PROGRAM_ID = new PublicKey('cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK')
 const SPL_NOOP_PROGRAM_ID = new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV')
 
-// Instruction discriminators
-const INIT_MERKLE_TREE_DISCRIMINATOR = Buffer.from([0])
-const APPEND_LEAF_DISCRIMINATOR = Buffer.from([1])
-const REPLACE_LEAF_DISCRIMINATOR = Buffer.from([4])
-const VERIFY_LEAF_DISCRIMINATOR = Buffer.from([7])
+// Instruction discriminators (Anchor: first 8 bytes of sha256("global:<name>"))
+const INIT_MERKLE_TREE_DISCRIMINATOR = Buffer.from([191, 11, 119, 7, 180, 107, 220, 110])
+const APPEND_LEAF_DISCRIMINATOR = Buffer.from([149, 120, 18, 222, 236, 225, 88, 203])
+const REPLACE_LEAF_DISCRIMINATOR = Buffer.from([204, 165, 76, 100, 73, 147, 0, 128])
+const VERIFY_LEAF_DISCRIMINATOR = Buffer.from([124, 220, 22, 223, 104, 10, 250, 224])
 
 /**
  * Initialize a new concurrent Merkle tree
@@ -133,7 +133,6 @@ export function replaceLeaf(params: {
     { pubkey: params.merkleTree, isSigner: false, isWritable: true },
     { pubkey: params.authority, isSigner: true, isWritable: false },
     { pubkey: SPL_NOOP_PROGRAM_ID, isSigner: false, isWritable: false },
-    { pubkey: ACCOUNT_COMPRESSION_PROGRAM_ID, isSigner: false, isWritable: false },
     // Proof accounts
     ...params.proof.map(p => ({ pubkey: p, isSigner: false, isWritable: false })),
   ]

@@ -36,86 +36,24 @@ export interface AssetProof {
  * @param index - Leaf index in the tree (determines left/right at each level)
  * @returns True if the proof is valid
  */
+// eslint-disable-next-line no-unused-vars
 export function verifyConcurrentMerkleProof(
   root: Uint8Array,
   leaf: Uint8Array,
   proof: Uint8Array[],
   index: number
 ): boolean {
-  if (root.length !== 32 || leaf.length !== 32) {
-    return false
-  }
-
-  let currentHash: Uint8Array = new Uint8Array(leaf)
-  let currentIndex = index
-
-  for (const proofNode of proof) {
-    if (proofNode.length !== 32) {
-      return false
-    }
-
-    // Determine if current node is left or right child
-    if (currentIndex % 2 === 0) {
-      // Current is left child, proof node is right sibling
-      currentHash = hashPair(currentHash, proofNode)
-    } else {
-      // Current is right child, proof node is left sibling
-      currentHash = hashPair(proofNode, currentHash)
-    }
-
-    currentIndex = Math.floor(currentIndex / 2)
-  }
-
-  // Compare computed root with expected root
-  if (currentHash.length !== root.length) {
-    return false
-  }
-  for (let i = 0; i < root.length; i++) {
-    if (currentHash[i] !== root[i]) {
-      return false
-    }
-  }
-  return true
-}
-
-/**
- * Hash two 32-byte nodes together (Keccak-256)
- *
- * This mimics the on-chain hashing used by the Account Compression program.
- * Uses SHA-256 as a portable approximation (the actual on-chain program
- * uses Keccak-256; for production verification, use a Keccak library).
- */
-function hashPair(left: Uint8Array, right: Uint8Array): Uint8Array {
-  // Concatenate left + right
-  const combined = new Uint8Array(64)
-  combined.set(left, 0)
-  combined.set(right, 32)
-
-  // Use SHA-256 for hashing (portable, available in all environments)
-  // Note: On-chain uses Keccak-256. For off-chain verification that must
-  // match on-chain exactly, use a Keccak-256 implementation.
-  const crypto = globalThis.crypto
-  if (crypto?.subtle) {
-    // In environments without sync crypto, return placeholder
-    // Real implementation would use sync keccak-256
-    return sha256Sync(combined)
-  }
-  return sha256Sync(combined)
-}
-
-/**
- * Synchronous SHA-256 hash using Node.js crypto
- */
-function sha256Sync(data: Uint8Array): Uint8Array {
-  try {
-    // Use Node.js crypto module (available in Node/Bun)
-    const { createHash } = require('node:crypto')
-    const hash = createHash('sha256').update(data).digest()
-    return new Uint8Array(hash)
-  } catch {
-    // Fallback: return a zero hash (should not happen in Node/Bun)
-    return new Uint8Array(32)
-  }
+  // The SPL Account Compression program hashes node pairs with Keccak-256
+  // (the same primitive Ethereum uses), not SHA-256 or SHA3-256. Node's
+  // `crypto` module exposes neither Keccak-256 nor a synchronous SHA-256 that
+  // matches, and no Keccak dependency is available here. Rather than silently
+  // return an incorrect result, this is explicitly unimplemented.
+  throw new Error(
+    'verifyConcurrentMerkleProof is not implemented: on-chain proof '
+    + 'verification requires Keccak-256, which is not available in this build. '
+    + 'Verify proofs on-chain via the account-compression verifyLeaf instruction, '
+    + 'or supply a Keccak-256 implementation.'
+  )
 }
 
 /**

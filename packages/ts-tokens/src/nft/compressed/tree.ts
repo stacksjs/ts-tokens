@@ -7,30 +7,22 @@
 import type {
   TransactionInstruction} from '@solana/web3.js';
 import {
-  Connection,
   Keypair,
   PublicKey,
   SystemProgram
 } from '@solana/web3.js'
-import type { TokenConfig, TransactionResult, TransactionOptions } from '../../types'
+import type { TokenConfig, TransactionOptions } from '../../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../../drivers/solana/transaction'
 import { loadWallet } from '../../drivers/solana/wallet'
 import { createConnection } from '../../drivers/solana/connection'
+import { createTree as buildCreateTreeIx } from '../../programs/bubblegum/instructions'
+import { findTreeAuthorityPda } from '../../programs/bubblegum/pda'
+import { assertValidTreeConfig } from '../../programs/account-compression/types'
 
 /**
  * SPL Account Compression Program ID
  */
 const SPL_ACCOUNT_COMPRESSION_PROGRAM_ID = new PublicKey('cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK')
-
-/**
- * SPL Noop Program ID (for logging)
- */
-const SPL_NOOP_PROGRAM_ID = new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV')
-
-/**
- * Bubblegum Program ID (Metaplex compressed NFTs)
- */
-const BUBBLEGUM_PROGRAM_ID = new PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
 
 /**
  * Merkle tree configuration
@@ -66,27 +58,22 @@ export function calculateTreeCapacity(maxDepth: number): number {
  * Calculate required space for Merkle tree account
  */
 export function calculateTreeSpace(maxDepth: number, maxBufferSize: number, canopyDepth: number = 0): number {
-  // Header size
-  const headerSize = 8 + // discriminator
-    32 + // authority
-    32 + // tree creator
-    1 + // is public
-    8 + // creation slot
-    1   // padding
+  // Concurrent Merkle tree account layout:
+  //   header (56) + serialized-tree preamble (24)
+  //   + changelog: maxBufferSize * (32 * (maxDepth + 1) + 8)
+  //   + rightmost proof: 32 * maxDepth + 40
+  //   + canopy
+  const headerSize = 56
+  const treePreamble = 24
 
-  // Changelog buffer size
-  const changelogSize = maxBufferSize * (32 + 32 + 4 + 4) // path + index + _padding
+  const changelogSize = maxBufferSize * (32 * (maxDepth + 1) + 8)
 
-  // Rightmost proof size
-  const rightmostProofSize = maxDepth * 32
+  const rightmostProofSize = 32 * maxDepth + 40
 
-  // Canopy size
+  // Canopy stores the top `canopyDepth` levels: (2^(canopyDepth+1) - 2) nodes.
   const canopySize = canopyDepth > 0 ? ((1 << (canopyDepth + 1)) - 2) * 32 : 0
 
-  // Tree nodes size
-  const treeSize = (1 << maxDepth) * 32
-
-  return headerSize + changelogSize + rightmostProofSize + canopySize + treeSize
+  return headerSize + treePreamble + changelogSize + rightmostProofSize + canopySize
 }
 
 /**
@@ -106,19 +93,21 @@ export async function createMerkleTree(
 
   const { maxDepth, maxBufferSize, canopyDepth = 0 } = config
 
+  // Reject invalid depth/buffer-size pairs before building any tx.
+  assertValidTreeConfig(maxDepth, maxBufferSize)
+
   // Calculate space and rent
   const space = calculateTreeSpace(maxDepth, maxBufferSize, canopyDepth)
   const lamports = await connection.getMinimumBalanceForRentExemption(space)
 
   // Get tree authority PDA
-  const [treeAuthority] = PublicKey.findProgramAddressSync(
-    [tree.toBuffer()],
-    BUBBLEGUM_PROGRAM_ID
-  )
+  const [treeAuthority] = findTreeAuthorityPda(tree)
 
   const instructions: TransactionInstruction[] = []
 
-  // 1. Create account for tree
+  // 1. Allocate a zeroed account owned by the compression program. Bubblegum's
+  //    create_tree requires an `#[account(zero)]` merkle tree and performs the
+  //    init_empty_merkle_tree CPI itself — do NOT pre-initialize it here.
   instructions.push(
     SystemProgram.createAccount({
       fromPubkey: payer.publicKey,
@@ -129,33 +118,19 @@ export async function createMerkleTree(
     })
   )
 
-  // 2. Initialize empty Merkle tree
-  const initTreeData = serializeInitEmptyMerkleTree(maxDepth, maxBufferSize)
-  instructions.push({
-    keys: [
-      { pubkey: tree, isSigner: false, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-      { pubkey: SPL_NOOP_PROGRAM_ID, isSigner: false, isWritable: false },
-    ],
-    programId: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
-    data: initTreeData,
-  })
-
-  // 3. Create tree config in Bubblegum
-  const createTreeData = serializeCreateTree(maxDepth, maxBufferSize, config.public ?? false)
-  instructions.push({
-    keys: [
-      { pubkey: treeAuthority, isSigner: false, isWritable: true },
-      { pubkey: tree, isSigner: false, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-      { pubkey: SPL_NOOP_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: SPL_ACCOUNT_COMPRESSION_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    ],
-    programId: BUBBLEGUM_PROGRAM_ID,
-    data: createTreeData,
-  })
+  // 2. Create tree config in Bubblegum (this also initializes the tree).
+  instructions.push(
+    buildCreateTreeIx({
+      merkleTree: tree,
+      treeAuthority,
+      payer: payer.publicKey,
+      treeCreator: payer.publicKey,
+      maxDepth,
+      maxBufferSize,
+      canopyDepth,
+      public: config.public,
+    })
+  )
 
   // Build and send transaction
   const transaction = await buildTransaction(
@@ -182,31 +157,6 @@ export async function createMerkleTree(
 }
 
 /**
- * Serialize InitEmptyMerkleTree instruction
- */
-function serializeInitEmptyMerkleTree(maxDepth: number, maxBufferSize: number): Buffer {
-  const buffer = Buffer.alloc(12)
-  // Discriminator for InitEmptyMerkleTree
-  buffer.writeUInt8(0, 0)
-  buffer.writeUInt32LE(maxDepth, 4)
-  buffer.writeUInt32LE(maxBufferSize, 8)
-  return buffer
-}
-
-/**
- * Serialize CreateTree instruction for Bubblegum
- */
-function serializeCreateTree(maxDepth: number, maxBufferSize: number, isPublic: boolean): Buffer {
-  const buffer = Buffer.alloc(13)
-  // Discriminator for CreateTree
-  buffer.writeUInt8(0, 0)
-  buffer.writeUInt32LE(maxDepth, 1)
-  buffer.writeUInt32LE(maxBufferSize, 5)
-  buffer.writeUInt8(isPublic ? 1 : 0, 9)
-  return buffer.slice(0, 10)
-}
-
-/**
  * Get Merkle tree info
  */
 // eslint-disable-next-line no-unused-vars
@@ -229,31 +179,32 @@ export async function getMerkleTreeInfo(
     throw new Error('Merkle tree not found')
   }
 
-  // Parse tree header
+  // Concurrent Merkle tree header (56 bytes):
+  //   byte 0      accountType (u8)
+  //   byte 1      headerVersion (u8)
+  //   byte 2..6   maxBufferSize (u32)
+  //   byte 6..10  maxDepth (u32)
+  //   byte 10..42 authority (32)
+  //   byte 42..50 creationSlot (u64)
+  //   byte 50..56 padding (6)
   const data = accountInfo.data
-  let offset = 8 // Skip discriminator
 
-  const authority = new PublicKey(data.slice(offset, offset + 32)).toBase58()
-  offset += 32
+  const maxBufferSize = data.readUInt32LE(2)
+  const maxDepth = data.readUInt32LE(6)
+  const authority = new PublicKey(data.slice(10, 42)).toBase58()
 
-  // Skip to tree config
-  offset += 32 + 1 + 8 + 1 // creator + is_public + creation_slot + padding
+  // Serialized concurrent Merkle tree follows the header:
+  //   sequenceNumber (u64), activeIndex (u64), bufferSize (u64)
+  let offset = 56
+  offset += 8 // sequenceNumber
+  const activeIndex = Number(data.readBigUInt64LE(offset))
+  offset += 8
+  const bufferSize = Number(data.readBigUInt64LE(offset))
+  offset += 8
 
-  const maxDepth = data.readUInt32LE(offset)
-  offset += 4
-
-  const maxBufferSize = data.readUInt32LE(offset)
-  offset += 4
-
-  const activeIndex = data.readUInt32LE(offset)
-  offset += 4
-
-  const bufferSize = data.readUInt32LE(offset)
-  offset += 4
-
-  // Get rightmost leaf
-  const rightmostLeafOffset = offset + maxBufferSize * (32 + 32 + 4 + 4)
-  const rightmostLeaf = Buffer.from(data.slice(rightmostLeafOffset, rightmostLeafOffset + 32)).toString('hex')
+  // The change log buffer follows; the current root is the first change log
+  // entry's root. Expose the active leaf position instead of a leaf hash here.
+  const rightmostLeaf = ''
 
   return {
     authority,

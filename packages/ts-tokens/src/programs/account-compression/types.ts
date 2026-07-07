@@ -110,14 +110,64 @@ export function getMerkleTreeAccountSize(
   maxBufferSize: number,
   canopyDepth: number = 0
 ): number {
-  // Header: 2 (discriminator) + 54 (header fields)
+  // Header (56) + serialized-tree preamble (24)
   const headerSize = 56
-  // Change log: maxBufferSize * (32 * (maxDepth + 1) + 4 + 8)
-  const changeLogSize = maxBufferSize * (32 * (maxDepth + 1) + 4 + 8)
-  // Right-most path: maxDepth * 32
-  const rightMostPathSize = maxDepth * 32
+  const treePreamble = 24
+  // Change log: maxBufferSize * (32 * (maxDepth + 1) + 8)
+  const changeLogSize = maxBufferSize * (32 * (maxDepth + 1) + 8)
+  // Right-most path: 32 * maxDepth + 40
+  const rightMostPathSize = 32 * maxDepth + 40
   // Canopy: (2^(canopyDepth+1) - 2) * 32
   const canopySize = canopyDepth > 0 ? ((1 << (canopyDepth + 1)) - 2) * 32 : 0
 
-  return headerSize + changeLogSize + rightMostPathSize + canopySize
+  return headerSize + treePreamble + changeLogSize + rightMostPathSize + canopySize
+}
+
+/**
+ * Valid (maxDepth, maxBufferSize) pairs supported by the SPL Account
+ * Compression program. Building a tree with an unsupported pair fails on-chain,
+ * so callers should validate up front with {@link isValidTreeConfig} /
+ * {@link assertValidTreeConfig}.
+ */
+export const VALID_TREE_CONFIGS: ReadonlyArray<readonly [number, number]> = [
+  [3, 8],
+  [5, 8],
+  [14, 64],
+  [14, 256],
+  [14, 1024],
+  [14, 2048],
+  [20, 64],
+  [20, 256],
+  [20, 1024],
+  [20, 2048],
+  [24, 64],
+  [24, 256],
+  [24, 512],
+  [24, 1024],
+  [24, 2048],
+  [26, 512],
+  [26, 1024],
+  [26, 2048],
+  [30, 512],
+  [30, 1024],
+  [30, 2048],
+]
+
+/**
+ * Check whether a (maxDepth, maxBufferSize) pair is supported on-chain.
+ */
+export function isValidTreeConfig(maxDepth: number, maxBufferSize: number): boolean {
+  return VALID_TREE_CONFIGS.some(([d, b]) => d === maxDepth && b === maxBufferSize)
+}
+
+/**
+ * Throw if the given (maxDepth, maxBufferSize) pair is not supported on-chain.
+ */
+export function assertValidTreeConfig(maxDepth: number, maxBufferSize: number): void {
+  if (!isValidTreeConfig(maxDepth, maxBufferSize)) {
+    throw new Error(
+      `Invalid concurrent Merkle tree config: maxDepth=${maxDepth}, maxBufferSize=${maxBufferSize}. `
+      + `Supported pairs: ${VALID_TREE_CONFIGS.map(([d, b]) => `${d}/${b}`).join(', ')}`
+    )
+  }
 }
