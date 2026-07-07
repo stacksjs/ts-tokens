@@ -23,112 +23,25 @@ import type {
 
 /**
  * Execute batch token transfers
+ *
+ * NOTE: This function only receives the payer's `PublicKey`, not a signing
+ * `Keypair`, so it cannot sign or submit transactions. Signing/submitting
+ * batches is intentionally not implemented here. Use `prepareBatchTransfer`
+ * to build the instructions and sign/send them with a wallet, or use the
+ * config-driven ALT path (`batchTransferWithALT`) which loads a wallet.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function batchTransfer(
   connection: Connection,
   payer: PublicKey,
   options: BatchTransferOptions
 ): Promise<BatchTransferResult> {
-  const {
-    mint,
-    recipients,
-    batchSize = 5,
-    delayMs = 500,
-    onProgress,
-    onError,
-  } = options
-
-  const result: BatchTransferResult = {
-    successful: 0,
-    failed: 0,
-    total: recipients.length,
-    signatures: [],
-    errors: [],
-  }
-
-  // Get source token account
-  const sourceAta = await getAssociatedTokenAddress(mint, payer)
-
-  // Process in batches
-  for (let i = 0; i < recipients.length; i += batchSize) {
-    const batch = recipients.slice(i, i + batchSize)
-
-    try {
-      const instructions: TransactionInstruction[] = []
-
-      for (const recipient of batch) {
-        const recipientPubkey = typeof recipient.address === 'string'
-          ? new PublicKey(recipient.address)
-          : recipient.address
-
-        const destAta = await getAssociatedTokenAddress(mint, recipientPubkey)
-
-        // Check if ATA exists, if not create it
-        const destAccount = await connection.getAccountInfo(destAta)
-        if (!destAccount) {
-          instructions.push(
-            createAssociatedTokenAccountInstruction(
-              payer,
-              destAta,
-              recipientPubkey,
-              mint
-            )
-          )
-        }
-
-        // Add transfer instruction
-        instructions.push(
-          createTransferInstruction(
-            sourceAta,
-            destAta,
-            payer,
-            recipient.amount
-          )
-        )
-      }
-
-      // Note: In production, would sign and send transaction
-      // This is a simplified version showing the structure
-      result.successful += batch.length
-
-      for (const recipient of batch) {
-        const addr = typeof recipient.address === 'string'
-          ? recipient.address
-          : recipient.address.toBase58()
-        result.signatures.push(`batch_${i}_${addr}`)
-      }
-
-    } catch (error) {
-      result.failed += batch.length
-
-      for (const recipient of batch) {
-        const addr = typeof recipient.address === 'string'
-          ? recipient.address
-          : recipient.address.toBase58()
-
-        result.errors.push({
-          recipient: addr,
-          error: (error as Error).message,
-        })
-
-        if (onError) {
-          onError(error as Error, recipient)
-        }
-      }
-    }
-
-    // Report progress
-    if (onProgress) {
-      onProgress(Math.min(i + batchSize, recipients.length), recipients.length)
-    }
-
-    // Delay between batches
-    if (i + batchSize < recipients.length && delayMs > 0) {
-      await new Promise(resolve => setTimeout(resolve, delayMs))
-    }
-  }
-
-  return result
+  throw new Error(
+    'batchTransfer is not implemented: it receives only a payer PublicKey and ' +
+    'cannot sign or send transactions. Build instructions with ' +
+    'prepareBatchTransfer() and sign/send them with a Keypair wallet, or use ' +
+    'batchTransferWithALT() which loads a signing wallet from config.'
+  )
 }
 
 /**
