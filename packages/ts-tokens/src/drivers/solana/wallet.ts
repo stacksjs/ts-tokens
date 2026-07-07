@@ -16,9 +16,14 @@ import { loadEncryptedKeypair, keyringExists } from '../../security/keyring'
 import type { KeyringOptions } from '../../security/keyring'
 
 /**
- * Current wallet instance
+ * Wallet explicitly set via setWallet()
  */
 let currentWallet: Keypair | null = null
+
+/**
+ * Cache of wallets loaded from config sources, keyed by resolved source
+ */
+const walletCache = new Map<string, Keypair>()
 
 /**
  * Load keypair from a JSON file
@@ -159,27 +164,37 @@ export function loadWallet(config: TokenConfig): Keypair {
     return sessionKp
   }
 
-  // 2. Check for cached wallet
+  // 2. Check for a wallet explicitly set via setWallet()
   if (currentWallet) {
     return currentWallet
   }
 
+  // The cache is keyed by the resolved source so two configs pointing at
+  // different keypairs never share an entry.
+  const cached = (key: string, load: () => Keypair): Keypair => {
+    let wallet = walletCache.get(key)
+    if (!wallet) {
+      wallet = load()
+      walletCache.set(key, wallet)
+    }
+    return wallet
+  }
+
   // 3. Try loading from config keypair path
   if (config.wallet?.keypairPath) {
-    currentWallet = loadKeypairFromFile(config.wallet.keypairPath)
-    return currentWallet
+    const keypairPath = config.wallet.keypairPath
+    return cached(`file:${keypairPath}`, () => loadKeypairFromFile(keypairPath))
   }
 
   // 4. Try loading from config env var
   if (config.wallet?.keypairEnv) {
-    currentWallet = loadKeypairFromEnv(config.wallet.keypairEnv)
-    return currentWallet
+    const keypairEnv = config.wallet.keypairEnv
+    return cached(`env:${keypairEnv}`, () => loadKeypairFromEnv(keypairEnv))
   }
 
   // 5. Try default environment variable
   if (process.env.TOKENS_KEYPAIR) {
-    currentWallet = loadKeypairFromEnv('TOKENS_KEYPAIR')
-    return currentWallet
+    return cached('env:TOKENS_KEYPAIR', () => loadKeypairFromEnv('TOKENS_KEYPAIR'))
   }
 
   // 6. Try encrypted keyring (if password is set via env)
@@ -188,16 +203,15 @@ export function loadWallet(config: TokenConfig): Keypair {
       ? { keyringDir: path.dirname(config.wallet.keyringPath), keyringFile: path.basename(config.wallet.keyringPath) }
       : undefined
     if (keyringExists(keyringOpts)) {
-      currentWallet = loadKeypairFromKeyring(process.env.TOKENS_KEYRING_PASSWORD, keyringOpts)
-      return currentWallet
+      return cached(`keyring:${config.wallet?.keyringPath ?? 'default'}`, () =>
+        loadKeypairFromKeyring(process.env.TOKENS_KEYRING_PASSWORD!, keyringOpts))
     }
   }
 
   // 7. Try default Solana CLI keypair location
   const defaultPath = path.join(os.homedir(), '.config', 'solana', 'id.json')
   if (fs.existsSync(defaultPath)) {
-    currentWallet = loadKeypairFromFile(defaultPath)
-    return currentWallet
+    return cached(`file:${defaultPath}`, () => loadKeypairFromFile(defaultPath))
   }
 
   throw new Error(
@@ -216,10 +230,11 @@ export function setWallet(keypair: Keypair): void {
 }
 
 /**
- * Clear the current wallet
+ * Clear the current wallet and any cached config-loaded wallets
  */
 export function clearWallet(): void {
   currentWallet = null
+  walletCache.clear()
 }
 
 /**
