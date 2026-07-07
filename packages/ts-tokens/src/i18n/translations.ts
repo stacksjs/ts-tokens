@@ -201,18 +201,41 @@ const ko: TranslationDictionary = {
 }
 
 /**
- * All translations
+ * Locales that have real, dedicated translations.
  */
-export const translations: Record<Locale, TranslationDictionary> = {
+const realTranslations: Record<'en' | 'es' | 'zh' | 'ja' | 'ko', TranslationDictionary> = {
   en,
   es,
   zh,
   ja,
   ko,
+}
+
+/**
+ * Locales that are advertised as supported but currently resolve to the
+ * English dictionary. Lookups still work (they return English), but the
+ * "available/has" reporting treats them as fallbacks, not real translations.
+ */
+export const fallbackLocales: ReadonlySet<Locale> = new Set<Locale>(['fr', 'de', 'pt', 'ru'])
+
+/**
+ * All translations, including English-fallback aliases so runtime lookups
+ * (`t`, `getTranslation`) still resolve for every declared locale.
+ */
+export const translations: Record<Locale, TranslationDictionary> = {
+  ...realTranslations,
   fr: en, // Fallback to English
   de: en,
   pt: en,
   ru: en,
+}
+
+/**
+ * Whether a locale has a real, dedicated translation (as opposed to an
+ * English fallback alias).
+ */
+export function isRealTranslation(locale: Locale): boolean {
+  return locale in realTranslations && !fallbackLocales.has(locale)
 }
 
 /**
@@ -262,16 +285,32 @@ export function t(key: TranslationKey, values?: InterpolationValues): string {
 }
 
 /**
- * Check if translation exists
+ * Check if a real (non-fallback) translation exists for a key in a locale.
+ *
+ * Returns false for fallback-only locales (fr/de/pt/ru) even though a lookup
+ * via `t` would still return the English string — so consumers can detect
+ * that the locale is not actually translated.
  */
 export function hasTranslation(key: TranslationKey, locale?: Locale): boolean {
-  const dict = translations[locale ?? currentConfig.locale]
+  const target = locale ?? currentConfig.locale
+  if (!isRealTranslation(target)) return false
+  const dict = translations[target]
   return dict?.[key] !== undefined
 }
 
 /**
- * Get all available locales
+ * Get all locales that have real, dedicated translations.
+ *
+ * Fallback-only locales (fr/de/pt/ru) are excluded — use
+ * {@link getFallbackLocales} to inspect those.
  */
 export function getAvailableLocales(): Locale[] {
-  return Object.keys(translations) as Locale[]
+  return (Object.keys(translations) as Locale[]).filter(isRealTranslation)
+}
+
+/**
+ * Get all locales that are declared but resolve to the English fallback.
+ */
+export function getFallbackLocales(): Locale[] {
+  return [...fallbackLocales]
 }

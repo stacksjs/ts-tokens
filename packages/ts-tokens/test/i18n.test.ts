@@ -5,6 +5,7 @@ import {
   getLocale,
   hasTranslation,
   getAvailableLocales,
+  getFallbackLocales,
   translations,
   setI18nConfig,
 } from '../src/i18n/translations'
@@ -118,12 +119,37 @@ describe('getAvailableLocales', () => {
     expect(locales).toContain('ko')
   })
 
-  test('includes fallback locales fr, de, pt, ru', () => {
+  test('excludes English-fallback-only locales fr, de, pt, ru', () => {
     const locales = getAvailableLocales()
-    expect(locales).toContain('fr')
-    expect(locales).toContain('de')
-    expect(locales).toContain('pt')
-    expect(locales).toContain('ru')
+    expect(locales).not.toContain('fr')
+    expect(locales).not.toContain('de')
+    expect(locales).not.toContain('pt')
+    expect(locales).not.toContain('ru')
+  })
+})
+
+describe('getFallbackLocales', () => {
+  test('lists the English-fallback-only locales', () => {
+    const fallbacks = getFallbackLocales()
+    expect(fallbacks).toContain('fr')
+    expect(fallbacks).toContain('de')
+    expect(fallbacks).toContain('pt')
+    expect(fallbacks).toContain('ru')
+  })
+
+  test('does not include real translations', () => {
+    const fallbacks = getFallbackLocales()
+    expect(fallbacks).not.toContain('en')
+    expect(fallbacks).not.toContain('es')
+  })
+})
+
+describe('hasTranslation — fallback locales', () => {
+  test('returns false for fallback-only locale even though lookup returns English', () => {
+    expect(hasTranslation('common.success', 'fr')).toBe(false)
+    // but t still resolves to English
+    setLocale('fr')
+    expect(t('common.success')).toBe('Success')
   })
 })
 

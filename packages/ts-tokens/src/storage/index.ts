@@ -16,7 +16,22 @@ import { ShadowDriveStorageAdapter, createShadowDriveAdapter } from './shadow-dr
 /**
  * Storage adapter registry
  */
-const adapters = new Map<StorageProvider, StorageAdapter>()
+const adapters = new Map<string, StorageAdapter>()
+
+/**
+ * Build a cache key that incorporates both the provider and the relevant
+ * config identity, so two different configs for the same provider don't
+ * share a single cached adapter.
+ */
+function getAdapterCacheKey(provider: StorageProvider, config?: TokenConfig): string {
+  const relevant = {
+    arweave: config?.storage?.arweave,
+    ipfs: config?.storage?.ipfs,
+    shadowDrive: config?.storage?.shadowDrive,
+    local: config?.storage?.local,
+  }
+  return `${provider}:${JSON.stringify(relevant)}`
+}
 
 /**
  * Get or create a storage adapter for a provider.
@@ -40,8 +55,10 @@ export function getStorageAdapter(
   provider: StorageProvider,
   config?: TokenConfig
 ): StorageAdapter {
-  // Check cache
-  const cached = adapters.get(provider)
+  // Check cache — keyed by provider + config identity so different configs
+  // for the same provider get distinct adapter instances.
+  const cacheKey = getAdapterCacheKey(provider, config)
+  const cached = adapters.get(cacheKey)
   if (cached) {
     return cached
   }
@@ -72,7 +89,7 @@ export function getStorageAdapter(
   }
 
   // Cache and return
-  adapters.set(provider, adapter)
+  adapters.set(cacheKey, adapter)
   return adapter
 }
 

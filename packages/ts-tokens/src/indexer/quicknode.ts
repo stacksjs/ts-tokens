@@ -4,9 +4,23 @@
  * QuickNode RPC and add-on features.
  */
 
-import type { Connection } from '@solana/web3.js'
-import { PublicKey } from '@solana/web3.js'
-import type { DASAsset, TransactionHistoryItem } from './types'
+import type { DASAsset } from './types'
+
+/**
+ * Signature info as returned by the `getSignaturesForAddress` RPC method.
+ *
+ * This is the shape QuickNode actually returns from the standard RPC — it is
+ * NOT the enriched/enhanced transaction shape. Consumers wanting decoded
+ * transfers/events should fetch and parse each transaction separately.
+ */
+export interface SignatureInfo {
+  signature: string
+  slot: number
+  err: unknown | null
+  memo: string | null
+  blockTime?: number | null
+  confirmationStatus?: 'processed' | 'confirmed' | 'finalized'
+}
 
 export interface QuickNodeConfig {
   endpoint: string
@@ -51,8 +65,13 @@ export class QuickNodeClient {
     return this.rpc('getAssetsByOwner', [{ ownerAddress: owner, page: options?.page ?? 1, limit: options?.limit ?? 100 }])
   }
 
-  /** Get transaction history (QuickNode enhanced) */
-  async getTransactionHistory(address: string, options?: { limit?: number; before?: string }): Promise<TransactionHistoryItem[]> {
+  /**
+   * Get signatures for an address via the standard `getSignaturesForAddress` RPC.
+   *
+   * Returns the raw signature-info shape (signature, slot, err, memo, blockTime),
+   * not an enriched/decoded transaction. This is what the underlying RPC produces.
+   */
+  async getTransactionHistory(address: string, options?: { limit?: number; before?: string }): Promise<SignatureInfo[]> {
     return this.rpc('getSignaturesForAddress', [address, { limit: options?.limit ?? 20, before: options?.before }])
   }
 
@@ -72,15 +91,14 @@ export class QuickNodeClient {
 
   /** Get priority fee estimate (QuickNode add-on) */
   async getPriorityFeeEstimate(options?: { percentile?: number }): Promise<{ low: number; medium: number; high: number }> {
-    try {
-      const result: any = await this.rpc('qn_estimatePriorityFees', [{ last_n_blocks: 100 }])
-      return {
-        low: result.per_compute_unit?.low ?? 0,
-        medium: result.per_compute_unit?.medium ?? 0,
-        high: result.per_compute_unit?.high ?? 0,
-      }
-    } catch {
-      return { low: 0, medium: 1000, high: 10000 }
+    const params: Record<string, unknown> = { last_n_blocks: 100 }
+    if (options?.percentile !== undefined) params.percentile = options.percentile
+
+    const result: any = await this.rpc('qn_estimatePriorityFees', [params])
+    return {
+      low: result.per_compute_unit?.low ?? 0,
+      medium: result.per_compute_unit?.medium ?? 0,
+      high: result.per_compute_unit?.high ?? 0,
     }
   }
 }

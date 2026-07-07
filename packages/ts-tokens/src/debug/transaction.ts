@@ -8,8 +8,8 @@ import type {
   AccountChange,
   InstructionInfo,
   DebugOptions,
-  KNOWN_PROGRAMS,
 } from './types'
+import { KNOWN_PROGRAMS } from './types'
 
 /**
  * Analyze a transaction by signature
@@ -28,37 +28,49 @@ export async function analyzeTransaction(
   }
 
   const { meta, slot, blockTime } = tx
+  const message = tx.transaction.message
+
+  // Build the full ordered account-key list: static keys first, then loaded
+  // writable, then loaded readonly (as required by v0 address-lookup-tables).
+  // Indexes in compiled instructions and balances refer to this combined list.
+  const staticKeys = message.staticAccountKeys
+  const loadedWritable = meta?.loadedAddresses?.writable ?? []
+  const loadedReadonly = meta?.loadedAddresses?.readonly ?? []
+  const keys: PublicKey[] = [...staticKeys, ...loadedWritable, ...loadedReadonly]
 
   // Parse account changes
   const accounts: AccountChange[] = []
-  if (meta && tx.transaction.message.staticAccountKeys) {
-    const keys = tx.transaction.message.staticAccountKeys
+  if (meta) {
     for (let i = 0; i < keys.length; i++) {
-      const preBalance = BigInt(meta.preBalances[i])
-      const postBalance = BigInt(meta.postBalances[i])
+      const key = keys[i]
+      if (!key) continue
+
+      const preBalance = BigInt(meta.preBalances[i] ?? 0)
+      const postBalance = BigInt(meta.postBalances[i] ?? 0)
 
       accounts.push({
-        address: keys[i],
+        address: key,
         preBalance,
         postBalance,
         change: postBalance - preBalance,
-        isWritable: tx.transaction.message.isAccountWritable(i),
-        isSigner: tx.transaction.message.isAccountSigner(i),
+        isWritable: message.isAccountWritable(i),
+        isSigner: message.isAccountSigner(i),
       })
     }
   }
 
   // Parse instructions
   const instructions: InstructionInfo[] = []
-  const compiledInstructions = tx.transaction.message.compiledInstructions
-  const keys = tx.transaction.message.staticAccountKeys
+  const compiledInstructions = message.compiledInstructions
 
   for (const ix of compiledInstructions) {
     const programId = keys[ix.programIdIndex]
+    if (!programId) continue
+
     instructions.push({
       programId,
       programName: getProgramName(programId),
-      accounts: ix.accountKeyIndexes.map(i => keys[i]),
+      accounts: ix.accountKeyIndexes.map(i => keys[i]).filter((k): k is PublicKey => k !== undefined),
       data: ix.data,
     })
   }
@@ -81,15 +93,7 @@ export async function analyzeTransaction(
  * Get program name from ID
  */
 export function getProgramName(programId: PublicKey): string {
-  const knownPrograms: Record<string, string> = {
-    '11111111111111111111111111111111': 'System Program',
-    'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA': 'Token Program',
-    'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb': 'Token-2022 Program',
-    'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL': 'Associated Token Program',
-    'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s': 'Token Metadata Program',
-  }
-
-  return knownPrograms[programId.toBase58()] ?? 'Unknown Program'
+  return KNOWN_PROGRAMS[programId.toBase58()] ?? 'Unknown Program'
 }
 
 /**
