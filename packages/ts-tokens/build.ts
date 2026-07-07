@@ -1,5 +1,14 @@
 import { dts } from 'bun-plugin-dtsx'
 
+let failed = false
+
+function check(name: string, result: Awaited<ReturnType<typeof Bun.build>>): void {
+  if (!result.success) {
+    failed = true
+    console.error(`Failed to build ${name}:`, result.logs)
+  }
+}
+
 async function main(): Promise<void> {
   // Main library entrypoint
   const resp = await Bun.build({
@@ -10,7 +19,7 @@ async function main(): Promise<void> {
     plugins: [dts()],
   })
 
-  console.log(resp)
+  check('index', resp)
 
   // Subpath module entrypoints (directories with index.ts)
   const submodules = [
@@ -50,9 +59,7 @@ async function main(): Promise<void> {
       plugins: [dts()],
     })
 
-    if (!result.success) {
-      console.error(`Failed to build ${mod}:`, result.logs)
-    }
+    check(mod, result)
   }
 
   // Single-file module entrypoints
@@ -69,9 +76,7 @@ async function main(): Promise<void> {
       plugins: [dts()],
     })
 
-    if (!result.success) {
-      console.error(`Failed to build ${mod}:`, result.logs)
-    }
+    check(mod, result)
   }
 
   // CLI entrypoint
@@ -83,7 +88,14 @@ async function main(): Promise<void> {
     plugins: [dts()],
   })
 
-  console.log(resp2)
+  check('cli', resp2)
+
+  if (failed) {
+    process.exit(1)
+  }
 }
 
-main()
+main().catch((error) => {
+  console.error(error)
+  process.exit(1)
+})
