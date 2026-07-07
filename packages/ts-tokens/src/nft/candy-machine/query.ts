@@ -143,20 +143,21 @@ export async function getCandyMachineItems(
   const itemsAvailable = Number(cm.data.itemsAvailable)
   const lineSize = settings.nameLength + settings.uriLength
 
-  // Config lines start after the fixed header section
-  // The header is variable length, so we calculate the config lines offset
-  // by working backwards from the total account size
-  const configLinesStart = data.length - (itemsAvailable * lineSize) - Math.ceil(itemsAvailable / 8)
+  // On-chain layout after the fixed 850-byte hidden section:
+  // u32 config-line count, then itemsAvailable * lineSize config lines,
+  // then the taken bitmask (floor(items/8) + 1 bytes, MSB-first),
+  // then itemsAvailable * 4 bytes of mint indices.
+  const HIDDEN_SECTION = 850
+  const configLinesStart = HIDDEN_SECTION + 4
 
   const items: CandyMachineItem[] = []
 
-  // The bitmap tracking which items are set is at the end of the account
-  const bitmapStart = data.length - Math.ceil(itemsAvailable / 8)
+  const bitmapStart = configLinesStart + itemsAvailable * lineSize
 
   for (let i = 0; i < itemsAvailable; i++) {
-    // Check if this config line has been set via the bitmap
+    // Check if this config line has been set via the bitmap (MSB-first)
     const byteIndex = Math.floor(i / 8)
-    const bitIndex = i % 8
+    const bitIndex = 7 - (i % 8)
     const isSet = (data[bitmapStart + byteIndex] & (1 << bitIndex)) !== 0
 
     if (!isSet) continue
