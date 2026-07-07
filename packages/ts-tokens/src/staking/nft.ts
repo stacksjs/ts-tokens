@@ -29,6 +29,7 @@ import {
   getNFTStakeEntryAddress,
   getRewardVaultAddress,
 } from './program'
+import { calculateNFTPoints } from './stake'
 import {
   createCreateNFTPoolInstruction,
   createStakeNFTInstruction,
@@ -265,7 +266,6 @@ export function calculateNFTRewardsWithMultipliers(
   bonuses: TraitBonus[],
   currentTime: bigint
 ): bigint {
-  const { calculateNFTPoints } = require('./stake')
   const basePoints = calculateNFTPoints(stakedAt, lastClaimTime, pointsPerDay, currentTime)
 
   let adjusted = applyRarityMultiplier(basePoints, nftTraits, multipliers)
