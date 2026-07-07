@@ -421,14 +421,18 @@ describe('votes.delegate', () => {
     const dao = Keypair.generate().publicKey
     const to = Keypair.generate().publicKey
 
+    const before = BigInt(Math.floor(Date.now() / 1000))
     const result = await votes.delegate(dao, {
       to,
       amount: 1000n,
       expires: '30 days',
     })
+    const after = BigInt(Math.floor(Date.now() / 1000))
 
-    // 30 days = 2592000 seconds
-    expect(result.delegation.expiresAt).toBe(2592000n)
+    // A duration string becomes an absolute timestamp: now + 30 days
+    const thirtyDays = 2592000n
+    expect(result.delegation.expiresAt).toBeGreaterThanOrEqual(before + thirtyDays)
+    expect(result.delegation.expiresAt).toBeLessThanOrEqual(after + thirtyDays)
   })
 
   test('accepts bigint expires directly', async () => {
