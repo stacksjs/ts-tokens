@@ -11,6 +11,29 @@ import type { AuditReport, AuditFinding } from './audit'
 import { isValidUri } from './validation'
 
 /**
+ * Find the slot of a mint's oldest (creation) transaction by paging back through
+ * its signatures (newest-first). Returns null if the mint has no signatures, or
+ * if it has more than `maxPages * 1000` — in which case it is clearly not new so
+ * the age check can be safely skipped rather than paged unboundedly.
+ */
+async function findCreationSlot(
+  connection: Connection,
+  mint: PublicKey,
+  maxPages = 5
+): Promise<number | null> {
+  let before: string | undefined
+  for (let page = 0; page < maxPages; page++) {
+    const sigs = await connection.getSignaturesForAddress(mint, { limit: 1000, before })
+    if (sigs.length === 0) return null
+    const oldest = sigs[sigs.length - 1]
+    if (sigs.length < 1000) return oldest.slot ?? null // reached the end
+    before = oldest.signature
+  }
+  // More than maxPages*1000 signatures — definitely not a new token.
+  return null
+}
+
+/**
  * Check if mint authority is set and whether it's a multisig
  */
 export function checkMintAuthority(mintAuth: string | null): SecurityCheckResult {
@@ -299,9 +322,13 @@ export async function fullTokenSecurityCheck(
     recommendations.push(...faCheck.recommendations)
 
     const currentSlot = await connection.getSlot()
-    const txSigs = await connection.getSignaturesForAddress(mint, { limit: 1 })
-    if (txSigs.length > 0 && txSigs[0].slot) {
-      const ageCheck = checkTokenAge(txSigs[0].slot, currentSlot)
+    // getSignaturesForAddress returns NEWEST-first, so a limit:1 query yields the
+    // most recent tx, not the creation. Page back to the oldest signature (the
+    // creation) with a bounded number of pages; a token with more signatures than
+    // that bound is clearly not new, so the age flag is skipped.
+    const creationSlot = await findCreationSlot(connection, mint)
+    if (creationSlot != null) {
+      const ageCheck = checkTokenAge(creationSlot, currentSlot)
       if (ageCheck.warnings.length > 0) {
         findings.push({ severity: 'medium', category: 'age', title: 'New token', description: ageCheck.warnings[0] })
         riskScore += 15
