@@ -22,9 +22,27 @@ export interface EmbeddedMetadata {
   additionalFields?: Array<[string, string]>
 }
 
-// Token Metadata extension instruction discriminators
-const TOKEN_METADATA_INITIALIZE = Buffer.from([210, 225, 30, 162, 88, 184, 238, 125])
+// SPL Token Metadata interface discriminators —
+// sha256("spl_token_metadata_interface:<name>")[0..8]
+const TOKEN_METADATA_INITIALIZE = Buffer.from([210, 225, 30, 162, 88, 184, 77, 141])
 const TOKEN_METADATA_UPDATE_FIELD = Buffer.from([221, 233, 49, 45, 181, 202, 220, 200])
+
+/**
+ * Encode the UpdateField Field enum: Name = 0, Symbol = 1, Uri = 2,
+ * Key(String) = 3 for custom fields
+ */
+function packField(field: string): Buffer {
+  switch (field.toLowerCase()) {
+    case 'name':
+      return Buffer.from([0])
+    case 'symbol':
+      return Buffer.from([1])
+    case 'uri':
+      return Buffer.from([2])
+    default:
+      return Buffer.concat([Buffer.from([3]), packString(field)])
+  }
+}
 
 /**
  * Build a serialized string for metadata instruction
@@ -78,7 +96,7 @@ function createUpdateTokenMetadataFieldInstruction(
 ): TransactionInstruction {
   const data = Buffer.concat([
     TOKEN_METADATA_UPDATE_FIELD,
-    packString(field),
+    packField(field),
     packString(value),
   ])
 
