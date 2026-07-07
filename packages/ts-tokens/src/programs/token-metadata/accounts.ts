@@ -111,6 +111,9 @@ export function deserializeMetadata(data: Buffer): Metadata {
     programmableConfig = { ruleSet }
   }
 
+  metadataData.collection = collection
+  metadataData.uses = uses
+
   return {
     key,
     updateAuthority,
@@ -254,34 +257,12 @@ function parseDataV2(data: Buffer, offset: number): { data: DataV2; offset: numb
     }
   }
 
-  // Collection (optional)
-  const hasCollection = data.readUInt8(offset) === 1
-  offset += 1
-  let collection: Collection | null = null
-  if (hasCollection) {
-    const verified = data.readUInt8(offset) === 1
-    offset += 1
-    const key = new PublicKey(data.subarray(offset, offset + 32))
-    offset += 32
-    collection = { verified, key }
-  }
-
-  // Uses (optional)
-  const hasUses = data.readUInt8(offset) === 1
-  offset += 1
-  let uses: Uses | null = null
-  if (hasUses) {
-    const useMethod = data.readUInt8(offset) as UseMethod
-    offset += 1
-    const remaining = data.readBigUInt64LE(offset)
-    offset += 8
-    const total = data.readBigUInt64LE(offset)
-    offset += 8
-    uses = { useMethod, remaining, total }
-  }
-
+  // The on-chain Metadata account stores the legacy Data struct here, which
+  // ends after creators — collection and uses live at the Metadata level
+  // (after primarySaleHappened/isMutable/editionNonce/tokenStandard) and are
+  // parsed by deserializeMetadata, which fills them in on the returned data.
   return {
-    data: { name, symbol, uri, sellerFeeBasisPoints, creators, collection, uses },
+    data: { name, symbol, uri, sellerFeeBasisPoints, creators, collection: null, uses: null },
     offset,
   }
 }

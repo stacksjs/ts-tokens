@@ -129,28 +129,8 @@ export function buildMetadataBuffer(opts: {
     parts.push(Buffer.from([0])) // no creators
   }
 
-  // DataV2: collection (optional)
-  if (opts.collection) {
-    parts.push(Buffer.from([1]))
-    parts.push(Buffer.from([opts.collection.verified ? 1 : 0]))
-    parts.push(opts.collection.key.toBuffer())
-  } else {
-    parts.push(Buffer.from([0]))
-  }
-
-  // DataV2: uses (optional)
-  if (opts.uses) {
-    parts.push(Buffer.from([1]))
-    parts.push(Buffer.from([opts.uses.useMethod]))
-    const remaining = Buffer.alloc(8)
-    remaining.writeBigUInt64LE(opts.uses.remaining, 0)
-    parts.push(remaining)
-    const total = Buffer.alloc(8)
-    total.writeBigUInt64LE(opts.uses.total, 0)
-    parts.push(total)
-  } else {
-    parts.push(Buffer.from([0]))
-  }
+  // The on-chain Data struct ends after creators; collection and uses
+  // live at the Metadata level below (after tokenStandard).
 
   // primarySaleHappened
   parts.push(Buffer.from([opts.primarySaleHappened ? 1 : 0]))
