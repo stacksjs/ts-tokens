@@ -134,6 +134,10 @@
       "types": "./dist/debug/index.d.ts",
       "import": "./dist/debug/index.js"
     },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js"
+    },
     "./*": {
       "import": "./dist/*"
     }

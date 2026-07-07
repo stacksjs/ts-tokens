@@ -48,6 +48,7 @@ async function main(): Promise<void> {
     'voting',
     'i18n',
     'debug',
+    'testing',
   ]
 
   for (const mod of submodules) {

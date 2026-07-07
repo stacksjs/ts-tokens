@@ -1,7 +1,9 @@
 /** Local development CLI command handlers. */
 
+import type { SolanaNetwork } from '../../types'
 import { success, error, keyValue, header, info } from '../utils'
 import { withSpinner } from '../utils/spinner'
+import { mergeConfig } from '../../config'
 
 /**
  * Start a local Solana test validator with a pre-funded wallet.
@@ -181,6 +183,93 @@ export async function devTime(timestamp: number): Promise<void> {
     } catch {
       info('Direct slot warp not supported by this validator version.')
       info('Consider stopping and restarting with --warp-slot flag.')
+    }
+  } catch (err) {
+    error(err instanceof Error ? err.message : String(err))
+    process.exit(1)
+  }
+}
+
+/**
+ * Programmatically airdrop SOL via the RPC (no Solana CLI required).
+ *
+ * Works on any airdrop-enabled cluster (localnet/devnet/testnet) and retries
+ * through the transient faucet failures those clusters commonly return.
+ *
+ * @param address - Public key to fund
+ * @param amount - SOL to airdrop
+ * @param options - `{ network }` selects the cluster (default devnet)
+ */
+export async function devAirdrop(
+  address: string,
+  amount: number,
+  options: { network?: SolanaNetwork } = {}
+): Promise<void> {
+  header('Airdrop SOL')
+
+  const network = options.network ?? 'devnet'
+  keyValue('Network', network)
+  keyValue('Address', address)
+  keyValue('Amount', `${amount} SOL`)
+
+  try {
+    const { PublicKey } = await import('@solana/web3.js')
+    const { createConnection } = await import('../../drivers/solana/connection')
+    const { airdrop } = await import('../../testing/airdrop')
+
+    const config = mergeConfig({ network })
+    const connection = createConnection(config)
+
+    const result = await withSpinner(
+      `Airdropping ${amount} SOL (with retries)`,
+      () => airdrop(connection, new PublicKey(address), { sol: amount }),
+      'Airdrop confirmed',
+    )
+    keyValue('New balance', `${result.balanceSol} SOL`)
+    success(`Airdropped ${amount} SOL to ${address}`)
+  } catch (err) {
+    error(err instanceof Error ? err.message : String(err))
+    process.exit(1)
+  }
+}
+
+/**
+ * Run a full NFT-drop dress rehearsal against a live cluster.
+ *
+ * Funds a fresh wallet, creates a collection, mints NFTs into it, and verifies
+ * each on-chain — printing a per-step report. Intended for validating a launch
+ * on localnet/devnet before mainnet.
+ *
+ * @param options - `{ network, count, fund }`
+ */
+export async function devRehearse(
+  options: { network?: SolanaNetwork; count?: number; fund?: number } = {}
+): Promise<void> {
+  header('NFT Drop Dress Rehearsal')
+
+  const network = options.network ?? 'devnet'
+  const count = options.count ?? 3
+  keyValue('Network', network)
+  keyValue('NFTs to mint', String(count))
+
+  try {
+    const { rehearseNftDrop, formatRehearsalReport } = await import('../../testing/rehearsal')
+    const config = mergeConfig({ network })
+
+    const report = await rehearseNftDrop(config, {
+      count,
+      fundSol: options.fund ?? 1,
+      logger: info,
+    })
+
+    console.log('')
+    console.log(formatRehearsalReport(report))
+
+    if (report.passed) {
+      success('Dress rehearsal passed — the drop flow works end-to-end')
+    } else {
+      error('Dress rehearsal failed — see the step report above')
+      process.exit(1)
     }
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
