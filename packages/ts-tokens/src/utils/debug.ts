@@ -5,6 +5,7 @@
  */
 
 import type { Connection, PublicKey } from '@solana/web3.js'
+import { Transaction, TransactionInstruction } from '@solana/web3.js'
 
 /**
  * Transaction analysis result
@@ -145,28 +146,50 @@ export async function inspectAccount(
   }
 }
 
-/**
- * Simulate an _instruction
- */
-export async function simulateInstruction(
-  _connection: Connection,
-  _instruction: {
-    programId: PublicKey
-    keys: Array<{ pubkey: PublicKey; isSigner: boolean; isWritable: boolean }>
-    data: Buffer
-  },
-  _payer: PublicKey
-): Promise<{
+export interface SimulateInstructionInput {
+  programId: PublicKey
+  keys: Array<{ pubkey: PublicKey; isSigner: boolean; isWritable: boolean }>
+  data: Buffer
+}
+
+export interface SimulateInstructionResult {
   success: boolean
   logs: string[]
   unitsConsumed: number
   error?: string
-}> {
-  // In production, would build and simulate transaction
+}
+
+/**
+ * Simulate a single instruction against the cluster
+ *
+ * Builds a transaction containing the instruction and runs it through
+ * `connection.simulateTransaction` (with signature verification disabled),
+ * returning the simulation logs and compute units consumed.
+ */
+export async function simulateInstruction(
+  connection: Connection,
+  instruction: SimulateInstructionInput,
+  payer: PublicKey
+): Promise<SimulateInstructionResult> {
+  const latest = await connection.getLatestBlockhash()
+
+  const tx = new Transaction()
+  tx.recentBlockhash = latest.blockhash
+  tx.feePayer = payer
+  const ix = new TransactionInstruction({
+    programId: instruction.programId,
+    keys: instruction.keys,
+    data: instruction.data,
+  })
+  tx.add(ix)
+
+  const result = await connection.simulateTransaction(tx, undefined)
+
   return {
-    success: true,
-    logs: [],
-    unitsConsumed: 0,
+    success: result.value.err === null,
+    logs: result.value.logs ?? [],
+    unitsConsumed: result.value.unitsConsumed ?? 0,
+    error: result.value.err ? JSON.stringify(result.value.err) : undefined,
   }
 }
 

@@ -2,6 +2,7 @@
  * Batch RPC & Connection Pooling
  */
 import { Connection, PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js'
+import { getMintWithProgram } from '../token/program'
 
 export interface BatchRpcOptions {
   connection: Connection
@@ -46,13 +47,15 @@ export async function prefetchTokenAccounts(
   mint: PublicKey,
   owner: PublicKey,
 ): Promise<{ mint: any; tokenAccount: any; metadata: any }> {
-  // Derive associated token account
-  const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+  // Resolve the owning token program first so Token-2022 mints derive the
+  // correct ATA (the token program id is part of the ATA seeds).
   const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL')
   const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
 
+  const { mint: mintAccount, programId: tokenProgramId } = await getMintWithProgram(connection, mint)
+
   const [ata] = PublicKey.findProgramAddressSync(
-    [owner.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    [owner.toBuffer(), tokenProgramId.toBuffer(), mint.toBuffer()],
     ASSOCIATED_TOKEN_PROGRAM_ID,
   )
 
@@ -64,7 +67,8 @@ export async function prefetchTokenAccounts(
   const accounts = await getMultipleAccountsBatched(connection, [mint, ata, metadataAddress])
 
   return {
-    mint: accounts.get(mint.toBase58()),
+    // getMintWithProgram already fetched and unpacked the mint account.
+    mint: accounts.get(mint.toBase58()) ?? mintAccount,
     tokenAccount: accounts.get(ata.toBase58()),
     metadata: accounts.get(metadataAddress.toBase58()),
   }

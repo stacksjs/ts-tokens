@@ -1,9 +1,12 @@
 /**
  * Base58 Encoding/Decoding
  *
- * A minimal, zero-dependency implementation of Base58 encoding
- * compatible with Solana address format.
+ * A minimal implementation of Base58 encoding compatible with Solana address
+ * format. The core encode/decode use no dependencies; the Base58Check helpers
+ * rely on the built-in `node:crypto` module for the SHA-256 checksum.
  */
+
+import { createHash } from 'node:crypto'
 
 /**
  * Base58 alphabet (Bitcoin/Solana variant)
@@ -174,25 +177,56 @@ export function isValidSolanaAddress(address: string): boolean {
 }
 
 /**
- * Encode bytes to Base58 with checksum (Bitcoin-style)
- * Note: Solana addresses don't use checksums, this is for compatibility
+ * Compute the 4-byte Base58Check checksum: the first four bytes of
+ * sha256(sha256(payload)).
+ */
+function checksum(payload: Uint8Array): Uint8Array {
+  const first = createHash('sha256').update(payload).digest()
+  const second = createHash('sha256').update(first).digest()
+  return new Uint8Array(second.subarray(0, 4))
+}
+
+/**
+ * Encode bytes to Base58 with checksum (Bitcoin-style Base58Check).
+ *
+ * Appends the first 4 bytes of the double-SHA256 of the payload before
+ * Base58-encoding, so the result can be integrity-checked on decode.
+ * Note: Solana addresses don't use checksums; this is for compatibility.
  *
  * @param buffer - Bytes to encode
  * @returns Base58Check encoded string
  */
 export function encodeCheck(buffer: Uint8Array): string {
-  // For now, just use regular encoding
-  // Full implementation would add SHA256 checksum
-  return encode(buffer)
+  const check = checksum(buffer)
+  const combined = new Uint8Array(buffer.length + check.length)
+  combined.set(buffer, 0)
+  combined.set(check, buffer.length)
+  return encode(combined)
 }
 
 /**
- * Decode Base58Check string
+ * Decode a Base58Check string and verify its checksum.
  *
  * @param str - Base58Check string to decode
- * @returns Decoded bytes (without checksum)
+ * @returns Decoded payload bytes (without the checksum)
+ * @throws Error if the string is too short or the checksum does not match
  */
 export function decodeCheck(str: string): Uint8Array {
-  // For now, just use regular decoding
-  return decode(str)
+  const decoded = decode(str)
+
+  if (decoded.length < 4) {
+    throw new Error('Invalid Base58Check string: too short to contain a checksum')
+  }
+
+  const payload = decoded.subarray(0, decoded.length - 4)
+  const expected = decoded.subarray(decoded.length - 4)
+  const actual = checksum(payload)
+
+  for (let i = 0; i < 4; i++) {
+    if (expected[i] !== actual[i]) {
+      throw new Error('Invalid Base58Check checksum')
+    }
+  }
+
+  return new Uint8Array(payload)
 }

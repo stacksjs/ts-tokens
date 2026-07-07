@@ -83,7 +83,7 @@ export function formatTokenAmount(
   displayDecimals?: number
 ): string {
   const value = typeof amount === 'bigint' ? amount : BigInt(amount)
-  const divisor = BigInt(10 ** decimals)
+  const divisor = 10n ** BigInt(decimals)
   const whole = value / divisor
   const fraction = value % divisor
 
@@ -140,13 +140,14 @@ export function generateSeed(): Uint8Array {
   const seed = new Uint8Array(32)
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     crypto.getRandomValues(seed)
-  } else {
-    // Fallback for Node.js without Web Crypto
-    for (let i = 0; i < 32; i++) {
-      seed[i] = Math.floor(Math.random() * 256)
-    }
+    return seed
   }
-  return seed
+  // No secure RNG available. Degrading to Math.random() would produce
+  // predictable key material, so refuse instead of returning insecure bytes.
+  throw new Error(
+    'generateSeed is not implemented: no cryptographically secure RNG available ' +
+    '(crypto.getRandomValues is undefined in this environment)'
+  )
 }
 
 /**

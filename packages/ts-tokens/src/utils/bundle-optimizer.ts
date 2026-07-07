@@ -59,16 +59,31 @@ export interface FeatureFlags {
   wallets: boolean
 }
 
-/** Get available features based on installed dependencies */
-export function getAvailableFeatures(): FeatureFlags {
-  return {
-    defi: true,
-    marketplace: true,
-    governance: true,
-    staking: true,
-    analytics: true,
-    wallets: true,
-  }
+/**
+ * Get available features by probing whether each optional submodule can be
+ * resolved. Each feature maps to a `ts-tokens/<feature>` subpath export; a
+ * feature is reported available only if its module actually resolves in the
+ * current environment.
+ */
+export async function getAvailableFeatures(): Promise<FeatureFlags> {
+  const features: (keyof FeatureFlags)[] = [
+    'defi',
+    'marketplace',
+    'governance',
+    'staking',
+    'analytics',
+    'wallets',
+  ]
+
+  const results = await Promise.all(
+    features.map(feature => isModuleAvailable(`ts-tokens/${feature}`)),
+  )
+
+  const flags = {} as FeatureFlags
+  features.forEach((feature, i) => {
+    flags[feature] = results[i]
+  })
+  return flags
 }
 
 /**
