@@ -10,11 +10,10 @@ import * as os from 'node:os'
 import {
   Keypair,
   PublicKey,
-  SystemProgram,
-  LAMPORTS_PER_SOL,
 } from '@solana/web3.js'
 import {
   createTransferInstruction,
+  createCloseAccountInstruction,
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token'
@@ -132,18 +131,15 @@ export async function fundVestingSchedule(
   const mintPubkey = new PublicKey(serialized.mint)
   const escrowKeypair = Keypair.generate()
 
-  // Create and fund escrow ATA
+  // The escrow token account is owned by the escrow keypair; its rent is paid
+  // by the payer (the ATA-create funder). The escrow keypair only ever needs
+  // to *sign* claim transfers as the token authority — it is never the fee
+  // payer — so it does not need any SOL of its own.
   const escrowAta = await getAssociatedTokenAddress(mintPubkey, escrowKeypair.publicKey)
   const sourceAta = await getAssociatedTokenAddress(mintPubkey, payer.publicKey)
 
   const instructions = [
-    // Fund escrow with SOL for rent
-    SystemProgram.transfer({
-      fromPubkey: payer.publicKey,
-      toPubkey: escrowKeypair.publicKey,
-      lamports: BigInt(LAMPORTS_PER_SOL / 50), // 0.02 SOL
-    }),
-    // Create escrow ATA
+    // Create escrow ATA (payer funds the rent)
     createAssociatedTokenAccountInstruction(
       payer.publicKey,
       escrowAta,
@@ -169,9 +165,11 @@ export async function fundVestingSchedule(
 
   const result = await sendAndConfirmTransaction(connection, transaction)
 
-  // Update state
+  // Persist the escrow keypair secret so claims can authorize transfers out of
+  // the escrow. Stored only in the 0600-mode local state file.
   serialized.status = 'active'
   serialized.escrowAccount = escrowKeypair.publicKey.toBase58()
+  serialized.escrowSecret = Buffer.from(escrowKeypair.secretKey).toString('base64')
   serialized.fundSignature = result.signature
   saveVestingState(state)
 
@@ -232,14 +230,24 @@ export async function claimVestedTokens(
     throw new Error('No tokens available to claim')
   }
 
+  // Reconstruct the escrow keypair — it owns the escrow token account and must
+  // sign the transfer out of it. Without the stored secret the funds would be
+  // unrecoverable.
+  if (!schedule.escrowSecret) {
+    throw new Error(
+      'Escrow secret is missing for this schedule; funds cannot be claimed. ' +
+      'The schedule must be funded with a version that persists the escrow key.'
+    )
+  }
+  const escrowKeypair = Keypair.fromSecretKey(Buffer.from(schedule.escrowSecret, 'base64'))
+
   const connection = createConnection(config)
   const payer = loadWallet(config)
   const mintPubkey = new PublicKey(schedule.mint)
   const recipientPubkey = new PublicKey(schedule.recipient)
 
   // Transfer from escrow to recipient
-  const escrowPubkey = new PublicKey(schedule.escrowAccount!)
-  const escrowAta = await getAssociatedTokenAddress(mintPubkey, escrowPubkey)
+  const escrowAta = await getAssociatedTokenAddress(mintPubkey, escrowKeypair.publicKey)
   const recipientAta = await getAssociatedTokenAddress(mintPubkey, recipientPubkey)
 
   const instructions = []
@@ -261,10 +269,23 @@ export async function claimVestedTokens(
     createTransferInstruction(
       escrowAta,
       recipientAta,
-      payer.publicKey, // Authority over escrow
+      escrowKeypair.publicKey, // Escrow keypair is the token account authority
       claimable
     )
   )
+
+  // On the final claim, close the now-empty escrow ATA and return its rent to
+  // the payer so no lamports are stranded.
+  const isFinalClaim = BigInt(serialized.claimedAmount) + claimable >= BigInt(serialized.totalAmount)
+  if (isFinalClaim) {
+    instructions.push(
+      createCloseAccountInstruction(
+        escrowAta,
+        payer.publicKey, // rent destination
+        escrowKeypair.publicKey // escrow authority
+      )
+    )
+  }
 
   const transaction = await buildTransaction(
     connection,
@@ -273,6 +294,7 @@ export async function claimVestedTokens(
   )
 
   transaction.partialSign(payer)
+  transaction.partialSign(escrowKeypair)
 
   const result = await sendAndConfirmTransaction(connection, transaction)
 
@@ -375,6 +397,7 @@ function serializeSchedule(s: VestingSchedule): SerializedVestingSchedule {
     endDate: s.endDate,
     status: s.status,
     escrowAccount: s.escrowAccount,
+    escrowSecret: s.escrowSecret,
     fundSignature: s.fundSignature,
     claimSignatures: s.claimSignatures,
     createdAt: s.createdAt,
@@ -400,6 +423,7 @@ function deserializeSchedule(s: SerializedVestingSchedule): VestingSchedule {
     endDate: s.endDate,
     status: s.status,
     escrowAccount: s.escrowAccount,
+    escrowSecret: s.escrowSecret,
     fundSignature: s.fundSignature,
     claimSignatures: s.claimSignatures,
     createdAt: s.createdAt,

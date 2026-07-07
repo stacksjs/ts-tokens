@@ -48,6 +48,12 @@ export interface VestingSchedule {
   endDate: number
   status: VestingStatus
   escrowAccount?: string
+  /**
+   * Base64-encoded escrow keypair secret. Required to authorize claim
+   * transfers out of the escrow token account. Persisted only in the
+   * 0600-mode local state file, mirroring the marketplace escrow store.
+   */
+  escrowSecret?: string
   fundSignature?: string
   claimSignatures: string[]
   createdAt: number
@@ -90,6 +96,7 @@ export interface SerializedVestingSchedule {
   endDate: number
   status: VestingStatus
   escrowAccount?: string
+  escrowSecret?: string
   fundSignature?: string
   claimSignatures: string[]
   createdAt: number

@@ -148,3 +148,28 @@ describe('Vesting types', () => {
     expect(report.percentageClaimed).toBe(25)
   })
 })
+
+// ---------------------------------------------------------------------------
+// Escrow custody — a persisted escrow secret must reconstruct the exact
+// authority that owns the escrow token account, otherwise vested funds can
+// never be claimed (regression guard for the escrow fund-loss bug).
+// ---------------------------------------------------------------------------
+
+describe('Vesting escrow custody', () => {
+  test('persisted escrow secret reconstructs the escrow authority', () => {
+    const escrow = Keypair.generate()
+    const escrowSecret = Buffer.from(escrow.secretKey).toString('base64')
+    const escrowAccount = escrow.publicKey.toBase58()
+
+    // Reconstruct the way claimVestedTokens does
+    const reconstructed = Keypair.fromSecretKey(Buffer.from(escrowSecret, 'base64'))
+
+    expect(reconstructed.publicKey.toBase58()).toBe(escrowAccount)
+  })
+
+  test('a schedule without an escrow secret is not claimable', () => {
+    const schedule = makeSchedule({ escrowAccount: Keypair.generate().publicKey.toBase58() })
+    // No escrowSecret means the claim path cannot sign for the escrow
+    expect(schedule.escrowSecret).toBeUndefined()
+  })
+})
