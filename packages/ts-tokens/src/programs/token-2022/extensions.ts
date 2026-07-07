@@ -49,7 +49,8 @@ export function getExtensionSize(type: ExtensionType): number {
     case ExtensionType.MetadataPointer:
       return 64
     case ExtensionType.ConfidentialTransferMint:
-      return 97
+      // authority(32) + autoApprove(1) + auditor ElGamal pubkey(32)
+      return 65
     case ExtensionType.ConfidentialTransferAccount:
       return 295
     case ExtensionType.TransferHookAccount:
@@ -61,7 +62,8 @@ export function getExtensionSize(type: ExtensionType): number {
     case ExtensionType.GroupMemberPointer:
       return 64
     case ExtensionType.TokenGroup:
-      return 136
+      // update_authority(32) + mint(32) + size(8) + max_size(8)
+      return 80
     case ExtensionType.TokenGroupMember:
       return 72
     default:
@@ -180,7 +182,8 @@ export function parseConfidentialTransferMint(data: Buffer, offset: number): Con
   return {
     authority: hasAuthority ? new PublicKey(authority) : null,
     autoApproveNewAccounts: data[offset + 32] === 1,
-    auditorElGamalPubkey: new Uint8Array(data.subarray(offset + 33, offset + 97)),
+    // ElGamal pubkeys are 32 bytes
+    auditorElGamalPubkey: new Uint8Array(data.subarray(offset + 33, offset + 65)),
   }
 }
 

@@ -62,7 +62,7 @@ describe('Extension Size Calculations', () => {
     expect(getExtensionSize(ExtensionType.TransferFeeConfig)).toBe(108)
     expect(getExtensionSize(ExtensionType.TransferFeeAmount)).toBe(8)
     expect(getExtensionSize(ExtensionType.MintCloseAuthority)).toBe(32)
-    expect(getExtensionSize(ExtensionType.ConfidentialTransferMint)).toBe(97)
+    expect(getExtensionSize(ExtensionType.ConfidentialTransferMint)).toBe(65)
     expect(getExtensionSize(ExtensionType.ConfidentialTransferAccount)).toBe(295)
     expect(getExtensionSize(ExtensionType.DefaultAccountState)).toBe(1)
     expect(getExtensionSize(ExtensionType.ImmutableOwner)).toBe(0)
@@ -77,7 +77,7 @@ describe('Extension Size Calculations', () => {
     expect(getExtensionSize(ExtensionType.MetadataPointer)).toBe(64)
     expect(getExtensionSize(ExtensionType.GroupPointer)).toBe(64)
     expect(getExtensionSize(ExtensionType.GroupMemberPointer)).toBe(64)
-    expect(getExtensionSize(ExtensionType.TokenGroup)).toBe(136)
+    expect(getExtensionSize(ExtensionType.TokenGroup)).toBe(80)
     expect(getExtensionSize(ExtensionType.TokenGroupMember)).toBe(72)
   })
 
@@ -215,20 +215,21 @@ describe('Extension Parsing', () => {
   })
 
   test('parseConfidentialTransferMint extracts all fields', () => {
-    const buf = Buffer.alloc(97)
+    const buf = Buffer.alloc(65)
     const authority = Keypair.generate().publicKey
     authority.toBuffer().copy(buf, 0)
     buf[32] = 1 // autoApproveNewAccounts = true
-    // Fill auditor pubkey bytes
-    for (let i = 0; i < 64; i++) {
+    // Fill auditor ElGamal pubkey bytes (32 bytes)
+    for (let i = 0; i < 32; i++) {
       buf[33 + i] = i + 1
     }
 
     const result = parseConfidentialTransferMint(buf, 0)
     expect(result.authority!.toBase58()).toBe(authority.toBase58())
     expect(result.autoApproveNewAccounts).toBe(true)
+    expect(result.auditorElGamalPubkey).toHaveLength(32)
     expect(result.auditorElGamalPubkey[0]).toBe(1)
-    expect(result.auditorElGamalPubkey[63]).toBe(64)
+    expect(result.auditorElGamalPubkey[31]).toBe(32)
   })
 
   test('parseConfidentialTransferMint handles null authority', () => {
