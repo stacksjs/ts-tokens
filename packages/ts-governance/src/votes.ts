@@ -180,9 +180,14 @@ export function createVotes(config: VotesConfig): Votes {
 
     async delegate(dao: PublicKey, input: DelegateInput) {
       const amount = input.amount === 'all' ? undefined : input.amount
-      const expiresAt = input.expires != null
-        ? parseDuration(input.expires)
-        : undefined
+      // A string like "7 days" is a relative duration → convert to an absolute
+      // unix timestamp; a bigint is treated as an already-absolute timestamp.
+      let expiresAt: bigint | undefined
+      if (input.expires != null) {
+        expiresAt = typeof input.expires === 'string'
+          ? BigInt(Math.floor(Date.now() / 1000)) + parseDuration(input.expires)
+          : input.expires
+      }
 
       return delegateVotingPower(connection, wallet, {
         dao,
