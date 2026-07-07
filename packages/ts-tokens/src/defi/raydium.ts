@@ -8,7 +8,30 @@ import type { Connection} from '@solana/web3.js';
 import { PublicKey } from '@solana/web3.js'
 import type { LiquidityPool, CreatePoolOptions, AddLiquidityOptions, RemoveLiquidityOptions } from './types'
 
-const RAYDIUM_API = 'https://api.raydium.io/v2'
+// api.raydium.io/v2 was decommissioned; the current API is api-v3.raydium.io.
+const RAYDIUM_API = 'https://api-v3.raydium.io'
+
+/**
+ * Parse a v3 pool object into a LiquidityPool.
+ *
+ * The v3 shape nests mints/amounts under mintA/mintB and vault/reserve fields;
+ * fall back across a few likely keys so we tolerate minor schema drift without
+ * silently returning zeros.
+ */
+function parseV3Pool(poolAddress: PublicKey, pool: any): LiquidityPool {
+  return {
+    address: poolAddress,
+    protocol: 'raydium',
+    tokenA: new PublicKey(pool.mintA?.address ?? pool.baseMint ?? pool.mintA),
+    tokenB: new PublicKey(pool.mintB?.address ?? pool.quoteMint ?? pool.mintB),
+    reserveA: BigInt(Math.floor(Number(pool.mintAmountA ?? pool.baseReserve ?? 0))),
+    reserveB: BigInt(Math.floor(Number(pool.mintAmountB ?? pool.quoteReserve ?? 0))),
+    lpMint: new PublicKey(pool.lpMint?.address ?? pool.lpMint ?? PublicKey.default),
+    lpSupply: BigInt(Math.floor(Number(pool.lpAmount ?? pool.lpSupply ?? 0))),
+    fee: pool.feeRate ?? pool.fee ?? 0.0025, // 0.25% default
+    apy: pool.day?.apr ?? pool.apy,
+  }
+}
 
 /**
  * Get pool info
@@ -17,30 +40,26 @@ export async function getPoolInfo(
   _connection: Connection,
   poolAddress: PublicKey
 ): Promise<LiquidityPool | null> {
+  let response: Response
   try {
-    const response = await fetch(`${RAYDIUM_API}/main/pool/${poolAddress.toBase58()}`)
-
-    if (!response.ok) {
-      return null
-    }
-
-    const data = await response.json()
-
-    return {
-      address: poolAddress,
-      protocol: 'raydium',
-      tokenA: new PublicKey(data.baseMint),
-      tokenB: new PublicKey(data.quoteMint),
-      reserveA: BigInt(data.baseReserve),
-      reserveB: BigInt(data.quoteReserve),
-      lpMint: new PublicKey(data.lpMint),
-      lpSupply: BigInt(data.lpSupply),
-      fee: data.fee ?? 0.0025, // 0.25% default
-      apy: data.apy,
-    }
-  } catch {
-    return null
+    response = await fetch(`${RAYDIUM_API}/pools/info/ids?ids=${poolAddress.toBase58()}`)
+  } catch (error) {
+    throw new Error(
+      `Failed to reach Raydium API: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
+
+  // 404 = pool genuinely not found; any other non-ok is a failure to surface.
+  if (response.status === 404) return null
+  if (!response.ok) {
+    throw new Error(`Raydium API error: ${response.status} ${response.statusText}`)
+  }
+
+  const body = await response.json()
+  const pool = Array.isArray(body.data) ? body.data[0] : (body.data ?? body)
+  if (!pool) return null
+
+  return parseV3Pool(poolAddress, pool)
 }
 
 /**
@@ -49,45 +68,33 @@ export async function getPoolInfo(
 export async function getPoolsForToken(
   tokenMint: PublicKey
 ): Promise<LiquidityPool[]> {
+  const mintAddress = tokenMint.toBase58()
+  const url = `${RAYDIUM_API}/pools/info/mint`
+    + `?mint1=${mintAddress}&poolType=all&poolSortField=default`
+    + `&sortType=desc&pageSize=100&page=1`
+
+  let response: Response
   try {
-    const response = await fetch(`${RAYDIUM_API}/main/pairs`)
-
-    if (!response.ok) {
-      return []
-    }
-
-    const data = await response.json()
-    const mintAddress = tokenMint.toBase58()
-
-    return data
-      .filter((pool: { baseMint: string; quoteMint: string }) =>
-        pool.baseMint === mintAddress || pool.quoteMint === mintAddress
-      )
-      .map((pool: {
-        ammId: string
-        baseMint: string
-        quoteMint: string
-        baseReserve: string
-        quoteReserve: string
-        lpMint: string
-        lpSupply: string
-        fee: number
-        apy: number
-      }) => ({
-        address: new PublicKey(pool.ammId),
-        protocol: 'raydium',
-        tokenA: new PublicKey(pool.baseMint),
-        tokenB: new PublicKey(pool.quoteMint),
-        reserveA: BigInt(pool.baseReserve),
-        reserveB: BigInt(pool.quoteReserve),
-        lpMint: new PublicKey(pool.lpMint),
-        lpSupply: BigInt(pool.lpSupply),
-        fee: pool.fee ?? 0.0025,
-        apy: pool.apy,
-      }))
-  } catch {
-    return []
+    response = await fetch(url)
+  } catch (error) {
+    throw new Error(
+      `Failed to reach Raydium API: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
+
+  // 404 = no pools for this token (genuinely empty); other non-ok is a failure.
+  if (response.status === 404) return []
+  if (!response.ok) {
+    throw new Error(`Raydium API error: ${response.status} ${response.statusText}`)
+  }
+
+  const body = await response.json()
+  // v3 wraps the page under data.data; tolerate a few shapes.
+  const pools: any[] = body.data?.data ?? body.data ?? (Array.isArray(body) ? body : [])
+
+  return pools.map((pool) =>
+    parseV3Pool(new PublicKey(pool.id ?? pool.ammId ?? pool.address), pool)
+  )
 }
 
 /**

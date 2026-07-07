@@ -41,27 +41,12 @@ export async function createMultisig(
 ): Promise<{ address: PublicKey; signature: string }> {
   const { signers, threshold } = options
 
-  if (signers.length < 1) {
-    throw new Error('At least 1 signer required')
-  }
-
-  if (signers.length > 11) {
-    throw new Error('Maximum 11 signers allowed')
-  }
-
-  if (threshold < 1) {
-    throw new Error('Threshold must be at least 1')
-  }
-
-  if (threshold > signers.length) {
-    throw new Error('Threshold cannot exceed number of signers')
-  }
-
-  // Reject duplicate signers — the SPL Token program would otherwise create
-  // a multisig where the same key is counted multiple times toward the threshold
-  const uniqueSigners = new Set(signers.map(s => s.toBase58()))
-  if (uniqueSigners.size !== signers.length) {
-    throw new Error('Duplicate signers not allowed')
+  // Enforce the same rules validateMultisigConfig checks so the two never
+  // disagree — notably the >= 2 signer minimum a real multisig requires. Run
+  // the shared validator and throw on the first error.
+  const errors = validateMultisigConfig(options)
+  if (errors.length > 0) {
+    throw new Error(errors[0])
   }
 
   // Create new account for multisig

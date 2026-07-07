@@ -52,12 +52,27 @@ export async function getLendingPools(
     ? `${baseUrl}/markets?token=${mint.toBase58()}`
     : `${baseUrl}/markets`
 
+  let response: Response
   try {
-    const response = await fetch(url)
-    if (!response.ok) return []
-    const data = await response.json()
+    response = await fetch(url)
+  } catch (error) {
+    // Network-level failure (DNS, connection reset, etc.) — surface it rather
+    // than masking an outage as "no pools".
+    throw new Error(
+      `Failed to reach ${protocol} lending API: ${error instanceof Error ? error.message : String(error)}`
+    )
+  }
 
-    return (data.markets ?? data.pools ?? data ?? []).map((pool: any) => ({
+  // 404 means the market genuinely has no pools for this token — a real empty
+  // result. Any other non-ok status is a failure that must not be swallowed.
+  if (response.status === 404) return []
+  if (!response.ok) {
+    throw new Error(`${protocol} lending API error: ${response.status} ${response.statusText}`)
+  }
+
+  const data = await response.json()
+
+  return (data.markets ?? data.pools ?? data ?? []).map((pool: any) => ({
       protocol,
       market: new PublicKey(pool.address ?? pool.market ?? PublicKey.default),
       mint: new PublicKey(pool.mint ?? pool.tokenMint ?? PublicKey.default),
@@ -71,9 +86,6 @@ export async function getLendingPools(
       liquidationThreshold: pool.liquidationThreshold ?? pool.liq_threshold ?? 0,
       reserveAvailable: BigInt(pool.availableLiquidity ?? pool.available ?? 0),
     }))
-  } catch {
-    return []
-  }
 }
 
 /**
@@ -100,7 +112,21 @@ export async function getBestLendingRates(
 }
 
 /**
- * Calculate liquidation price for a borrow position
+ * Calculate liquidation price for a borrow position.
+ *
+ * Returns the collateral price (USD per whole collateral token) at which the
+ * position becomes liquidatable. Amounts are base-unit bigints of two
+ * potentially different-decimal mints, so both must be normalized to whole
+ * tokens before mixing; otherwise the result is off by 10^(borrowDecimals -
+ * collateralDecimals).
+ *
+ * Liquidation triggers when: collateralValue * threshold <= borrowValue
+ *   collateralTokens * liqPrice * threshold = borrowTokens * borrowPrice
+ *   liqPrice = (borrowTokens * borrowPrice) / (collateralTokens * threshold)
+ *
+ * The current _collateralPrice is not needed to compute the *liquidation*
+ * price (it is the unknown being solved for), but is accepted so callers can
+ * pass live market data and derive how far the position is from liquidation.
  */
 export function calculateLiquidationPrice(
   collateralAmount: bigint,
@@ -108,16 +134,16 @@ export function calculateLiquidationPrice(
   borrowAmount: bigint,
   borrowPrice: number,
   liquidationThreshold: number,
+  collateralDecimals: number = 0,
+  borrowDecimals: number = 0,
 ): number {
-  // liquidation when: collateral_value * threshold <= borrow_value
-  // collateral_amount * liq_price * threshold = borrow_amount * borrow_price
-  // liq_price = (borrow_amount * borrow_price) / (collateral_amount * threshold)
-  const borrowValue = Number(borrowAmount) * borrowPrice
-  const collateralUnits = Number(collateralAmount)
+  const collateralTokens = Number(collateralAmount) / Math.pow(10, collateralDecimals)
+  const borrowTokens = Number(borrowAmount) / Math.pow(10, borrowDecimals)
 
-  if (collateralUnits === 0 || liquidationThreshold === 0) return 0
+  if (collateralTokens === 0 || liquidationThreshold === 0) return 0
 
-  return borrowValue / (collateralUnits * liquidationThreshold)
+  const borrowValue = borrowTokens * borrowPrice
+  return borrowValue / (collateralTokens * liquidationThreshold)
 }
 
 /**

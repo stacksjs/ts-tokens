@@ -52,14 +52,23 @@ export async function createFanoutWallet(
 ): Promise<FanoutWallet> {
   const payer = loadWallet(config)
 
-  // Validate shares
+  if (options.members.length === 0) {
+    throw new Error('At least one member is required')
+  }
+
+  // Validate each member's shares individually — a zero/negative/fractional
+  // share slips past a sum-only check (e.g. shares 0 and 100 sum to 100) yet
+  // makes distribution math nonsensical. Mirror addFanoutMember/
+  // updateMemberShares which require a positive integer.
+  for (const m of options.members) {
+    if (!Number.isInteger(m.shares) || m.shares <= 0) {
+      throw new Error(`Member ${m.address} shares must be a positive integer`)
+    }
+  }
+
   const totalShares = options.members.reduce((sum, m) => sum + m.shares, 0)
   if (totalShares <= 0) {
     throw new Error('Total shares must be greater than 0')
-  }
-
-  if (options.members.length === 0) {
-    throw new Error('At least one member is required')
   }
 
   const fanout: FanoutWallet = {

@@ -28,6 +28,7 @@ import {
   getNFTPoolAddress,
   getNFTStakeEntryAddress,
   getRewardVaultAddress,
+  programNotDeployedError,
 } from './program'
 import { calculateNFTPoints } from './stake'
 import {
@@ -47,6 +48,8 @@ export async function createNFTStakePool(
 ): Promise<StakingResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
+
+  programNotDeployedError()
 
   const nftPool = getNFTPoolAddress(payer.publicKey, options.collection)
   const rewardVault = getRewardVaultAddress(nftPool)
@@ -87,6 +90,8 @@ export async function stakeNFT(
 ): Promise<StakingResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
+
+  programNotDeployedError()
 
   const nftStakeEntry = getNFTStakeEntryAddress(options.pool, options.mint)
   const ownerNFTAccount = await getAssociatedTokenAddress(options.mint, payer.publicKey)
@@ -129,6 +134,8 @@ export async function unstakeNFT(
 ): Promise<StakingResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
+
+  programNotDeployedError()
 
   const nftStakeEntry = getNFTStakeEntryAddress(options.pool, options.mint)
   const ownerNFTAccount = await getAssociatedTokenAddress(options.mint, payer.publicKey)
@@ -192,6 +199,9 @@ export async function claimNFTRewards(
     rewardVault,
     ownerRewardAccount
   )
+
+  // Refuse before submitting: the staking program is undeployed.
+  programNotDeployedError()
 
   const transaction = await buildTransaction(
     connection,

@@ -16,6 +16,7 @@ import {
   createCloseAccountInstruction,
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
+  getAccount,
 } from '@solana/spl-token'
 import type { TokenConfig } from '../types'
 import type {
@@ -46,12 +47,20 @@ function loadVestingState(storePath?: string): VestingState {
 }
 
 /**
- * Save vesting state
+ * Save vesting state atomically.
+ *
+ * Writes to a unique temp file in the same directory, then renames it over the
+ * target. rename(2) is atomic on the same filesystem, so a crash mid-write can
+ * never leave a truncated/partial state file that would corrupt claim
+ * accounting. Concurrent writers each rename their own temp file, so the last
+ * writer wins without either observing a half-written file.
  */
 function saveVestingState(state: VestingState, storePath?: string): void {
   const filePath = storePath ?? getVestingStatePath()
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
-  fs.writeFileSync(filePath, JSON.stringify(state, null, 2), { mode: 0o600 })
+  const tmpPath = `${filePath}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`
+  fs.writeFileSync(tmpPath, JSON.stringify(state, null, 2), { mode: 0o600 })
+  fs.renameSync(tmpPath, filePath)
 }
 
 /**
@@ -82,6 +91,27 @@ export async function createVestingSchedule(
   vestingConfig: VestingConfig,
   _config: TokenConfig
 ): Promise<VestingSchedule> {
+  const cliffPercentage = vestingConfig.cliffPercentage ?? 0
+
+  // Guard against inputs that would make vested exceed totalAmount. A
+  // cliffPercentage above 100 makes cliffAmount > totalAmount, driving
+  // remainingAmount negative so linear vesting subtracts from the cliff and the
+  // schedule can pay out more than was funded.
+  if (!Number.isFinite(cliffPercentage) || cliffPercentage < 0 || cliffPercentage > 100) {
+    throw new Error('cliffPercentage must be between 0 and 100')
+  }
+  if (!Number.isFinite(vestingConfig.cliffMonths) || vestingConfig.cliffMonths < 0) {
+    throw new Error('cliffMonths must be >= 0')
+  }
+  // vestingMonths is used as the linear-vesting divisor window; it must be a
+  // positive integer so the end date is strictly after the cliff date.
+  if (!Number.isFinite(vestingConfig.vestingMonths) || vestingConfig.vestingMonths <= 0) {
+    throw new Error('vestingMonths must be > 0')
+  }
+  if (vestingConfig.totalAmount <= 0n) {
+    throw new Error('totalAmount must be greater than 0')
+  }
+
   const startDate = vestingConfig.startDate ?? Date.now()
   const cliffDate = addMonths(startDate, vestingConfig.cliffMonths)
   const endDate = addMonths(startDate, vestingConfig.cliffMonths + vestingConfig.vestingMonths)
@@ -95,7 +125,7 @@ export async function createVestingSchedule(
     claimedAmount: 0n,
     cliffMonths: vestingConfig.cliffMonths,
     vestingMonths: vestingConfig.vestingMonths,
-    cliffPercentage: vestingConfig.cliffPercentage ?? 0,
+    cliffPercentage,
     startDate,
     cliffDate,
     endDate,
@@ -223,12 +253,6 @@ export async function claimVestedTokens(
   }
 
   const schedule = deserializeSchedule(serialized)
-  const vestedNow = calculateVestedAmount(schedule)
-  const claimable = vestedNow - schedule.claimedAmount
-
-  if (claimable <= 0n) {
-    throw new Error('No tokens available to claim')
-  }
 
   // Reconstruct the escrow keypair — it owns the escrow token account and must
   // sign the transfer out of it. Without the stored secret the funds would be
@@ -249,6 +273,45 @@ export async function claimVestedTokens(
   // Transfer from escrow to recipient
   const escrowAta = await getAssociatedTokenAddress(mintPubkey, escrowKeypair.publicKey)
   const recipientAta = await getAssociatedTokenAddress(mintPubkey, recipientPubkey)
+
+  // Derive the already-claimed amount from the on-chain escrow balance rather
+  // than trusting the locally-persisted claimedAmount. The escrow was funded
+  // with exactly totalAmount, and the only outflow is prior claims, so
+  //   claimed == totalAmount - escrowBalance.
+  // This makes claiming idempotent against chain state: a concurrent claim, or
+  // a crash between send and save, cannot double-pay because the second attempt
+  // sees the reduced escrow balance and computes a correspondingly smaller
+  // claimable. It also self-heals a stale local claimedAmount.
+  let onChainClaimed: bigint
+  try {
+    const escrowAccount = await getAccount(connection, escrowAta)
+    onChainClaimed = schedule.totalAmount - escrowAccount.amount
+  } catch {
+    // The escrow ATA is gone (closed on the final claim) — everything is out.
+    onChainClaimed = schedule.totalAmount
+  }
+  if (onChainClaimed < 0n) onChainClaimed = 0n
+
+  // Reconcile local state to the on-chain truth before computing claimable.
+  const claimedSoFar = onChainClaimed > schedule.claimedAmount
+    ? onChainClaimed
+    : schedule.claimedAmount
+
+  const vestedNow = calculateVestedAmount(schedule)
+  let claimable = vestedNow - claimedSoFar
+  // Never attempt to withdraw more than the escrow actually holds.
+  const escrowRemaining = schedule.totalAmount - onChainClaimed
+  if (claimable > escrowRemaining) claimable = escrowRemaining
+
+  if (claimable <= 0n) {
+    // Persist the reconciled claimed amount so status reports stay accurate.
+    if (claimedSoFar > schedule.claimedAmount) {
+      serialized.claimedAmount = claimedSoFar.toString()
+      if (claimedSoFar >= schedule.totalAmount) serialized.status = 'completed'
+      saveVestingState(state)
+    }
+    throw new Error('No tokens available to claim')
+  }
 
   const instructions = []
 
@@ -276,7 +339,7 @@ export async function claimVestedTokens(
 
   // On the final claim, close the now-empty escrow ATA and return its rent to
   // the payer so no lamports are stranded.
-  const isFinalClaim = BigInt(serialized.claimedAmount) + claimable >= BigInt(serialized.totalAmount)
+  const isFinalClaim = claimedSoFar + claimable >= schedule.totalAmount
   if (isFinalClaim) {
     instructions.push(
       createCloseAccountInstruction(
@@ -298,12 +361,24 @@ export async function claimVestedTokens(
 
   const result = await sendAndConfirmTransaction(connection, transaction)
 
-  // Update state
-  serialized.claimedAmount = (BigInt(serialized.claimedAmount) + claimable).toString()
+  if (!result.confirmed) {
+    // The transfer did not confirm. Persist the reconciled claimedAmount (which
+    // reflects only settled on-chain outflows) but do NOT credit this claim, so
+    // a retry recomputes claimable from the still-full escrow balance.
+    if (claimedSoFar > schedule.claimedAmount) {
+      serialized.claimedAmount = claimedSoFar.toString()
+      saveVestingState(state)
+    }
+    throw new Error(`Claim transfer was not confirmed: ${result.error ?? 'unknown error'}`)
+  }
+
+  // Update state against the reconciled base, not the stale persisted value.
+  const newClaimed = claimedSoFar + claimable
+  serialized.claimedAmount = newClaimed.toString()
   serialized.vestedAmount = vestedNow.toString()
   serialized.claimSignatures.push(result.signature)
 
-  if (BigInt(serialized.claimedAmount) >= BigInt(serialized.totalAmount)) {
+  if (newClaimed >= schedule.totalAmount) {
     serialized.status = 'completed'
   }
 

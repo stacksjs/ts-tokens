@@ -4,14 +4,15 @@
  * Create, close, and query DCA positions via Jupiter DCA API.
  */
 
-import { PublicKey, Transaction } from '@solana/web3.js'
-import type { Connection } from '@solana/web3.js'
+import { VersionedTransaction } from '@solana/web3.js'
 import type { TokenConfig } from '../types'
 import { createConnection } from '../drivers/solana/connection'
 import { loadWallet } from '../drivers/solana/wallet'
 import { sendAndConfirmTransaction } from '../drivers/solana/transaction'
 
-const JUPITER_DCA_API = 'https://dca-api.jup.ag'
+// The standalone dca-api.jup.ag host was decommissioned; DCA is served by the
+// Recurring API under api.jup.ag/recurring/v1.
+const JUPITER_DCA_API = 'https://api.jup.ag/recurring/v1'
 
 /**
  * DCA position
@@ -45,8 +46,17 @@ export interface CreateDCAOptions {
   totalInAmount: bigint
   inAmountPerCycle: bigint
   cycleFrequency: number
-  minPrice?: number
-  maxPrice?: number
+  /**
+   * Minimum acceptable output per cycle, in output-mint **base units** (not a
+   * price). Maps directly to Jupiter's minOutAmountPerCycle. The previous
+   * minPrice/maxPrice options were misleading: a price was passed straight
+   * through as a raw amount, giving no real price protection. Callers holding a
+   * price must convert it themselves: minOutAmountPerCycle ≈
+   * floor(price * inAmountPerCycle) adjusted for the input/output decimal delta.
+   */
+  minOutAmountPerCycle?: bigint
+  /** Maximum acceptable output per cycle, in output-mint base units. */
+  maxOutAmountPerCycle?: bigint
   startAt?: number
 }
 
@@ -70,17 +80,17 @@ export async function createDCA(
     cycleSecondsApart: options.cycleFrequency,
   }
 
-  if (options.minPrice !== undefined) {
-    body.minOutAmountPerCycle = options.minPrice.toString()
+  if (options.minOutAmountPerCycle !== undefined) {
+    body.minOutAmountPerCycle = options.minOutAmountPerCycle.toString()
   }
-  if (options.maxPrice !== undefined) {
-    body.maxOutAmountPerCycle = options.maxPrice.toString()
+  if (options.maxOutAmountPerCycle !== undefined) {
+    body.maxOutAmountPerCycle = options.maxOutAmountPerCycle.toString()
   }
   if (options.startAt !== undefined) {
     body.startAt = options.startAt
   }
 
-  const response = await fetch(`${JUPITER_DCA_API}/v1/dca/create`, {
+  const response = await fetch(`${JUPITER_DCA_API}/createOrder`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -91,9 +101,9 @@ export async function createDCA(
   }
 
   const data = await response.json()
-  const transaction = Transaction.from(Buffer.from(data.tx, 'base64'))
+  const transaction = VersionedTransaction.deserialize(Buffer.from(data.tx, 'base64'))
 
-  transaction.partialSign(payer)
+  transaction.sign([payer])
 
   const result = await sendAndConfirmTransaction(connection, transaction)
 
@@ -113,7 +123,7 @@ export async function closeDCA(
   const connection = createConnection(config)
   const payer = loadWallet(config)
 
-  const response = await fetch(`${JUPITER_DCA_API}/v1/dca/close`, {
+  const response = await fetch(`${JUPITER_DCA_API}/cancelOrder`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -127,9 +137,9 @@ export async function closeDCA(
   }
 
   const data = await response.json()
-  const transaction = Transaction.from(Buffer.from(data.tx, 'base64'))
+  const transaction = VersionedTransaction.deserialize(Buffer.from(data.tx, 'base64'))
 
-  transaction.partialSign(payer)
+  transaction.sign([payer])
 
   const result = await sendAndConfirmTransaction(connection, transaction)
 
@@ -143,11 +153,16 @@ export async function getDCAPositions(
   wallet: string
 ): Promise<DCAPosition[]> {
   const response = await fetch(
-    `${JUPITER_DCA_API}/v1/user/${wallet}/dcas`
+    `${JUPITER_DCA_API}/${wallet}/dcas`
   )
 
-  if (!response.ok) {
+  // 404 = wallet has no DCA positions (genuinely empty). Any other non-ok is a
+  // failure that must not masquerade as an empty list.
+  if (response.status === 404) {
     return []
+  }
+  if (!response.ok) {
+    throw new Error(`Jupiter DCA API error: ${response.status} ${response.statusText}`)
   }
 
   const data = await response.json()
@@ -161,7 +176,7 @@ export async function getDCAPosition(
   dcaPubkey: string
 ): Promise<DCAPosition | null> {
   const response = await fetch(
-    `${JUPITER_DCA_API}/v1/dca/${dcaPubkey}`
+    `${JUPITER_DCA_API}/order/${dcaPubkey}`
   )
 
   if (!response.ok) {

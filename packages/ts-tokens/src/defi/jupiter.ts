@@ -5,10 +5,15 @@
  */
 
 import type { Connection} from '@solana/web3.js';
-import { PublicKey, Transaction } from '@solana/web3.js'
+import { PublicKey, VersionedTransaction } from '@solana/web3.js'
 import type { SwapQuote, SwapOptions, TokenPrice } from './types'
 
-const JUPITER_API = 'https://quote-api.jup.ag/v6'
+// Current Jupiter endpoints. The v6 quote-api, price.jup.ag/v4 and
+// token.jup.ag hosts were decommissioned; quote + swap now live under
+// api.jup.ag/swap/v1 and price/token data under api.jup.ag.
+const JUPITER_SWAP_API = 'https://api.jup.ag/swap/v1'
+const JUPITER_PRICE_API = 'https://api.jup.ag/price/v2'
+const JUPITER_TOKENS_API = 'https://api.jup.ag/tokens/v1'
 
 /**
  * Get swap quote from Jupiter
@@ -30,7 +35,7 @@ export async function getSwapQuote(options: SwapOptions): Promise<SwapQuote> {
     onlyDirectRoutes: onlyDirectRoutes.toString(),
   })
 
-  const response = await fetch(`${JUPITER_API}/quote?${params}`)
+  const response = await fetch(`${JUPITER_SWAP_API}/quote?${params}`)
 
   if (!response.ok) {
     throw new Error(`Jupiter API error: ${response.statusText}`)
@@ -43,7 +48,7 @@ export async function getSwapQuote(options: SwapOptions): Promise<SwapQuote> {
     outputMint,
     inputAmount: BigInt(data.inAmount),
     outputAmount: BigInt(data.outAmount),
-    priceImpact: data.priceImpactPct,
+    priceImpact: Number(data.priceImpactPct),
     fee: BigInt(data.platformFee?.amount ?? 0),
     route: data.routePlan?.map((leg: { swapInfo: { ammKey: string; inputMint: string; outputMint: string; inAmount: string; outAmount: string }; label: string }) => ({
       protocol: leg.label,
@@ -54,6 +59,8 @@ export async function getSwapQuote(options: SwapOptions): Promise<SwapQuote> {
       poolAddress: new PublicKey(leg.swapInfo.ammKey),
     })) ?? [],
     expiresAt: Date.now() + 30000, // 30 seconds
+    // Keep the full quote so /swap receives it unmodified.
+    rawQuote: data,
   }
 }
 
@@ -63,18 +70,22 @@ export async function getSwapQuote(options: SwapOptions): Promise<SwapQuote> {
 export async function buildSwapTransaction(
   quote: SwapQuote,
   userPublicKey: PublicKey
-): Promise<Transaction> {
-  const response = await fetch(`${JUPITER_API}/swap`, {
+): Promise<VersionedTransaction> {
+  // /swap requires the full, unmodified quoteResponse (routePlan,
+  // otherAmountThreshold, swapMode, slippageBps, ...). Forward the raw quote as
+  // returned by /quote; a hand-rebuilt partial object is rejected.
+  if (!quote.rawQuote) {
+    throw new Error(
+      'SwapQuote is missing rawQuote; build it via getSwapQuote so the full ' +
+      'Jupiter quote can be forwarded to /swap'
+    )
+  }
+
+  const response = await fetch(`${JUPITER_SWAP_API}/swap`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      quoteResponse: {
-        inputMint: quote.inputMint.toBase58(),
-        outputMint: quote.outputMint.toBase58(),
-        inAmount: quote.inputAmount.toString(),
-        outAmount: quote.outputAmount.toString(),
-        priceImpactPct: quote.priceImpact,
-      },
+      quoteResponse: quote.rawQuote,
       userPublicKey: userPublicKey.toBase58(),
       wrapAndUnwrapSol: true,
     }),
@@ -85,9 +96,10 @@ export async function buildSwapTransaction(
   }
 
   const data = await response.json()
-  const swapTransaction = Buffer.from(data.swapTransaction, 'base64')
 
-  return Transaction.from(swapTransaction)
+  // Jupiter returns a base64 VersionedTransaction; legacy Transaction.from()
+  // throws on the versioned message prefix.
+  return VersionedTransaction.deserialize(Buffer.from(data.swapTransaction, 'base64'))
 }
 
 /**
@@ -97,7 +109,7 @@ export async function executeSwap(
   _connection: Connection,
   options: SwapOptions,
   userPublicKey: PublicKey
-): Promise<{ quote: SwapQuote; transaction: Transaction }> {
+): Promise<{ quote: SwapQuote; transaction: VersionedTransaction }> {
   const quote = await getSwapQuote(options)
   const transaction = await buildSwapTransaction(quote, userPublicKey)
 
@@ -109,7 +121,7 @@ export async function executeSwap(
  */
 export async function getTokenPrice(mint: PublicKey): Promise<TokenPrice> {
   const response = await fetch(
-    `https://price.jup.ag/v4/price?ids=${mint.toBase58()}`
+    `${JUPITER_PRICE_API}?ids=${mint.toBase58()}`
   )
 
   if (!response.ok) {
@@ -117,7 +129,7 @@ export async function getTokenPrice(mint: PublicKey): Promise<TokenPrice> {
   }
 
   const data = await response.json()
-  const priceData = data.data[mint.toBase58()]
+  const priceData = data.data?.[mint.toBase58()]
 
   if (!priceData) {
     throw new Error(`Price not found for ${mint.toBase58()}`)
@@ -125,7 +137,8 @@ export async function getTokenPrice(mint: PublicKey): Promise<TokenPrice> {
 
   return {
     mint,
-    priceUsd: priceData.price,
+    // price v2 returns price as a numeric string.
+    priceUsd: Number(priceData.price),
     priceChange24h: 0, // Not available in this endpoint
     volume24h: 0,
     source: 'jupiter',
@@ -138,7 +151,7 @@ export async function getTokenPrice(mint: PublicKey): Promise<TokenPrice> {
  */
 export async function getTokenPrices(mints: PublicKey[]): Promise<Map<string, TokenPrice>> {
   const ids = mints.map(m => m.toBase58()).join(',')
-  const response = await fetch(`https://price.jup.ag/v4/price?ids=${ids}`)
+  const response = await fetch(`${JUPITER_PRICE_API}?ids=${ids}`)
 
   if (!response.ok) {
     throw new Error(`Jupiter price API error: ${response.statusText}`)
@@ -149,12 +162,12 @@ export async function getTokenPrices(mints: PublicKey[]): Promise<Map<string, To
 
   for (const mint of mints) {
     const address = mint.toBase58()
-    const priceData = data.data[address]
+    const priceData = data.data?.[address]
 
     if (priceData) {
       prices.set(address, {
         mint,
-        priceUsd: priceData.price,
+        priceUsd: Number(priceData.price),
         priceChange24h: 0,
         volume24h: 0,
         source: 'jupiter',
@@ -176,7 +189,10 @@ export async function getSupportedTokens(): Promise<Array<{
   decimals: number
   logoURI?: string
 }>> {
-  const response = await fetch('https://token.jup.ag/all')
+  // token.jup.ag/all was decommissioned. The tokens v1 API exposes token
+  // metadata by tag; 'verified' is the closest analogue to the old curated
+  // list and returns full { address, symbol, name, decimals, logoURI } objects.
+  const response = await fetch(`${JUPITER_TOKENS_API}/tagged/verified`)
 
   if (!response.ok) {
     throw new Error(`Jupiter token list error: ${response.statusText}`)

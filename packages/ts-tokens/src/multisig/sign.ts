@@ -31,7 +31,7 @@ const pendingTransactions = new Map<string, MultisigTransaction>()
 export async function createMultisigTransaction(
   connection: Connection,
   multisig: PublicKey,
-  instruction: TransactionInstruction,
+  _instruction: TransactionInstruction,
   _description?: string
 ): Promise<MultisigTransaction> {
   const multisigAccount = await getMultisig(connection, multisig)
@@ -40,21 +40,11 @@ export async function createMultisigTransaction(
     throw new Error('Multisig account not found')
   }
 
-  const id = generateTransactionId()
-
-  const transaction: MultisigTransaction = {
-    id,
-    multisig,
-    instruction: Buffer.from(instruction.data),
-    signers: multisigAccount.signers,
-    signatures: new Map(),
-    executed: false,
-    createdAt: new Date(),
-  }
-
-  pendingTransactions.set(id, transaction)
-
-  return transaction
+  // sign/execute unconditionally throw PROGRAM_NOT_DEPLOYED, so a pending
+  // transaction created here could never be signed or executed. Refuse at
+  // creation time too rather than accumulating dead in-memory entries that
+  // getPendingSignatures would surface as actionable.
+  throw new Error(PROGRAM_NOT_DEPLOYED)
 }
 
 /**
@@ -180,6 +170,8 @@ export function cancelMultisigTransaction(transactionId: string): boolean {
 /**
  * Check if transaction can be executed
  */
+// (generateTransactionId removed: createMultisigTransaction now throws before
+// ever minting an id, so no unique-id generator is needed.)
 export async function canExecute(
   connection: Connection,
   transactionId: string
@@ -208,11 +200,4 @@ export async function canExecute(
   }
 
   return { canExecute: true }
-}
-
-/**
- * Generate unique transaction ID
- */
-function generateTransactionId(): string {
-  return `tx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 }

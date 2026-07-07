@@ -12,6 +12,24 @@ import { PublicKey } from '@solana/web3.js'
 export const STAKING_PROGRAM_ID = new PublicKey('StakeProgram1111111111111111111111111111111')
 
 /**
+ * Message thrown by every mutating staking op: the on-chain staking program is
+ * a placeholder id and is not deployed, so any real transaction built against
+ * it is guaranteed to fail preflight. Mirrors the multisig/treasury modules —
+ * refuse loudly at call time instead of sending a doomed transaction.
+ */
+export const STAKING_PROGRAM_NOT_DEPLOYED =
+  'Staking program is not deployed (STAKING_PROGRAM_ID is a placeholder); ' +
+  'staking transactions cannot be submitted'
+
+/**
+ * Throw a clear "staking program not deployed" error. Call at the start of each
+ * high-level mutating staking operation.
+ */
+export function programNotDeployedError(): never {
+  throw new Error(STAKING_PROGRAM_NOT_DEPLOYED)
+}
+
+/**
  * Return true when an error represents a genuinely-absent account rather than
  * an RPC/network failure. Used to distinguish "no stakes yet" (return []) from
  * transient failures that must be rethrown so callers do not treat an outage as

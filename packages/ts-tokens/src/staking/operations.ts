@@ -23,6 +23,7 @@ import {
   getStakeEntryAddress,
   getStakeVaultAddress,
   getRewardVaultAddress,
+  programNotDeployedError,
 } from './program'
 import {
   createStakeInstruction,
@@ -70,6 +71,10 @@ export async function stake(
     ownerTokenAccount,
     options.amount
   )
+
+  // Refuse before submitting: the staking program is undeployed, so this
+  // transaction is guaranteed to fail preflight.
+  programNotDeployedError()
 
   const transaction = await buildTransaction(
     connection,
@@ -125,6 +130,9 @@ export async function unstake(
     options.amount
   )
 
+  // Refuse before submitting: the staking program is undeployed.
+  programNotDeployedError()
+
   const transaction = await buildTransaction(
     connection,
     [instruction],
@@ -178,6 +186,9 @@ export async function claimRewards(
     ownerRewardAccount
   )
 
+  // Refuse before submitting: the staking program is undeployed.
+  programNotDeployedError()
+
   const transaction = await buildTransaction(
     connection,
     [instruction],
@@ -205,6 +216,8 @@ export async function compoundRewards(
 ): Promise<StakingResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
+
+  programNotDeployedError()
 
   const stakeEntry = getStakeEntryAddress(options.pool, payer.publicKey)
   const rewardVault = getRewardVaultAddress(options.pool)
@@ -269,6 +282,9 @@ export async function emergencyUnstake(
     stakeVault,
     ownerTokenAccount
   )
+
+  // Refuse before submitting: the staking program is undeployed.
+  programNotDeployedError()
 
   const transaction = await buildTransaction(
     connection,

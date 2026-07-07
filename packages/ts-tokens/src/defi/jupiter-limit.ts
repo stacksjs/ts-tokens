@@ -4,14 +4,14 @@
  * Create, cancel, and query limit orders via Jupiter Limit Order API.
  */
 
-import { PublicKey, Transaction } from '@solana/web3.js'
-import type { Connection } from '@solana/web3.js'
+import { VersionedTransaction } from '@solana/web3.js'
 import type { TokenConfig } from '../types'
 import { createConnection } from '../drivers/solana/connection'
 import { loadWallet } from '../drivers/solana/wallet'
-import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
+import { sendAndConfirmTransaction } from '../drivers/solana/transaction'
 
-const JUPITER_LIMIT_API = 'https://jup.ag/api/limit/v2'
+// The limit-order v2 API was superseded by the Jupiter Trigger API.
+const JUPITER_LIMIT_API = 'https://api.jup.ag/trigger/v1'
 
 /**
  * Limit order
@@ -62,10 +62,11 @@ export async function createLimitOrder(
       payer: payer.publicKey.toBase58(),
       inputMint: options.inputMint,
       outputMint: options.outputMint,
-      makingAmount: options.makingAmount.toString(),
-      takingAmount: options.takingAmount.toString(),
-      expiredAt: options.expireAt ?? null,
-      feeBps: 0,
+      params: {
+        makingAmount: options.makingAmount.toString(),
+        takingAmount: options.takingAmount.toString(),
+        ...(options.expireAt !== undefined ? { expiredAt: options.expireAt.toString() } : {}),
+      },
     }),
   })
 
@@ -74,15 +75,19 @@ export async function createLimitOrder(
   }
 
   const data = await response.json()
-  const transaction = Transaction.from(Buffer.from(data.tx, 'base64'))
+  // Trigger API returns a base64 VersionedTransaction; legacy Transaction.from
+  // throws on the versioned prefix.
+  const transaction = VersionedTransaction.deserialize(
+    Buffer.from(data.transaction ?? data.tx, 'base64')
+  )
 
-  transaction.partialSign(payer)
+  transaction.sign([payer])
 
   const result = await sendAndConfirmTransaction(connection, transaction)
 
   return {
     signature: result.signature,
-    orderPubkey: data.orderPubkey ?? '',
+    orderPubkey: data.order ?? data.orderPubkey ?? '',
   }
 }
 
@@ -112,9 +117,10 @@ export async function cancelLimitOrders(
   const data = await response.json()
   const signatures: string[] = []
 
-  for (const txData of data.txs ?? [data.tx].filter(Boolean)) {
-    const transaction = Transaction.from(Buffer.from(txData, 'base64'))
-    transaction.partialSign(payer)
+  const txs = data.transactions ?? data.txs ?? [data.transaction ?? data.tx].filter(Boolean)
+  for (const txData of txs) {
+    const transaction = VersionedTransaction.deserialize(Buffer.from(txData, 'base64'))
+    transaction.sign([payer])
     const result = await sendAndConfirmTransaction(connection, transaction)
     signatures.push(result.signature)
   }
@@ -129,14 +135,15 @@ export async function getOpenLimitOrders(
   wallet: string
 ): Promise<LimitOrder[]> {
   const response = await fetch(
-    `${JUPITER_LIMIT_API}/openOrders?wallet=${wallet}`
+    `${JUPITER_LIMIT_API}/getTriggerOrders?user=${wallet}&orderStatus=active`
   )
 
   if (!response.ok) {
     throw new Error(`Jupiter open orders error: ${response.statusText}`)
   }
 
-  return response.json()
+  const data = await response.json()
+  return data.orders ?? data ?? []
 }
 
 /**
@@ -146,17 +153,18 @@ export async function getLimitOrderHistory(
   wallet: string,
   options: { page?: number; take?: number } = {}
 ): Promise<LimitOrder[]> {
-  const { page = 1, take = 20 } = options
+  const { page = 1 } = options
 
   const response = await fetch(
-    `${JUPITER_LIMIT_API}/orderHistory?wallet=${wallet}&page=${page}&take=${take}`
+    `${JUPITER_LIMIT_API}/getTriggerOrders?user=${wallet}&orderStatus=history&page=${page}`
   )
 
   if (!response.ok) {
     throw new Error(`Jupiter order history error: ${response.statusText}`)
   }
 
-  return response.json()
+  const data = await response.json()
+  return data.orders ?? data ?? []
 }
 
 /**

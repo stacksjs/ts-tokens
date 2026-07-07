@@ -16,6 +16,13 @@ export interface SwapQuote {
   fee: bigint
   route: SwapRoute[]
   expiresAt: number
+  /**
+   * The unmodified quote JSON returned by Jupiter's /quote endpoint. It must be
+   * forwarded verbatim to /swap (routePlan, otherAmountThreshold, swapMode,
+   * slippageBps and all) — reconstructing a partial quote is rejected by the
+   * swap endpoint.
+   */
+  rawQuote?: unknown
 }
 
 /**

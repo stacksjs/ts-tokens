@@ -22,6 +22,7 @@ import {
   getLiquidPoolAddress,
   getReceiptMintAddress,
   getStakeVaultAddress,
+  programNotDeployedError,
 } from './program'
 import {
   createCreateLiquidPoolInstruction,
@@ -39,6 +40,8 @@ export async function createLiquidStakePool(
 ): Promise<StakingResult> {
   const connection = createConnection(config)
   const payer = loadWallet(config)
+
+  programNotDeployedError()
 
   const liquidPool = getLiquidPoolAddress(payer.publicKey, options.stakeMint)
   const receiptMint = getReceiptMintAddress(liquidPool)
@@ -105,6 +108,9 @@ export async function liquidStake(
     options.amount
   )
 
+  // Refuse before submitting: the staking program is undeployed.
+  programNotDeployedError()
+
   const transaction = await buildTransaction(
     connection,
     [instruction],
@@ -158,6 +164,9 @@ export async function liquidUnstake(
     ownerReceiptAccount,
     options.receiptAmount
   )
+
+  // Refuse before submitting: the staking program is undeployed.
+  programNotDeployedError()
 
   const transaction = await buildTransaction(
     connection,

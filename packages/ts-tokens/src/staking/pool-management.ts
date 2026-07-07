@@ -22,6 +22,7 @@ import {
   getPoolAddress,
   getStakeVaultAddress,
   getRewardVaultAddress,
+  programNotDeployedError,
 } from './program'
 import {
   createCreatePoolInstruction,
@@ -46,6 +47,8 @@ export async function createStakePool(
   if (errors.length > 0) {
     throw new Error(`Invalid pool config: ${errors.join(', ')}`)
   }
+
+  programNotDeployedError()
 
   const connection = createConnection(config)
   const payer = loadWallet(config)
@@ -92,6 +95,8 @@ export async function updateStakePool(
   config: TokenConfig,
   txOptions?: TransactionOptions
 ): Promise<StakingResult> {
+  programNotDeployedError()
+
   const connection = createConnection(config)
   const payer = loadWallet(config)
 
@@ -129,6 +134,8 @@ export async function pauseStakePool(
   config: TokenConfig,
   txOptions?: TransactionOptions
 ): Promise<StakingResult> {
+  programNotDeployedError()
+
   const connection = createConnection(config)
   const payer = loadWallet(config)
 
@@ -159,6 +166,8 @@ export async function resumeStakePool(
   config: TokenConfig,
   txOptions?: TransactionOptions
 ): Promise<StakingResult> {
+  programNotDeployedError()
+
   const connection = createConnection(config)
   const payer = loadWallet(config)
 
@@ -213,6 +222,9 @@ export async function fundRewards(
     options.amount
   )
 
+  // Refuse before submitting: the staking program is undeployed.
+  programNotDeployedError()
+
   const transaction = await buildTransaction(
     connection,
     [instruction],
@@ -263,6 +275,9 @@ export async function withdrawRewards(
     options.amount
   )
 
+  // Refuse before submitting: the staking program is undeployed.
+  programNotDeployedError()
+
   const transaction = await buildTransaction(
     connection,
     [instruction],
@@ -289,6 +304,8 @@ export async function closeStakePool(
   config: TokenConfig,
   txOptions?: TransactionOptions
 ): Promise<StakingResult> {
+  programNotDeployedError()
+
   const connection = createConnection(config)
   const payer = loadWallet(config)
 
