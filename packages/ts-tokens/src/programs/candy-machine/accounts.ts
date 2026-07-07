@@ -67,8 +67,13 @@ export function deserializeCandyMachine(data: Buffer): CandyMachine {
   const tokenStandard = data.readUInt8(offset)
   offset += 1
 
-  const features = data.readBigUInt64LE(offset)
-  offset += 8
+  // features is [u8; 6] on-chain — version + tokenStandard + features pack
+  // into the 8 bytes the legacy u64 occupied
+  let features = 0n
+  for (let i = 0; i < 6; i++) {
+    features |= BigInt(data.readUInt8(offset + i)) << BigInt(8 * i)
+  }
+  offset += 6
 
   const authority = new PublicKey(data.subarray(offset, offset + 32))
   offset += 32
