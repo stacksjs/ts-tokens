@@ -10,10 +10,8 @@ import {
   getAssociatedTokenAddress,
   createAssociatedTokenAccountIdempotentInstruction,
   getAccount,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
-  getMint,
 } from '@solana/spl-token'
+import { resolveTokenProgram } from './program'
 import type { TokenConfig, MintOptions, TransactionResult } from '../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
 import { loadWallet } from '../drivers/solana/wallet'
@@ -49,11 +47,8 @@ export async function mintTokens(
     ? new PublicKey(options.mintAuthority)
     : payer.publicKey
 
-  // Determine program ID by checking the mint account
-  const mintInfo = await getMint(connection, mint)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  // Determine program ID by checking the mint account owner
+  const programId = await resolveTokenProgram(connection, mint)
 
   // Get or create associated token account
   const ata = await getAssociatedTokenAddress(mint, destination, false, programId)
@@ -127,10 +122,7 @@ export async function mintTokensToMany(
   const mintPubkey = new PublicKey(mint)
 
   // Determine program ID
-  const mintInfo = await getMint(connection, mintPubkey)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  const programId = await resolveTokenProgram(connection, mintPubkey)
 
   const instructions = []
   const createdAtas = new Set<string>()

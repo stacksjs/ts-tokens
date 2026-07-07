@@ -11,6 +11,7 @@ export * from './burn'
 export * from './authority'
 export * from './account'
 export * from './metadata'
+export * from './program'
 export * from './query'
 
 // Re-export convenience functions
@@ -34,6 +35,11 @@ export {
   getAssociatedTokenAccountAddress,
   tokenAccountExists,
 } from './account'
+export {
+  resolveTokenProgram,
+  getMintWithProgram,
+  getTokenAccountWithProgram,
+} from './program'
 export {
   createTokenMetadata,
   updateTokenMetadata,

@@ -164,20 +164,26 @@ export async function getTokenHolders(
   const holders: TokenHolder[] = []
 
   for (const programId of [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID]) {
-    const accounts = await connection.getProgramAccounts(programId, {
-      filters: [
-        { dataSize: AccountLayout.span },
-        {
-          memcmp: {
-            offset: 0,
-            bytes: mintPubkey.toBase58(),
-          },
+    // Token-2022 accounts can be larger than the base layout when extensions
+    // are present, so only classic SPL accounts get the exact-size filter
+    const filters: Array<{ dataSize: number } | { memcmp: { offset: number; bytes: string } }> = [
+      {
+        memcmp: {
+          offset: 0,
+          bytes: mintPubkey.toBase58(),
         },
-      ],
-    })
+      },
+    ]
+
+    if (programId.equals(TOKEN_PROGRAM_ID)) {
+      filters.unshift({ dataSize: AccountLayout.span })
+    }
+
+    const accounts = await connection.getProgramAccounts(programId, { filters })
 
     for (const { pubkey, account } of accounts) {
-      const decoded = AccountLayout.decode(account.data)
+      // Decode only the base layout; extension TLV data lives past it
+      const decoded = AccountLayout.decode(account.data.subarray(0, AccountLayout.span))
       const balance = BigInt(decoded.amount.toString())
 
       if (balance > 0n) {

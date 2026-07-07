@@ -11,10 +11,8 @@ import {
   getAssociatedTokenAddress,
   createAssociatedTokenAccountIdempotentInstruction,
   getAccount,
-  getMint,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token'
+import { getMintWithProgram } from './program'
 import type { TokenConfig, TransactionResult, TransactionOptions } from '../types'
 import type { TransferOptions } from '../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
@@ -50,11 +48,8 @@ export async function transferTokens(
   const to = new PublicKey(options.to)
   const amount = BigInt(options.amount)
 
-  // Determine program ID
-  const mintInfo = await getMint(connection, mint)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  // Determine program ID from the mint account owner
+  const { mint: mintInfo, programId } = await getMintWithProgram(connection, mint)
 
   // Get source token account (ATA of from address)
   const sourceAta = await getAssociatedTokenAddress(mint, from, false, programId)
@@ -135,11 +130,8 @@ export async function transferTokensToMany(
   const mintPubkey = new PublicKey(mint)
   const fromPubkey = new PublicKey(from)
 
-  // Determine program ID
-  const mintInfo = await getMint(connection, mintPubkey)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  // Determine program ID from the mint account owner
+  const { mint: mintInfo, programId } = await getMintWithProgram(connection, mintPubkey)
 
   // Get source ATA
   const sourceAta = await getAssociatedTokenAddress(mintPubkey, fromPubkey, false, programId)

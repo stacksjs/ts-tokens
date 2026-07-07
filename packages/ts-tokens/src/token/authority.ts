@@ -8,13 +8,11 @@ import { Connection, PublicKey } from '@solana/web3.js'
 import {
   createSetAuthorityInstruction,
   AuthorityType,
-  getMint,
   getAccount,
   createFreezeAccountInstruction,
   createThawAccountInstruction,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token'
+import { getMintWithProgram } from './program'
 import type { TokenConfig, TransactionResult, TransactionOptions } from '../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
 import { loadWallet } from '../drivers/solana/wallet'
@@ -40,11 +38,8 @@ export async function setMintAuthority(
   const mintPubkey = new PublicKey(mint)
   const newAuthorityPubkey = newAuthority ? new PublicKey(newAuthority) : null
 
-  // Determine program ID
-  const mintInfo = await getMint(connection, mintPubkey)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  // Determine program ID from the mint account owner
+  const { mint: mintInfo, programId } = await getMintWithProgram(connection, mintPubkey)
 
   // Current authority must be the payer
   if (!mintInfo.mintAuthority) {
@@ -114,11 +109,8 @@ export async function setFreezeAuthority(
   const mintPubkey = new PublicKey(mint)
   const newAuthorityPubkey = newAuthority ? new PublicKey(newAuthority) : null
 
-  // Determine program ID
-  const mintInfo = await getMint(connection, mintPubkey)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  // Determine program ID from the mint account owner
+  const { mint: mintInfo, programId } = await getMintWithProgram(connection, mintPubkey)
 
   // Current authority must be the payer
   if (!mintInfo.freezeAuthority) {
@@ -188,11 +180,8 @@ export async function freezeAccount(
   const mintPubkey = new PublicKey(mint)
   const accountPubkey = new PublicKey(account)
 
-  // Determine program ID
-  const mintInfo = await getMint(connection, mintPubkey)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  // Determine program ID from the mint account owner
+  const { mint: mintInfo, programId } = await getMintWithProgram(connection, mintPubkey)
 
   // Verify freeze authority
   if (!mintInfo.freezeAuthority) {
@@ -252,11 +241,8 @@ export async function thawAccount(
   const mintPubkey = new PublicKey(mint)
   const accountPubkey = new PublicKey(account)
 
-  // Determine program ID
-  const mintInfo = await getMint(connection, mintPubkey)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  // Determine program ID from the mint account owner
+  const { mint: mintInfo, programId } = await getMintWithProgram(connection, mintPubkey)
 
   // Verify freeze authority
   if (!mintInfo.freezeAuthority) {

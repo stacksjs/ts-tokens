@@ -10,10 +10,8 @@ import {
   createBurnCheckedInstruction,
   getAssociatedTokenAddress,
   getAccount,
-  getMint,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token'
+import { getMintWithProgram, resolveTokenProgram } from './program'
 import type { TokenConfig, BurnOptions, TransactionResult } from '../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
 import { loadWallet } from '../drivers/solana/wallet'
@@ -46,11 +44,8 @@ export async function burnTokens(
     : payer.publicKey
   const amount = BigInt(options.amount)
 
-  // Determine program ID
-  const mintInfo = await getMint(connection, mint)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  // Determine program ID from the mint account owner
+  const { mint: mintInfo, programId } = await getMintWithProgram(connection, mint)
 
   // Get token account to burn from
   let tokenAccount: PublicKey
@@ -109,11 +104,8 @@ export async function burnAll(
 
   const mintPubkey = new PublicKey(mint)
 
-  // Determine program ID
-  const mintInfo = await getMint(connection, mintPubkey)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  // Determine program ID from the mint account owner
+  const programId = await resolveTokenProgram(connection, mintPubkey)
 
   // Get ATA
   const ata = await getAssociatedTokenAddress(mintPubkey, payer.publicKey, false, programId)

@@ -13,11 +13,10 @@ import {
 } from '@solana/web3.js'
 import {
   TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
   createSetAuthorityInstruction,
   AuthorityType,
-  getMint,
 } from '@solana/spl-token'
+import { getMintWithProgram } from '../token/program'
 import type {
   MultisigAccount,
   CreateMultisigOptions,
@@ -231,10 +230,7 @@ export async function setTokenAuthorityMultisig(
   const connection = createConnection(config)
   const payer = loadWallet(config)
 
-  const mintInfo = await getMint(connection, options.mint)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  const { mint: mintInfo, programId } = await getMintWithProgram(connection, options.mint)
 
   const authorityType = options.authorityType === 'mint'
     ? AuthorityType.MintTokens

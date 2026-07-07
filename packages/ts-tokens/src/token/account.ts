@@ -10,12 +10,10 @@ import {
   createAssociatedTokenAccountInstruction,
   createAssociatedTokenAccountIdempotentInstruction,
   getAccount,
-  getMint,
   createCloseAccountInstruction,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
+import { resolveTokenProgram, getTokenAccountWithProgram } from './program'
 import type { TokenConfig, TransactionResult, TokenAccountInfo } from '../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
 import { loadWallet } from '../drivers/solana/wallet'
@@ -40,11 +38,8 @@ export async function getOrCreateAssociatedTokenAccount(
   const ownerPubkey = new PublicKey(owner)
   const mintPubkey = new PublicKey(mint)
 
-  // Determine program ID
-  const mintInfo = await getMint(connection, mintPubkey)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  // Determine program ID from the mint account owner
+  const programId = await resolveTokenProgram(connection, mintPubkey)
 
   // Get ATA address
   const ata = await getAssociatedTokenAddress(
@@ -108,11 +103,8 @@ export async function createTokenAccount(
   const ownerPubkey = new PublicKey(owner)
   const mintPubkey = new PublicKey(mint)
 
-  // Determine program ID
-  const mintInfo = await getMint(connection, mintPubkey)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
+  // Determine program ID from the mint account owner
+  const programId = await resolveTokenProgram(connection, mintPubkey)
 
   // Get ATA address
   const ata = await getAssociatedTokenAddress(
@@ -175,8 +167,8 @@ export async function closeTokenAccount(
 
   const accountPubkey = new PublicKey(account)
 
-  // Get account info to determine program and verify it's empty
-  const accountInfo = await getAccount(connection, accountPubkey)
+  // Determine program ID from the token account's own owner and verify it's empty
+  const { account: accountInfo, programId } = await getTokenAccountWithProgram(connection, accountPubkey)
 
   if (accountInfo.amount > 0n) {
     throw new Error(
@@ -192,12 +184,6 @@ export async function closeTokenAccount(
       `Expected: ${accountInfo.owner.toBase58()}, Got: ${payer.publicKey.toBase58()}`
     )
   }
-
-  // Determine program ID from the account
-  const mintInfo = await getMint(connection, accountInfo.mint)
-  const programId = mintInfo.tlvData && mintInfo.tlvData.length > 0
-    ? TOKEN_2022_PROGRAM_ID
-    : TOKEN_PROGRAM_ID
 
   const instruction = createCloseAccountInstruction(
     accountPubkey,
@@ -232,7 +218,8 @@ export async function getTokenAccountInfo(
   const connection = createConnection(config)
   const accountPubkey = new PublicKey(account)
 
-  const accountInfo = await getAccount(connection, accountPubkey)
+  // Determine program ID from the token account's own owner
+  const { account: accountInfo } = await getTokenAccountWithProgram(connection, accountPubkey)
 
   return {
     address: account,
@@ -250,23 +237,34 @@ export async function getTokenAccountInfo(
 /**
  * Get associated token account address (without creating)
  *
+ * Resolves the mint's owning program first so Token-2022 mints derive the
+ * correct ATA instead of the classic SPL one.
+ *
  * @param owner - Owner wallet address
  * @param mint - Token mint address
+ * @param config - Token configuration
  * @param allowOwnerOffCurve - Allow owner to be off curve (for PDAs)
  * @returns Associated token account address
  */
 export async function getAssociatedTokenAccountAddress(
   owner: string,
   mint: string,
+  config: TokenConfig,
   allowOwnerOffCurve: boolean = false
 ): Promise<string> {
+  const connection = createConnection(config)
   const ownerPubkey = new PublicKey(owner)
   const mintPubkey = new PublicKey(mint)
+
+  // Determine program ID from the mint account owner
+  const programId = await resolveTokenProgram(connection, mintPubkey)
 
   const ata = await getAssociatedTokenAddress(
     mintPubkey,
     ownerPubkey,
-    allowOwnerOffCurve
+    allowOwnerOffCurve,
+    programId,
+    ASSOCIATED_TOKEN_PROGRAM_ID
   )
 
   return ata.toBase58()
@@ -287,7 +285,7 @@ export async function tokenAccountExists(
   const accountPubkey = new PublicKey(account)
 
   try {
-    await getAccount(connection, accountPubkey)
+    await getTokenAccountWithProgram(connection, accountPubkey)
     return true
   } catch {
     return false
