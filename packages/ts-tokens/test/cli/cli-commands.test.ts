@@ -42,10 +42,10 @@ describe('Version & Help', () => {
     expect(combined).toContain('version')
   })
 
-  test('unknown command exits silently (clapp ignores unknown commands)', () => {
+  test('unknown command errors with a helpful message and exits 1', () => {
     const { stdout, stderr, exitCode } = runCLI(['this-command-does-not-exist'])
-    // clapp silently ignores unknown commands — exit code 0, no output
-    expect(exitCode).toBe(0)
+    expect(exitCode).toBe(1)
+    expect(stdout + stderr).toContain('not found')
   })
 })
 
@@ -392,10 +392,10 @@ describe('Utility Commands', () => {
     expect(combined).toMatch(/snapshot|mint|help|usage/)
   })
 
-  test('unknown subcommand exits silently (clapp ignores unknown commands)', () => {
+  test('unknown subcommand errors with a helpful message and exits 1', () => {
     const { stdout, stderr, exitCode } = runCLI(['nft:nonexistent'])
-    // clapp silently ignores unknown subcommands
-    expect(exitCode).toBe(0)
+    expect(exitCode).toBe(1)
+    expect(stdout + stderr).toContain('not found')
   })
 
   test('user errors do not produce raw stack traces in stderr', () => {
