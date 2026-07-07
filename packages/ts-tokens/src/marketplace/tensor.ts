@@ -283,12 +283,30 @@ const _TSWAP_PROGRAM_ID = 'TSWAPaqyCSx2KABk68Shruf4rp7CxcNi8hAsbdwmHbN'
 const _TCOMP_PROGRAM_ID = 'TCMPhJdwDryooaGtiocG1u3xcYbRpiJzb283XfCZsDp'
 
 /**
+ * Extract the serialized transaction from a Tensor tx API response, throwing if
+ * the API returned none (never return '' as a transaction).
+ */
+function requireTensorTransaction(
+  data: { txs?: Array<{ tx?: string }>; tx?: string },
+  op: string,
+): string {
+  const transaction = data.txs?.[0]?.tx ?? data.tx
+  if (!transaction) {
+    throw new Error(`Tensor ${op} API returned no transaction`)
+  }
+  return transaction
+}
+
+/**
  * Options for buying an NFT on Tensor
  */
 export interface TensorBuyOptions {
   mint: string
   maxPrice: bigint
-  owner?: string
+  /** The current owner (seller) of the listing. */
+  owner: string
+  /** The buyer's wallet (receives the NFT and signs the transaction). */
+  buyer: string
 }
 
 /**
@@ -297,25 +315,31 @@ export interface TensorBuyOptions {
 export interface TensorListOptions {
   mint: string
   price: bigint
+  /** The NFT owner listing the NFT (signs the transaction). */
+  owner: string
   expiry?: number
 }
 
 /**
  * Build a buy instruction for Tensor TComp
  */
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function buyOnTensor(options: TensorBuyOptions): Promise<{
   transaction: string
 }> {
+  if (!options.owner || !options.buyer) {
+    throw new Error('buyOnTensor requires both owner (seller) and buyer addresses')
+  }
+
   // Use Tensor's transaction API to get a pre-built transaction
   const response = await fetch('https://api.tensor.so/api/v1/tx/buy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       mint: options.mint,
-      owner: options.owner || '',
+      owner: options.owner,
       maxPrice: options.maxPrice.toString(),
-      buyer: options.owner || '',
+      buyer: options.buyer,
     }),
   })
 
@@ -324,23 +348,27 @@ export async function buyOnTensor(options: TensorBuyOptions): Promise<{
   }
 
   const data = await response.json()
-  return { transaction: data.txs?.[0]?.tx ?? data.tx ?? '' }
+  return { transaction: requireTensorTransaction(data, 'buy') }
 }
 
 /**
  * Build a list instruction for Tensor
  */
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function listOnTensor(options: TensorListOptions): Promise<{
   transaction: string
 }> {
+  if (!options.owner) {
+    throw new Error('listOnTensor requires the owner (seller) address')
+  }
+
   const response = await fetch('https://api.tensor.so/api/v1/tx/list', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       mint: options.mint,
       price: options.price.toString(),
-      owner: '',
+      owner: options.owner,
     }),
   })
 
@@ -349,21 +377,29 @@ export async function listOnTensor(options: TensorListOptions): Promise<{
   }
 
   const data = await response.json()
-  return { transaction: data.txs?.[0]?.tx ?? data.tx ?? '' }
+  return { transaction: requireTensorTransaction(data, 'list') }
 }
 
 /**
  * Build a delist instruction for Tensor
  */
-export async function delistFromTensor(_mint: string): Promise<{
+// eslint-disable-next-line pickier/no-unused-vars
+export async function delistFromTensor(options: {
+  mint: string
+  owner: string
+}): Promise<{
   transaction: string
 }> {
+  if (!options.owner) {
+    throw new Error('delistFromTensor requires the owner (seller) address')
+  }
+
   const response = await fetch('https://api.tensor.so/api/v1/tx/delist', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      _mint,
-      owner: '',
+      mint: options.mint,
+      owner: options.owner,
     }),
   })
 
@@ -372,7 +408,7 @@ export async function delistFromTensor(_mint: string): Promise<{
   }
 
   const data = await response.json()
-  return { transaction: data.txs?.[0]?.tx ?? data.tx ?? '' }
+  return { transaction: requireTensorTransaction(data, 'delist') }
 }
 
 /**
@@ -382,7 +418,13 @@ export async function bidOnTensor(options: {
   mint?: string
   collection?: string
   price: bigint
+  /** The bidder's wallet (signs and funds the bid). */
+  owner: string
 }): Promise<{ transaction: string }> {
+  if (!options.owner) {
+    throw new Error('bidOnTensor requires the owner (bidder) address')
+  }
+
   const response = await fetch('https://api.tensor.so/api/v1/tx/bid', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -390,7 +432,7 @@ export async function bidOnTensor(options: {
       mint: options.mint,
       collection: options.collection,
       price: options.price.toString(),
-      owner: '',
+      owner: options.owner,
     }),
   })
 
@@ -399,5 +441,5 @@ export async function bidOnTensor(options: {
   }
 
   const data = await response.json()
-  return { transaction: data.txs?.[0]?.tx ?? data.tx ?? '' }
+  return { transaction: requireTensorTransaction(data, 'bid') }
 }

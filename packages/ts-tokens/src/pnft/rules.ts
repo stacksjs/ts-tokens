@@ -16,228 +16,90 @@ import type {
   HolderGateRule,
   PNFTResult,
 } from './types'
-import { createConnection } from '../drivers/solana/connection'
-import { loadWallet } from '../drivers/solana/wallet'
-import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
-import { getPNFTAddress, getRuleSetAddress, serializeRuleData, RULE_TYPE_INDEX } from './program'
-import {
-  createAddRuleInstruction,
-  createRemoveRuleInstruction,
-  createUpdateRuleInstruction,
-  createFreezeRulesInstruction,
-} from './instructions'
+import { pnftNotImplemented } from './program'
 
 /**
  * Add rule to pNFT
  */
 export async function addRule(
-  rule: TransferRule,
-  mint: PublicKey,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _rule: TransferRule,
+  _mint: PublicKey,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<PNFTResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-  const pnftAccount = getPNFTAddress(mint)
-
-  const ruleData = serializeRuleData(rule)
-  const instruction = createAddRuleInstruction(payer.publicKey, pnftAccount, ruleData)
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    pnftAccount: pnftAccount.toBase58(),
-  }
+  pnftNotImplemented('addRule')
 }
 
 /**
  * Remove rule from pNFT
  */
 export async function removeRule(
-  ruleType: TransferRuleType,
-  mint: PublicKey,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _ruleType: TransferRuleType,
+  _mint: PublicKey,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<PNFTResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-  const pnftAccount = getPNFTAddress(mint)
-
-  const ruleTypeIndex = RULE_TYPE_INDEX[ruleType]
-  const instruction = createRemoveRuleInstruction(payer.publicKey, pnftAccount, ruleTypeIndex)
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    pnftAccount: pnftAccount.toBase58(),
-  }
+  pnftNotImplemented('removeRule')
 }
 
 /**
  * Update rule on pNFT
  */
 export async function updateRule(
-  rule: TransferRule,
-  mint: PublicKey,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _rule: TransferRule,
+  _mint: PublicKey,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<PNFTResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-  const pnftAccount = getPNFTAddress(mint)
-
-  const ruleData = serializeRuleData(rule)
-  const instruction = createUpdateRuleInstruction(payer.publicKey, pnftAccount, ruleData)
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    pnftAccount: pnftAccount.toBase58(),
-  }
+  pnftNotImplemented('updateRule')
 }
 
 /**
  * Enable/disable rule
  */
 export async function setRuleEnabled(
-  ruleType: TransferRuleType,
-  enabled: boolean,
-  mint: PublicKey,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _ruleType: TransferRuleType,
+  _enabled: boolean,
+  _mint: PublicKey,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<PNFTResult> {
-  // Build a minimal rule with the toggled enabled state, then update
-  const rule: TransferRule = {
-    type: ruleType,
-    enabled,
-  } as TransferRule
-
-  return updateRule(rule, mint, config, txOptions)
+  pnftNotImplemented('setRuleEnabled')
 }
 
 /**
  * Freeze rules (make immutable)
  */
 export async function freezeRules(
-  mint: PublicKey,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _mint: PublicKey,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<PNFTResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-  const pnftAccount = getPNFTAddress(mint)
-
-  const instruction = createFreezeRulesInstruction(payer.publicKey, pnftAccount)
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    pnftAccount: pnftAccount.toBase58(),
-  }
+  pnftNotImplemented('freezeRules')
 }
 
 /**
  * Add rule to rule set
  */
 export async function addRuleToSet(
-  rule: TransferRule,
-  ruleSet: PublicKey,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _rule: TransferRule,
+  _ruleSet: PublicKey,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<PNFTResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-
-  const ruleData = serializeRuleData(rule)
-  const instruction = createAddRuleInstruction(payer.publicKey, ruleSet, ruleData)
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    ruleSet: ruleSet.toBase58(),
-  }
+  pnftNotImplemented('addRuleToSet')
 }
 
 /**
  * Remove rule from rule set
  */
 export async function removeRuleFromSet(
-  ruleType: TransferRuleType,
-  ruleSet: PublicKey,
-  config: TokenConfig,
-  txOptions?: TransactionOptions
+  _ruleType: TransferRuleType,
+  _ruleSet: PublicKey,
+  _config: TokenConfig,
+  _txOptions?: TransactionOptions
 ): Promise<PNFTResult> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-
-  const ruleTypeIndex = RULE_TYPE_INDEX[ruleType]
-  const instruction = createRemoveRuleInstruction(payer.publicKey, ruleSet, ruleTypeIndex)
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    txOptions
-  )
-
-  transaction.partialSign(payer)
-  const result = await sendAndConfirmTransaction(connection, transaction, txOptions)
-
-  return {
-    signature: result.signature,
-    confirmed: result.confirmed,
-    ruleSet: ruleSet.toBase58(),
-  }
+  pnftNotImplemented('removeRuleFromSet')
 }
 
 /**
@@ -247,8 +109,7 @@ export async function getAllRules(
   _connection: Connection,
   _mint: PublicKey
 ): Promise<TransferRule[]> {
-  // In production, would fetch pNFT rules + rule set rules
-  return []
+  pnftNotImplemented('getAllRules')
 }
 
 /**

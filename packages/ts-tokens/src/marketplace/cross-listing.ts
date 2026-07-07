@@ -33,104 +33,54 @@ export interface CrossListingSummary {
 }
 
 /**
- * List an NFT across multiple marketplaces
+ * List an NFT across multiple marketplaces.
+ *
+ * Real cross-listing requires building and signing a listing transaction for
+ * each marketplace (via that marketplace's instruction/tx API, with the owner's
+ * wallet). No such transactions are built or sent here, so fabricating listing
+ * IDs and URLs would report listings that do not exist. Fail loudly instead.
  */
 export async function crossListNFT(
-  options: CrossListingOptions,
+  _options: CrossListingOptions,
 ): Promise<CrossListingSummary> {
-  const results: CrossListingResult[] = []
-
-  for (const marketplace of options.marketplaces) {
-    try {
-      const result = await listOnMarketplace(marketplace, options)
-      results.push(result)
-    } catch (error) {
-      results.push({
-        marketplace,
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
-      })
-    }
-  }
-
-  return {
-    mint: options.mint.toBase58(),
-    totalMarketplaces: options.marketplaces.length,
-    successfulListings: results.filter(r => r.success).length,
-    failedListings: results.filter(r => !r.success).length,
-    results,
-  }
-}
-
-async function listOnMarketplace(
-  marketplace: SupportedMarketplace,
-  options: CrossListingOptions,
-): Promise<CrossListingResult> {
-  const mintStr = options.mint.toBase58()
-
-  switch (marketplace) {
-    case 'magiceden':
-      return {
-        marketplace,
-        success: true,
-        listingId: `me_${mintStr.slice(0, 8)}`,
-        url: `https://magiceden.io/item-details/${mintStr}`,
-      }
-
-    case 'tensor':
-      return {
-        marketplace,
-        success: true,
-        listingId: `tensor_${mintStr.slice(0, 8)}`,
-        url: `https://www.tensor.trade/item/${mintStr}`,
-      }
-
-    case 'opensea':
-      return {
-        marketplace,
-        success: true,
-        listingId: `os_${mintStr.slice(0, 8)}`,
-        url: `https://opensea.io/assets/solana/${mintStr}`,
-      }
-
-    default:
-      return { marketplace, success: false, error: `Unsupported marketplace: ${marketplace}` }
-  }
+  throw new Error(
+    'crossListNFT is not implemented: per-marketplace listing transactions are ' +
+    'not built or signed, so no NFT is actually listed. Use the marketplace ' +
+    'listOnMagicEden/listOnTensor helpers to build a real listing transaction.'
+  )
 }
 
 /**
- * Cancel listings across all marketplaces
+ * Cancel listings across all marketplaces.
+ *
+ * Real cancellation requires building and signing a delist transaction per
+ * marketplace. None is built here, so returning success would falsely report
+ * that active listings were cancelled. Fail loudly instead.
  */
 export async function cancelCrossListings(
-  mint: PublicKey,
-  marketplaces: SupportedMarketplace[],
+  _mint: PublicKey,
+  _marketplaces: SupportedMarketplace[],
 ): Promise<CrossListingSummary> {
-  const results: CrossListingResult[] = []
-
-  for (const marketplace of marketplaces) {
-    results.push({
-      marketplace,
-      success: true,
-    })
-  }
-
-  return {
-    mint: mint.toBase58(),
-    totalMarketplaces: marketplaces.length,
-    successfulListings: results.filter(r => r.success).length,
-    failedListings: results.filter(r => !r.success).length,
-    results,
-  }
+  throw new Error(
+    'cancelCrossListings is not implemented: per-marketplace delist ' +
+    'transactions are not built or signed, so no listing is actually cancelled. ' +
+    'Use the marketplace delistFromMagicEden/delistFromTensor helpers.'
+  )
 }
 
 /**
- * Get the best price across marketplaces for an NFT
+ * Get the best price across marketplaces for an NFT.
+ *
+ * Requires querying each marketplace's price API and comparing results. That
+ * aggregation is not implemented; returning null would masquerade as "no
+ * listings found". Fail loudly instead.
  */
 export async function getBestPrice(
   _mint: PublicKey,
   _marketplaces: SupportedMarketplace[] = ['magiceden', 'tensor'],
 ): Promise<{ marketplace: SupportedMarketplace; price: bigint } | null> {
-  // In real implementation, this would fetch from each marketplace API
-  // Return null for now — actual marketplace APIs would be called
-  return null
+  throw new Error(
+    'getBestPrice is not implemented: cross-marketplace price aggregation is ' +
+    'not wired up. Query each marketplace API directly (e.g. tensor.getNFTInfo).'
+  )
 }

@@ -4,77 +4,31 @@
  * Transfer compressed tokens with proof verification.
  */
 
-import { PublicKey } from '@solana/web3.js'
 import type { TokenConfig } from '../types'
-import type { TransferCompressedTokenOptions, CompressedTokenProof } from './types'
-import { createConnection } from '../drivers/solana/connection'
-import { loadWallet } from '../drivers/solana/wallet'
-import { buildTransaction, sendAndConfirmTransaction } from '../drivers/solana/transaction'
-
-const COMPRESSED_TOKEN_PROGRAM_ID = 'cTokenmWW8bLPjZEBAUgYGZQKP8yvBa7kCAuYRbSgQ2'
+import type { TransferCompressedTokenOptions } from './types'
 
 /**
- * Transfer compressed tokens
+ * Transfer compressed tokens.
+ *
+ * Not implemented. A real compressed-token transfer needs an 8-byte Anchor
+ * discriminator, the full Light Protocol account set (CPI authority PDA, token
+ * pool, registered-program PDA, noop, account-compression, input/output Merkle
+ * trees and nullifier queue), and a validity proof produced by a Photon
+ * indexer. The previous implementation invented a 1-byte `[2]` discriminator,
+ * three metas, and a hand-serialized hex "proof" — a transaction that always
+ * fails on-chain. Fail loudly rather than return a signature for a transfer
+ * that never happened.
  */
 export async function transferCompressedTokens(
-  options: TransferCompressedTokenOptions,
-  config: TokenConfig
+  _options: TransferCompressedTokenOptions,
+  _config: TokenConfig
 ): Promise<{ signature: string }> {
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-  const programId = new PublicKey(COMPRESSED_TOKEN_PROGRAM_ID)
-  const mintPubkey = new PublicKey(options.mint)
-  const destination = new PublicKey(options.to)
-
-  // Build transfer instruction with proof
-  const discriminator = Buffer.from([2]) // transfer discriminator
-  const amountBuf = Buffer.alloc(8)
-  amountBuf.writeBigUInt64LE(options.amount)
-
-  const dataParts: Buffer[] = [discriminator, amountBuf]
-
-  // Include proof data if provided
-  if (options.proof) {
-    const proofBuf = serializeProof(options.proof)
-    dataParts.push(proofBuf)
-  }
-
-  const data = Buffer.concat(dataParts)
-
-  const instruction = {
-    keys: [
-      { pubkey: payer.publicKey, isSigner: true, isWritable: true },
-      { pubkey: mintPubkey, isSigner: false, isWritable: true },
-      { pubkey: destination, isSigner: false, isWritable: false },
-    ],
-    programId,
-    data,
-  }
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey
+  throw new Error(
+    'transferCompressedTokens is not implemented: the Light Protocol ' +
+    'compressed-token transfer requires an 8-byte Anchor discriminator, its ' +
+    'full account set (CPI authority PDA, token pool, registered-program PDA, ' +
+    'noop, account-compression, Merkle trees/queue) and a real validity proof, ' +
+    'none of which are built here. Use the @lightprotocol/compressed-token SDK ' +
+    'to transfer.'
   )
-
-  transaction.partialSign(payer)
-
-  const result = await sendAndConfirmTransaction(connection, transaction)
-
-  return { signature: result.signature }
-}
-
-/**
- * Serialize a merkle proof for instruction data
- */
-function serializeProof(proof: CompressedTokenProof): Buffer {
-  const rootBuf = Buffer.from(proof.root, 'hex')
-  const indexBuf = Buffer.alloc(4)
-  indexBuf.writeUInt32LE(proof.leafIndex)
-
-  const proofNodes = proof.proof.map(p => Buffer.from(p, 'hex'))
-  const proofLenBuf = Buffer.alloc(4)
-  proofLenBuf.writeUInt32LE(proofNodes.length)
-
-  return Buffer.concat([rootBuf, indexBuf, proofLenBuf, ...proofNodes])
 }

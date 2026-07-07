@@ -915,16 +915,15 @@ describe('createRecoverSoulboundInstruction', () => {
 // ---------------------------------------------------------------------------
 
 describe('canTransfer', () => {
-  test('returns allowed for non-existent pNFT', async () => {
+  test('throws because the pNFT program is not deployed', async () => {
     const { Connection } = await import('@solana/web3.js')
     const connection = new Connection('https://api.devnet.solana.com')
     const mint = Keypair.generate().publicKey
     const from = Keypair.generate().publicKey
     const to = Keypair.generate().publicKey
 
-    const result = await canTransfer(connection, mint, from, to)
-    expect(result.allowed).toBe(true)
-    expect(result.failedRules).toHaveLength(0)
+    // Must NOT silently return allowed:true — that would bypass every transfer rule.
+    await expect(canTransfer(connection, mint, from, to)).rejects.toThrow(/not implemented/)
   })
 })
 
@@ -933,13 +932,11 @@ describe('canTransfer', () => {
 // ---------------------------------------------------------------------------
 
 describe('estimateRoyalty', () => {
-  test('returns 0 for non-existent pNFT', async () => {
+  test('throws because the pNFT program is not deployed', async () => {
     const { Connection } = await import('@solana/web3.js')
     const connection = new Connection('https://api.devnet.solana.com')
     const mint = Keypair.generate().publicKey
 
-    const result = await estimateRoyalty(connection, mint, 1000000n)
-    expect(result.amount).toBe(0n)
-    expect(result.recipients).toHaveLength(0)
+    await expect(estimateRoyalty(connection, mint, 1000000n)).rejects.toThrow(/not implemented/)
   })
 })

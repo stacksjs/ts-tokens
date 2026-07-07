@@ -195,7 +195,7 @@ function mapActivityType(type: string): NFTActivity['type'] {
     case 'list':
     case 'listing':
       return 'listing'
-    case 'buyNow':
+    case 'buynow':
     case 'buy':
     case 'sale':
       return 'sale'
@@ -225,6 +225,35 @@ export function formatPrice(lamports: bigint): string {
 const ME_INSTRUCTIONS_API = 'https://api-mainnet.magiceden.dev/v2/instructions'
 
 /**
+ * The Magic Eden instruction endpoints require the auction house address the
+ * order should be routed through (and, on mainnet, an API key). Passing an empty
+ * auction house yields an unusable/incorrect transaction, so callers must supply
+ * a real one.
+ */
+function requireAuctionHouse(auctionHouseAddress: string | undefined): string {
+  if (!auctionHouseAddress || auctionHouseAddress.trim() === '') {
+    throw new Error(
+      'Magic Eden instruction APIs require an auctionHouseAddress. Pass the ' +
+      'auction house the order routes through; calling with an empty address ' +
+      'returns an invalid transaction.'
+    )
+  }
+  return auctionHouseAddress
+}
+
+/**
+ * Extract the serialized transaction from a Magic Eden instruction API response,
+ * throwing if the API returned none (never return '' as a transaction).
+ */
+function requireTransaction(data: { txSigned?: string; tx?: string }, op: string): string {
+  const transaction = data.txSigned ?? data.tx
+  if (!transaction) {
+    throw new Error(`Magic Eden ${op} API returned no transaction`)
+  }
+  return transaction
+}
+
+/**
  * Options for buying on Magic Eden
  */
 export interface MEBuyOptions {
@@ -232,6 +261,7 @@ export interface MEBuyOptions {
   buyer: string
   seller: string
   price: number
+  auctionHouseAddress: string
   tokenATA?: string
 }
 
@@ -243,19 +273,20 @@ export interface MEListOptions {
   seller: string
   price: number
   tokenATA: string
+  auctionHouseAddress: string
 }
 
 /**
  * Buy an NFT on Magic Eden via instruction API
  */
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function buyOnMagicEden(options: MEBuyOptions): Promise<{
   transaction: string
 }> {
   const params = new URLSearchParams({
     buyer: options.buyer,
     seller: options.seller,
-    auctionHouseAddress: '',
+    auctionHouseAddress: requireAuctionHouse(options.auctionHouseAddress),
     tokenMint: options.mint,
     price: options.price.toString(),
   })
@@ -271,19 +302,19 @@ export async function buyOnMagicEden(options: MEBuyOptions): Promise<{
   }
 
   const data = await response.json()
-  return { transaction: data.txSigned ?? data.tx ?? '' }
+  return { transaction: requireTransaction(data, 'buy') }
 }
 
 /**
  * List an NFT on Magic Eden via instruction API
  */
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function listOnMagicEden(options: MEListOptions): Promise<{
   transaction: string
 }> {
   const params = new URLSearchParams({
     seller: options.seller,
-    auctionHouseAddress: '',
+    auctionHouseAddress: requireAuctionHouse(options.auctionHouseAddress),
     tokenMint: options.mint,
     tokenAccount: options.tokenATA,
     price: options.price.toString(),
@@ -296,7 +327,7 @@ export async function listOnMagicEden(options: MEListOptions): Promise<{
   }
 
   const data = await response.json()
-  return { transaction: data.txSigned ?? data.tx ?? '' }
+  return { transaction: requireTransaction(data, 'list') }
 }
 
 /**
@@ -307,10 +338,11 @@ export async function delistFromMagicEden(options: {
   mint: string
   tokenATA: string
   price: number
+  auctionHouseAddress: string
 }): Promise<{ transaction: string }> {
   const params = new URLSearchParams({
     seller: options.seller,
-    auctionHouseAddress: '',
+    auctionHouseAddress: requireAuctionHouse(options.auctionHouseAddress),
     tokenMint: options.mint,
     tokenAccount: options.tokenATA,
     price: options.price.toString(),
@@ -323,5 +355,5 @@ export async function delistFromMagicEden(options: {
   }
 
   const data = await response.json()
-  return { transaction: data.txSigned ?? data.tx ?? '' }
+  return { transaction: requireTransaction(data, 'delist') }
 }

@@ -12,6 +12,21 @@ import type { TransferRule, TransferRuleType } from './types'
  */
 export const PNFT_PROGRAM_ID = new PublicKey('PNftProgram11111111111111111111111111111111')
 
+/**
+ * The pNFT on-chain program is not deployed — `PNFT_PROGRAM_ID` above is a
+ * placeholder address with no program behind it. Every read parses accounts that
+ * never exist, and every write would send a transaction to a nonexistent program
+ * (burning fees while accomplishing nothing). Both categories throw via this
+ * helper so callers cannot mistake stubbed behaviour for real functionality.
+ */
+export function pnftNotImplemented(fn: string): never {
+  throw new Error(
+    `${fn} is not implemented: the pNFT program is not deployed ` +
+    `(PNFT_PROGRAM_ID is a placeholder). No pNFT accounts exist to read and no ` +
+    `transaction can be executed against it.`
+  )
+}
+
 // ---------------------------------------------------------------------------
 // PDA derivation
 // ---------------------------------------------------------------------------
