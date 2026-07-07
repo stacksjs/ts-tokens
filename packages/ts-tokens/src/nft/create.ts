@@ -259,14 +259,14 @@ function serializeCreateMetadataV3(params: {
     offset += 1
   }
 
-  // Collection
+  // Collection — borsh layout is { verified: bool, key: Pubkey }
   if (params.collection) {
     buffer.writeUInt8(1, offset) // Some
     offset += 1
-    params.collection.key.toBuffer().copy(buffer, offset)
-    offset += 32
     buffer.writeUInt8(params.collection.verified ? 1 : 0, offset)
     offset += 1
+    params.collection.key.toBuffer().copy(buffer, offset)
+    offset += 32
   } else {
     buffer.writeUInt8(0, offset) // None
     offset += 1
