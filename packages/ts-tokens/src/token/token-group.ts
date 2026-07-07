@@ -32,10 +32,11 @@ export interface TokenGroupMember {
   group: string
 }
 
-// SPL Token Group instruction discriminators
-const INITIALIZE_GROUP = Buffer.from([170, 191, 42, 34, 235, 57, 225, 148])
-const INITIALIZE_MEMBER = Buffer.from([59, 237, 197, 108, 21, 178, 11, 92])
-const UPDATE_GROUP_MAX_SIZE = Buffer.from([108, 37, 171, 246, 200, 113, 17, 228])
+// SPL Token Group interface discriminators —
+// sha256("spl_token_group_interface:<name>")[0..8]
+const INITIALIZE_GROUP = Buffer.from([121, 113, 108, 39, 54, 51, 0, 4])
+const INITIALIZE_MEMBER = Buffer.from([152, 32, 222, 176, 223, 237, 116, 134])
+const UPDATE_GROUP_MAX_SIZE = Buffer.from([108, 37, 171, 143, 248, 30, 18, 110])
 
 /**
  * Create a token group instruction
@@ -47,16 +48,17 @@ function createInitializeGroupInstruction(
   updateAuthority: PublicKey,
   maxSize: number
 ): TransactionInstruction {
-  const data = Buffer.alloc(8 + 4)
+  // disc + update_authority (OptionalNonZeroPubkey, raw 32 bytes) + u64 max_size
+  const data = Buffer.alloc(8 + 32 + 8)
   INITIALIZE_GROUP.copy(data, 0)
-  data.writeUInt32LE(maxSize, 8)
+  updateAuthority.toBuffer().copy(data, 8)
+  data.writeBigUInt64LE(BigInt(maxSize), 40)
 
   return {
     keys: [
       { pubkey: group, isSigner: false, isWritable: true },
       { pubkey: mint, isSigner: false, isWritable: false },
       { pubkey: mintAuthority, isSigner: true, isWritable: false },
-      { pubkey: updateAuthority, isSigner: false, isWritable: false },
     ],
     programId: TOKEN_2022_PROGRAM_ID,
     data,
@@ -167,9 +169,9 @@ export async function updateGroupMaxSize(
   const payer = loadWallet(config)
   const groupMintPubkey = new PublicKey(groupMint)
 
-  const data = Buffer.alloc(8 + 4)
+  const data = Buffer.alloc(8 + 8)
   UPDATE_GROUP_MAX_SIZE.copy(data, 0)
-  data.writeUInt32LE(newMaxSize, 8)
+  data.writeBigUInt64LE(BigInt(newMaxSize), 8)
 
   const instruction: TransactionInstruction = {
     keys: [
