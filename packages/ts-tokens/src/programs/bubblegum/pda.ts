@@ -5,7 +5,6 @@
 import { PublicKey } from '@solana/web3.js'
 
 const BUBBLEGUM_PROGRAM_ID = new PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
-const ACCOUNT_COMPRESSION_PROGRAM_ID = new PublicKey('cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK')
 
 /**
  * Find the tree authority PDA
@@ -53,11 +52,14 @@ export function findAssetId(merkleTree: PublicKey, leafIndex: bigint): [PublicKe
 
 /**
  * Find the tree config PDA
+ *
+ * The TreeConfig account is owned by the Bubblegum program (same seeds as
+ * the tree authority PDA).
  */
 export function findTreeConfigPda(merkleTree: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [merkleTree.toBuffer()],
-    ACCOUNT_COMPRESSION_PROGRAM_ID
+    BUBBLEGUM_PROGRAM_ID
   )
 }
 
