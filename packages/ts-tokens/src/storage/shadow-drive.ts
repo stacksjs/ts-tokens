@@ -11,6 +11,7 @@ import {
   TransactionInstruction,
   SystemProgram,
 } from '@solana/web3.js'
+import nacl from 'tweetnacl'
 import type { StorageAdapter, UploadResult, UploadOptions, BatchUploadResult, TokenConfig } from '../types'
 import { loadWallet } from '../drivers/solana/wallet'
 import { createConnection } from '../drivers/solana/connection'
@@ -89,9 +90,8 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
     formData.append('message', 'upload')
 
     // Sign the upload request
-    const message = new TextEncoder().encode(`Shadow Drive Upload: ${fileName}`)
-    // Note: Actual signing would require tweetnacl or similar
-    const signature = Buffer.from(wallet.secretKey.slice(0, 64)).toString('base64')
+    const message = new TextEncoder().encode(`Shadow Drive Signed Message:\nStorage Account: ${this.config.storageAccount}\nUpload files with hash: ${fileName}`)
+    const signature = Buffer.from(nacl.sign.detached(message, wallet.secretKey)).toString('base64')
 
     const response = await fetch(`${this.config.endpoint}/upload`, {
       method: 'POST',
@@ -250,11 +250,14 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
 
     const wallet = loadWallet(this.tokenConfig)
 
+    const deleteMessage = new TextEncoder().encode(`Shadow Drive Signed Message:\nDelete file: ${url}`)
+    const deleteSignature = Buffer.from(nacl.sign.detached(deleteMessage, wallet.secretKey)).toString('base64')
+
     const response = await fetch(`${this.config.endpoint}/delete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-shadow-signature': Buffer.from(wallet.secretKey.slice(0, 64)).toString('base64'),
+        'x-shadow-signature': deleteSignature,
         'x-shadow-signer': wallet.publicKey.toBase58(),
       },
       body: JSON.stringify({
@@ -342,10 +345,13 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
     formData.append('file', blob, filename)
     formData.append('storageAccount', account)
 
+    const editMessage = new TextEncoder().encode(`Shadow Drive Signed Message:\nStorage Account: ${account}\nEdit file: ${filename}`)
+    const editSignature = Buffer.from(nacl.sign.detached(editMessage, wallet.secretKey)).toString('base64')
+
     const response = await fetch(`${this.config.endpoint}/edit`, {
       method: 'POST',
       headers: {
-        'x-shadow-signature': Buffer.from(wallet.secretKey.slice(0, 64)).toString('base64'),
+        'x-shadow-signature': editSignature,
         'x-shadow-signer': wallet.publicKey.toBase58(),
       },
       body: formData,
