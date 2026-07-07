@@ -169,15 +169,22 @@ export async function sendAndConfirmTransaction(
 
   // Wait for confirmation
   try {
+    const blockhash = transaction instanceof Transaction
+      ? transaction.recentBlockhash!
+      : transaction.message.recentBlockhash
+    let lastValidBlockHeight = transaction instanceof Transaction
+      ? transaction.lastValidBlockHeight
+      : undefined
+    if (lastValidBlockHeight == null) {
+      const latest = await connection.getLatestBlockhash(options?.commitment ?? 'confirmed')
+      lastValidBlockHeight = latest.lastValidBlockHeight
+    }
+
     const confirmation = await connection.confirmTransaction(
       {
         signature,
-        blockhash: transaction instanceof Transaction
-          ? transaction.recentBlockhash!
-          : '', // For versioned transactions, we'd need to extract this differently
-        lastValidBlockHeight: transaction instanceof Transaction
-          ? transaction.lastValidBlockHeight!
-          : 0,
+        blockhash,
+        lastValidBlockHeight,
       },
       options?.commitment ?? 'confirmed'
     )
