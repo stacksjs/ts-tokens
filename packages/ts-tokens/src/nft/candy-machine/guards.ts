@@ -21,10 +21,10 @@ const CANDY_GUARD_PROGRAM_ID = new PublicKey('Guard1JwRhJkVH6XZhzoYxeBVQe872VH6Q
 const CANDY_MACHINE_PROGRAM_ID = new PublicKey('CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR')
 
 // Candy Guard instruction discriminators (Anchor style)
-const INITIALIZE_GUARD_DISCRIMINATOR = Buffer.from([56, 231, 179, 6, 104, 218, 224, 125])
-const UPDATE_GUARD_DISCRIMINATOR = Buffer.from([44, 227, 213, 80, 78, 124, 78, 182])
-const WRAP_DISCRIMINATOR = Buffer.from([178, 231, 32, 164, 240, 70, 174, 234])
-const UNWRAP_DISCRIMINATOR = Buffer.from([208, 219, 44, 172, 134, 144, 41, 249])
+const INITIALIZE_GUARD_DISCRIMINATOR = Buffer.from([175, 175, 109, 31, 13, 152, 155, 237])
+const UPDATE_GUARD_DISCRIMINATOR = Buffer.from([219, 200, 88, 176, 158, 63, 253, 127])
+const WRAP_DISCRIMINATOR = Buffer.from([178, 40, 10, 189, 228, 129, 186, 140])
+const UNWRAP_DISCRIMINATOR = Buffer.from([126, 175, 198, 14, 212, 69, 50, 44])
 const MINT_V2_DISCRIMINATOR = Buffer.from([120, 121, 23, 146, 173, 110, 199, 205])
 
 /**
