@@ -56,26 +56,24 @@ export function initializeTransferFeeConfig(options: {
     { pubkey: options.mint, isSigner: false, isWritable: true },
   ]
 
-  const data = Buffer.alloc(99)
-  data[0] = 26 // InitializeTransferFeeConfig instruction
+  // TransferFeeExtension=26, sub-instruction InitializeTransferFeeConfig=0.
+  // Layout (78 bytes): [26, 0, authOpt(1), auth(32), wdOpt(1), wd(32), bps(u16), maxFee(u64)]
+  const data = Buffer.alloc(78)
+  data[0] = 26
+  data[1] = 0
 
-  // Config authority
-  data[1] = options.transferFeeConfigAuthority ? 1 : 0
+  data[2] = options.transferFeeConfigAuthority ? 1 : 0
   if (options.transferFeeConfigAuthority) {
-    options.transferFeeConfigAuthority.toBuffer().copy(data, 2)
+    options.transferFeeConfigAuthority.toBuffer().copy(data, 3)
   }
 
-  // Withdraw authority
-  data[34] = options.withdrawWithheldAuthority ? 1 : 0
+  data[35] = options.withdrawWithheldAuthority ? 1 : 0
   if (options.withdrawWithheldAuthority) {
-    options.withdrawWithheldAuthority.toBuffer().copy(data, 35)
+    options.withdrawWithheldAuthority.toBuffer().copy(data, 36)
   }
 
-  // Fee basis points
-  data.writeUInt16LE(options.transferFeeBasisPoints, 67)
-
-  // Maximum fee
-  data.writeBigUInt64LE(options.maximumFee, 69)
+  data.writeUInt16LE(options.transferFeeBasisPoints, 68)
+  data.writeBigUInt64LE(options.maximumFee, 70)
 
   return new TransactionInstruction({
     keys,
@@ -96,10 +94,12 @@ export function initializeInterestBearingMint(options: {
     { pubkey: options.mint, isSigner: false, isWritable: true },
   ]
 
+  // InterestBearingMintExtension=33, sub-instruction Initialize=0.
+  // Layout (36 bytes): [33, 0, rateAuthority(raw 32, zeros if none), rate(s16)]
   const data = Buffer.alloc(36)
-  data[0] = 33 // InitializeInterestBearingMint instruction
+  data[0] = 33
+  data[1] = 0
 
-  data[1] = options.rateAuthority ? 1 : 0
   if (options.rateAuthority) {
     options.rateAuthority.toBuffer().copy(data, 2)
   }
@@ -147,10 +147,12 @@ export function initializeTransferHook(options: {
     { pubkey: options.mint, isSigner: false, isWritable: true },
   ]
 
+  // TransferHookExtension=36, sub-instruction Initialize=0.
+  // Layout (66 bytes): [36, 0, authority(raw 32, zeros if none), programId(raw 32)]
   const data = Buffer.alloc(66)
-  data[0] = 36 // InitializeTransferHook instruction
+  data[0] = 36
+  data[1] = 0
 
-  data[1] = options.authority ? 1 : 0
   if (options.authority) {
     options.authority.toBuffer().copy(data, 2)
   }
@@ -176,10 +178,12 @@ export function initializeMetadataPointer(options: {
     { pubkey: options.mint, isSigner: false, isWritable: true },
   ]
 
+  // MetadataPointerExtension=39, sub-instruction Initialize=0.
+  // Layout (66 bytes): [39, 0, authority(raw 32, zeros if none), metadataAddress(raw 32)]
   const data = Buffer.alloc(66)
-  data[0] = 39 // InitializeMetadataPointer instruction
+  data[0] = 39
+  data[1] = 0
 
-  data[1] = options.authority ? 1 : 0
   if (options.authority) {
     options.authority.toBuffer().copy(data, 2)
   }
@@ -230,9 +234,13 @@ export function initializeDefaultAccountState(options: {
     { pubkey: options.mint, isSigner: false, isWritable: true },
   ]
 
-  const data = Buffer.alloc(2)
-  data[0] = 28 // InitializeDefaultAccountState instruction
-  data[1] = options.state
+  // DefaultAccountStateExtension=28, sub-instruction Initialize=0.
+  // Layout (3 bytes): [28, 0, accountState]. Without the sub-instruction byte,
+  // `state` is read as the sub-instruction (decoded as Update, not Initialize).
+  const data = Buffer.alloc(3)
+  data[0] = 28
+  data[1] = 0
+  data[2] = options.state
 
   return new TransactionInstruction({
     keys,
@@ -525,26 +533,23 @@ export function initializeConfidentialTransferMint(options: {
     { pubkey: options.mint, isSigner: false, isWritable: true },
   ]
 
-  const data = Buffer.alloc(98)
-  data[0] = 27 // ConfidentialTransferExtension instruction
-  data[1] = 0  // InitializeMint sub-instruction
+  // ConfidentialTransferExtension=27, sub-instruction InitializeMint=0.
+  // Layout (67 bytes): [27, 0, authority(raw 32 OptionalNonZeroPubkey),
+  //   autoApproveNewAccounts(u8), auditorElGamalPubkey(raw 32)].
+  // The authority is a raw 32-byte OptionalNonZeroPubkey (zeros = none), NOT a
+  // 4-/1-byte COption, and the ElGamal pubkey is 32 bytes (not 64).
+  const data = Buffer.alloc(67)
+  data[0] = 27
+  data[1] = 0
 
-  // Authority (COption<Pubkey>)
   if (options.authority) {
-    data[2] = 1
-    options.authority.toBuffer().copy(data, 3)
-  } else {
-    data[2] = 0
+    options.authority.toBuffer().copy(data, 2)
   }
 
-  // Auto-approve new accounts
-  data[35] = options.autoApproveNewAccounts ? 1 : 0
+  data[34] = options.autoApproveNewAccounts ? 1 : 0
 
-  // Auditor ElGamal pubkey
   if (options.auditorElGamalPubkey) {
-    options.auditorElGamalPubkey.slice(0, 64).forEach((b, i) => {
-      data[36 + i] = b
-    })
+    Buffer.from(options.auditorElGamalPubkey.slice(0, 32)).copy(data, 35)
   }
 
   return new TransactionInstruction({

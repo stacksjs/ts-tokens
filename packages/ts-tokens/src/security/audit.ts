@@ -58,11 +58,12 @@ export async function auditToken(
       }
     }
 
-    // Parse mint data (simplified)
     const data = mintInfo.data
 
-    // Check mint authority (byte 0-36 contains authority info)
-    const hasMintAuthority = data[0] === 1
+    // SPL Mint layout: mintAuthorityOption u32 @0, mintAuthority @4..36,
+    // supply u64 @36..44, decimals @44, isInitialized @45,
+    // freezeAuthorityOption u32 @46, freezeAuthority @50..82.
+    const hasMintAuthority = data.readUInt32LE(0) === 1
     if (hasMintAuthority) {
       findings.push({
         severity: 'medium',
@@ -75,8 +76,9 @@ export async function auditToken(
       riskScore += 20
     }
 
-    // Check freeze authority
-    const hasFreezeAuthority = data[36] === 1
+    // Check freeze authority (option flag is the u32 at offset 46, NOT byte 36
+    // which is the first byte of `supply`).
+    const hasFreezeAuthority = data.readUInt32LE(46) === 1
     if (hasFreezeAuthority) {
       findings.push({
         severity: 'high',

@@ -425,12 +425,12 @@ describe('Instruction Builders', () => {
     expect(ix.keys).toHaveLength(1)
     expect(ix.keys[0].pubkey.toBase58()).toBe(mint.toBase58())
     expect(ix.data[0]).toBe(27) // opcode
-    expect(ix.data[1]).toBe(0)  // sub-instruction
-    expect(ix.data[2]).toBe(1)  // authority present
-    // Authority encoded at offset 3
-    const encodedAuth = new PublicKey(ix.data.subarray(3, 35))
+    expect(ix.data[1]).toBe(0)  // sub-instruction InitializeMint
+    // Authority is a raw 32-byte OptionalNonZeroPubkey at offset 2 (no tag byte)
+    const encodedAuth = new PublicKey(ix.data.subarray(2, 34))
     expect(encodedAuth.toBase58()).toBe(authority.toBase58())
-    expect(ix.data[35]).toBe(1) // autoApproveNewAccounts
+    expect(ix.data[34]).toBe(1) // autoApproveNewAccounts
+    expect(ix.data).toHaveLength(67)
   })
 
   test('initializeConfidentialTransferMint handles no authority', () => {
@@ -441,8 +441,10 @@ describe('Instruction Builders', () => {
 
     expect(ix.data[0]).toBe(27)
     expect(ix.data[1]).toBe(0)
-    expect(ix.data[2]).toBe(0) // no authority
-    expect(ix.data[35]).toBe(0) // autoApproveNewAccounts = false
+    // No authority => raw pubkey is all zeros
+    expect(ix.data.subarray(2, 34).every(b => b === 0)).toBe(true)
+    expect(ix.data[34]).toBe(0) // autoApproveNewAccounts = false
+    expect(ix.data).toHaveLength(67)
   })
 
   test('enableCpiGuard creates correct instruction', () => {
@@ -537,9 +539,12 @@ describe('Instruction Builders', () => {
     })
 
     expect(ix.programId.toBase58()).toBe(TOKEN_2022_PROGRAM_ID.toBase58())
-    expect(ix.data[0]).toBe(26) // opcode
-    expect(ix.data.readUInt16LE(67)).toBe(500)
-    expect(ix.data.readBigUInt64LE(69)).toBe(1000000n)
+    expect(ix.data[0]).toBe(26) // TransferFeeExtension opcode
+    expect(ix.data[1]).toBe(0)  // sub-instruction InitializeTransferFeeConfig
+    // 78-byte layout: [26,0,authOpt,auth(32),wdOpt,wd(32),bps@68,maxFee@70]
+    expect(ix.data).toHaveLength(78)
+    expect(ix.data.readUInt16LE(68)).toBe(500)
+    expect(ix.data.readBigUInt64LE(70)).toBe(1000000n)
   })
 
   test('setTransferFee creates correct instruction', () => {
@@ -572,6 +577,45 @@ describe('Instruction Builders', () => {
     expect(ix.data[0]).toBe(26) // TransferFeeExtension
     expect(ix.data[1]).toBe(3) // WithdrawWithheldTokensFromAccounts sub-instruction
     expect(ix.data[2]).toBe(1) // sources count
+  })
+
+  // Regression: each extension-init instruction must carry its extension
+  // sub-instruction byte (Initialize=0) after the opcode, or the program decodes
+  // the wrong sub-instruction / rejects the data.
+  test('initializeInterestBearingMint carries [33, 0] and s16 rate at offset 34', () => {
+    const ix = initializeInterestBearingMint({ mint, rateAuthority: authority, rate: -500 })
+    expect(ix.data[0]).toBe(33)
+    expect(ix.data[1]).toBe(0)
+    expect(ix.data).toHaveLength(36)
+    expect(ix.data.readInt16LE(34)).toBe(-500)
+    expect(new PublicKey(ix.data.subarray(2, 34)).toBase58()).toBe(authority.toBase58())
+  })
+
+  test('initializeTransferHook carries [36, 0] with raw authority + programId', () => {
+    const hookProgram = Keypair.generate().publicKey
+    const ix = initializeTransferHook({ mint, authority, programId: hookProgram })
+    expect(ix.data[0]).toBe(36)
+    expect(ix.data[1]).toBe(0)
+    expect(ix.data).toHaveLength(66)
+    expect(new PublicKey(ix.data.subarray(2, 34)).toBase58()).toBe(authority.toBase58())
+    expect(new PublicKey(ix.data.subarray(34, 66)).toBase58()).toBe(hookProgram.toBase58())
+  })
+
+  test('initializeMetadataPointer carries [39, 0] with raw authority + metadata address', () => {
+    const metadataAddress = Keypair.generate().publicKey
+    const ix = initializeMetadataPointer({ mint, authority, metadataAddress })
+    expect(ix.data[0]).toBe(39)
+    expect(ix.data[1]).toBe(0)
+    expect(ix.data).toHaveLength(66)
+    expect(new PublicKey(ix.data.subarray(34, 66)).toBase58()).toBe(metadataAddress.toBase58())
+  })
+
+  test('initializeDefaultAccountState (Initialize) carries [28, 0, state]', () => {
+    const ix = initializeDefaultAccountState({ mint, state: AccountState.Frozen })
+    expect(ix.data[0]).toBe(28)
+    expect(ix.data[1]).toBe(0) // Initialize sub-instruction (NOT Update=1)
+    expect(ix.data[2]).toBe(AccountState.Frozen)
+    expect(ix.data).toHaveLength(3)
   })
 })
 

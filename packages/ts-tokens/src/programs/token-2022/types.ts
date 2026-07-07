@@ -5,7 +5,14 @@
 import type { PublicKey } from '@solana/web3.js'
 
 /**
- * Extension types available in Token-2022
+ * Extension types available in Token-2022.
+ *
+ * These ordinals are the on-chain TLV discriminators and MUST match the SPL
+ * Token-2022 program (see @solana/spl-token `ExtensionType`). In particular
+ * types 16/17 are the ConfidentialTransferFee extensions, so MetadataPointer is
+ * 18, TokenMetadata is 19, GroupPointer 20, TokenGroup 21, GroupMemberPointer
+ * 22, TokenGroupMember 23 — getting these wrong makes TLV parsing misidentify
+ * every modern extension.
  */
 export enum ExtensionType {
   Uninitialized = 0,
@@ -24,12 +31,14 @@ export enum ExtensionType {
   NonTransferableAccount = 13,
   TransferHook = 14,
   TransferHookAccount = 15,
-  MetadataPointer = 16,
-  TokenMetadata = 17,
-  GroupPointer = 18,
-  GroupMemberPointer = 19,
-  TokenGroup = 20,
-  TokenGroupMember = 21,
+  ConfidentialTransferFeeConfig = 16,
+  ConfidentialTransferFeeAmount = 17,
+  MetadataPointer = 18,
+  TokenMetadata = 19,
+  GroupPointer = 20,
+  TokenGroup = 21,
+  GroupMemberPointer = 22,
+  TokenGroupMember = 23,
 }
 
 /**

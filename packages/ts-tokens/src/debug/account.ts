@@ -90,7 +90,7 @@ function tryParseAccountData(
       decimals: data[44],
       isInitialized: data[45] === 1,
       freezeAuthority: data[46] === 1
-        ? new PublicKey(data.slice(47, 79)).toBase58()
+        ? new PublicKey(data.slice(50, 82)).toBase58()
         : null,
     }
   }
@@ -110,7 +110,7 @@ function tryParseAccountData(
       delegatedAmount: data.readBigUInt64LE(121),
       closeAuthorityOption: data[129],
       closeAuthority: data[129] === 1
-        ? new PublicKey(data.slice(130, 162)).toBase58()
+        ? new PublicKey(data.slice(133, 165)).toBase58()
         : null,
     }
   }
@@ -147,35 +147,37 @@ export function formatAccountInspection(inspection: AccountInspection): string {
 }
 
 /**
- * Get account balance history (requires archive node)
+ * Get account balance history.
+ *
+ * NOT IMPLEMENTED. `getBalance(address, { minContextSlot })` does NOT return the
+ * balance *at* that slot — `minContextSlot` only requires the RPC node to have
+ * progressed at least to that slot, so every entry would be the current balance
+ * mislabeled as historical. True historical balances need an archive node with a
+ * slot-scoped API (e.g. a `getBalance`/`getAccountInfo` that accepts a past slot
+ * via a `getBlock`/Bigtable lookup). Refuse rather than returning fabricated data.
  */
 export async function getBalanceHistory(
-  connection: Connection,
-  address: PublicKey,
-  slots: number[]
+  _connection: Connection,
+  _address: PublicKey,
+  _slots: number[]
 ): Promise<Array<{ slot: number; balance: bigint | null }>> {
-  const results: Array<{ slot: number; balance: bigint | null }> = []
-
-  for (const slot of slots) {
-    try {
-      // Note: This requires archive node access
-      const balance = await connection.getBalance(address, { minContextSlot: slot })
-      results.push({ slot, balance: BigInt(balance) })
-    } catch {
-      results.push({ slot, balance: null })
-    }
-  }
-
-  return results
+  throw new Error(
+    'getBalanceHistory is not implemented: minContextSlot does not fetch a ' +
+    'historical balance. Query an archive node with slot-scoped account lookups.'
+  )
 }
 
 /**
- * Compare account state before and after transaction
+ * Compare account state before and after a transaction.
+ *
+ * NOT IMPLEMENTED for the historical `before` state — the current RPC connection
+ * cannot fetch account state at a past slot, so returning `before: null,
+ * changes: []` would misreport "no changes" for any transaction. Use
+ * `inspectAccount` directly for the live state, or an archive node for the diff.
  */
-// eslint-disable-next-line no-unused-vars
 export async function diffAccountState(
-  connection: Connection,
-  address: PublicKey,
+  _connection: Connection,
+  _address: PublicKey,
   _beforeSlot: number,
   _afterSlot: number
 ): Promise<{
@@ -183,14 +185,10 @@ export async function diffAccountState(
   after: AccountInspection | null
   changes: string[]
 }> {
-  // In production, would fetch historical state
-  const after = await inspectAccount(connection, address)
-
-  return {
-    before: null, // Would need archive node
-    after,
-    changes: [],
-  }
+  throw new Error(
+    'diffAccountState is not implemented: historical account state at a past ' +
+    'slot requires an archive node. Use inspectAccount for the current state.'
+  )
 }
 
 /**

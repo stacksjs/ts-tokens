@@ -59,9 +59,9 @@ describe('auditToken', () => {
     expect(report.riskScore).toBeGreaterThanOrEqual(20)
   })
 
-  test('returns high finding when freeze authority is set (byte[36]=1)', async () => {
+  test('returns high finding when freeze authority is set (freezeAuthorityOption @46)', async () => {
     const data = Buffer.alloc(100)
-    data[36] = 1 // freeze authority present
+    data.writeUInt32LE(1, 46) // freezeAuthorityOption = Some (offset 46, not 36)
 
     const conn = createMockConnection({
       getAccountInfo: async () => mockAccountInfo(data),
@@ -79,8 +79,8 @@ describe('auditToken', () => {
 
   test('returns combined risk when both authorities are set', async () => {
     const data = Buffer.alloc(100)
-    data[0] = 1  // mint authority
-    data[36] = 1 // freeze authority
+    data.writeUInt32LE(1, 0)  // mintAuthorityOption = Some (offset 0)
+    data.writeUInt32LE(1, 46) // freezeAuthorityOption = Some (offset 46)
 
     const conn = createMockConnection({
       getAccountInfo: async () => mockAccountInfo(data),
@@ -97,6 +97,21 @@ describe('auditToken', () => {
     expect(report.riskScore).toBe(50)
     expect(report.recommendations).toContain('Revoke mint authority if supply should be fixed')
     expect(report.recommendations).toContain('Revoke freeze authority to prevent account freezing')
+  })
+
+  test('does NOT flag a freeze authority from a nonzero byte at the old offset 36 (supply)', async () => {
+    // Byte 36 is the first byte of `supply`; a token whose supply low byte is 1
+    // must not be misreported as having a freeze authority.
+    const data = Buffer.alloc(100)
+    data.writeBigUInt64LE(1n, 36) // supply = 1 (byte[36] = 1), freeze option @46 = 0
+
+    const conn = createMockConnection({
+      getAccountInfo: async () => mockAccountInfo(data),
+    })
+    const mint = Keypair.generate().publicKey
+
+    const report = await auditToken(conn, mint)
+    expect(report.findings.find(f => f.title === 'Freeze authority is set')).toBeUndefined()
   })
 
   test('includes info finding about supply for valid accounts', async () => {

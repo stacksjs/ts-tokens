@@ -276,7 +276,9 @@ export async function fullTokenSecurityCheck(
     }
 
     const data = mintInfo.data
-    const hasMintAuthority = data[0] === 1
+    // SPL Mint: mintAuthorityOption u32 @0, mintAuthority @4..36, supply @36..44,
+    // decimals @44, isInitialized @45, freezeAuthorityOption u32 @46, freeze @50..82.
+    const hasMintAuthority = data.readUInt32LE(0) === 1
     const mintAuth = hasMintAuthority ? new PublicKey(data.subarray(4, 36)).toBase58() : null
 
     const maCheck = checkMintAuthority(mintAuth)
@@ -286,8 +288,8 @@ export async function fullTokenSecurityCheck(
     }
     recommendations.push(...maCheck.recommendations)
 
-    const hasFreezeAuthority = data[36] === 1
-    const freezeAuth = hasFreezeAuthority ? new PublicKey(data.subarray(40, 72)).toBase58() : null
+    const hasFreezeAuthority = data.readUInt32LE(46) === 1
+    const freezeAuth = hasFreezeAuthority ? new PublicKey(data.subarray(50, 82)).toBase58() : null
 
     const faCheck = checkFreezeAuthority(freezeAuth)
     if (faCheck.warnings.length > 0) {

@@ -117,14 +117,15 @@ export async function fullCollectionSecurityCheck(
       }
     }
 
-    // Check mint authority
+    // Check mint authority. SPL Mint: mintAuthorityOption u32 @0,
+    // freezeAuthorityOption u32 @46 (byte 36 is the first byte of `supply`).
     const data = mintInfo.data
-    const hasMintAuthority = data[0] === 1
+    const hasMintAuthority = data.readUInt32LE(0) === 1
     if (hasMintAuthority) {
       findings.push({ severity: 'info', category: 'authority', title: 'Mint authority active', description: 'Collection mint authority is set — new items can be minted' })
     }
 
-    const hasFreezeAuthority = data[36] === 1
+    const hasFreezeAuthority = data.readUInt32LE(46) === 1
     if (hasFreezeAuthority) {
       findings.push({ severity: 'medium', category: 'authority', title: 'Freeze authority active', description: 'Collection has freeze authority set', recommendation: 'Review if freeze authority is needed' })
       riskScore += 15
