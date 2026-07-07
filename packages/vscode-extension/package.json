@@ -6,7 +6,7 @@
   "publisher": "stacksjs",
   "license": "MIT",
   "engines": {
-    "vscode": "^1.999.0"
+    "vscode": "^1.109.0"
   },
   "categories": [
     "Snippets",
@@ -30,6 +30,16 @@
     "workspaceContains:tokens.config.js"
   ],
   "contributes": {
+    "commands": [
+      {
+        "command": "ts-tokens.showCommands",
+        "title": "ts-tokens: Show Commands"
+      },
+      {
+        "command": "ts-tokens.fixError",
+        "title": "ts-tokens: Fix Error"
+      }
+    ],
     "snippets": [
       {
         "language": "typescript",

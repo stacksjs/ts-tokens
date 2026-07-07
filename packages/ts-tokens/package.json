@@ -138,6 +138,46 @@
       "types": "./dist/testing/index.d.ts",
       "import": "./dist/testing/index.js"
     },
+    "./actions": {
+      "types": "./dist/actions/index.d.ts",
+      "import": "./dist/actions/index.js"
+    },
+    "./automation": {
+      "types": "./dist/automation/index.d.ts",
+      "import": "./dist/automation/index.js"
+    },
+    "./compat": {
+      "types": "./dist/compat/index.d.ts",
+      "import": "./dist/compat/index.js"
+    },
+    "./compressed-token": {
+      "types": "./dist/compressed-token/index.d.ts",
+      "import": "./dist/compressed-token/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./distribution": {
+      "types": "./dist/distribution/index.d.ts",
+      "import": "./dist/distribution/index.js"
+    },
+    "./fanout": {
+      "types": "./dist/fanout/index.d.ts",
+      "import": "./dist/fanout/index.js"
+    },
+    "./legacy": {
+      "types": "./dist/legacy/index.d.ts",
+      "import": "./dist/legacy/index.js"
+    },
+    "./transaction": {
+      "types": "./dist/transaction/index.d.ts",
+      "import": "./dist/transaction/index.js"
+    },
+    "./vesting": {
+      "types": "./dist/vesting/index.d.ts",
+      "import": "./dist/vesting/index.js"
+    },
     "./*": {
       "import": "./dist/*"
     }

@@ -1,5 +1,8 @@
 [install]
 registry = { url = "https://registry.npmjs.org/", token = "$BUN_AUTH_TOKEN" }
+# better-dx provides shared dev tooling (typescript, pickier, bun-plugin-dtsx) as
+# peer deps; hoisted linking is required for those to resolve from consumers.
+linker = "hoisted"
 
 [test]
 preload = ["./packages/ts-tokens/test-setup.ts"]

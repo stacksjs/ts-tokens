@@ -49,6 +49,16 @@ async function main(): Promise<void> {
     'i18n',
     'debug',
     'testing',
+    'actions',
+    'automation',
+    'compat',
+    'compressed-token',
+    'core',
+    'distribution',
+    'fanout',
+    'legacy',
+    'transaction',
+    'vesting',
   ]
 
   for (const mod of submodules) {
