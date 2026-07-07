@@ -122,29 +122,16 @@ export abstract class BaseBuilder<T extends BaseBuilder<T>> {
       throw new Error('Payer not set')
     }
 
-    const errors: Array<{ operation: string; error: string }> = []
-    const signatures: string[] = []
-
-    try {
-      const instructions = await this.build()
-
-      // In production, would sign and send transaction
-      // This is a simplified version
-      signatures.push(`executed_${Date.now()}`)
-
-    } catch (error) {
-      errors.push({
-        operation: 'execute',
-        error: (error as Error).message,
-      })
-    }
-
-    return {
-      success: errors.length === 0,
-      signatures,
-      operations: this.operations,
-      errors,
-    }
+    // The fluent builder is not wired to the real instruction builders yet
+    // (see `build()` in TokenBuilder/NFTBuilder, which currently emit no
+    // instructions), so there is nothing to sign or send. Returning a fake
+    // `executed_<timestamp>` signature would report success for an operation
+    // that never touched the chain.
+    throw new Error(
+      'BaseBuilder.execute() is not implemented: the fluent builder is not ' +
+      'wired to real instruction builders, so operations cannot be signed or ' +
+      'sent. Use the dedicated token/NFT APIs to build and submit transactions.'
+    )
   }
 }
 

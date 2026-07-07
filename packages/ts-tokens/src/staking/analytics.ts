@@ -11,26 +11,24 @@ import type {
   StakingPerformance,
   EarningsHistory,
 } from './types'
-import { STAKING_PROGRAM_ID, getStakeEntryAddress } from './program'
+import { STAKING_PROGRAM_ID } from './program'
 
 /**
  * Get staking history for a user in a pool
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getStakingHistory(
   connection: Connection,
   pool: PublicKey,
   owner: PublicKey
 ): Promise<StakingHistoryEntry[]> {
-  const stakeEntry = getStakeEntryAddress(pool, owner)
-  const signatures = await connection.getSignaturesForAddress(stakeEntry, { limit: 100 })
-
-  return signatures.map(sig => ({
-    timestamp: sig.blockTime ?? 0,
-    action: 'stake' as const, // Simplified — full impl would parse tx data
-    amount: 0n,
-    signature: sig.signature,
-    pool: pool.toBase58(),
-  }))
+  throw new Error(
+    'getStakingHistory is not implemented: signatures for the stake entry are ' +
+    'available, but the per-entry action (stake/unstake/claim) and amount ' +
+    'require parsing each transaction\'s instruction data. The previous ' +
+    'implementation hardcoded action="stake" and amount=0n, so earnings were ' +
+    'always empty/zero (fabricated data).'
+  )
 }
 
 /**

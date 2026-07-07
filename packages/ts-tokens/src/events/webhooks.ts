@@ -10,7 +10,10 @@ import type {
   TokenEvent,
   EventType,
 } from './types'
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
+
+/** Maximum number of payloads held in a single webhook's retry queue. */
+const MAX_RETRY_QUEUE_SIZE = 1000
 
 /**
  * Webhook manager
@@ -86,10 +89,22 @@ export class WebhookManager {
     try {
       await this.deliver(config, payload)
     } catch (error) {
-      // Add to retry queue
+      // Add to retry queue, capping its size to avoid unbounded growth when an
+      // endpoint is persistently failing. Drop the oldest queued payload first.
       const queue = this.retryQueue.get(webhookId) ?? []
       queue.push({ payload, attempts: 1 })
+      while (queue.length > MAX_RETRY_QUEUE_SIZE) {
+        queue.shift()
+        console.warn(
+          `Webhook ${webhookId} retry queue exceeded ${MAX_RETRY_QUEUE_SIZE}; ` +
+          'dropping oldest queued payload.'
+        )
+      }
       this.retryQueue.set(webhookId, queue)
+
+      // Surface the failure to the caller instead of silently swallowing it.
+      // The payload is still queued for retry above.
+      throw error instanceof Error ? error : new Error(String(error))
     }
   }
 
@@ -198,7 +213,18 @@ export function verifyWebhookSignature(
   secret: string
 ): boolean {
   const expected = signPayload(payload, secret)
-  return signature === expected
+
+  const signatureBuffer = Buffer.from(signature, 'utf8')
+  const expectedBuffer = Buffer.from(expected, 'utf8')
+
+  // timingSafeEqual requires equal-length buffers and throws otherwise. A
+  // length mismatch already means the signatures differ, so bail early. This
+  // avoids leaking timing information about how much of the signature matched.
+  if (signatureBuffer.length !== expectedBuffer.length) {
+    return false
+  }
+
+  return timingSafeEqual(signatureBuffer, expectedBuffer)
 }
 
 /**

@@ -12,123 +12,41 @@ export async function getPriceHistory(
   mint: PublicKey,
   period: '1h' | '24h' | '7d' | '30d' | '90d' | '1y' | 'all' = '7d'
 ): Promise<PriceHistory> {
-  // In production, would fetch from price API (Jupiter, Birdeye, etc.)
-  // This is a placeholder showing the structure
-
-  const dataPoints: PricePoint[] = []
-  const now = Date.now()
-
-  const periodMs: Record<string, number> = {
-    '1h': 60 * 60 * 1000,
-    '24h': 24 * 60 * 60 * 1000,
-    '7d': 7 * 24 * 60 * 60 * 1000,
-    '30d': 30 * 24 * 60 * 60 * 1000,
-    '90d': 90 * 24 * 60 * 60 * 1000,
-    '1y': 365 * 24 * 60 * 60 * 1000,
-    'all': 3 * 365 * 24 * 60 * 60 * 1000,
-  }
-
-  const intervals: Record<string, number> = {
-    '1h': 12, // 5 min intervals
-    '24h': 24, // 1 hour intervals
-    '7d': 168, // 1 hour intervals
-    '30d': 30, // 1 day intervals
-    '90d': 90, // 1 day intervals
-    '1y': 365, // 1 day intervals
-    'all': 365, // 1 day intervals
-  }
-
-  const numPoints = intervals[period]
-  const intervalMs = periodMs[period] / numPoints
-
-  // Generate placeholder data
-  for (let i = 0; i < numPoints; i++) {
-    const timestamp = now - (numPoints - i) * intervalMs
-    dataPoints.push({
-      timestamp,
-      price: 0,
-      volume: 0n,
-      high: 0,
-      low: 0,
-      open: 0,
-      close: 0,
-    })
-  }
-
-  // Calculate metrics
-  const prices = dataPoints.map(p => p.price).filter(p => p > 0)
-  const high = prices.length > 0 ? Math.max(...prices) : 0
-  const low = prices.length > 0 ? Math.min(...prices) : 0
-  const avgPrice = prices.length > 0 ? prices.reduce((a, b) => a + b, 0) / prices.length : 0
-
-  const firstPrice = dataPoints[0]?.price ?? 0
-  const lastPrice = dataPoints[dataPoints.length - 1]?.price ?? 0
-  const priceChange = lastPrice - firstPrice
-  const priceChangePercentage = firstPrice > 0 ? (priceChange / firstPrice) * 100 : 0
-
-  return {
-    mint,
-    period,
-    dataPoints,
-    priceChange,
-    priceChangePercentage,
-    high,
-    low,
-    avgPrice,
-  }
+  throw new Error(
+    'getPriceHistory is not implemented: it requires a price API or indexer ' +
+    '(e.g. Jupiter, Birdeye). The previous implementation returned all-zero ' +
+    'price points, which is fabricated data.'
+  )
 }
 
 /**
  * Get token metrics
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getTokenMetrics(
   connection: Connection,
   mint: PublicKey
 ): Promise<TokenMetrics> {
-  // Get supply info
-  const supplyInfo = await connection.getTokenSupply(mint)
-  const supply = BigInt(supplyInfo.value.amount)
-
-  // In production, would fetch price from API
-  const price = 0
-  const marketCap = Number(supply) * price
-
-  return {
-    mint,
-    price,
-    priceChange24h: 0,
-    marketCap,
-    fullyDilutedValuation: marketCap,
-    volume24h: 0,
-    holders: 0, // Would need to count
-    transactions24h: 0,
-    liquidity: 0,
-    timestamp: Date.now(),
-  }
+  throw new Error(
+    'getTokenMetrics is not implemented: price, market cap, 24h volume, holder ' +
+    'count, and liquidity require a price API/indexer. The previous ' +
+    'implementation returned zero for every price-derived field, which is ' +
+    'fabricated data.'
+  )
 }
 
 /**
  * Get NFT collection metrics
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getCollectionMetrics(
   collection: PublicKey
 ): Promise<CollectionMetrics> {
-  // In production, would fetch from marketplace APIs
-  return {
-    collection,
-    floorPrice: 0n,
-    floorPriceChange24h: 0,
-    volume24h: 0n,
-    volume7d: 0n,
-    volumeAll: 0n,
-    sales24h: 0,
-    listed: 0,
-    totalSupply: 0,
-    owners: 0,
-    uniqueOwnersPercentage: 0,
-    avgPrice24h: 0n,
-    timestamp: Date.now(),
-  }
+  throw new Error(
+    'getCollectionMetrics is not implemented: floor price, volume, listings, ' +
+    'and owner counts require marketplace/indexer APIs. The previous ' +
+    'implementation returned all zeros, which is fabricated data.'
+  )
 }
 
 /**

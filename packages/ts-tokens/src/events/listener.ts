@@ -4,7 +4,8 @@
  * Real-time event streaming via WebSocket.
  */
 
-import type { Connection, PublicKey } from '@solana/web3.js'
+import type { Connection } from '@solana/web3.js'
+import { PublicKey } from '@solana/web3.js'
 import type {
   TokenEvent,
   EventCallback,
@@ -20,6 +21,8 @@ export class EventListener {
   private connection: Connection
   private subscriptions: Map<number, { callback: EventCallback; filter?: EventFilter }> = new Map()
   private nextId = 1
+  /** Solana WebSocket subscription id for the active onLogs listener, if any. */
+  private logsSubscriptionId: number | null = null
 
   constructor(connection: Connection) {
     this.connection = connection
@@ -27,21 +30,22 @@ export class EventListener {
 
   /**
    * Subscribe to events
+   *
+   * NOTE: log parsing is not implemented (`parseLogsToEvent` cannot yet decode
+   * program logs into `TokenEvent`s), so no event would ever be delivered to
+   * the callback. Rather than silently registering a subscription that can
+   * never fire, this throws so callers know real-time events are unavailable.
+   * The subscription bookkeeping and filtering below are correct and ready for
+   * when parsing is wired up.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   subscribe(callback: EventCallback, options: ListenerOptions = {}): number {
-    const id = this.nextId++
-
-    this.subscriptions.set(id, {
-      callback,
-      filter: options.filter,
-    })
-
-    // Start listening if first subscription
-    if (this.subscriptions.size === 1) {
-      this.startListening(options)
-    }
-
-    return id
+    throw new Error(
+      'EventListener.subscribe() is not implemented: program-log parsing ' +
+      '(parseLogsToEvent) is not wired up, so no events can ever be emitted to ' +
+      'the callback. Use pollEvents() with your own transaction parsing, or ' +
+      'wait for log parsing support.'
+    )
   }
 
   /**
@@ -72,8 +76,12 @@ export class EventListener {
   private startListening(options: ListenerOptions): void {
     const { commitment = 'confirmed' } = options
 
-    // Subscribe to logs for token program
-    this.connection.onLogs(
+    // Avoid opening a second WebSocket subscription if one is already active.
+    if (this.logsSubscriptionId !== null) return
+
+    // Subscribe to logs for token program and retain the subscription id so it
+    // can be removed later (otherwise the WebSocket subscription leaks).
+    this.logsSubscriptionId = this.connection.onLogs(
       'all',
       (logs) => {
         this.processLogs(logs)
@@ -86,7 +94,13 @@ export class EventListener {
    * Stop listening
    */
   private stopListening(): void {
-    // Would remove WebSocket subscriptions
+    if (this.logsSubscriptionId !== null) {
+      const id = this.logsSubscriptionId
+      this.logsSubscriptionId = null
+      // Fire-and-forget: removeOnLogsListener returns a promise; swallow errors
+      // so teardown never throws.
+      void this.connection.removeOnLogsListener(id).catch(() => {})
+    }
   }
 
   /**
@@ -95,25 +109,44 @@ export class EventListener {
   private processLogs(logs: { signature: string; logs: string[]; err: unknown }): void {
     if (logs.err) return
 
-    // Parse logs to determine event type
-    const event = this.parseLogsToEvent(logs)
+    // Parse logs to determine event type. Parsing is not yet implemented and
+    // throws; guard it so an unimplemented/failed parse cannot tear down the
+    // WebSocket log stream.
+    let event: TokenEvent | null
+    try {
+      event = this.parseLogsToEvent(logs)
+    } catch {
+      return
+    }
     if (!event) return
 
-    // Emit to all matching subscribers
+    // Emit to all matching subscribers. Isolate each callback so one throwing
+    // subscriber does not prevent the others from receiving the event.
     for (const [, sub] of this.subscriptions) {
       if (this.matchesFilter(event, sub.filter)) {
-        sub.callback(event)
+        try {
+          sub.callback(event)
+        } catch {
+          // Swallow subscriber errors; a misbehaving callback must not break
+          // the WebSocket log stream or other subscribers.
+        }
       }
     }
   }
 
   /**
    * Parse logs to event
+   *
+   * NOTE: not implemented. Decoding raw program logs into typed `TokenEvent`s
+   * requires instruction/log parsing that is not yet available. This throws so
+   * the "no events fire" gap is explicit rather than silently returning null.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private parseLogsToEvent(logs: { signature: string; logs: string[] }): TokenEvent | null {
-    // In production, would parse program logs to determine event type
-    // This is a simplified placeholder
-    return null
+    throw new Error(
+      'parseLogsToEvent is not implemented: program-log decoding into ' +
+      'TokenEvents is not available yet.'
+    )
   }
 
   /**
@@ -131,6 +164,26 @@ export class EventListener {
     if (filter.mints && 'mint' in event) {
       const mint = event.mint as PublicKey
       if (!filter.mints.some(m => m.equals(mint))) {
+        return false
+      }
+    }
+
+    // Check collection (NFT transfer/mint events carry an optional collection)
+    if (filter.collections) {
+      const collection = 'collection' in event ? event.collection : undefined
+      if (!collection || !filter.collections.some(c => c.equals(collection))) {
+        return false
+      }
+    }
+
+    // Check accounts: match if any account-like field on the event appears in
+    // the filter's account list.
+    if (filter.accounts) {
+      const eventAccounts = collectEventAccounts(event)
+      const matches = eventAccounts.some(acc =>
+        filter.accounts!.some(a => a.equals(acc))
+      )
+      if (!matches) {
         return false
       }
     }
@@ -160,6 +213,32 @@ export class EventListener {
   get subscriptionCount(): number {
     return this.subscriptions.size
   }
+}
+
+/**
+ * Collect the account-like PublicKey fields present on an event so account
+ * filters can match on any participant (sender, recipient, owner, staker, etc).
+ */
+function collectEventAccounts(event: TokenEvent): PublicKey[] {
+  const candidateFields = [
+    'from',
+    'to',
+    'owner',
+    'user',
+    'pool',
+    'seller',
+    'buyer',
+    'authority',
+  ] as const
+
+  const accounts: PublicKey[] = []
+  for (const field of candidateFields) {
+    const value = (event as unknown as Record<string, unknown>)[field]
+    if (value instanceof PublicKey) {
+      accounts.push(value)
+    }
+  }
+  return accounts
 }
 
 /**
@@ -231,7 +310,13 @@ export function onStake(
 
 /**
  * Poll for events (alternative to WebSocket)
+ *
+ * NOTE: not implemented. The polling loop can fetch new signatures per account,
+ * but turning those transactions into typed `TokenEvent`s requires transaction
+ * parsing that is not available yet, so `onEvent` could never fire. This throws
+ * rather than starting a loop that silently never emits.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function pollEvents(
   connection: Connection,
   accounts: PublicKey[],
@@ -241,45 +326,9 @@ export async function pollEvents(
     onError?: (error: Error) => void
   }
 ): Promise<{ stop: () => void }> {
-  // eslint-disable-next-line no-unused-vars
-  const { interval = 5000, onEvent, onError } = options
-
-  let running = true
-  const lastSignatures: Map<string, string> = new Map()
-
-  const poll = async (): Promise<void> => {
-    while (running) {
-      try {
-        for (const account of accounts) {
-          const signatures = await connection.getSignaturesForAddress(account, {
-            limit: 10,
-          })
-
-          const lastSig = lastSignatures.get(account.toBase58())
-
-          for (const sig of signatures) {
-            if (sig.signature === lastSig) break
-
-            // Would parse transaction and emit event
-          }
-
-          if (signatures.length > 0) {
-            lastSignatures.set(account.toBase58(), signatures[0].signature)
-          }
-        }
-      } catch (error) {
-        onError?.(error as Error)
-      }
-
-      await new Promise(resolve => setTimeout(resolve, interval))
-    }
-  }
-
-  poll()
-
-  return {
-    stop: () => {
-      running = false
-    },
-  }
+  throw new Error(
+    'pollEvents is not implemented: transactions fetched by signature cannot ' +
+    'yet be parsed into TokenEvents, so onEvent would never fire. Implement ' +
+    'transaction parsing before using this.'
+  )
 }

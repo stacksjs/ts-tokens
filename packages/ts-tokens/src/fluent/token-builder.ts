@@ -157,29 +157,15 @@ export class TokenBuilder extends BaseBuilder<TokenBuilder> {
    * Build transaction instructions
    */
   async build(): Promise<TransactionInstruction[]> {
-    const instructions: TransactionInstruction[] = []
-
-    for (const op of this.operations) {
-      // In production, would build actual instructions
-      // This is a placeholder showing the structure
-      switch (op.type) {
-        case 'createToken':
-          // Would call createToken instruction builder
-          break
-        case 'mint':
-          // Would call mintTo instruction builder
-          break
-        case 'transfer':
-          // Would call transfer instruction builder
-          break
-        case 'burn':
-          // Would call burn instruction builder
-          break
-        // ... other operations
-      }
-    }
-
-    return instructions
+    // The queued operations are not yet translated into real SPL Token
+    // instructions. Returning an empty array here would let `execute()` (or a
+    // caller) believe there was nothing to do rather than surfacing that the
+    // builder cannot produce a transaction.
+    throw new Error(
+      'TokenBuilder.build() is not implemented: chained operations are not ' +
+      'wired to the SPL Token instruction builders yet. Use the dedicated ' +
+      'token APIs to construct and submit instructions.'
+    )
   }
 
   /**

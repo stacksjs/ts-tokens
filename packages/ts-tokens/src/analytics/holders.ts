@@ -2,55 +2,101 @@
  * Holder Analytics
  */
 
-import type { Connection, PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@solana/web3.js'
+import type { Connection } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID, AccountLayout } from '@solana/spl-token'
 import type { TokenHolder, HolderDistribution, HolderSnapshot } from './types'
 
+/** SPL token account offsets/size (base Token program layout). */
+const TOKEN_ACCOUNT_SIZE = 165
+const MINT_OFFSET = 0
+const OWNER_OFFSET = 32
+
 /**
- * Get token holder distribution
+ * Get token holder distribution.
+ *
+ * Enumerates every SPL token account for the mint via `getProgramAccounts`
+ * (memcmp on the mint at offset 0, filtered to the 165-byte account size),
+ * aggregates balances by owner, and computes the reported metrics over the
+ * complete holder set. When a `limit` is supplied, only the returned
+ * `holders` list is truncated (to the largest N); `totalHolders`, the top-10/
+ * top-100 percentages, and the Gini coefficient are always computed from the
+ * full set so they are not understated.
  */
 export async function getHolderDistribution(
   connection: Connection,
   mint: PublicKey,
   options: { limit?: number } = {}
 ): Promise<HolderDistribution> {
-  const { limit = 100 } = options
+  const { limit } = options
 
-  // Get largest token accounts
-  const largestAccounts = await connection.getTokenLargestAccounts(mint)
+  // Enumerate all token accounts for this mint (classic SPL Token program).
+  const accounts = await connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
+    filters: [
+      { dataSize: TOKEN_ACCOUNT_SIZE },
+      { memcmp: { offset: MINT_OFFSET, bytes: mint.toBase58() } },
+    ],
+  })
 
-  // Get mint info for supply
+  // Aggregate balances by owner (a single owner can hold multiple token
+  // accounts for the same mint). Retain one representative token account per
+  // owner for the `tokenAccount` field.
+  const balancesByOwner = new Map<string, bigint>()
+  const tokenAccountByOwner = new Map<string, string>()
+  for (const { pubkey, account } of accounts) {
+    const decoded = AccountLayout.decode(account.data.subarray(0, AccountLayout.span))
+    const owner = new PublicKey(account.data.subarray(OWNER_OFFSET, OWNER_OFFSET + 32)).toBase58()
+    const amount = BigInt(decoded.amount.toString())
+    if (amount > 0n) {
+      balancesByOwner.set(owner, (balancesByOwner.get(owner) ?? 0n) + amount)
+      if (!tokenAccountByOwner.has(owner)) {
+        tokenAccountByOwner.set(owner, pubkey.toBase58())
+      }
+    }
+  }
+
+  // Get mint supply.
   const mintInfo = await connection.getParsedAccountInfo(mint)
   const mintData = mintInfo.value?.data
-
   let totalSupply = 0n
   if (mintData && 'parsed' in mintData) {
     totalSupply = BigInt(mintData.parsed.info.supply)
   }
 
-  // Build holder list
+  // Sorted full holder set (descending by balance).
+  const sortedOwners = Array.from(balancesByOwner.entries())
+    .sort((a, b) => (a[1] < b[1] ? 1 : a[1] > b[1] ? -1 : 0))
+
+  const totalHolders = sortedOwners.length
+
+  // Build the ranked holder list. Only this list honors `limit`; metrics below
+  // are computed over the complete set.
+  const rankedCount = limit !== undefined ? Math.min(sortedOwners.length, limit) : sortedOwners.length
+  if (limit !== undefined && limit < sortedOwners.length) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `getHolderDistribution: returning ${rankedCount} of ${sortedOwners.length} ` +
+      'holders (limited); aggregate metrics still reflect all holders.'
+    )
+  }
+
   const holders: TokenHolder[] = []
-  let runningTotal = 0n
-
-  for (let i = 0; i < Math.min(largestAccounts.value.length, limit); i++) {
-    const account = largestAccounts.value[i]
-    const balance = BigInt(account.amount)
-    runningTotal += balance
-
+  for (let i = 0; i < rankedCount; i++) {
+    const [owner, balance] = sortedOwners[i]
+    const ownerPubkey = new PublicKey(owner)
+    const tokenAccount = tokenAccountByOwner.get(owner)
     holders.push({
-      address: account.address, // This is the token account, not owner
+      address: ownerPubkey,
       balance,
       percentage: totalSupply > 0n ? Number((balance * 10000n) / totalSupply) / 100 : 0,
       rank: i + 1,
-      tokenAccount: account.address,
+      tokenAccount: tokenAccount ? new PublicKey(tokenAccount) : ownerPubkey,
     })
   }
 
-  // Calculate metrics
-  const top10 = holders.slice(0, 10)
-  const top100 = holders.slice(0, 100)
-
-  const top10Holdings = top10.reduce((sum, h) => sum + h.balance, 0n)
-  const top100Holdings = top100.reduce((sum, h) => sum + h.balance, 0n)
+  // Metrics over the full holder set.
+  const top10Holdings = sortedOwners.slice(0, 10).reduce((sum, [, b]) => sum + b, 0n)
+  const top100Holdings = sortedOwners.slice(0, 100).reduce((sum, [, b]) => sum + b, 0n)
 
   const top10Percentage = totalSupply > 0n
     ? Number((top10Holdings * 10000n) / totalSupply) / 100
@@ -60,15 +106,14 @@ export async function getHolderDistribution(
     ? Number((top100Holdings * 10000n) / totalSupply) / 100
     : 0
 
-  // Calculate Gini coefficient (simplified)
-  const gini = calculateGiniCoefficient(holders.map(h => Number(h.balance)))
+  const gini = calculateGiniCoefficient(sortedOwners.map(([, b]) => Number(b)))
 
   return {
     mint,
     totalSupply,
     circulatingSupply: totalSupply, // Would need to exclude locked tokens
     holders,
-    totalHolders: largestAccounts.value.length,
+    totalHolders,
     top10Percentage,
     top100Percentage,
     giniCoefficient: gini,
@@ -104,7 +149,9 @@ export async function getHolderSnapshot(
   connection: Connection,
   mint: PublicKey
 ): Promise<HolderSnapshot> {
-  const distribution = await getHolderDistribution(connection, mint, { limit: 100 })
+  // Fetch the complete holder set (no limit) so the median reflects all
+  // holders rather than only the top 100.
+  const distribution = await getHolderDistribution(connection, mint)
 
   const top10Holdings = distribution.holders
     .slice(0, 10)
@@ -114,8 +161,8 @@ export async function getHolderSnapshot(
     .slice(0, 100)
     .reduce((sum, h) => sum + h.balance, 0n)
 
-  // Calculate median
-  const balances = distribution.holders.map(h => h.balance).sort((a, b) => Number(a - b))
+  // Calculate median over the full holder set.
+  const balances = distribution.holders.map(h => h.balance).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
   const medianHolding = balances.length > 0
     ? balances[Math.floor(balances.length / 2)]
     : 0n

@@ -7,139 +7,84 @@ import type { TradingVolume, WhaleActivity, WhaleWatchConfig } from './types'
 
 /**
  * Get trading volume for a token
+ *
+ * NOTE: not implemented. Signature counts are available, but computing real
+ * volume, unique buyers/sellers, and average trade size requires decoding each
+ * transaction's token balance changes, which is not available yet. Returning
+ * `trades * 1_000_000` and fixed buyer/seller ratios would be fabricated data.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getTradingVolume(
   connection: Connection,
   mint: PublicKey,
   period: '1h' | '24h' | '7d' | '30d' = '24h'
 ): Promise<TradingVolume> {
-  // Calculate time range
-  const now = Date.now()
-  const periodMs: Record<string, number> = {
-    '1h': 60 * 60 * 1000,
-    '24h': 24 * 60 * 60 * 1000,
-    '7d': 7 * 24 * 60 * 60 * 1000,
-    '30d': 30 * 24 * 60 * 60 * 1000,
-  }
-
-  const startTime = now - periodMs[period]
-
-  // Get recent signatures for the mint
-  const signatures = await connection.getSignaturesForAddress(mint, {
-    limit: 1000,
-  })
-
-  // Filter by time
-  const relevantSigs = signatures.filter(sig =>
-    sig.blockTime && sig.blockTime * 1000 >= startTime
+  throw new Error(
+    'getTradingVolume is not implemented: real volume requires parsing token ' +
+    'balance changes per transaction. Signature counts alone cannot produce ' +
+    'volume, buyer/seller counts, or average trade size.'
   )
-
-  // In production, would parse transactions to extract volume
-  // This is a simplified version
-  const trades = relevantSigs.length
-  const _uniqueAddresses = new Set<string>()
-
-  // Estimate volume (would need actual transaction parsing)
-  const estimatedVolume = BigInt(trades * 1000000) // Placeholder
-
-  return {
-    mint,
-    period,
-    volume: estimatedVolume,
-    volumeUsd: 0, // Would need price data
-    trades,
-    uniqueBuyers: Math.floor(trades * 0.6), // Estimate
-    uniqueSellers: Math.floor(trades * 0.4), // Estimate
-    avgTradeSize: trades > 0 ? estimatedVolume / BigInt(trades) : 0n,
-  }
 }
 
 /**
  * Get volume breakdown by time intervals
+ *
+ * NOTE: not implemented. This can only emit zero-filled buckets without real
+ * per-transaction volume parsing (see `getTradingVolume`).
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getVolumeBreakdown(
-  _connection: Connection,
-  _mint: PublicKey,
+  connection: Connection,
+  mint: PublicKey,
   intervals: number = 24
 ): Promise<Array<{ timestamp: number; volume: bigint; trades: number }>> {
-  const now = Date.now()
-  const intervalMs = (24 * 60 * 60 * 1000) / intervals
-
-  const breakdown: Array<{ timestamp: number; volume: bigint; trades: number }> = []
-
-  for (let i = 0; i < intervals; i++) {
-    const timestamp = now - (intervals - i) * intervalMs
-    breakdown.push({
-      timestamp,
-      volume: 0n, // Would need actual data
-      trades: 0,
-    })
-  }
-
-  return breakdown
+  throw new Error(
+    'getVolumeBreakdown is not implemented: producing per-interval volume ' +
+    'requires parsing token balance changes per transaction, which is not ' +
+    'available yet.'
+  )
 }
 
 /**
  * Watch for whale activity
+ *
+ * NOTE: not implemented. Detecting large transfers requires decoding transfer
+ * instructions/balance changes from program logs, which is not available yet,
+ * so the alert callback could never fire. Rather than returning a watcher that
+ * silently never alerts, construction throws.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function createWhaleWatcher(
   connection: Connection,
   config: WhaleWatchConfig
 ): { start: () => void; stop: () => void } {
-  let subscriptionId: number | null = null
-
-  const start = (): void => {
-    subscriptionId = connection.onLogs(
-      config.mint,
-      (logs) => {
-        // Parse logs for large transfers
-        // In production, would decode transfer instructions
-        if (config.alertCallback) {
-          // Check if transfer amount exceeds threshold
-          // This is a simplified version
-        }
-      },
-      'confirmed'
-    )
-  }
-
-  const stop = (): void => {
-    if (subscriptionId !== null) {
-      connection.removeOnLogsListener(subscriptionId)
-      subscriptionId = null
-    }
-  }
-
-  return { start, stop }
+  throw new Error(
+    'createWhaleWatcher is not implemented: detecting whale transfers requires ' +
+    'decoding transfer amounts from logs, which is not available yet, so the ' +
+    'alert callback would never fire.'
+  )
 }
 
 /**
  * Get recent whale activity
+ *
+ * NOTE: not implemented. Signatures are available, but the actual transfer
+ * addresses, direction, and amounts require decoding each transaction. The
+ * previous placeholder reported every signature with `amount: 0n` and the mint
+ * as the address, which is fabricated data.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getWhaleActivity(
   connection: Connection,
   mint: PublicKey,
   minAmount: bigint,
   limit: number = 20
 ): Promise<WhaleActivity[]> {
-  const signatures = await connection.getSignaturesForAddress(mint, { limit: 100 })
-
-  const activities: WhaleActivity[] = []
-
-  // In production, would parse each transaction
-  // This is a simplified version showing the structure
-  for (const sig of signatures.slice(0, limit)) {
-    // Would parse transaction to get actual amounts
-    activities.push({
-      address: mint, // Would be actual address
-      type: 'transfer_in',
-      amount: 0n, // Would be actual amount
-      timestamp: sig.blockTime ?? 0,
-      signature: sig.signature,
-    })
-  }
-
-  return activities.filter(a => a.amount >= minAmount)
+  throw new Error(
+    'getWhaleActivity is not implemented: extracting transfer addresses and ' +
+    'amounts requires parsing each transaction. Signatures alone cannot ' +
+    'identify whale transfers.'
+  )
 }
 
 /**

@@ -28,7 +28,6 @@ import type {
  */
 export class NFTBuilder extends BaseBuilder<NFTBuilder> {
   private collectionAddress: PublicKey | null = null
-  private nftAddresses: PublicKey[] = []
 
   /**
    * Create a new NFT builder
@@ -176,31 +175,15 @@ export class NFTBuilder extends BaseBuilder<NFTBuilder> {
    * Build transaction instructions
    */
   async build(): Promise<TransactionInstruction[]> {
-    const instructions: TransactionInstruction[] = []
-
-    for (const op of this.operations) {
-      // In production, would build actual instructions
-      switch (op.type) {
-        case 'createCollection':
-          // Would call createCollection instruction builder
-          break
-        case 'mintNFT':
-          // Would call mintNFT instruction builder
-          break
-        case 'transfer':
-          // Would call transfer instruction builder
-          break
-        case 'burn':
-          // Would call burn instruction builder
-          break
-        case 'updateMetadata':
-          // Would call updateMetadata instruction builder
-          break
-        // ... other operations
-      }
-    }
-
-    return instructions
+    // The queued operations are not yet translated into real NFT/Metaplex
+    // instructions. Returning an empty array here would let `execute()` (or a
+    // caller) believe there was nothing to do rather than surfacing that the
+    // builder cannot produce a transaction.
+    throw new Error(
+      'NFTBuilder.build() is not implemented: chained operations are not ' +
+      'wired to the NFT instruction builders yet. Use the dedicated NFT APIs ' +
+      'to construct and submit instructions.'
+    )
   }
 
   /**
@@ -212,9 +195,17 @@ export class NFTBuilder extends BaseBuilder<NFTBuilder> {
 
   /**
    * Get minted NFT addresses
+   *
+   * NOTE: mint addresses are only known after NFTs are actually minted, which
+   * requires signing/sending transactions (see `build()`/`execute()`, which
+   * are not implemented). This never has any addresses to return, so it throws
+   * rather than silently reporting an empty list as if nothing was minted.
    */
   getMintedNFTs(): PublicKey[] {
-    return [...this.nftAddresses]
+    throw new Error(
+      'NFTBuilder.getMintedNFTs() is not implemented: minting is not wired to ' +
+      'real instruction builders, so no mint addresses are ever produced.'
+    )
   }
 }
 

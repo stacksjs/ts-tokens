@@ -231,12 +231,24 @@ export async function batchTransferWithALT(
   if (addressArray.length > 0) {
     await extendLookupTable(tableAddress, addressArray, config)
 
-    // Wait for table activation (need at least 1 slot)
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // A lookup table can only be referenced by transactions in a slot *after*
+    // the one it was extended in. Wait for the slot to advance instead of a
+    // fixed sleep so we neither race the activation nor over-wait.
+    const extendedSlot = await connection.getSlot()
+    const activationDeadline = Date.now() + 30000
+    while (Date.now() < activationDeadline) {
+      const currentSlot = await connection.getSlot()
+      if (currentSlot > extendedSlot) break
+      await new Promise(resolve => setTimeout(resolve, 400))
+    }
   }
 
   // Build and send versioned transactions in batches
-  const { createTransferInstruction, getAssociatedTokenAddress } = await import('@solana/spl-token')
+  const {
+    createTransferInstruction,
+    getAssociatedTokenAddress,
+    createAssociatedTokenAccountIdempotentInstruction,
+  } = await import('@solana/spl-token')
   const mintPubkey = new PublicKey(mint)
   const sourceAta = await getAssociatedTokenAddress(mintPubkey, payer.publicKey)
 
@@ -248,6 +260,17 @@ export async function batchTransferWithALT(
       try {
         const recipientPubkey = new PublicKey(recipient.address)
         const destAta = await getAssociatedTokenAddress(mintPubkey, recipientPubkey)
+
+        // Ensure the recipient's ATA exists. Idempotent so it is a no-op when
+        // the account is already present.
+        instructions.push(
+          createAssociatedTokenAccountIdempotentInstruction(
+            payer.publicKey,
+            destAta,
+            recipientPubkey,
+            mintPubkey,
+          ),
+        )
 
         instructions.push(
           createTransferInstruction(
