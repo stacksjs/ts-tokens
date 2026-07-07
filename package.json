@@ -40,7 +40,7 @@
   "scripts": {
     "build": "bun --filter './packages/*' build",
     "fresh": "bunx rimraf node_modules/ bun.lock && bun i",
-    "test": "bun test packages/ test/",
+    "test": "bun test packages/ test/ --path-ignore-patterns 'pantry/**'",
     "lint": "bunx --bun pickier .",
     "lint:fix": "bunx --bun pickier . --fix",
     "format": "bunx --bun pickier . --format",
