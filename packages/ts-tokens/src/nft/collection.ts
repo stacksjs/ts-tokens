@@ -10,6 +10,9 @@ import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/t
 import { loadWallet } from '../drivers/solana/wallet'
 import { createConnection } from '../drivers/solana/connection'
 import { findMetadataPda, findMasterEditionPda } from '../programs/token-metadata/pda'
+import { deserializeMetadata } from '../programs/token-metadata/accounts'
+import type { DataV2 } from '../programs/token-metadata/types'
+import { mergeMetadataUpdates } from './metadata-merge'
 import {
   updateMetadataAccountV2,
   verifyCollection,
@@ -17,7 +20,11 @@ import {
 } from '../programs/token-metadata/instructions'
 
 /**
- * Update collection NFT metadata
+ * Update collection NFT metadata.
+ *
+ * Merges the requested changes over the current on-chain DataV2 so that omitted
+ * fields (name/symbol/uri/royalties/creators/collection/uses) are preserved
+ * rather than blanked — UpdateMetadataAccountV2 replaces the whole struct.
  */
 export async function updateCollection(
   options: {
@@ -38,23 +45,26 @@ export async function updateCollection(
   const mintPubkey = new PublicKey(options.collectionMint)
   const [metadata] = findMetadataPda(mintPubkey)
 
+  const accountInfo = await connection.getAccountInfo(metadata)
+  if (!accountInfo) {
+    throw new Error(`Collection metadata account not found for mint ${options.collectionMint}`)
+  }
+
+  const current = deserializeMetadata(accountInfo.data)
+  const { data, changed } = mergeMetadataUpdates(current.data, {
+    name: options.name,
+    symbol: options.symbol,
+    uri: options.uri,
+    sellerFeeBasisPoints: options.sellerFeeBasisPoints,
+  })
+
   const instruction = updateMetadataAccountV2({
     metadata,
     updateAuthority: payer.publicKey,
     newUpdateAuthority: options.newUpdateAuthority
       ? new PublicKey(options.newUpdateAuthority)
       : null,
-    data: (options.name || options.symbol || options.uri || options.sellerFeeBasisPoints !== undefined)
-      ? {
-          name: options.name || '',
-          symbol: options.symbol || '',
-          uri: options.uri || '',
-          sellerFeeBasisPoints: options.sellerFeeBasisPoints ?? 0,
-          creators: null,
-          collection: null,
-          uses: null,
-        }
-      : null,
+    data: changed ? (data as DataV2) : null,
     primarySaleHappened: null,
     isMutable: options.isMutable ?? null,
   })

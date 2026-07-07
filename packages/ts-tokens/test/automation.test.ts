@@ -9,7 +9,9 @@ import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as os from 'node:os'
-import { Keypair } from '@solana/web3.js'
+import { Keypair, PublicKey } from '@solana/web3.js'
+import type { DataV2 } from '../src/programs/token-metadata/types'
+import { createMockConnection, buildMetadataBuffer } from './helpers/mock-connection'
 
 // Cron
 import {
@@ -50,6 +52,19 @@ import {
   validateBatchMetadataItem,
   prepareBatchMetadataUpdate,
 } from '../src/batch/metadata'
+
+function makeCurrentDataV2(overrides: Partial<DataV2> = {}): DataV2 {
+  return {
+    name: 'Original Name',
+    symbol: 'ORIG',
+    uri: 'https://example.com/original.json',
+    sellerFeeBasisPoints: 500,
+    creators: null,
+    collection: null,
+    uses: null,
+    ...overrides,
+  }
+}
 
 // Lookup table helpers
 import { chunkAddresses } from '../src/batch/lookup-table'
@@ -323,58 +338,96 @@ describe('validateBatchMetadataItem', () => {
 })
 
 describe('buildMetadataUpdateInstruction', () => {
-  test('should build instruction with correct program ID', () => {
+  test('should build instruction with correct program ID (flags-only, no current needed)', () => {
     const mint = Keypair.generate().publicKey
     const authority = Keypair.generate().publicKey
 
     const ix = buildMetadataUpdateInstruction(
       mint.toBase58(),
-      { name: 'Test' },
+      { isMutable: false },
       authority,
     )
 
     expect(ix.programId.toBase58()).toBe('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
     expect(ix.keys.length).toBe(2)
     expect(ix.keys[1].pubkey.toBase58()).toBe(authority.toBase58())
+    // discriminator 15, data:None (no DataV2 change) => [15, 0, ...]
+    expect(ix.data[0]).toBe(15)
+    expect(ix.data[1]).toBe(0)
   })
 
-  test('should include discriminator 15 in data', () => {
+  test('refuses a data-field update without current metadata (would wipe others)', () => {
     const mint = Keypair.generate().publicKey
     const authority = Keypair.generate().publicKey
 
+    expect(() =>
+      buildMetadataUpdateInstruction(mint.toBase58(), { name: 'Test' }, authority),
+    ).toThrow(/current on-chain DataV2/i)
+  })
+
+  test('merges a uri-only update over current data, preserving name/symbol/royalties', () => {
+    const mint = Keypair.generate().publicKey
+    const authority = Keypair.generate().publicKey
+    const current = makeCurrentDataV2()
+
     const ix = buildMetadataUpdateInstruction(
       mint.toBase58(),
-      { name: 'Test' },
+      { uri: 'https://example.com/new.json' },
       authority,
+      current,
     )
 
-    // First byte is the discriminator
+    // discriminator 15, data:Some(1), then DataV2 = name/symbol/uri...
     expect(ix.data[0]).toBe(15)
+    expect(ix.data[1]).toBe(1) // Some(DataV2)
+    // The serialized DataV2 must still contain the original name and symbol.
+    const text = Buffer.from(ix.data).toString('utf8')
+    expect(text).toContain('Original Name')
+    expect(text).toContain('ORIG')
+    expect(text).toContain('new.json')
   })
 })
 
 describe('prepareBatchMetadataUpdate', () => {
-  test('should return correct number of instructions for valid items', () => {
+  test('should return correct number of instructions for valid items', async () => {
     const authority = Keypair.generate().publicKey
+    const connection = createMockConnection({
+      getAccountInfo: async () => ({
+        owner: new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+        data: buildMetadataBuffer({ name: 'Original', symbol: 'ORIG' }),
+        lamports: 1,
+        executable: false,
+        rentEpoch: 0,
+      }),
+    })
     const items = Array.from({ length: 3 }, () => ({
       mint: Keypair.generate().publicKey.toBase58(),
       updates: { name: 'Updated' },
     }))
 
-    const { instructions, errors } = prepareBatchMetadataUpdate(items, authority)
+    const { instructions, errors } = await prepareBatchMetadataUpdate(connection, items, authority)
     expect(instructions.length).toBe(3)
     expect(errors.length).toBe(0)
   })
 
-  test('should separate valid and invalid items', () => {
+  test('should separate valid and invalid items', async () => {
     const authority = Keypair.generate().publicKey
+    const connection = createMockConnection({
+      getAccountInfo: async () => ({
+        owner: new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+        data: buildMetadataBuffer({ name: 'Original', symbol: 'ORIG' }),
+        lamports: 1,
+        executable: false,
+        rentEpoch: 0,
+      }),
+    })
     const items = [
       { mint: Keypair.generate().publicKey.toBase58(), updates: { name: 'Good' } },
       { mint: 'invalid-address', updates: { name: 'Bad' } },
       { mint: Keypair.generate().publicKey.toBase58(), updates: {} },
     ]
 
-    const { instructions, errors } = prepareBatchMetadataUpdate(items, authority)
+    const { instructions, errors } = await prepareBatchMetadataUpdate(connection, items, authority)
     expect(instructions.length).toBe(1) // Only first is valid
     expect(errors.length).toBe(2)
   })

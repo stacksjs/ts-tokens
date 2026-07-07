@@ -4,12 +4,16 @@
  * Update and fetch NFT metadata.
  */
 
-import type { TransactionInstruction } from '@solana/web3.js';
+import type { TransactionInstruction } from '@solana/web3.js'
 import { Connection, PublicKey } from '@solana/web3.js'
 import type { TokenConfig, TransactionResult, TransactionOptions, NFTMetadata } from '../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../drivers/solana/transaction'
 import { loadWallet } from '../drivers/solana/wallet'
 import { createConnection } from '../drivers/solana/connection'
+import { deserializeMetadata } from '../programs/token-metadata/accounts'
+import { updateMetadataAccountV2 } from '../programs/token-metadata/instructions'
+import type { DataV2 } from '../programs/token-metadata/types'
+import { mergeMetadataUpdates, type MetadataUpdates } from './metadata-merge'
 
 /**
  * Token Metadata Program ID
@@ -32,19 +36,17 @@ function getMetadataAddress(mint: PublicKey): PublicKey {
 }
 
 /**
- * Update NFT metadata
+ * Update NFT metadata.
+ *
+ * UpdateMetadataAccountV2 replaces the entire DataV2 struct, so this fetches the
+ * current on-chain metadata and merges the requested changes over it —
+ * preserving name/symbol/uri/royalties/creators/collection/uses that the caller
+ * did not touch. Sending only the changed fields (as the old implementation did)
+ * would blank every omitted field on-chain.
  */
 export async function updateNFTMetadata(
   mint: string,
-  updates: {
-    name?: string
-    symbol?: string
-    uri?: string
-    sellerFeeBasisPoints?: number
-    creators?: Array<{ address: string; share: number }>
-    primarySaleHappened?: boolean
-    isMutable?: boolean
-  },
+  updates: MetadataUpdates,
   config: TokenConfig,
   options?: TransactionOptions
 ): Promise<TransactionResult> {
@@ -54,18 +56,27 @@ export async function updateNFTMetadata(
   const mintPubkey = new PublicKey(mint)
   const metadataAddress = getMetadataAddress(mintPubkey)
 
-  // Build UpdateMetadataAccountV2 instruction
-  // Discriminator: 15
-  const data = serializeUpdateMetadataV2(updates, payer.publicKey)
-
-  const instruction: TransactionInstruction = {
-    keys: [
-      { pubkey: metadataAddress, isSigner: false, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-    ],
-    programId: TOKEN_METADATA_PROGRAM_ID,
-    data,
+  const accountInfo = await connection.getAccountInfo(metadataAddress)
+  if (!accountInfo) {
+    throw new Error(`Metadata account not found for mint ${mint}`)
   }
+
+  const current = deserializeMetadata(accountInfo.data)
+
+  // Merge the requested DataV2 changes over the current on-chain values.
+  const { data, changed } = mergeMetadataUpdates(current.data, updates)
+
+  const instruction = updateMetadataAccountV2({
+    metadata: metadataAddress,
+    updateAuthority: payer.publicKey,
+    // Only rewrite DataV2 when something in it actually changed, otherwise leave
+    // it untouched (None) so we never risk re-serializing it unnecessarily.
+    data: changed ? (data as DataV2) : null,
+    newUpdateAuthority: null,
+    primarySaleHappened:
+      updates.primarySaleHappened !== undefined ? updates.primarySaleHappened : null,
+    isMutable: updates.isMutable !== undefined ? updates.isMutable : null,
+  })
 
   const transaction = await buildTransaction(
     connection,
@@ -77,114 +88,6 @@ export async function updateNFTMetadata(
   transaction.partialSign(payer)
 
   return sendAndConfirmTransaction(connection, transaction, options)
-}
-
-/**
- * Serialize UpdateMetadataAccountV2 data
- */
-function serializeUpdateMetadataV2(
-  updates: {
-    name?: string
-    symbol?: string
-    uri?: string
-    sellerFeeBasisPoints?: number
-    creators?: Array<{ address: string; share: number }>
-    primarySaleHappened?: boolean
-    isMutable?: boolean
-  },
-  _updateAuthority: PublicKey
-): Buffer {
-  // This is a simplified version - full implementation would handle all fields
-  const buffer = Buffer.alloc(512)
-  let offset = 0
-
-  // Discriminator for UpdateMetadataAccountV2
-  buffer.writeUInt8(15, offset)
-  offset += 1
-
-  // Data option (Some)
-  buffer.writeUInt8(1, offset)
-  offset += 1
-
-  // Name
-  if (updates.name) {
-    const nameBytes = Buffer.from(updates.name.slice(0, 32))
-    buffer.writeUInt32LE(nameBytes.length, offset)
-    offset += 4
-    nameBytes.copy(buffer, offset)
-    offset += nameBytes.length
-  } else {
-    buffer.writeUInt32LE(0, offset)
-    offset += 4
-  }
-
-  // Symbol
-  if (updates.symbol) {
-    const symbolBytes = Buffer.from(updates.symbol.slice(0, 10))
-    buffer.writeUInt32LE(symbolBytes.length, offset)
-    offset += 4
-    symbolBytes.copy(buffer, offset)
-    offset += symbolBytes.length
-  } else {
-    buffer.writeUInt32LE(0, offset)
-    offset += 4
-  }
-
-  // URI
-  if (updates.uri) {
-    const uriBytes = Buffer.from(updates.uri.slice(0, 200))
-    buffer.writeUInt32LE(uriBytes.length, offset)
-    offset += 4
-    uriBytes.copy(buffer, offset)
-    offset += uriBytes.length
-  } else {
-    buffer.writeUInt32LE(0, offset)
-    offset += 4
-  }
-
-  // Seller fee basis points
-  buffer.writeUInt16LE(updates.sellerFeeBasisPoints || 0, offset)
-  offset += 2
-
-  // Creators (None for now - simplified)
-  buffer.writeUInt8(0, offset)
-  offset += 1
-
-  // Collection (None)
-  buffer.writeUInt8(0, offset)
-  offset += 1
-
-  // Uses (None)
-  buffer.writeUInt8(0, offset)
-  offset += 1
-
-  // Update authority option (None - keep existing)
-  buffer.writeUInt8(0, offset)
-  offset += 1
-
-  // Primary sale happened option
-  if (updates.primarySaleHappened !== undefined) {
-    buffer.writeUInt8(1, offset) // Some
-    offset += 1
-    buffer.writeUInt8(updates.primarySaleHappened ? 1 : 0, offset)
-    offset += 1
-  } else {
-    buffer.writeUInt8(0, offset) // None
-    offset += 1
-  }
-
-  // Is mutable option
-  if (updates.isMutable !== undefined) {
-    buffer.writeUInt8(1, offset) // Some
-    offset += 1
-    buffer.writeUInt8(updates.isMutable ? 1 : 0, offset)
-    offset += 1
-  } else {
-    buffer.writeUInt8(0, offset) // None
-    offset += 1
-  }
-
-  return buffer.slice(0, offset)
 }
 
 /**
