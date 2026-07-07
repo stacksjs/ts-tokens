@@ -7,7 +7,6 @@
 import type {
   TransactionInstruction} from '@solana/web3.js';
 import {
-  Connection,
   Keypair,
   PublicKey,
   SystemProgram
@@ -17,6 +16,20 @@ import type { TokenConfig, TransactionResult, TransactionOptions } from '../../t
 import { sendAndConfirmTransaction, buildTransaction } from '../../drivers/solana/transaction'
 import { loadWallet } from '../../drivers/solana/wallet'
 import { createConnection } from '../../drivers/solana/connection'
+import {
+  initializeCandyMachine as initializeCandyMachineInstruction,
+  addConfigLines as addConfigLinesInstruction,
+  mintFromCandyMachine as mintFromCandyMachineInstruction,
+} from '../../programs/candy-machine/instructions'
+import { findCandyMachineAuthorityPda } from '../../programs/candy-machine/pda'
+import {
+  findMetadataPda,
+  findMasterEditionPda,
+  findCollectionAuthorityPda,
+} from '../../programs/token-metadata/pda'
+import type { CandyMachineData } from '../../programs/candy-machine/types'
+import { addGuards } from './guards'
+import type { GuardSet } from '../../programs/candy-machine/guards'
 
 /**
  * Candy Machine Program ID (Metaplex Candy Machine v3)
@@ -101,6 +114,8 @@ export async function createCandyMachine(
   const space = calculateCandyMachineSpace(config)
   const lamports = await connection.getMinimumBalanceForRentExemption(space)
 
+  const collectionMint = new PublicKey(config.collection)
+
   const instructions: TransactionInstruction[] = []
 
   // Create candy machine account
@@ -114,19 +129,21 @@ export async function createCandyMachine(
     })
   )
 
-  // Initialize candy machine instruction
-  const initData = serializeInitializeCandyMachine(config, payer.publicKey)
-
-  instructions.push({
-    keys: [
-      { pubkey: candyMachine, isSigner: false, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-      { pubkey: new PublicKey(config.collection), isSigner: false, isWritable: false },
-      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    ],
-    programId: CANDY_MACHINE_PROGRAM_ID,
-    data: initData,
-  })
+  // Initialize candy machine (v2) instruction — routed through the shared
+  // program instruction builder so the discriminator and account list stay
+  // correct.
+  instructions.push(
+    initializeCandyMachineInstruction({
+      candyMachine,
+      authority: payer.publicKey,
+      payer: payer.publicKey,
+      collectionMint,
+      collectionUpdateAuthority: payer.publicKey,
+      data: toCandyMachineData(config),
+      // TokenStandard::NonFungible
+      tokenStandard: 0,
+    })
+  )
 
   // Build and send transaction
   const transaction = await buildTransaction(
@@ -141,11 +158,108 @@ export async function createCandyMachine(
 
   const result = await sendAndConfirmTransaction(connection, transaction, options)
 
+  // Wire up guards, if any were provided. This is a follow-up transaction
+  // (initialize a Candy Guard and wrap the Candy Machine).
+  if (config.guards) {
+    await addGuards(
+      candyMachine.toBase58(),
+      toGuardSet(config.guards),
+      tokenConfig,
+      options
+    )
+  }
+
   return {
     candyMachine: candyMachine.toBase58(),
     collection: config.collection,
     signature: result.signature,
   }
+}
+
+/**
+ * Build on-chain CandyMachineData from the high-level config.
+ */
+function toCandyMachineData(config: CandyMachineConfig): CandyMachineData {
+  return {
+    itemsAvailable: BigInt(config.itemsAvailable),
+    symbol: config.symbol,
+    sellerFeeBasisPoints: config.sellerFeeBasisPoints,
+    maxSupply: BigInt(config.maxEditionSupply),
+    isMutable: config.isMutable,
+    creators: config.creators.map(c => ({
+      address: new PublicKey(c.address),
+      verified: false,
+      percentageShare: c.share,
+    })),
+    configLineSettings: config.configLineSettings ?? null,
+    hiddenSettings: config.hiddenSettings ?? null,
+  }
+}
+
+/**
+ * Convert the high-level CandyGuardConfig into the low-level GuardSet
+ * consumed by the guard serializers.
+ */
+function toGuardSet(guards: CandyGuardConfig): GuardSet {
+  const set: GuardSet = {}
+
+  if (guards.botTax) set.botTax = guards.botTax
+  if (guards.solPayment) {
+    set.solPayment = {
+      lamports: guards.solPayment.lamports,
+      destination: new PublicKey(guards.solPayment.destination),
+    }
+  }
+  if (guards.tokenPayment) {
+    set.tokenPayment = {
+      amount: guards.tokenPayment.amount,
+      mint: new PublicKey(guards.tokenPayment.mint),
+      destinationAta: new PublicKey(guards.tokenPayment.destinationAta),
+    }
+  }
+  if (guards.startDate) set.startDate = { date: BigInt(guards.startDate.date) }
+  if (guards.endDate) set.endDate = { date: BigInt(guards.endDate.date) }
+  if (guards.mintLimit) set.mintLimit = guards.mintLimit
+  if (guards.nftPayment) {
+    set.nftPayment = {
+      requiredCollection: new PublicKey(guards.nftPayment.requiredCollection),
+      destination: new PublicKey(guards.nftPayment.destination),
+    }
+  }
+  if (guards.redeemedAmount) set.redeemedAmount = { maximum: BigInt(guards.redeemedAmount.maximum) }
+  if (guards.addressGate) set.addressGate = { address: new PublicKey(guards.addressGate.address) }
+  if (guards.nftGate) {
+    set.nftGate = { requiredCollection: new PublicKey(guards.nftGate.requiredCollection) }
+  }
+  if (guards.nftBurn) {
+    set.nftBurn = { requiredCollection: new PublicKey(guards.nftBurn.requiredCollection) }
+  }
+  if (guards.tokenBurn) {
+    set.tokenBurn = { amount: guards.tokenBurn.amount, mint: new PublicKey(guards.tokenBurn.mint) }
+  }
+  if (guards.freezeSolPayment) {
+    set.freezeSolPayment = {
+      lamports: guards.freezeSolPayment.lamports,
+      destination: new PublicKey(guards.freezeSolPayment.destination),
+    }
+  }
+  if (guards.freezeTokenPayment) {
+    set.freezeTokenPayment = {
+      amount: guards.freezeTokenPayment.amount,
+      mint: new PublicKey(guards.freezeTokenPayment.mint),
+      destinationAta: new PublicKey(guards.freezeTokenPayment.destinationAta),
+    }
+  }
+  if (guards.programGate) {
+    set.programGate = { additional: guards.programGate.additional.map(a => new PublicKey(a)) }
+  }
+  if (guards.allocation) set.allocation = guards.allocation
+  if (guards.tokenGate) {
+    set.tokenGate = { amount: guards.tokenGate.amount, mint: new PublicKey(guards.tokenGate.mint) }
+  }
+  if (guards.allowList) set.allowList = guards.allowList
+
+  return set
 }
 
 /**
@@ -175,104 +289,6 @@ function calculateCandyMachineSpace(config: CandyMachineConfig): number {
 }
 
 /**
- * Serialize initialize candy machine instruction data
- */
-function serializeInitializeCandyMachine(
-  config: CandyMachineConfig,
-  _authority: PublicKey
-): Buffer {
-  const buffer = Buffer.alloc(512)
-  let offset = 0
-
-  // Discriminator for Initialize (simplified)
-  buffer.writeUInt8(0, offset)
-  offset += 8
-
-  // Items available
-  buffer.writeBigUInt64LE(BigInt(config.itemsAvailable), offset)
-  offset += 8
-
-  // Symbol
-  const symbolBytes = Buffer.from(config.symbol.slice(0, 10))
-  buffer.writeUInt32LE(symbolBytes.length, offset)
-  offset += 4
-  symbolBytes.copy(buffer, offset)
-  offset += symbolBytes.length
-
-  // Seller fee basis points
-  buffer.writeUInt16LE(config.sellerFeeBasisPoints, offset)
-  offset += 2
-
-  // Max edition supply
-  buffer.writeBigUInt64LE(BigInt(config.maxEditionSupply), offset)
-  offset += 8
-
-  // Is mutable
-  buffer.writeUInt8(config.isMutable ? 1 : 0, offset)
-  offset += 1
-
-  // Creators
-  buffer.writeUInt32LE(config.creators.length, offset)
-  offset += 4
-  for (const creator of config.creators) {
-    new PublicKey(creator.address).toBuffer().copy(buffer, offset)
-    offset += 32
-    buffer.writeUInt8(0, offset) // verified = false initially
-    offset += 1
-    buffer.writeUInt8(creator.share, offset)
-    offset += 1
-  }
-
-  // Config line settings
-  if (config.configLineSettings) {
-    buffer.writeUInt8(1, offset) // Some
-    offset += 1
-    const prefixNameBytes = Buffer.from(config.configLineSettings.prefixName)
-    buffer.writeUInt32LE(prefixNameBytes.length, offset)
-    offset += 4
-    prefixNameBytes.copy(buffer, offset)
-    offset += prefixNameBytes.length
-    buffer.writeUInt32LE(config.configLineSettings.nameLength, offset)
-    offset += 4
-    const prefixUriBytes = Buffer.from(config.configLineSettings.prefixUri)
-    buffer.writeUInt32LE(prefixUriBytes.length, offset)
-    offset += 4
-    prefixUriBytes.copy(buffer, offset)
-    offset += prefixUriBytes.length
-    buffer.writeUInt32LE(config.configLineSettings.uriLength, offset)
-    offset += 4
-    buffer.writeUInt8(config.configLineSettings.isSequential ? 1 : 0, offset)
-    offset += 1
-  } else {
-    buffer.writeUInt8(0, offset) // None
-    offset += 1
-  }
-
-  // Hidden settings
-  if (config.hiddenSettings) {
-    buffer.writeUInt8(1, offset) // Some
-    offset += 1
-    const nameBytes = Buffer.from(config.hiddenSettings.name)
-    buffer.writeUInt32LE(nameBytes.length, offset)
-    offset += 4
-    nameBytes.copy(buffer, offset)
-    offset += nameBytes.length
-    const uriBytes = Buffer.from(config.hiddenSettings.uri)
-    buffer.writeUInt32LE(uriBytes.length, offset)
-    offset += 4
-    uriBytes.copy(buffer, offset)
-    offset += uriBytes.length
-    Buffer.from(config.hiddenSettings.hash).copy(buffer, offset)
-    offset += 32
-  } else {
-    buffer.writeUInt8(0, offset) // None
-    offset += 1
-  }
-
-  return buffer.slice(0, offset)
-}
-
-/**
  * Add config lines to candy machine
  */
 export async function addConfigLines(
@@ -287,17 +303,14 @@ export async function addConfigLines(
 
   const candyMachinePubkey = new PublicKey(candyMachine)
 
-  // Serialize add config lines instruction
-  const data = serializeAddConfigLines(startIndex, configLines)
-
-  const instruction: TransactionInstruction = {
-    keys: [
-      { pubkey: candyMachinePubkey, isSigner: false, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-    ],
-    programId: CANDY_MACHINE_PROGRAM_ID,
-    data,
-  }
+  // Routed through the shared program instruction builder so the
+  // discriminator and serialization stay correct.
+  const instruction = addConfigLinesInstruction({
+    candyMachine: candyMachinePubkey,
+    authority: payer.publicKey,
+    index: startIndex,
+    configLines,
+  })
 
   const transaction = await buildTransaction(
     connection,
@@ -309,45 +322,6 @@ export async function addConfigLines(
   transaction.partialSign(payer)
 
   return sendAndConfirmTransaction(connection, transaction, options)
-}
-
-/**
- * Serialize add config lines instruction data
- */
-function serializeAddConfigLines(
-  startIndex: number,
-  configLines: Array<{ name: string; uri: string }>
-): Buffer {
-  const buffer = Buffer.alloc(4096)
-  let offset = 0
-
-  // Discriminator for AddConfigLines
-  buffer.writeUInt8(1, offset)
-  offset += 8
-
-  // Start index
-  buffer.writeUInt32LE(startIndex, offset)
-  offset += 4
-
-  // Config lines
-  buffer.writeUInt32LE(configLines.length, offset)
-  offset += 4
-
-  for (const line of configLines) {
-    const nameBytes = Buffer.from(line.name)
-    buffer.writeUInt32LE(nameBytes.length, offset)
-    offset += 4
-    nameBytes.copy(buffer, offset)
-    offset += nameBytes.length
-
-    const uriBytes = Buffer.from(line.uri)
-    buffer.writeUInt32LE(uriBytes.length, offset)
-    offset += 4
-    uriBytes.copy(buffer, offset)
-    offset += uriBytes.length
-  }
-
-  return buffer.slice(0, offset)
 }
 
 /**
@@ -363,24 +337,42 @@ export async function mintFromCandyMachine(
 
   const candyMachinePubkey = new PublicKey(candyMachine)
 
+  // Fetch the candy machine to resolve collection info.
+  const accountInfo = await connection.getAccountInfo(candyMachinePubkey)
+  if (!accountInfo) {
+    throw new Error('Candy Machine account not found')
+  }
+  const { deserializeCandyMachine } = await import('../../programs/candy-machine/accounts')
+  const cm = deserializeCandyMachine(accountInfo.data as Buffer)
+
   // Generate new mint keypair
   const mintKeypair = Keypair.generate()
 
-  // This is a simplified version - full implementation would include
-  // all required accounts for minting (metadata, master edition, etc.)
-  const data = Buffer.alloc(8)
-  data.writeUInt8(2, 0) // Mint discriminator
+  const [authorityPda] = findCandyMachineAuthorityPda(candyMachinePubkey)
+  const [nftMetadata] = findMetadataPda(mintKeypair.publicKey)
+  const [nftMasterEdition] = findMasterEditionPda(mintKeypair.publicKey)
+  const [collectionMetadata] = findMetadataPda(cm.collectionMint)
+  const [collectionMasterEdition] = findMasterEditionPda(cm.collectionMint)
+  const [collectionAuthorityRecord] = findCollectionAuthorityPda(
+    cm.collectionMint,
+    authorityPda
+  )
 
-  const instruction: TransactionInstruction = {
-    keys: [
-      { pubkey: candyMachinePubkey, isSigner: false, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: true },
-      { pubkey: mintKeypair.publicKey, isSigner: true, isWritable: true },
-      // Additional accounts would be needed here
-    ],
-    programId: CANDY_MACHINE_PROGRAM_ID,
-    data,
-  }
+  const instruction = mintFromCandyMachineInstruction({
+    candyMachine: candyMachinePubkey,
+    authorityPda,
+    mintAuthority: payer.publicKey,
+    payer: payer.publicKey,
+    nftMint: mintKeypair.publicKey,
+    nftMintAuthority: payer.publicKey,
+    nftMetadata,
+    nftMasterEdition,
+    collectionAuthorityRecord,
+    collectionMint: cm.collectionMint,
+    collectionMetadata,
+    collectionMasterEdition,
+    collectionUpdateAuthority: cm.authority,
+  })
 
   const transaction = await buildTransaction(
     connection,

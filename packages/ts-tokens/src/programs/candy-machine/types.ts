@@ -70,14 +70,32 @@ export interface ConfigLine {
 }
 
 /**
- * Initialize Candy Machine options
+ * Initialize Candy Machine (v2) options
+ *
+ * Accounts follow the mpl-candy-machine `initializeV2` instruction order.
+ * `authorityPda` and the collection delegate record are derived PDAs; if
+ * omitted they are computed from `candyMachine`/`collectionMint`.
  */
 export interface InitializeCandyMachineOptions {
   candyMachine: PublicKey
+  /** Candy Machine authority PDA (derived from candyMachine if omitted) */
+  authorityPda?: PublicKey
   authority: PublicKey
   payer: PublicKey
+  /** Optional token-metadata rule set for programmable NFTs */
+  ruleSet?: PublicKey
   collectionMint: PublicKey
+  /** Collection metadata account (derived if omitted) */
+  collectionMetadata?: PublicKey
+  /** Collection master edition account (derived if omitted) */
+  collectionMasterEdition?: PublicKey
   collectionUpdateAuthority: PublicKey
+  /** Collection metadata delegate record (derived if omitted) */
+  collectionDelegateRecord?: PublicKey
+  /** Optional pNFT authorization rules program */
+  authorizationRulesProgram?: PublicKey
+  /** Optional pNFT authorization rules account */
+  authorizationRules?: PublicKey
   data: CandyMachineData
   tokenStandard: number
 }
@@ -97,17 +115,29 @@ export interface AddConfigLinesOptions {
  */
 export interface MintFromCandyMachineOptions {
   candyMachine: PublicKey
-  authority: PublicKey
+  /** Candy Machine authority PDA (derived from candyMachine if omitted) */
+  authorityPda?: PublicKey
+  /** Mint authority (must sign) — the candy machine authority or guard PDA */
+  mintAuthority: PublicKey
   payer: PublicKey
   nftMint: PublicKey
+  /**
+   * Whether the NFT mint is a transaction signer (default true).
+   *
+   * The program only creates the mint account when it signs, so this must be
+   * true when passing a freshly generated keypair (the usual flow). Set to
+   * false only when the mint account already exists on-chain.
+   */
+  nftMintIsSigner?: boolean
   nftMintAuthority: PublicKey
   nftMetadata: PublicKey
   nftMasterEdition: PublicKey
+  /** Collection authority record (delegate) PDA */
+  collectionAuthorityRecord: PublicKey
   collectionMint: PublicKey
   collectionMetadata: PublicKey
   collectionMasterEdition: PublicKey
   collectionUpdateAuthority: PublicKey
-  tokenAccount: PublicKey
 }
 
 /**

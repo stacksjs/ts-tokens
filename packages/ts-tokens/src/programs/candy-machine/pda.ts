@@ -6,6 +6,7 @@ import { PublicKey } from '@solana/web3.js'
 
 const CANDY_MACHINE_PROGRAM_ID = new PublicKey('CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR')
 const CANDY_GUARD_PROGRAM_ID = new PublicKey('Guard1JwRhJkVH6XZhzoYxeBVQe872VH6QggF4BWmS9g')
+const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
 
 /**
  * Find the Candy Machine authority PDA
@@ -24,6 +25,31 @@ export function findCandyGuardPda(base: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from('candy_guard'), base.toBuffer()],
     CANDY_GUARD_PROGRAM_ID
+  )
+}
+
+/**
+ * Find the Token Metadata collection delegate record PDA
+ *
+ * Used as `collectionDelegateRecord` in Candy Machine v2 instructions
+ * (initializeV2, mintV2, setCollectionV2). The delegate is the candy
+ * machine authority PDA.
+ */
+export function findCollectionDelegateRecordPda(
+  collectionMint: PublicKey,
+  collectionUpdateAuthority: PublicKey,
+  delegate: PublicKey
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from('metadata'),
+      TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+      collectionMint.toBuffer(),
+      Buffer.from('collection_delegate'),
+      collectionUpdateAuthority.toBuffer(),
+      delegate.toBuffer(),
+    ],
+    TOKEN_METADATA_PROGRAM_ID
   )
 }
 

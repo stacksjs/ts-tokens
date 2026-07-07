@@ -6,10 +6,10 @@ import {
   PublicKey,
   TransactionInstruction,
   SystemProgram,
-  SYSVAR_RENT_PUBKEY,
+  SYSVAR_INSTRUCTIONS_PUBKEY,
   SYSVAR_SLOT_HASHES_PUBKEY,
 } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import type {
   InitializeCandyMachineOptions,
   AddConfigLinesOptions,
@@ -20,12 +20,14 @@ import type {
   Creator,
   ConfigLine,
 } from './types'
+import { findCandyMachineAuthorityPda, findCollectionDelegateRecordPda } from './pda'
+import { findMetadataPda, findMasterEditionPda } from '../token-metadata/pda'
 
 const CANDY_MACHINE_PROGRAM_ID = new PublicKey('CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR')
 const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
 
-// Instruction discriminators (Anchor style)
-const INITIALIZE_DISCRIMINATOR = Buffer.from([175, 175, 109, 31, 13, 152, 155, 237])
+// Instruction discriminators (Anchor style: sha256('global:NAME')[0..8])
+const INITIALIZE_V2_DISCRIMINATOR = Buffer.from([67, 153, 175, 39, 218, 16, 38, 32])
 const ADD_CONFIG_LINES_DISCRIMINATOR = Buffer.from([223, 50, 224, 227, 151, 8, 115, 106])
 const MINT_DISCRIMINATOR = Buffer.from([51, 57, 225, 47, 182, 146, 137, 166])
 const UPDATE_DISCRIMINATOR = Buffer.from([219, 200, 88, 176, 158, 63, 253, 127])
@@ -33,23 +35,64 @@ const WITHDRAW_DISCRIMINATOR = Buffer.from([183, 18, 70, 156, 148, 109, 161, 34]
 const SET_AUTHORITY_DISCRIMINATOR = Buffer.from([133, 250, 37, 21, 110, 163, 26, 121])
 
 /**
- * Create an Initialize Candy Machine instruction
+ * Create an Initialize Candy Machine (v2) instruction.
+ *
+ * Follows the mpl-candy-machine `initializeV2` account order and serializes
+ * `data: CandyMachineData` followed by the `tokenStandard: u8`.
  */
 export function initializeCandyMachine(
   options: InitializeCandyMachineOptions
 ): TransactionInstruction {
+  const authorityPda =
+    options.authorityPda ?? findCandyMachineAuthorityPda(options.candyMachine)[0]
+  const collectionMetadata =
+    options.collectionMetadata ?? findMetadataPda(options.collectionMint)[0]
+  const collectionMasterEdition =
+    options.collectionMasterEdition ?? findMasterEditionPda(options.collectionMint)[0]
+  const collectionDelegateRecord =
+    options.collectionDelegateRecord ??
+    findCollectionDelegateRecordPda(
+      options.collectionMint,
+      options.collectionUpdateAuthority,
+      authorityPda
+    )[0]
+
   const keys = [
     { pubkey: options.candyMachine, isSigner: false, isWritable: true },
+    { pubkey: authorityPda, isSigner: false, isWritable: true },
     { pubkey: options.authority, isSigner: false, isWritable: false },
     { pubkey: options.payer, isSigner: true, isWritable: true },
+    // ruleSet is an optional account; when absent the program id sits in its
+    // slot as a "None" marker.
+    { pubkey: options.ruleSet ?? CANDY_MACHINE_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: collectionMetadata, isSigner: false, isWritable: true },
     { pubkey: options.collectionMint, isSigner: false, isWritable: false },
-    { pubkey: options.collectionUpdateAuthority, isSigner: true, isWritable: false },
+    { pubkey: collectionMasterEdition, isSigner: false, isWritable: false },
+    { pubkey: options.collectionUpdateAuthority, isSigner: true, isWritable: true },
+    { pubkey: collectionDelegateRecord, isSigner: false, isWritable: true },
+    // NOTE: per the official mpl-candy-machine IDL and the on-chain
+    // InitializeV2 account struct, the SPL Token program is NOT part of this
+    // instruction — token_metadata_program is followed directly by
+    // system_program. Inserting it here shifts system_program out of its slot
+    // and the program rejects the instruction with InvalidProgramId.
+    { pubkey: TOKEN_METADATA_PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+    { pubkey: SYSVAR_INSTRUCTIONS_PUBKEY, isSigner: false, isWritable: false },
+    // Optional pNFT authorization-rules accounts; the program id marks "None".
+    {
+      pubkey: options.authorizationRulesProgram ?? CANDY_MACHINE_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    },
+    {
+      pubkey: options.authorizationRules ?? CANDY_MACHINE_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    },
   ]
 
   const data = Buffer.concat([
-    INITIALIZE_DISCRIMINATOR,
+    INITIALIZE_V2_DISCRIMINATOR,
     serializeCandyMachineData(options.data),
     Buffer.from([options.tokenStandard]),
   ])
@@ -94,24 +137,26 @@ export function addConfigLines(options: AddConfigLinesOptions): TransactionInstr
 export function mintFromCandyMachine(
   options: MintFromCandyMachineOptions
 ): TransactionInstruction {
+  const authorityPda =
+    options.authorityPda ?? findCandyMachineAuthorityPda(options.candyMachine)[0]
+
   const keys = [
     { pubkey: options.candyMachine, isSigner: false, isWritable: true },
-    { pubkey: options.authority, isSigner: false, isWritable: false },
+    { pubkey: authorityPda, isSigner: false, isWritable: true },
+    { pubkey: options.mintAuthority, isSigner: true, isWritable: false },
     { pubkey: options.payer, isSigner: true, isWritable: true },
-    { pubkey: options.nftMint, isSigner: true, isWritable: true },
+    { pubkey: options.nftMint, isSigner: options.nftMintIsSigner ?? true, isWritable: true },
     { pubkey: options.nftMintAuthority, isSigner: true, isWritable: false },
     { pubkey: options.nftMetadata, isSigner: false, isWritable: true },
     { pubkey: options.nftMasterEdition, isSigner: false, isWritable: true },
+    { pubkey: options.collectionAuthorityRecord, isSigner: false, isWritable: false },
     { pubkey: options.collectionMint, isSigner: false, isWritable: false },
     { pubkey: options.collectionMetadata, isSigner: false, isWritable: true },
     { pubkey: options.collectionMasterEdition, isSigner: false, isWritable: false },
     { pubkey: options.collectionUpdateAuthority, isSigner: false, isWritable: false },
-    { pubkey: options.tokenAccount, isSigner: false, isWritable: true },
-    { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-    { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: TOKEN_METADATA_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
     { pubkey: SYSVAR_SLOT_HASHES_PUBKEY, isSigner: false, isWritable: false },
   ]
 
@@ -186,7 +231,7 @@ export function withdraw(options: WithdrawOptions): TransactionInstruction {
 
 // Serialization helpers
 
-function serializeCandyMachineData(data: CandyMachineData): Buffer {
+export function serializeCandyMachineData(data: CandyMachineData): Buffer {
   const parts: Buffer[] = []
 
   // Items available
