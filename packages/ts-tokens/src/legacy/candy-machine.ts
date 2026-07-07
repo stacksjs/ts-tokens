@@ -15,13 +15,18 @@ const CM_V3_PROGRAM_ID = 'CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR'
 
 /**
  * Detect candy machine version by owner program ID
+ *
+ * Throws for unknown owners rather than guessing a version.
  */
 function detectVersion(ownerProgram: string): CandyMachineVersion {
   switch (ownerProgram) {
     case CM_V1_PROGRAM_ID: return CMV.V1
     case CM_V2_PROGRAM_ID: return CMV.V2
     case CM_V3_PROGRAM_ID: return CMV.V3
-    default: return CMV.V3
+    default:
+      throw new Error(
+        `Unknown Candy Machine program owner: ${ownerProgram}. Not a recognized Candy Machine v1/v2/v3 account.`
+      )
   }
 }
 
@@ -77,28 +82,11 @@ export async function getCandyMachineInfo(
     }
   }
 
-  // For v1/v2, parse basic header fields
-  const data = accountInfo.data as Buffer
-  let offset = 8 // Skip discriminator
-
-  // Basic v1/v2 parsing (authority at first 32 bytes after discriminator)
-  const authority = new PublicKey(data.subarray(offset, offset + 32)).toBase58()
-  offset += 32
-
-  return {
-    address,
-    version,
-    authority,
-    collectionMint: '',
-    itemsAvailable: 0,
-    itemsRedeemed: 0,
-    symbol: '',
-    sellerFeeBasisPoints: 0,
-    isMutable: true,
-    creators: [],
-    configLineSettings: null,
-    hiddenSettings: null,
-  }
+  // v1/v2 candy machines use a different, legacy account layout that this
+  // library does not deserialize. Rather than fabricate zeroed fields, refuse.
+  throw new Error(
+    `getCandyMachineInfo is not implemented for Candy Machine ${version}: only v3 accounts can be deserialized. Migrate the collection to Candy Machine v3 to read its state.`
+  )
 }
 
 /**

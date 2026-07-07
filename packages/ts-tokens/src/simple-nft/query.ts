@@ -12,11 +12,14 @@ import type { TokenConfig, NFTMetadata } from '../types'
 
 /**
  * Transform NFTMetadata to SimpleNFT
+ *
+ * `owner` must be the real token holder. It is intentionally required: the
+ * metadata update authority is NOT the owner, so there is no safe fallback.
  */
-function toSimpleNFT(metadata: NFTMetadata, owner?: PublicKey, collection?: PublicKey): SimpleNFT {
+function toSimpleNFT(metadata: NFTMetadata, owner: PublicKey, collection?: PublicKey): SimpleNFT {
   return {
     mint: new PublicKey(metadata.mint),
-    owner: owner ?? new PublicKey(metadata.updateAuthority),
+    owner,
     name: metadata.name,
     symbol: metadata.symbol,
     uri: metadata.uri,
@@ -73,6 +76,20 @@ export async function getSimpleNFTsByCollection(
 ): Promise<SimpleNFT[]> {
   const { getNFTsByCollection } = await import('../nft/query')
 
+  const { getNFTHolder } = await import('../nft/query')
+
   const nfts = await getNFTsByCollection(collectionMint.toBase58(), config, limit)
-  return nfts.map(m => toSimpleNFT(m, undefined, collectionMint))
+
+  // Resolve the real holder for each NFT. The metadata update authority is not
+  // the owner, so we look up the largest token account holder per mint.
+  const result: SimpleNFT[] = []
+  for (const m of nfts) {
+    const holder = await getNFTHolder(m.mint, config)
+    if (!holder) {
+      // Skip NFTs whose holder cannot be resolved rather than fabricating one.
+      continue
+    }
+    result.push(toSimpleNFT(m, new PublicKey(holder), collectionMint))
+  }
+  return result
 }

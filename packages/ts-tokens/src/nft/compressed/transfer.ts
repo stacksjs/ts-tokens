@@ -86,6 +86,66 @@ function decodeHash(value: string): Uint8Array {
 }
 
 /**
+ * Read a concurrent Merkle tree's maxDepth and canopyDepth from its account.
+ *
+ * The account layout is:
+ *   header (56)  = accountType(1) + version(1) + maxBufferSize(u32) +
+ *                  maxDepth(u32) + authority(32) + creationSlot(u64) + pad(6)
+ *   serialized tree preamble (24) = sequenceNumber/activeIndex/bufferSize (3x u64)
+ *   changelog     = maxBufferSize * (32 * (maxDepth + 1) + 8)
+ *   rightmost proof = 32 * maxDepth + 40
+ *   canopy        = (2^(canopyDepth+1) - 2) * 32
+ *
+ * The canopy caches the top `canopyDepth` levels of the tree, so a valid proof
+ * submitted to Bubblegum must be truncated to `maxDepth - canopyDepth` nodes.
+ */
+async function getTreeDepths(
+  connection: ReturnType<typeof createConnection>,
+  tree: PublicKey
+): Promise<{ maxDepth: number; canopyDepth: number }> {
+  const accountInfo = await connection.getAccountInfo(tree)
+  if (!accountInfo) {
+    throw new Error(`Merkle tree account not found: ${tree.toBase58()}`)
+  }
+
+  const data = accountInfo.data
+  const maxBufferSize = data.readUInt32LE(2)
+  const maxDepth = data.readUInt32LE(6)
+
+  const headerSize = 56
+  const treePreamble = 24
+  const changelogSize = maxBufferSize * (32 * (maxDepth + 1) + 8)
+  const rightmostProofSize = 32 * maxDepth + 40
+
+  const canopyBytes = data.length - (headerSize + treePreamble + changelogSize + rightmostProofSize)
+  let canopyDepth = 0
+  if (canopyBytes > 0) {
+    const canopyNodes = Math.floor(canopyBytes / 32)
+    // canopyNodes = 2^(canopyDepth+1) - 2  =>  canopyDepth = log2(canopyNodes + 2) - 1
+    canopyDepth = Math.round(Math.log2(canopyNodes + 2)) - 1
+    if (canopyDepth < 0) canopyDepth = 0
+  }
+
+  return { maxDepth, canopyDepth }
+}
+
+/**
+ * Truncate a full Merkle proof to the length Bubblegum expects for a tree with
+ * a canopy: proof.length must equal `maxDepth - canopyDepth`.
+ */
+function truncateProofForCanopy(
+  proof: PublicKey[],
+  maxDepth: number,
+  canopyDepth: number
+): PublicKey[] {
+  const expectedLength = maxDepth - canopyDepth
+  if (expectedLength < 0 || expectedLength > proof.length) {
+    return proof
+  }
+  return proof.slice(0, expectedLength)
+}
+
+/**
  * Transfer a compressed NFT
  */
 export async function transferCompressedNFT(
@@ -110,6 +170,15 @@ export async function transferCompressedNFT(
   // are not present in a proof response.
   const asset = await getAsset(transferOptions.assetId, tokenConfig)
 
+  // Truncate the proof to account for the tree's canopy. Bubblegum expects
+  // proof.length == maxDepth - canopyDepth; a full proof would be rejected.
+  const { maxDepth, canopyDepth } = await getTreeDepths(connection, treePubkey)
+  const proof = truncateProofForCanopy(
+    transferOptions.proof.proof.map(p => new PublicKey(p)),
+    maxDepth,
+    canopyDepth
+  )
+
   const instruction = buildTransferIx({
     merkleTree: treePubkey,
     treeAuthority,
@@ -121,7 +190,7 @@ export async function transferCompressedNFT(
     creatorHash: decodeHash(asset.compression.creatorHash),
     nonce: BigInt(asset.compression.leafIndex),
     index: asset.compression.leafIndex,
-    proof: transferOptions.proof.proof.map(p => new PublicKey(p)),
+    proof,
   })
 
   const transaction = await buildTransaction(
@@ -231,6 +300,15 @@ export async function burnCompressedNFT(
 
   const asset = await getAsset(assetId, tokenConfig)
 
+  // Truncate the proof to account for the tree's canopy. Bubblegum expects
+  // proof.length == maxDepth - canopyDepth; a full proof would be rejected.
+  const { maxDepth, canopyDepth } = await getTreeDepths(connection, treePubkey)
+  const truncatedProof = truncateProofForCanopy(
+    proof.proof.map(p => new PublicKey(p)),
+    maxDepth,
+    canopyDepth
+  )
+
   const instruction = buildBurnIx({
     merkleTree: treePubkey,
     treeAuthority,
@@ -241,7 +319,7 @@ export async function burnCompressedNFT(
     creatorHash: decodeHash(asset.compression.creatorHash),
     nonce: BigInt(asset.compression.leafIndex),
     index: asset.compression.leafIndex,
-    proof: proof.proof.map(p => new PublicKey(p)),
+    proof: truncatedProof,
   })
 
   const transaction = await buildTransaction(

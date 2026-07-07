@@ -58,14 +58,20 @@ describe('importFromSugarConfig', () => {
     expect(result.collectionInfo.mint).toBe('')
   })
 
-  test('should throw for missing number field', () => {
-    const config = { ...validSugarConfig, number: 0 }
+  test('should throw when number field is absent', () => {
+    const { number: _number, ...config } = validSugarConfig
     expect(() => importFromSugarConfig(JSON.stringify(config))).toThrow('missing required fields')
   })
 
-  test('should throw for missing sellerFeeBasisPoints', () => {
-    const config = { ...validSugarConfig, sellerFeeBasisPoints: 0 }
+  test('should throw when sellerFeeBasisPoints field is absent', () => {
+    const { sellerFeeBasisPoints: _sfbp, ...config } = validSugarConfig
     expect(() => importFromSugarConfig(JSON.stringify(config))).toThrow('missing required fields')
+  })
+
+  test('should accept sellerFeeBasisPoints of 0 (valid zero royalty)', () => {
+    const config = { ...validSugarConfig, sellerFeeBasisPoints: 0 }
+    const result = importFromSugarConfig(JSON.stringify(config))
+    expect(result.collectionInfo.sellerFeeBasisPoints).toBe(0)
   })
 
   test('should throw for invalid JSON', () => {

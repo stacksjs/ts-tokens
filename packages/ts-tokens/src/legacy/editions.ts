@@ -78,68 +78,18 @@ export async function getEditionsByMaster(
 /**
  * Update master edition max supply
  *
- * Note: Max supply can only be reduced, never increased, and cannot be set
- * lower than the current supply.
+ * NOT SUPPORTED: The Token Metadata program has no instruction to change a
+ * master edition's max supply after it has been created. Max supply is fixed
+ * at CreateMasterEditionV3 time; there is no on-chain path to modify it.
  */
+// eslint-disable-next-line no-unused-vars
 export async function updateMasterEditionMaxSupply(
   mint: string,
   newMaxSupply: number | null,
   config: TokenConfig,
   options?: TransactionOptions
 ): Promise<TransactionResult> {
-  const { PublicKey, SystemProgram } = await import('@solana/web3.js')
-  const { TOKEN_PROGRAM_ID } = await import('@solana/spl-token')
-  const { loadWallet } = await import('../drivers/solana/wallet')
-  const { createConnection } = await import('../drivers/solana/connection')
-  const { buildTransaction, sendAndConfirmTransaction } = await import('../drivers/solana/transaction')
-  const { findMetadataPda, findMasterEditionPda } = await import('../programs/token-metadata/pda')
-
-  const connection = createConnection(config)
-  const payer = loadWallet(config)
-  const mintPubkey = new PublicKey(mint)
-
-  const [metadata] = findMetadataPda(mintPubkey)
-  const [masterEdition] = findMasterEditionPda(mintPubkey)
-
-  // CreateMasterEditionV3 with updated max supply
-  const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
-
-  const parts: Buffer[] = [Buffer.from([17])] // CreateMasterEditionV3 discriminator
-
-  if (newMaxSupply !== null) {
-    parts.push(Buffer.from([1])) // Some
-    const maxSupplyBuffer = Buffer.alloc(8)
-    maxSupplyBuffer.writeBigUInt64LE(BigInt(newMaxSupply))
-    parts.push(maxSupplyBuffer)
-  } else {
-    parts.push(Buffer.from([0])) // None
-  }
-
-  const data = Buffer.concat(parts)
-
-  const instruction = {
-    keys: [
-      { pubkey: masterEdition, isSigner: false, isWritable: true },
-      { pubkey: mintPubkey, isSigner: false, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: true },
-      { pubkey: metadata, isSigner: false, isWritable: true },
-      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    ],
-    programId: TOKEN_METADATA_PROGRAM_ID,
-    data,
-  }
-
-  const transaction = await buildTransaction(
-    connection,
-    [instruction],
-    payer.publicKey,
-    options
+  throw new Error(
+    'updateMasterEditionMaxSupply is not implemented: max supply cannot be changed after the master edition is created. The Token Metadata program provides no instruction to modify max supply, and re-sending CreateMasterEditionV3 against an already-initialized edition PDA is rejected on-chain.'
   )
-
-  transaction.partialSign(payer)
-
-  return sendAndConfirmTransaction(connection, transaction, options)
 }

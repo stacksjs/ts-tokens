@@ -21,13 +21,23 @@ export async function parseMetadataInput(
     return input.uri
   }
 
-  // Local file path
+  // Local file path — read the file contents and upload those, not the path.
   if ('file' in input) {
     if (!uploadFn) {
       throw new Error('Upload function required for file input')
     }
-    // Would read file and upload
-    return uploadFn(input.file)
+
+    // Reading a local file requires Node's fs. Guard so this stays browser-safe.
+    const hasNodeFs = typeof process !== 'undefined' && !!process.versions?.node
+    if (!hasNodeFs) {
+      throw new Error(
+        'File input is not supported in this environment: reading a local file path requires Node.js (fs). Provide a URI or a full metadata object instead.'
+      )
+    }
+
+    const { readFile } = await import('node:fs/promises')
+    const contents = await readFile(input.file)
+    return uploadFn(contents)
   }
 
   // Full metadata object - needs to be uploaded

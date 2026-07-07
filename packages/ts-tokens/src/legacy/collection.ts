@@ -228,6 +228,7 @@ export async function detectCollectionVersion(
   const { PublicKey } = await import('@solana/web3.js')
   const { createConnection } = await import('../drivers/solana/connection')
   const { findMetadataPda } = await import('../programs/token-metadata/pda')
+  const { deserializeMetadata } = await import('../programs/token-metadata/accounts')
 
   const connection = createConnection(config)
   const mintPubkey = new PublicKey(collectionMint)
@@ -238,17 +239,10 @@ export async function detectCollectionVersion(
     return CV.Legacy
   }
 
-  const data = accountInfo.data
+  // Deserialize the metadata and inspect collectionDetails. A sized collection
+  // (v2) carries a collectionDetails.size field; an unsized/legacy (v1)
+  // collection has no collectionDetails at all.
+  const metadata = deserializeMetadata(accountInfo.data as Buffer)
 
-  // Check for token standard field
-  // After primary_sale_happened (1 byte) and is_mutable (1 byte) at variable offset,
-  // there may be edition_nonce and token_standard fields
-  // A simplified heuristic: if account data is large enough and has collection details, it's sized
-  if (data.length > 400) {
-    // Look for collectionDetails presence (non-zero at expected offset)
-    // This is a heuristic - the exact offset depends on variable-length fields
-    return CV.Sized
-  }
-
-  return CV.Legacy
+  return metadata.collectionDetails ? CV.Sized : CV.Legacy
 }

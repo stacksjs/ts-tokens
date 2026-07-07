@@ -10,6 +10,40 @@ import type { FreezeResult, DelegateResult } from './types'
 import type { TokenConfig } from '../types'
 
 /**
+ * Ensure the loaded wallet is the mint's freeze authority.
+ *
+ * For master-edition NFTs the freeze authority is the edition PDA, not the
+ * wallet, so a plain SPL freeze/thaw signed by the wallet would always fail.
+ * This guard fetches the mint and throws a clear error in that case.
+ */
+async function assertWalletIsFreezeAuthority(
+  mint: PublicKey,
+  operation: string,
+  config: TokenConfig
+): Promise<void> {
+  const { getMint } = await import('@solana/spl-token')
+  const { loadWallet } = await import('../drivers/solana/wallet')
+  const { createConnection } = await import('../drivers/solana/connection')
+
+  const connection = createConnection(config)
+  const wallet = loadWallet(config)
+  const mintInfo = await getMint(connection, mint)
+
+  if (!mintInfo.freezeAuthority) {
+    throw new Error(
+      `${operation} is not possible: mint ${mint.toBase58()} has no freeze authority.`
+    )
+  }
+
+  if (!mintInfo.freezeAuthority.equals(wallet.publicKey)) {
+    throw new Error(
+      `${operation} is not possible with this wallet: the mint's freeze authority is ${mintInfo.freezeAuthority.toBase58()}, not ${wallet.publicKey.toBase58()}. ` +
+        `Master-edition NFTs delegate freeze authority to the edition PDA and must be frozen/thawed via the Token Metadata freezeDelegatedAccount/thawDelegatedAccount instructions, not a raw SPL freeze.`
+    )
+  }
+}
+
+/**
  * Freeze an NFT token account
  *
  * Prevents the NFT from being transferred. Requires freeze authority.
@@ -27,6 +61,8 @@ export async function freezeNFT(
   tokenAccount: PublicKey,
   config: TokenConfig
 ): Promise<FreezeResult> {
+  await assertWalletIsFreezeAuthority(mint, 'freezeNFT', config)
+
   const { freezeAccount } = await import('../token/authority')
 
   const result = await freezeAccount(
@@ -60,6 +96,8 @@ export async function thawNFT(
   tokenAccount: PublicKey,
   config: TokenConfig
 ): Promise<FreezeResult> {
+  await assertWalletIsFreezeAuthority(mint, 'thawNFT', config)
+
   const { thawAccount } = await import('../token/authority')
 
   const result = await thawAccount(

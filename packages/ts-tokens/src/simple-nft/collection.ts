@@ -112,7 +112,8 @@ export async function getSimpleCollection(
     symbol: metadata.symbol,
     uri: metadata.uri,
     royalty: metadata.sellerFeeBasisPoints / 100,
-    size: collectionInfo.size,
+    // size is null when uncountable via RPC (see getCollectionInfo); report 0.
+    size: collectionInfo.size ?? 0,
     verified: true,
   }
 }
@@ -174,28 +175,39 @@ export async function getCollectionNFTs(
   config: TokenConfig,
   options: { limit?: number; offset?: number } = {}
 ): Promise<SimpleNFT[]> {
-  const { getNFTsByCollection } = await import('../nft/query')
+  const { getNFTsByCollection, getNFTHolder } = await import('../nft/query')
 
   const limit = options.limit ?? 50
   const nfts = await getNFTsByCollection(collectionMint.toBase58(), config, limit)
 
-  return nfts.map(metadata => ({
-    mint: new PublicKey(metadata.mint),
-    owner: new PublicKey(metadata.updateAuthority),
-    name: metadata.name,
-    symbol: metadata.symbol,
-    uri: metadata.uri,
-    royalty: metadata.sellerFeeBasisPoints / 100,
-    creators: (metadata.creators || []).map(c => ({
-      address: new PublicKey(c.address),
-      share: c.share,
-      verified: c.verified,
-    })),
-    collection: collectionMint,
-    collectionVerified: true,
-    isMutable: metadata.isMutable,
-    primarySaleHappened: metadata.primarySaleHappened,
-  }))
+  // Resolve the real holder per NFT. The update authority is not the owner, so
+  // we must look up the largest token account holder rather than fabricate it.
+  const result: SimpleNFT[] = []
+  for (const metadata of nfts) {
+    const holder = await getNFTHolder(metadata.mint, config)
+    if (!holder) {
+      // Skip NFTs whose holder cannot be resolved rather than fabricating one.
+      continue
+    }
+    result.push({
+      mint: new PublicKey(metadata.mint),
+      owner: new PublicKey(holder),
+      name: metadata.name,
+      symbol: metadata.symbol,
+      uri: metadata.uri,
+      royalty: metadata.sellerFeeBasisPoints / 100,
+      creators: (metadata.creators || []).map(c => ({
+        address: new PublicKey(c.address),
+        share: c.share,
+        verified: c.verified,
+      })),
+      collection: collectionMint,
+      collectionVerified: true,
+      isMutable: metadata.isMutable,
+      primarySaleHappened: metadata.primarySaleHappened,
+    })
+  }
+  return result
 }
 
 /**
@@ -210,7 +222,8 @@ export async function getCollectionSize(
 ): Promise<number> {
   const { getCollectionInfo } = await import('../nft/query')
   const info = await getCollectionInfo(collectionMint.toBase58(), config)
-  return info.size
+  // size is null when uncountable via RPC (see getCollectionInfo); report 0.
+  return info.size ?? 0
 }
 
 /**
@@ -334,28 +347,21 @@ export function verifyCollection(collection: SimpleCollection): {
  *
  * Returns size, verified count, and unique owner count.
  */
-// eslint-disable-next-line no-unused-vars
 export async function getCollectionStats(
   _connection: Connection,
-  collectionMint: PublicKey,
-  config: TokenConfig
+  _collectionMint: PublicKey,
+  _config: TokenConfig
 ): Promise<{
   size: number
   verified: number
   owners: number
 }> {
-  const { getCollectionInfo } = await import('../nft/query')
-  const { getNFTsByCollection } = await import('../nft/query')
-
-  const info = await getCollectionInfo(collectionMint.toBase58(), config)
-  const nfts = await getNFTsByCollection(collectionMint.toBase58(), config, 1000)
-
-  // Count unique update authorities as a proxy for owners
-  const uniqueAuthorities = new Set(nfts.map(n => n.updateAuthority))
-
-  return {
-    size: info.size,
-    verified: info.size,
-    owners: uniqueAuthorities.size,
-  }
+  // Enumerating a collection's members (needed for size/verified/owners) relies
+  // on getNFTsByCollection, which cannot be done over RPC — the metadata
+  // collection field is at a variable offset and can't be memcmp-filtered. Use
+  // the DAS API (getAssetsByGroup groupKey=collection) to compute these stats.
+  throw new Error(
+    'getCollectionStats is not implemented via RPC: collection membership ' +
+    'requires the DAS API (getAssetsByGroup). See src/nft/compressed/query.ts.'
+  )
 }

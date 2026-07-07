@@ -173,8 +173,13 @@ export interface CollectionStats {
   totalItems: number
   /** Number of unique holders */
   uniqueHolders: number
-  /** Number of listed items */
-  listedItems: number
+  /**
+   * Number of items with an active token delegate.
+   *
+   * NOTE: this is a delegation count, not a marketplace-listing count. Some
+   * marketplaces list via delegation, but delegation does not imply a listing.
+   */
+  delegated: number
   /** Floor price in SOL (if available) */
   floorPrice?: number
 }

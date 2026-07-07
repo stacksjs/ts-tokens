@@ -40,8 +40,9 @@ export function importFromSugarConfig(
 } {
   const parsed: SugarConfig = JSON.parse(configJson)
 
-  // Validate required fields
-  if (!parsed.number || !parsed.sellerFeeBasisPoints) {
+  // Validate required fields. Use typeof checks so legitimately zero-valued
+  // fields (e.g. sellerFeeBasisPoints: 0) are not rejected as "missing".
+  if (typeof parsed.number !== 'number' || typeof parsed.sellerFeeBasisPoints !== 'number') {
     throw new Error('Invalid Sugar config: missing required fields (number, sellerFeeBasisPoints)')
   }
 

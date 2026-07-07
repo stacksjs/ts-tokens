@@ -39,19 +39,21 @@ export async function getCollectionStats(
 
   // Calculate stats
   const owners = new Set<string>()
-  let listedItems = 0
+  let delegated = 0
 
   for (const asset of allAssets) {
     owners.add(asset.ownership.owner)
+    // Count items with an active token delegate. This is delegation, not a
+    // marketplace listing — do not conflate the two.
     if (asset.ownership.delegated) {
-      listedItems++
+      delegated++
     }
   }
 
   return {
     totalItems: allAssets.length,
     uniqueHolders: owners.size,
-    listedItems,
+    delegated,
   }
 }
 

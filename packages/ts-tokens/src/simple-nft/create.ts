@@ -142,8 +142,9 @@ export async function getSimpleNFT(
     verified: c.verified,
   }))
 
-  // Try to get current owner via token largest accounts
-  let owner = mint // fallback
+  // Resolve the current owner via the largest token account holder. If it
+  // cannot be resolved, return null rather than using the mint as a fake owner.
+  let owner: PublicKey | null = null
   try {
     const largestAccounts = await connection.getTokenLargestAccounts(mint)
     for (const account of largestAccounts.value) {
@@ -157,7 +158,12 @@ export async function getSimpleNFT(
       }
     }
   } catch {
-    // Fall back to mint as placeholder
+    owner = null
+  }
+
+  if (!owner) {
+    // Owner could not be determined; do not fabricate one from the mint.
+    return null
   }
 
   return {

@@ -145,9 +145,12 @@ export async function getCompressedNFTsByTree(
   const connection = createConnection(config)
   const rpcUrl = connection.rpcEndpoint
 
-  return dasApiCall(rpcUrl, 'getAssetsByGroup', {
-    groupKey: 'collection',
-    groupValue: tree,
+  // A Merkle tree is NOT a collection group, so getAssetsByGroup with the tree
+  // address returns nothing. Use searchAssets with the `tree` filter (supported
+  // by DAS providers such as Helius) to enumerate assets stored in the tree.
+  return dasApiCall(rpcUrl, 'searchAssets', {
+    tree,
+    compressed: true,
     page: options?.page ?? 1,
     limit: options?.limit ?? 1000,
     displayOptions: {

@@ -359,58 +359,21 @@ export async function getEditionInfo(
 
 /**
  * Get all editions printed from a master
+ *
+ * NOT SUPPORTED with on-chain calls alone. Edition accounts are PDAs derived
+ * from each print's mint and store the master edition PDA as their parent, but
+ * they do NOT record their own mint. `getProgramAccounts` can enumerate the
+ * matching Edition accounts, yet there is no on-chain way to invert an Edition
+ * PDA back to its mint without an external index (e.g. a DAS provider). Rather
+ * than return records with empty-string mints, this throws.
  */
+// eslint-disable-next-line no-unused-vars
 export async function getEditionsByMaster(
   masterMint: string,
   config: TokenConfig,
   limit: number = 100
 ): Promise<EditionInfo[]> {
-  const connection = createConnection(config)
-  const masterMintPubkey = new PublicKey(masterMint)
-
-  // Get master edition info first
-  const masterInfo = await getEditionInfo(masterMint, config)
-  if (!masterInfo || masterInfo.edition !== 0) {
-    throw new Error('Not a master edition')
-  }
-
-  // Search for edition accounts that reference this master.
-  // Edition.parent stores the master edition PDA, not the master mint.
-  const masterEditionAddress = getMasterEditionAddress(masterMintPubkey)
-  const accounts = await connection.getProgramAccounts(
-    TOKEN_METADATA_PROGRAM_ID,
-    {
-      filters: [
-        { dataSize: 41 }, // Edition account size
-        {
-          memcmp: {
-            offset: 1, // Parent offset
-            bytes: masterEditionAddress.toBase58(),
-          },
-        },
-      ],
-    }
+  throw new Error(
+    'getEditionsByMaster is not implemented: resolving printed edition mints from a master requires an indexer (e.g. DAS). Edition accounts store the master edition PDA as parent but not their own mint, and an Edition PDA cannot be inverted back to a mint via on-chain calls alone.'
   )
-
-  const editions: EditionInfo[] = []
-
-  for (const { account } of accounts.slice(0, limit)) {
-    const data = account.data
-    if (data[0] === 1) { // EditionV1 key
-      const parent = new PublicKey(data.slice(1, 33)).toBase58()
-      const edition = Number(data.readBigUInt64LE(33))
-
-      // Find the mint for this edition
-      // This would require additional lookups in production
-      editions.push({
-        mint: '', // Would need to look up
-        parent,
-        edition,
-        maxSupply: masterInfo.maxSupply,
-        supply: 1,
-      })
-    }
-  }
-
-  return editions.sort((a, b) => a.edition - b.edition)
 }
