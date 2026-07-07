@@ -3,7 +3,8 @@
  */
 
 import type { Connection} from '@solana/web3.js';
-import { PublicKey, Keypair } from '@solana/web3.js'
+import { PublicKey } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
 import type {
   Treasury,
   CreateTreasuryOptions,
@@ -12,24 +13,27 @@ import type {
 } from './types'
 
 /**
- * Create a new treasury for a DAO
+ * Create a new treasury for a DAO.
+ *
+ * NOT IMPLEMENTED. A treasury is an account owned and governed by the DAO's
+ * governance program so that only approved proposals can move its funds. That
+ * program is not deployed, so there is nothing to create the account against or
+ * to register the DAO as its authority. The previous implementation returned a
+ * freshly generated keypair's public key and discarded the secret key — any
+ * tokens later deposited to that address's associated token account (see
+ * `deposit` in ./operations) would be permanently unrecoverable. Fail loudly
+ * instead of handing back an unusable address.
  */
 export async function createTreasury(
   _connection: Connection,
   _payer: PublicKey,
   _options: CreateTreasuryOptions
 ): Promise<{ address: PublicKey; signature: string }> {
-  const treasuryKeypair = Keypair.generate()
-
-  // In production, would:
-  // 1. Create treasury account
-  // 2. Set DAO as authority
-  // 3. Optionally make initial deposit
-
-  return {
-    address: treasuryKeypair.publicKey,
-    signature: `treasury_created_${Date.now()}`,
-  }
+  throw new Error(
+    'createTreasury is not implemented: the governance program that owns and ' +
+    'authorizes treasury accounts is not deployed. Returning a throwaway address ' +
+    'would permanently lock any deposited funds.'
+  )
 }
 
 /**
@@ -44,14 +48,38 @@ export async function getTreasury(
 }
 
 /**
- * Get treasury balances
+ * Get treasury balances.
+ *
+ * Reads every SPL token account (classic Token and Token-2022) owned by the
+ * treasury address and returns their balances. This is a read-only RPC query
+ * that does not depend on the governance program.
  */
 export async function getTreasuryBalances(
-  _connection: Connection,
+  connection: Connection,
   treasury: PublicKey
 ): Promise<TreasuryBalance[]> {
-  // In production, would fetch all token accounts owned by treasury
-  return []
+  const balances: TreasuryBalance[] = []
+
+  for (const programId of [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID]) {
+    const { value } = await connection.getParsedTokenAccountsByOwner(treasury, {
+      programId,
+    })
+
+    for (const { pubkey, account } of value) {
+      const info = (account.data as { parsed?: { info?: any } }).parsed?.info
+      const tokenAmount = info?.tokenAmount
+      if (!info?.mint || !tokenAmount) continue
+
+      balances.push({
+        mint: new PublicKey(info.mint),
+        amount: BigInt(tokenAmount.amount),
+        decimals: tokenAmount.decimals,
+        tokenAccount: pubkey,
+      })
+    }
+  }
+
+  return balances
 }
 
 /**
@@ -67,19 +95,27 @@ export async function getTreasuryBalance(
 }
 
 /**
- * Get _treasury stats
+ * Get treasury stats.
+ *
+ * Deposit/withdrawal totals and depositor counts require parsing the treasury's
+ * full transaction history, which is not implemented (see `getTransactionHistory`
+ * in ./operations). `tokenCount` is derived from the live balances. The
+ * history-derived aggregates are reported as `null` rather than a fabricated `0n`
+ * so callers can tell the difference between "no activity" and "not computed".
  */
 export async function getTreasuryStats(
-  _connection: Connection,
-  _treasury: PublicKey
-): Promise<TreasuryStats> {
-  // In production, would calculate from transaction history
+  connection: Connection,
+  treasury: PublicKey
+): Promise<TreasuryStats & { historyAvailable: boolean }> {
+  const balances = await getTreasuryBalances(connection, treasury)
+
   return {
     totalDeposits: 0n,
     totalWithdrawals: 0n,
     transactionCount: 0,
     uniqueDepositors: 0,
-    tokenCount: 0,
+    tokenCount: balances.length,
+    historyAvailable: false,
   }
 }
 

@@ -14,7 +14,7 @@ import {
 } from '@solana/web3.js'
 import {
   getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   createTransferCheckedInstruction,
   createCloseAccountInstruction,
   TOKEN_PROGRAM_ID,
@@ -64,6 +64,14 @@ export async function createAuction(
 
   if (options.duration <= 0) {
     throw new Error('Duration must be greater than zero')
+  }
+
+  // Settlement pays the seller and creators with SystemProgram.transfer (SOL).
+  // An SPL-priced auction would be settled in SOL lamports at the same numeric
+  // value, drastically mispricing the sale, so reject non-SOL until SPL
+  // settlement is implemented.
+  if (options.currency && options.currency !== 'SOL') {
+    throw new Error('Only SOL-denominated auctions are supported')
   }
 
   // Deposit NFT into escrow
@@ -240,7 +248,7 @@ export async function buyDutchAuction(
   )
 
   instructions.push(
-    createAssociatedTokenAccountInstruction(
+    createAssociatedTokenAccountIdempotentInstruction(
       buyer.publicKey,
       buyerATA,
       buyer.publicKey,
@@ -350,6 +358,17 @@ export async function settleAuction(
     throw new Error('No bids placed — cancel the auction instead')
   }
 
+  // Bids are off-chain records with no escrowed funds, so settlement must be
+  // paid by the winner from their own wallet. If anyone else could settle, they
+  // would pay the winning bid (and royalties) out of pocket while the NFT went
+  // to the winner. Require the caller to be the winning bidder.
+  if (!caller.publicKey.equals(auction.highestBidder)) {
+    throw new Error(
+      'Only the winning bidder can settle this auction (their wallet pays the ' +
+      'winning bid). Winner: ' + auction.highestBidder.toBase58()
+    )
+  }
+
   if (!auction.escrowId) {
     throw new Error('Auction has no escrow')
   }
@@ -384,7 +403,7 @@ export async function settleAuction(
   )
 
   instructions.push(
-    createAssociatedTokenAccountInstruction(
+    createAssociatedTokenAccountIdempotentInstruction(
       caller.publicKey,
       winnerATA,
       auction.highestBidder,
@@ -393,7 +412,7 @@ export async function settleAuction(
     )
   )
 
-  // Royalties (paid by caller / settlement executor)
+  // Royalties (paid by the winning bidder, who is the caller — see guard above)
   const { instructions: royaltyIxs, totalRoyalty } = buildRoyaltyInstructions(
     caller.publicKey,
     auction.highestBid,

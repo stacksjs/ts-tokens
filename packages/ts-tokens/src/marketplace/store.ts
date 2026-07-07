@@ -258,13 +258,15 @@ export function addEscrowSignature(id: string, signature: string, storePath?: st
 // Offer CRUD
 // ============================================
 
-export function serializeOffer(offer: LocalOffer): SerializedOffer {
+export function serializeOffer(offer: LocalOffer, escrowSecret?: string): SerializedOffer {
   return {
     id: offer.id,
     mint: offer.mint.toBase58(),
     bidder: offer.bidder.toBase58(),
     price: offer.price.toString(),
     currency: offer.currency,
+    escrowAccount: offer.escrowAccount?.toBase58(),
+    escrowSecret,
     expiry: offer.expiry,
     createdAt: offer.createdAt,
     status: offer.status,
@@ -278,15 +280,16 @@ export function deserializeOffer(s: SerializedOffer): LocalOffer {
     bidder: new PublicKey(s.bidder),
     price: BigInt(s.price),
     currency: s.currency,
+    escrowAccount: s.escrowAccount ? new PublicKey(s.escrowAccount) : undefined,
     expiry: s.expiry,
     createdAt: s.createdAt,
     status: s.status,
   }
 }
 
-export function saveOffer(offer: LocalOffer, storePath?: string): void {
+export function saveOffer(offer: LocalOffer, escrowSecret?: string, storePath?: string): void {
   const state = loadState(storePath)
-  state.offers[offer.id] = serializeOffer(offer)
+  state.offers[offer.id] = serializeOffer(offer, escrowSecret)
   saveState(state, storePath)
 }
 
@@ -295,6 +298,13 @@ export function getOffer(id: string, storePath?: string): LocalOffer | null {
   const s = state.offers[id]
   if (!s) return null
   return deserializeOffer(s)
+}
+
+export function getOfferEscrowKeypair(id: string, storePath?: string): Keypair | null {
+  const state = loadState(storePath)
+  const s = state.offers[id]
+  if (!s?.escrowSecret) return null
+  return Keypair.fromSecretKey(Buffer.from(s.escrowSecret, 'base64'))
 }
 
 export function updateOfferStatus(id: string, status: LocalOffer['status'], storePath?: string): void {

@@ -21,6 +21,7 @@ export function createMockConnection(overrides: Record<string, unknown> = {}): C
     getMinimumBalanceForRentExemption: async () => 2039280,
     getAccountInfo: async () => null,
     getMultipleAccountsInfo: async () => [],
+    getParsedTokenAccountsByOwner: async () => ({ value: [] }),
     simulateTransaction: async () => ({ value: { unitsConsumed: 150000, err: null, logs: [] } }),
     getRecentPrioritizationFees: async () => [
       { slot: 1, prioritizationFee: 100 },

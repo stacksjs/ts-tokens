@@ -1,17 +1,23 @@
 /**
  * Offer / Bid System
  *
- * Offers are off-chain records. Acceptance triggers on-chain settlement
- * using the escrow pattern (seller deposits NFT, then settles with buyer's payment).
+ * An offer escrows the bidder's SOL into a dedicated system account when it is
+ * made. Acceptance (run by the seller) releases the escrowed SOL to the seller
+ * and creators and hands the NFT to the bidder in a single atomic transaction,
+ * signed by the seller and the offer's escrow keypair. Cancelling, rejecting, or
+ * letting an offer expire refunds the escrowed SOL to the bidder.
+ *
+ * The escrow keypair is stored in the local marketplace state file (see ./store),
+ * so this is a single-machine / trusted-operator model, not trustless P2P.
  */
 
 import {
-  PublicKey,
+  Keypair,
   SystemProgram,
 } from '@solana/web3.js'
 import {
   getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   createTransferCheckedInstruction,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
@@ -24,22 +30,59 @@ import {
   generateId,
   saveOffer,
   getOffer,
+  getOfferEscrowKeypair,
   updateOfferStatus,
   getOffersForMint as storeGetOffersForMint,
 } from './store'
 import { getRoyaltyInfo, buildRoyaltyInstructions } from './royalties'
 
 /**
- * Make an offer on an NFT (off-chain record only)
+ * Make an offer on an NFT.
+ *
+ * Escrows `price` (plus the escrow account's rent-exempt minimum) from the
+ * bidder into a fresh system account so the offer is actually funded. The escrow
+ * keypair is persisted with the offer for later release/refund.
  */
 export async function makeOffer(
   options: CreateOfferOptions,
   config: TokenConfig
 ): Promise<LocalOffer> {
+  const connection = createConnection(config)
   const bidder = loadWallet(config)
 
   if (options.price <= 0n) {
     throw new Error('Offer price must be greater than zero')
+  }
+
+  const currency = options.currency ?? 'SOL'
+  if (currency !== 'SOL') {
+    // Settlement releases SOL via SystemProgram.transfer. An SPL offer would be
+    // released as SOL lamports at the same numeric value, mispricing the trade.
+    throw new Error('Only SOL-denominated offers are supported')
+  }
+
+  const escrowKeypair = Keypair.generate()
+
+  // Fund the escrow with the offer price plus the rent-exempt minimum for a
+  // 0-byte system account, so it persists until acceptance and can be fully
+  // drained (price distributed, rent refunded to the bidder) at settlement.
+  const rentExempt = BigInt(await connection.getMinimumBalanceForRentExemption(0))
+  const funding = options.price + rentExempt
+
+  const instructions = [
+    SystemProgram.transfer({
+      fromPubkey: bidder.publicKey,
+      toPubkey: escrowKeypair.publicKey,
+      lamports: funding,
+    }),
+  ]
+
+  const transaction = await buildTransaction(connection, instructions, bidder.publicKey)
+  transaction.partialSign(bidder)
+
+  const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(`Failed to fund offer escrow: ${result.error ?? 'transaction not confirmed'}`)
   }
 
   const offer: LocalOffer = {
@@ -47,28 +90,29 @@ export async function makeOffer(
     mint: options.mint,
     bidder: bidder.publicKey,
     price: options.price,
-    currency: options.currency ?? 'SOL',
+    currency,
+    escrowAccount: escrowKeypair.publicKey,
     expiry: options.expiry,
     createdAt: Date.now(),
     status: 'active',
   }
 
-  saveOffer(offer)
+  const escrowSecret = Buffer.from(escrowKeypair.secretKey).toString('base64')
+  saveOffer(offer, escrowSecret)
   return offer
 }
 
 /**
- * Accept an offer — seller sends NFT, buyer pays SOL (atomic swap)
+ * Accept an offer — seller receives the escrowed SOL, bidder receives the NFT.
  *
- * The seller builds and signs a transaction that:
- * 1. Creates buyer ATA if needed
- * 2. Pays royalties from offer proceeds
- * 3. Transfers SOL from the bidder to the seller
- * 4. Transfers NFT from seller to bidder
+ * Run by the seller. Atomic transaction:
+ * 1. Create bidder ATA if needed (payer: seller)
+ * 2. Royalty payments from escrow -> creators
+ * 3. SOL from escrow -> seller (price - royalties)
+ * 4. NFT from seller -> bidder
+ * 5. Refund the leftover escrow rent from escrow -> bidder (drains escrow to 0)
  *
- * Note: In a real P2P scenario, the bidder would need to co-sign.
- * For CLI simplicity, this assumes the current wallet is the seller
- * and builds the transaction accordingly.
+ * Signed by the seller and the offer's escrow keypair.
  */
 export async function acceptOffer(
   offerId: string,
@@ -91,6 +135,15 @@ export async function acceptOffer(
     throw new Error('Offer has expired')
   }
 
+  if (!offer.escrowAccount) {
+    throw new Error('Offer has no escrow account — it may predate escrow-backed offers')
+  }
+
+  const escrowKeypair = getOfferEscrowKeypair(offerId)
+  if (!escrowKeypair) {
+    throw new Error('Offer escrow keypair not found in state')
+  }
+
   const sellerATA = await getAssociatedTokenAddress(
     offer.mint,
     seller.publicKey,
@@ -107,11 +160,15 @@ export async function acceptOffer(
 
   const royaltyInfo = await getRoyaltyInfo(offer.mint, config)
 
+  // The escrow holds `price + rent`. Distribute the price to creators + seller
+  // and refund the remainder (the rent) to the bidder so the escrow drains to 0.
+  const escrowBalance = BigInt(await connection.getBalance(escrowKeypair.publicKey))
+
   const instructions = []
 
-  // Create bidder ATA if needed
+  // Create bidder ATA if needed (seller pays the rent for it)
   instructions.push(
-    createAssociatedTokenAccountInstruction(
+    createAssociatedTokenAccountIdempotentInstruction(
       seller.publicKey,
       bidderATA,
       offer.bidder,
@@ -120,14 +177,25 @@ export async function acceptOffer(
     )
   )
 
-  // Royalty payments from seller (deducted from offer price)
-  // eslint-disable-next-line no-unused-vars
+  // Royalty payments funded from the escrow account
   const { instructions: royaltyIxs, totalRoyalty } = buildRoyaltyInstructions(
-    seller.publicKey,
+    escrowKeypair.publicKey,
     offer.price,
     royaltyInfo
   )
   instructions.push(...royaltyIxs)
+
+  // SOL from escrow to seller (price - royalties)
+  const sellerAmount = offer.price - totalRoyalty
+  if (sellerAmount > 0n) {
+    instructions.push(
+      SystemProgram.transfer({
+        fromPubkey: escrowKeypair.publicKey,
+        toPubkey: seller.publicKey,
+        lamports: sellerAmount,
+      })
+    )
+  }
 
   // Transfer NFT from seller to bidder
   instructions.push(
@@ -143,14 +211,30 @@ export async function acceptOffer(
     )
   )
 
+  // Refund the leftover escrow balance (the rent) to the bidder, draining it to 0
+  const refund = escrowBalance - offer.price
+  if (refund > 0n) {
+    instructions.push(
+      SystemProgram.transfer({
+        fromPubkey: escrowKeypair.publicKey,
+        toPubkey: offer.bidder,
+        lamports: refund,
+      })
+    )
+  }
+
   const transaction = await buildTransaction(
     connection,
     instructions,
     seller.publicKey
   )
   transaction.partialSign(seller)
+  transaction.partialSign(escrowKeypair)
 
   const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(`Failed to accept offer: ${result.error ?? 'transaction not confirmed'}`)
+  }
 
   updateOfferStatus(offerId, 'accepted')
 
@@ -158,7 +242,35 @@ export async function acceptOffer(
 }
 
 /**
- * Cancel an offer (by the bidder)
+ * Refund an offer's escrowed SOL back to the bidder, draining the escrow to 0.
+ */
+async function refundOfferEscrow(offerId: string, config: TokenConfig): Promise<void> {
+  const offer = getOffer(offerId)
+  if (!offer?.escrowAccount) return
+
+  const escrowKeypair = getOfferEscrowKeypair(offerId)
+  if (!escrowKeypair) return
+
+  const connection = createConnection(config)
+  const balance = BigInt(await connection.getBalance(escrowKeypair.publicKey))
+  if (balance <= 0n) return
+
+  const instructions = [
+    SystemProgram.transfer({
+      fromPubkey: escrowKeypair.publicKey,
+      toPubkey: offer.bidder,
+      lamports: balance,
+    }),
+  ]
+
+  const transaction = await buildTransaction(connection, instructions, escrowKeypair.publicKey)
+  transaction.partialSign(escrowKeypair)
+
+  await sendAndConfirmTransaction(connection, transaction)
+}
+
+/**
+ * Cancel an offer (by the bidder) and refund the escrowed SOL
  */
 export async function cancelOffer(
   offerId: string,
@@ -179,15 +291,16 @@ export async function cancelOffer(
     throw new Error('Only the bidder can cancel this offer')
   }
 
+  await refundOfferEscrow(offerId, config)
   updateOfferStatus(offerId, 'cancelled')
 }
 
 /**
- * Reject an offer (by the NFT owner)
+ * Reject an offer (by the NFT owner) and refund the escrowed SOL to the bidder
  */
 export async function rejectOffer(
   offerId: string,
-  _config: TokenConfig
+  config: TokenConfig
 ): Promise<void> {
   const offer = getOffer(offerId)
 
@@ -199,6 +312,7 @@ export async function rejectOffer(
     throw new Error(`Offer is not active (status: ${offer.status})`)
   }
 
+  await refundOfferEscrow(offerId, config)
   updateOfferStatus(offerId, 'rejected')
 }
 

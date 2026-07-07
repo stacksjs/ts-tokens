@@ -5,7 +5,7 @@
  */
 
 import type { Connection } from '@solana/web3.js'
-import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { PublicKey, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js'
 
 const MARINADE_PROGRAM_ID = new PublicKey('MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD')
 const MSOL_MINT = new PublicKey('mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So')
@@ -82,29 +82,26 @@ export async function getMarinadePosition(
 
 /**
  * Build stake SOL transaction (deposit SOL to receive mSOL)
+ *
+ * NOT IMPLEMENTED. A correct Marinade deposit is a CPI to the Marinade program's
+ * `deposit` instruction, which requires the state account, mSOL mint + mint
+ * authority PDA, the liquidity-pool mSOL leg, reserve PDA, and the caller's mSOL
+ * ATA — none of which a bare `SystemProgram.transfer` supplies. Emitting a plain
+ * transfer to the Marinade state account would donate the SOL with no mSOL minted
+ * and no way to recover it, so this refuses rather than building a fund-losing
+ * transaction.
  */
 export async function buildStakeTransaction(
-  connection: Connection,
-  owner: PublicKey,
-  amountLamports: bigint,
+  _connection: Connection,
+  _owner: PublicKey,
+  _amountLamports: bigint,
 ): Promise<Transaction> {
-  const transaction = new Transaction()
-
-  // Simplified instruction — real impl uses Marinade SDK instructions
-  // This builds a system transfer to the Marinade state account
-  // The actual Marinade program instruction would be more complex
-  transaction.add(
-    SystemProgram.transfer({
-      fromPubkey: owner,
-      toPubkey: MARINADE_STATE,
-      lamports: amountLamports,
-    })
+  throw new Error(
+    'buildStakeTransaction is not implemented: staking SOL with Marinade requires ' +
+    'the program\'s deposit instruction (state, mSOL mint authority, liquidity pool, ' +
+    'reserve, and destination mSOL ATA). A plain SOL transfer would be lost with no ' +
+    'mSOL minted. Use the Marinade SDK/program instruction to build this transaction.'
   )
-
-  transaction.feePayer = owner
-  transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
-
-  return transaction
 }
 
 /**

@@ -390,7 +390,7 @@ describe('State Store', () => {
 
   test('should CRUD offers', () => {
     const offer = makeTestOffer()
-    saveOffer(offer, testStorePath)
+    saveOffer(offer, undefined, testStorePath)
 
     const loaded = getOffer(offer.id, testStorePath)
     expect(loaded).not.toBeNull()
@@ -447,7 +447,7 @@ describe('State Store', () => {
     saveListing(listing, undefined, testStorePath)
 
     const offer = makeTestOffer({ expiry: pastExpiry })
-    saveOffer(offer, testStorePath)
+    saveOffer(offer, undefined, testStorePath)
 
     const escrow = makeTestEscrow({ expiry: pastExpiry })
     const secret = Buffer.from(Keypair.generate().secretKey).toString('base64')
@@ -483,14 +483,14 @@ describe('Offer Validation', () => {
     const offer = makeTestOffer({ price: 0n })
     // The validation is in makeOffer (which needs network), but we can
     // verify the state store accepts it and the status is preserved
-    saveOffer(offer, testStorePath)
+    saveOffer(offer, undefined, testStorePath)
     const loaded = getOffer(offer.id, testStorePath)
     expect(loaded!.price).toBe(0n)
   })
 
   test('should track expired offer status', () => {
     const offer = makeTestOffer({ expiry: Date.now() - 1000 })
-    saveOffer(offer, testStorePath)
+    saveOffer(offer, undefined, testStorePath)
 
     const result = cleanupExpired(testStorePath)
     expect(result.offers).toBe(1)
@@ -501,7 +501,7 @@ describe('Offer Validation', () => {
 
   test('should transition offer through statuses', () => {
     const offer = makeTestOffer()
-    saveOffer(offer, testStorePath)
+    saveOffer(offer, undefined, testStorePath)
     expect(getOffer(offer.id, testStorePath)!.status).toBe('active')
 
     updateOfferStatus(offer.id, 'rejected', testStorePath)

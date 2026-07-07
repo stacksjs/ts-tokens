@@ -8,6 +8,8 @@ import {
   createTransferCheckedInstruction,
   getAssociatedTokenAddress,
   createAssociatedTokenAccountIdempotentInstruction,
+  TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token'
 import type { TokenConfig } from '../types'
 import { createConnection } from '../drivers/solana/connection'
@@ -292,14 +294,36 @@ export async function checkWithdrawalLimits(
 }
 
 /**
- * Get _treasury token accounts
+ * Get treasury token accounts.
+ *
+ * Reads every SPL token account (classic Token and Token-2022) owned by the
+ * treasury via a read-only RPC query. Used by `calculateTreasuryValue`.
  */
 export async function getTreasuryTokenAccounts(
-  _connection: Connection,
-  _treasury: PublicKey
+  connection: Connection,
+  treasury: PublicKey
 ): Promise<Array<{ mint: PublicKey; account: PublicKey; balance: bigint }>> {
-  // In production, would fetch all token accounts
-  return []
+  const accounts: Array<{ mint: PublicKey; account: PublicKey; balance: bigint }> = []
+
+  for (const programId of [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID]) {
+    const { value } = await connection.getParsedTokenAccountsByOwner(treasury, {
+      programId,
+    })
+
+    for (const { pubkey, account } of value) {
+      const info = (account.data as { parsed?: { info?: any } }).parsed?.info
+      const tokenAmount = info?.tokenAmount
+      if (!info?.mint || !tokenAmount) continue
+
+      accounts.push({
+        mint: new PublicKey(info.mint),
+        account: pubkey,
+        balance: BigInt(tokenAmount.amount),
+      })
+    }
+  }
+
+  return accounts
 }
 
 /**

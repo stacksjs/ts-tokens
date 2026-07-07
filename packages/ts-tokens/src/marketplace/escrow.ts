@@ -14,6 +14,7 @@ import {
 import {
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   createTransferCheckedInstruction,
   createCloseAccountInstruction,
   TOKEN_PROGRAM_ID,
@@ -47,6 +48,13 @@ export async function createEscrow(
 ): Promise<EscrowRecord> {
   const connection = createConnection(config)
   const seller = loadWallet(config)
+
+  // settleEscrow pays the seller with SystemProgram.transfer (SOL). An SPL-priced
+  // escrow would be paid in SOL lamports at the same numeric value, mispricing
+  // the sale, so reject non-SOL until SPL settlement is implemented.
+  if (options.currency && options.currency !== 'SOL') {
+    throw new Error('Only SOL-denominated escrows are supported')
+  }
 
   const escrowKeypair = Keypair.generate()
 
@@ -166,7 +174,7 @@ export async function settleEscrow(
   )
 
   instructions.push(
-    createAssociatedTokenAccountInstruction(
+    createAssociatedTokenAccountIdempotentInstruction(
       buyer.publicKey,
       buyerATA,
       buyer.publicKey,

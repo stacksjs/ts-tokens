@@ -13,7 +13,7 @@ import {
 import {
   getAssociatedTokenAddress,
   createTransferInstruction,
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
 import type { TokenConfig } from '../types'
@@ -226,9 +226,9 @@ export async function buildSPLRoyaltyInstructions(
         TOKEN_PROGRAM_ID
       )
 
-      // Create creator ATA if needed (will be a no-op if it already exists on-chain)
+      // Create creator ATA if needed (idempotent: a true no-op if it already exists)
       instructions.push(
-        createAssociatedTokenAccountInstruction(
+        createAssociatedTokenAccountIdempotentInstruction(
           payer,
           creatorATA,
           payment.creator,
@@ -385,30 +385,22 @@ export async function markPrimarySale(
 ): Promise<TransactionInstruction> {
   const metadataAddress = getMetadataAddress(mint)
 
-  // UpdateMetadataAccountV2 instruction
-  // Discriminator: 15 (UpdateMetadataAccountV2)
-  const data = Buffer.alloc(
-    1 + // discriminator
-    1 + // data option (None)
-    1 + // update_authority option (None)
-    1   // primary_sale_happened option (Some(true))
-  )
-  let offset = 0
-
-  // Instruction discriminator for UpdateMetadataAccountV2
-  data.writeUInt8(15, offset)
-  offset += 1
-
-  // data option: None
-  data.writeUInt8(0, offset)
-  offset += 1
-
-  // update_authority option: None
-  data.writeUInt8(0, offset)
-  offset += 1
-
-  // primary_sale_happened option: Some(true)
-  data.writeUInt8(1, offset)
+  // UpdateMetadataAccountV2 (discriminator 15). Args (borsh):
+  //   data:                  Option<DataV2>  -> None
+  //   update_authority:      Option<Pubkey>  -> None
+  //   primary_sale_happened: Option<bool>    -> Some(true)
+  //   is_mutable:            Option<bool>    -> None
+  // An Option<bool> that is Some encodes TWO bytes (1 for Some, then the bool),
+  // and the trailing is_mutable option byte must be present or deserialization
+  // fails on-chain.
+  const data = Buffer.from([
+    15, // discriminator
+    0,  // data: None
+    0,  // update_authority: None
+    1,  // primary_sale_happened: Some
+    1,  // primary_sale_happened value: true
+    0,  // is_mutable: None
+  ])
 
   return {
     keys: [

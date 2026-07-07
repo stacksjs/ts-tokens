@@ -16,7 +16,7 @@ import {
   getAssociatedTokenAddress,
   createApproveInstruction,
   createRevokeInstruction,
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
 import { createTransferCheckedInstruction } from '@solana/spl-token'
@@ -49,6 +49,14 @@ export async function listNFT(
 ): Promise<LocalListing> {
   const connection = createConnection(config)
   const seller = loadWallet(config)
+
+  // buyListedNFT settles by paying the seller with SystemProgram.transfer (SOL).
+  // An SPL-priced listing would be paid in SOL lamports at the same numeric
+  // value, mispricing the sale, so reject non-SOL until SPL settlement is
+  // implemented.
+  if (options.currency && options.currency !== 'SOL') {
+    throw new Error('Only SOL-denominated listings are supported')
+  }
 
   const sellerATA = await getAssociatedTokenAddress(
     options.mint,
@@ -199,7 +207,7 @@ export async function buyListedNFT(
   )
 
   instructions.push(
-    createAssociatedTokenAccountInstruction(
+    createAssociatedTokenAccountIdempotentInstruction(
       buyer.publicKey,
       buyerATA,
       buyer.publicKey,

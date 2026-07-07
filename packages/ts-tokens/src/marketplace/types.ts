@@ -223,7 +223,11 @@ export interface CreateEscrowOptions {
 // ============================================
 
 /**
- * Local offer record
+ * Local offer record.
+ *
+ * The bidder's SOL is escrowed in `escrowAccount` (a system account whose keypair
+ * is held in the state store) when the offer is made, so acceptance can release
+ * real funds to the seller and refund the rent to the bidder.
  */
 export interface LocalOffer {
   id: string
@@ -231,6 +235,7 @@ export interface LocalOffer {
   bidder: PublicKey
   price: bigint
   currency: PaymentCurrency
+  escrowAccount?: PublicKey
   expiry?: number
   createdAt: number
   status: 'active' | 'accepted' | 'rejected' | 'cancelled' | 'expired'
@@ -399,6 +404,8 @@ export interface SerializedOffer {
   bidder: string
   price: string
   currency: PaymentCurrency
+  escrowAccount?: string
+  escrowSecret?: string
   expiry?: number
   createdAt: number
   status: 'active' | 'accepted' | 'rejected' | 'cancelled' | 'expired'
