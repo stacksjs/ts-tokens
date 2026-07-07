@@ -3,7 +3,7 @@
  */
 
 import type { Connection, Keypair } from '@solana/web3.js'
-import type { DAO, DAOConfig, CreateDAOOptions } from '../types'
+import type { DAO, CreateDAOOptions } from '../types'
 import { getDAOAddress, getTreasuryAddress } from '../programs/program'
 
 /**
@@ -30,20 +30,25 @@ export function parseDuration(duration: string | bigint): bigint {
 }
 
 /**
- * Create a new DAO using PDA-derived addresses
+ * Create a new DAO using PDA-derived addresses.
+ *
+ * Validates the requested configuration and derives the on-chain addresses,
+ * but does not fabricate a transaction: the governance program that would
+ * persist the DAO account is not deployed, so this throws rather than returning
+ * a fake signature for a DAO that was never created on-chain. Input validation
+ * runs first so callers still get a meaningful error for bad config.
  */
 export async function createDAO(
   _connection: Connection,
   payer: Keypair,
   options: CreateDAOOptions
 ): Promise<{ dao: DAO; signature: string }> {
-  const { name, governanceToken, config } = options
+  const { name, config } = options
 
-  const votingPeriod = parseDuration(config.votingPeriod)
-  const executionDelay = config.executionDelay
-    ? parseDuration(config.executionDelay)
-    : 86400n
-
+  // Validate before the not-implemented throw so config/name errors surface.
+  if (Buffer.byteLength(name) > 32) {
+    throw new Error('DAO name must be 32 bytes or fewer (it is used as a PDA seed)')
+  }
   if (config.quorum < 1 || config.quorum > 100) {
     throw new Error('Quorum must be between 1 and 100')
   }
@@ -51,35 +56,16 @@ export async function createDAO(
     throw new Error('Approval threshold must be between 1 and 100')
   }
 
+  // Parse durations to surface format errors (also validates the inputs).
+  parseDuration(config.votingPeriod)
+  if (config.executionDelay) parseDuration(config.executionDelay)
+
+  // Derive the addresses that a real deployment would use.
   const daoAddress = getDAOAddress(payer.publicKey, name)
-  const treasury = getTreasuryAddress(daoAddress)
+  getTreasuryAddress(daoAddress)
 
-  const daoConfig: DAOConfig = {
-    votingPeriod,
-    quorum: config.quorum,
-    approvalThreshold: config.approvalThreshold,
-    executionDelay,
-    minProposalThreshold: config.minProposalThreshold ?? 0n,
-    vetoAuthority: config.vetoAuthority,
-    voteWeightType: config.voteWeightType ?? 'token',
-    allowEarlyExecution: config.allowEarlyExecution ?? false,
-    allowVoteChange: config.allowVoteChange ?? false,
-  }
-
-  const dao: DAO = {
-    address: daoAddress,
-    name,
-    authority: payer.publicKey,
-    governanceToken,
-    treasury,
-    config: daoConfig,
-    proposalCount: 0n,
-    totalVotingPower: 0n,
-    createdAt: BigInt(Math.floor(Date.now() / 1000)),
-  }
-
-  return {
-    dao,
-    signature: `dao_created_${daoAddress.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'createDAO is not implemented: the governance program that stores DAO ' +
+    'accounts is not deployed. No DAO was created on-chain.'
+  )
 }

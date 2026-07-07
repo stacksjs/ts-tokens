@@ -2,25 +2,26 @@
  * DAO Queries
  */
 
-import type { Connection } from '@solana/web3.js'
-import { PublicKey } from '@solana/web3.js'
+import type { Connection, PublicKey } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import type { DAO } from '../types'
 
 /**
- * Get DAO info
+ * Get DAO info.
+ *
+ * The DAO account layout belongs to the governance program, which is not
+ * deployed, so there is no account data to deserialize. Returning null would be
+ * indistinguishable from "the DAO does not exist" and let callers silently treat
+ * an undeployable program as an empty result, so this throws instead.
  */
 export async function getDAO(
-  connection: Connection,
-  address: PublicKey
+  _connection: Connection,
+  _address: PublicKey
 ): Promise<DAO | null> {
-  const accountInfo = await connection.getAccountInfo(address)
-
-  if (!accountInfo) {
-    return null
-  }
-
-  // In production, would deserialize from account data
-  return null
+  throw new Error(
+    'getDAO is not implemented: the governance program that owns DAO accounts ' +
+    'is not deployed, so DAO state cannot be read from the chain.'
+  )
 }
 
 /**
@@ -35,7 +36,10 @@ export async function getTotalVotingPower(
 }
 
 /**
- * Get DAO treasury balance
+ * Get the SOL and SPL token balances held by a treasury address.
+ *
+ * This is a read-only SPL/RPC query and does not depend on the governance
+ * program, so it is fully implemented.
  */
 export async function getTreasuryBalance(
   connection: Connection,
@@ -44,7 +48,7 @@ export async function getTreasuryBalance(
   const solBalance = await connection.getBalance(treasury)
 
   const tokenAccounts = await connection.getParsedTokenAccountsByOwner(treasury, {
-    programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+    programId: TOKEN_PROGRAM_ID,
   })
 
   const tokens = tokenAccounts.value.map(account => ({

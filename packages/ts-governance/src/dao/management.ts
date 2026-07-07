@@ -11,10 +11,11 @@ import { parseDuration } from './create'
  */
 export async function updateDAOConfig(
   _connection: Connection,
-  dao: PublicKey,
+  _dao: PublicKey,
   _authority: Keypair,
   newConfig: Partial<DAOConfig>
 ): Promise<{ signature: string }> {
+  // Validate inputs before the not-implemented throw so bad config surfaces.
   if (newConfig.quorum !== undefined && (newConfig.quorum < 1 || newConfig.quorum > 100)) {
     throw new Error('Quorum must be between 1 and 100')
   }
@@ -22,9 +23,10 @@ export async function updateDAOConfig(
     throw new Error('Approval threshold must be between 1 and 100')
   }
 
-  return {
-    signature: `config_updated_${dao.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'updateDAOConfig is not implemented: the governance program that stores ' +
+    'DAO accounts is not deployed. No configuration was updated on-chain.'
+  )
 }
 
 /**
@@ -32,13 +34,14 @@ export async function updateDAOConfig(
  */
 export async function setDAOAuthority(
   _connection: Connection,
-  dao: PublicKey,
+  _dao: PublicKey,
   _currentAuthority: Keypair,
   _newAuthority: PublicKey
 ): Promise<{ signature: string }> {
-  return {
-    signature: `authority_set_${dao.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'setDAOAuthority is not implemented: the governance program that stores ' +
+    'DAO accounts is not deployed. The authority was not changed on-chain.'
+  )
 }
 
 /**
@@ -55,9 +58,9 @@ export function validateDAOConfig(config: CreateDAOOptions['config']): string[] 
     errors.push('Approval threshold must be between 1 and 100')
   }
 
-  if (config.approvalThreshold < config.quorum) {
-    errors.push('Approval threshold should be >= quorum')
-  }
+  // quorum and approvalThreshold are percentages of different denominators
+  // (turnout vs. total supply), so they are validated independently — there is
+  // no requirement that approvalThreshold >= quorum.
 
   try {
     parseDuration(config.votingPeriod)

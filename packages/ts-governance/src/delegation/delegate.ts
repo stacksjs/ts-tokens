@@ -2,65 +2,71 @@
  * Delegation Operations
  */
 
-import type { Connection, Keypair, PublicKey } from '@solana/web3.js'
+import type { Connection, Keypair } from '@solana/web3.js'
 import type { Delegation, DelegateOptions, UndelegateOptions, AcceptDelegationOptions } from '../types'
-import { getDelegationAddress } from '../programs/program'
 
 /**
- * Delegate voting power
+ * Delegate voting power.
+ *
+ * Validates the delegation inputs first (a voter cannot delegate to themselves,
+ * and any expiry must be in the future) so callers get a meaningful error, then
+ * throws: the governance program that stores delegation accounts is not
+ * deployed, so no delegation is recorded on-chain.
  */
 export async function delegateVotingPower(
   _connection: Connection,
   delegator: Keypair,
   options: DelegateOptions
 ): Promise<{ delegation: Delegation; signature: string }> {
-  const { dao, delegate, amount, expiresAt } = options
+  const { delegate, expiresAt } = options
 
-  const delegationAddress = getDelegationAddress(dao, delegator.publicKey)
-
-  const delegation: Delegation = {
-    delegator: delegator.publicKey,
-    delegate,
-    dao,
-    amount: amount ?? 0n, // 0 means all
-    timestamp: BigInt(Math.floor(Date.now() / 1000)),
-    expiresAt,
+  if (delegate.equals(delegator.publicKey)) {
+    throw new Error('Cannot delegate voting power to yourself')
+  }
+  if (expiresAt !== undefined) {
+    const now = BigInt(Math.floor(Date.now() / 1000))
+    if (expiresAt <= now) {
+      throw new Error('Delegation expiry must be in the future')
+    }
   }
 
-  return {
-    delegation,
-    signature: `delegated_${delegationAddress.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'delegateVotingPower is not implemented: the governance program that stores ' +
+    'delegation accounts is not deployed. No delegation was recorded on-chain.'
+  )
 }
 
 /**
- * Remove delegation
+ * Remove delegation.
+ *
+ * Depends on the governance program (undeployed) to close the delegation
+ * account, so this throws rather than returning a fabricated signature.
  */
 export async function undelegateVotingPower(
   _connection: Connection,
-  delegator: Keypair,
-  options: UndelegateOptions
+  _delegator: Keypair,
+  _options: UndelegateOptions
 ): Promise<{ signature: string }> {
-  const { dao } = options
-  const delegationAddress = getDelegationAddress(dao, delegator.publicKey)
-
-  return {
-    signature: `undelegated_${delegationAddress.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'undelegateVotingPower is not implemented: the governance program that ' +
+    'stores delegation accounts is not deployed. No delegation was removed ' +
+    'on-chain.'
+  )
 }
 
 /**
- * Accept a delegation (optional confirmation step)
+ * Accept a delegation (optional confirmation step).
+ *
+ * Depends on the governance program (undeployed) to mutate the delegation
+ * account, so this throws rather than returning a fabricated signature.
  */
 export async function acceptDelegation(
   _connection: Connection,
   _delegate: Keypair,
-  options: AcceptDelegationOptions
+  _options: AcceptDelegationOptions
 ): Promise<{ signature: string }> {
-  const { dao, delegator } = options
-  const delegationAddress = getDelegationAddress(dao, delegator)
-
-  return {
-    signature: `delegation_accepted_${delegationAddress.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'acceptDelegation is not implemented: the governance program that stores ' +
+    'delegation accounts is not deployed. No delegation was accepted on-chain.'
+  )
 }

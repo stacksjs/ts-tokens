@@ -114,58 +114,34 @@ describe('createVotes', () => {
 // ---------------------------------------------------------------------------
 
 describe('votes.dao.create', () => {
-  test('maps token to governanceToken and returns a DAO', async () => {
-    const config = makeConfig()
-    const votes = createVotes(config)
+  test('throws not-implemented (governance program undeployed)', async () => {
+    const votes = createVotes(makeConfig())
     const token = Keypair.generate().publicKey
 
-    const result = await votes.dao.create({
-      name: 'My DAO',
-      token,
-      config: {
-        votingPeriod: '7 days',
-        quorum: 10,
-        approvalThreshold: 51,
-      },
-    })
-
-    expect(result.dao).toBeDefined()
-    expect(result.dao.name).toBe('My DAO')
-    expect(result.dao.governanceToken.equals(token)).toBe(true)
-    expect(result.signature).toBeDefined()
+    // createDAO does not fabricate a signature — it throws because the
+    // governance program that stores DAO accounts is not deployed.
+    await expect(
+      votes.dao.create({
+        name: 'My DAO',
+        token,
+        config: {
+          votingPeriod: '7 days',
+          quorum: 10,
+          approvalThreshold: 51,
+        },
+      }),
+    ).rejects.toThrow(/not implemented/i)
   })
 
-  test('parses string durations in config', async () => {
+  test('rejects a name longer than 32 bytes before the not-implemented throw', async () => {
     const votes = createVotes(makeConfig())
-    const result = await votes.dao.create({
-      name: 'Duration DAO',
-      token: Keypair.generate().publicKey,
-      config: {
-        votingPeriod: '5 days',
-        quorum: 15,
-        approvalThreshold: 66,
-        executionDelay: '2 days',
-      },
-    })
-
-    // 5 days = 432000 seconds, 2 days = 172800 seconds
-    expect(result.dao.config.votingPeriod).toBe(432000n)
-    expect(result.dao.config.executionDelay).toBe(172800n)
-  })
-
-  test('accepts bigint durations directly', async () => {
-    const votes = createVotes(makeConfig())
-    const result = await votes.dao.create({
-      name: 'BigInt DAO',
-      token: Keypair.generate().publicKey,
-      config: {
-        votingPeriod: 86400n,
-        quorum: 10,
-        approvalThreshold: 51,
-      },
-    })
-
-    expect(result.dao.config.votingPeriod).toBe(86400n)
+    await expect(
+      votes.dao.create({
+        name: 'x'.repeat(33),
+        token: Keypair.generate().publicKey,
+        config: { votingPeriod: '5 days', quorum: 10, approvalThreshold: 51 },
+      }),
+    ).rejects.toThrow(/32 bytes/i)
   })
 
   test('validates quorum range', async () => {
@@ -198,42 +174,34 @@ describe('votes.dao.create', () => {
 // ---------------------------------------------------------------------------
 
 describe('votes.proposal.create', () => {
-  test('accepts PublicKey for dao field', async () => {
+  test('throws not-implemented for valid input (governance program undeployed)', async () => {
     const votes = createVotes(makeConfig())
     const daoAddress = Keypair.generate().publicKey
 
-    const result = await votes.proposal.create({
-      dao: daoAddress,
-      title: 'Increase rewards',
-      description: 'Double staking rewards',
-      actions: [{
-        programId: SystemProgram.programId,
-        accounts: [],
-        data: Buffer.from([0]),
-      }],
-    })
-
-    expect(result.proposal).toBeDefined()
-    expect(result.proposal.title).toBe('Increase rewards')
+    await expect(
+      votes.proposal.create({
+        dao: daoAddress,
+        title: 'Increase rewards',
+        description: 'Double staking rewards',
+        actions: [{
+          programId: SystemProgram.programId,
+          accounts: [],
+          data: Buffer.from([0]),
+        }],
+      }),
+    ).rejects.toThrow(/not implemented/i)
   })
 
-  test('accepts DAO object for dao field', async () => {
+  test('rejects empty actions before the not-implemented throw', async () => {
     const votes = createVotes(makeConfig())
-    const dao = makeDAO()
-
-    const result = await votes.proposal.create({
-      dao,
-      title: 'Config update',
-      description: 'Update quorum',
-      actions: [{
-        programId: SystemProgram.programId,
-        accounts: [],
-        data: Buffer.from([1]),
-      }],
-    })
-
-    expect(result.proposal).toBeDefined()
-    expect(result.proposal.dao.equals(dao.address)).toBe(true)
+    await expect(
+      votes.proposal.create({
+        dao: Keypair.generate().publicKey,
+        title: 'No actions',
+        description: 'missing actions',
+        actions: [],
+      }),
+    ).rejects.toThrow(/at least one action/i)
   })
 })
 
@@ -242,7 +210,59 @@ describe('votes.proposal.create', () => {
 // ---------------------------------------------------------------------------
 
 describe('votes.proposal.status', () => {
-  test('returns rich status from a Proposal object', async () => {
+  test('evaluates quorum and threshold against the DAO config', async () => {
+    const votes = createVotes(makeConfig())
+    // quorum 10%, approvalThreshold 51%, totalVotingPower 100.
+    const dao = makeDAO({ totalVotingPower: 100n })
+    const proposal = makeProposal({
+      forVotes: 70n,
+      againstVotes: 20n,
+      abstainVotes: 10n,
+    })
+
+    const status = await votes.proposal.status(proposal, dao)
+
+    expect(status.status).toBe('active')
+    expect(status.votesFor).toBe(70n)
+    expect(status.votesAgainst).toBe(20n)
+    expect(status.votesAbstain).toBe(10n)
+    // 100 votes / 100 supply = 100% >= 10% quorum
+    expect(status.quorumReached).toBe(true)
+    // for 70 / (70+20)=77.8% >= 51% threshold
+    expect(status.passingThreshold).toBe(true)
+    expect(status.timeRemaining.seconds).toBeGreaterThan(0n)
+  })
+
+  test('quorumReached false when turnout is below the configured quorum', async () => {
+    const votes = createVotes(makeConfig())
+    const dao = makeDAO({ totalVotingPower: 10000n }) // quorum 10% => need 1000
+    const proposal = makeProposal({
+      forVotes: 5n,
+      againstVotes: 0n,
+      abstainVotes: 0n,
+    })
+
+    const status = await votes.proposal.status(proposal, dao)
+
+    expect(status.quorumReached).toBe(false)
+    expect(status.passingThreshold).toBe(false)
+  })
+
+  test('passingThreshold false when for-share is below the approval threshold', async () => {
+    const votes = createVotes(makeConfig())
+    const dao = makeDAO({ totalVotingPower: 100n })
+    const proposal = makeProposal({
+      forVotes: 30n,
+      againstVotes: 70n,
+      abstainVotes: 0n,
+    })
+
+    const status = await votes.proposal.status(proposal, dao)
+
+    expect(status.passingThreshold).toBe(false)
+  })
+
+  test('without a DAO, quorum/threshold are not guessed', async () => {
     const votes = createVotes(makeConfig())
     const proposal = makeProposal({
       forVotes: 70n,
@@ -252,38 +272,7 @@ describe('votes.proposal.status', () => {
 
     const status = await votes.proposal.status(proposal)
 
-    expect(status.status).toBe('active')
-    expect(status.votesFor).toBe(70n)
-    expect(status.votesAgainst).toBe(20n)
-    expect(status.votesAbstain).toBe(10n)
-    expect(status.quorumReached).toBe(true) // totalVotes > 0
-    expect(status.passingThreshold).toBe(true) // for > against
-    expect(status.timeRemaining.seconds).toBeGreaterThan(0n)
-  })
-
-  test('returns quorumReached false when no votes', async () => {
-    const votes = createVotes(makeConfig())
-    const proposal = makeProposal({
-      forVotes: 0n,
-      againstVotes: 0n,
-      abstainVotes: 0n,
-    })
-
-    const status = await votes.proposal.status(proposal)
-
     expect(status.quorumReached).toBe(false)
-  })
-
-  test('returns passingThreshold false when against > for', async () => {
-    const votes = createVotes(makeConfig())
-    const proposal = makeProposal({
-      forVotes: 30n,
-      againstVotes: 70n,
-      abstainVotes: 0n,
-    })
-
-    const status = await votes.proposal.status(proposal)
-
     expect(status.passingThreshold).toBe(false)
   })
 
@@ -367,25 +356,21 @@ describe('votes.actions.transferFromTreasury', () => {
 // ---------------------------------------------------------------------------
 
 describe('votes.vote', () => {
-  test('passes correct voteType to castVote', async () => {
+  test('resolves voting power first, which is not implemented', async () => {
     const config = makeConfig()
     const votes = createVotes(config)
     const proposal = Keypair.generate().publicKey
 
-    // castVote will throw "No voting power" since mock returns 0.
-    // That's expected — we test the wiring.
-    try {
-      await votes.vote(proposal, 'for')
-    } catch (e: any) {
-      expect(e.message).toMatch(/voting power/i)
-    }
+    // castVote resolves getVotingPower first; that requires the per-proposal
+    // snapshot from the undeployed program, so it throws not-implemented rather
+    // than recording a fabricated vote.
+    await expect(votes.vote(proposal, 'for')).rejects.toThrow(/not implemented/i)
   })
 
-  test('accepts all three vote types', () => {
+  test('accepts all three vote types (all throw, program undeployed)', () => {
     const votes = createVotes(makeConfig())
     const proposal = Keypair.generate().publicKey
 
-    // Verify all three types are accepted (they'll throw due to mock)
     const types = ['for', 'against', 'abstain'] as const
     for (const voteType of types) {
       expect(votes.vote(proposal, voteType)).rejects.toThrow()
@@ -398,67 +383,37 @@ describe('votes.vote', () => {
 // ---------------------------------------------------------------------------
 
 describe('votes.delegate', () => {
-  test('delegates with specific amount', async () => {
+  test('throws not-implemented for a valid delegation (program undeployed)', async () => {
     const votes = createVotes(makeConfig())
     const dao = Keypair.generate().publicKey
     const to = Keypair.generate().publicKey
 
-    const result = await votes.delegate(dao, {
-      to,
-      amount: 5000n,
-    })
-
-    expect(result.delegation).toBeDefined()
-    expect(result.delegation.delegate.equals(to)).toBe(true)
-    expect(result.delegation.amount).toBe(5000n)
-    expect(result.signature).toBeDefined()
+    // delegateVotingPower validates inputs then throws — no fabricated signature.
+    await expect(
+      votes.delegate(dao, { to, amount: 5000n }),
+    ).rejects.toThrow(/not implemented/i)
   })
 
-  test('handles "all" by passing undefined amount', async () => {
-    const votes = createVotes(makeConfig())
+  test('rejects self-delegation before the not-implemented throw', async () => {
+    const config = makeConfig()
+    const votes = createVotes(config)
     const dao = Keypair.generate().publicKey
-    const to = Keypair.generate().publicKey
 
-    const result = await votes.delegate(dao, {
-      to,
-      amount: 'all',
-    })
-
-    // When amount='all', underlying delegateVotingPower receives undefined → 0n (means all)
-    expect(result.delegation.amount).toBe(0n)
+    // delegate to the wallet itself
+    await expect(
+      votes.delegate(dao, { to: config.wallet.publicKey, amount: 1000n }),
+    ).rejects.toThrow(/yourself/i)
   })
 
-  test('parses expires duration string', async () => {
+  test('rejects a past expiry before the not-implemented throw', async () => {
     const votes = createVotes(makeConfig())
     const dao = Keypair.generate().publicKey
     const to = Keypair.generate().publicKey
 
-    const before = BigInt(Math.floor(Date.now() / 1000))
-    const result = await votes.delegate(dao, {
-      to,
-      amount: 1000n,
-      expires: '30 days',
-    })
-    const after = BigInt(Math.floor(Date.now() / 1000))
-
-    // A duration string becomes an absolute timestamp: now + 30 days
-    const thirtyDays = 2592000n
-    expect(result.delegation.expiresAt).toBeGreaterThanOrEqual(before + thirtyDays)
-    expect(result.delegation.expiresAt).toBeLessThanOrEqual(after + thirtyDays)
-  })
-
-  test('accepts bigint expires directly', async () => {
-    const votes = createVotes(makeConfig())
-    const dao = Keypair.generate().publicKey
-    const to = Keypair.generate().publicKey
-
-    const result = await votes.delegate(dao, {
-      to,
-      amount: 1000n,
-      expires: 86400n,
-    })
-
-    expect(result.delegation.expiresAt).toBe(86400n)
+    // A bigint expires is treated as an absolute timestamp; 1 is in the past.
+    await expect(
+      votes.delegate(dao, { to, amount: 1000n, expires: 1n }),
+    ).rejects.toThrow(/future/i)
   })
 })
 
@@ -467,60 +422,23 @@ describe('votes.delegate', () => {
 // ---------------------------------------------------------------------------
 
 describe('votes.votingPower', () => {
-  test('returns { own, delegated, total } shape', async () => {
+  test('throws when delegated power cannot be read (program undeployed)', async () => {
+    // `own` is a real live-balance read, but the delegated component lives in
+    // the undeployed governance program, so a truthful total cannot be produced.
     const config = makeConfig()
     const votes = createVotes(config)
     const dao = makeDAO()
 
-    const power = await votes.votingPower(dao)
-
-    expect(power).toHaveProperty('own')
-    expect(power).toHaveProperty('delegated')
-    expect(power).toHaveProperty('total')
-    expect(typeof power.own).toBe('bigint')
-    expect(typeof power.delegated).toBe('bigint')
-    expect(typeof power.total).toBe('bigint')
+    await expect(votes.votingPower(dao)).rejects.toThrow(/not implemented/i)
   })
 
-  test('total equals own + delegated', async () => {
-    const votes = createVotes(makeConfig())
-    const dao = makeDAO()
-
-    const power = await votes.votingPower(dao)
-
-    expect(power.total).toBe(power.own + power.delegated)
-  })
-
-  test('uses wallet.publicKey when no voter specified', async () => {
-    const config = makeConfig()
-    const votes = createVotes(config)
-    const dao = makeDAO()
-
-    // Should not throw
-    const power = await votes.votingPower(dao)
-    expect(power).toBeDefined()
-  })
-
-  test('accepts explicit voter PublicKey', async () => {
-    const config = makeConfig()
-    const votes = createVotes(config)
-    const dao = makeDAO()
-    const voter = Keypair.generate().publicKey
-
-    const power = await votes.votingPower(dao, voter)
-    expect(power).toBeDefined()
-  })
-
-  test('returns zeros when DAO not found on chain', async () => {
+  test('throws for a bare DAO address (DAO state unreadable)', async () => {
     const config = makeConfig()
     const votes = createVotes(config)
     const daoAddress = Keypair.generate().publicKey
 
-    // getDAO returns null for PublicKey (mock returns null from getAccountInfo)
-    const power = await votes.votingPower(daoAddress)
-    expect(power.own).toBe(0n)
-    expect(power.delegated).toBe(0n)
-    expect(power.total).toBe(0n)
+    // getDAO throws — DAO state cannot be read while the program is undeployed.
+    await expect(votes.votingPower(daoAddress)).rejects.toThrow(/not implemented/i)
   })
 })
 
@@ -529,14 +447,11 @@ describe('votes.votingPower', () => {
 // ---------------------------------------------------------------------------
 
 describe('votes.undelegate', () => {
-  test('returns a signature', async () => {
+  test('throws not-implemented (program undeployed)', async () => {
     const votes = createVotes(makeConfig())
     const dao = Keypair.generate().publicKey
 
-    const result = await votes.undelegate(dao)
-
-    expect(result.signature).toBeDefined()
-    expect(typeof result.signature).toBe('string')
+    await expect(votes.undelegate(dao)).rejects.toThrow(/not implemented/i)
   })
 })
 

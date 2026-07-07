@@ -2,51 +2,61 @@
  * Proposal Lifecycle
  */
 
-import type { Connection, Keypair } from '@solana/web3.js'
-import { PublicKey } from '@solana/web3.js'
-import type { Proposal, ExecuteProposalOptions } from '../types'
+import type { Connection, Keypair, PublicKey } from '@solana/web3.js'
+import type { DAOConfig, Proposal, ExecuteProposalOptions } from '../types'
 
 /**
- * Cancel a proposal
+ * Cancel a proposal.
+ *
+ * Depends on the governance program (undeployed) to mutate proposal state, so
+ * this throws rather than returning a fabricated signature for a cancellation
+ * that never happened.
  */
 export async function cancelProposal(
   _connection: Connection,
-  proposal: PublicKey,
+  _proposal: PublicKey,
   _authority: Keypair
 ): Promise<{ signature: string }> {
-  return {
-    signature: `proposal_cancelled_${proposal.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'cancelProposal is not implemented: the governance program that stores ' +
+    'proposal state is not deployed. The proposal was not cancelled on-chain.'
+  )
 }
 
 /**
- * Queue a successful proposal for execution
+ * Queue a successful proposal for execution.
+ *
+ * Depends on the governance program (undeployed) to move the proposal into the
+ * queued state, so this throws rather than returning a fabricated signature. The
+ * DAO config is required so the caller uses the DAO's configured executionDelay
+ * (rather than a hardcoded value) when a real implementation lands.
  */
 export async function queueProposal(
   _connection: Connection,
-  proposal: PublicKey
+  _proposal: PublicKey,
+  _config: Pick<DAOConfig, 'executionDelay'>
 ): Promise<{ signature: string; executionTime: bigint }> {
-  const currentTime = BigInt(Math.floor(Date.now() / 1000))
-  const executionDelay = 86400n
-
-  return {
-    signature: `proposal_queued_${proposal.toBase58().slice(0, 8)}`,
-    executionTime: currentTime + executionDelay,
-  }
+  throw new Error(
+    'queueProposal is not implemented: the governance program that stores ' +
+    'proposal state is not deployed. The proposal was not queued on-chain.'
+  )
 }
 
 /**
- * Execute a queued proposal
+ * Execute a queued proposal.
+ *
+ * Depends on the governance program (undeployed) to validate proposal state and
+ * dispatch its actions, so this throws rather than returning a fabricated
+ * signature for an execution that never happened.
  */
 export async function executeProposal(
   _connection: Connection,
-  options: ExecuteProposalOptions
+  _options: ExecuteProposalOptions
 ): Promise<{ signature: string }> {
-  const { proposal } = options
-
-  return {
-    signature: `proposal_executed_${proposal.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'executeProposal is not implemented: the governance program that executes ' +
+    'proposals is not deployed. The proposal was not executed on-chain.'
+  )
 }
 
 /**
@@ -86,8 +96,14 @@ export function calculateProposalResult(
     return { passed: false, reason: 'Quorum not reached' }
   }
 
-  // Abstain votes are neutral for the approval threshold
+  // Abstain votes are neutral for the approval threshold. If there are no
+  // deciding (for/against) votes at all — e.g. an all-abstain proposal — there
+  // is no support to approve, so the proposal fails. Without this guard the
+  // threshold check would be `0 < 0` (false) and wrongly report passed.
   const decidingVotes = proposal.forVotes + proposal.againstVotes
+  if (decidingVotes === 0n) {
+    return { passed: false, reason: 'No deciding votes cast' }
+  }
   if (proposal.forVotes * 100n < decidingVotes * BigInt(approvalThreshold)) {
     return { passed: false, reason: 'Approval threshold not met' }
   }

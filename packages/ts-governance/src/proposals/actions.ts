@@ -2,11 +2,11 @@
  * Proposal Action Builders
  */
 
-import { PublicKey, SystemProgram } from '@solana/web3.js'
-import type { TreasuryActions, GovernanceActions, TokenActions, DAOConfig } from '../types'
+import { SystemProgram } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID as TOKEN_PROGRAM } from '@solana/spl-token'
+import type { TreasuryActions, GovernanceActions, TokenActions } from '../types'
 import { GOVERNANCE_PROGRAM_ID } from '../programs/program'
-
-const TOKEN_PROGRAM = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA')
+import { serializeUpdateDaoConfigData } from '../programs/program'
 
 /**
  * Encode a u64 as 8 little-endian bytes. Uses writeBigUInt64LE so the byte
@@ -56,10 +56,19 @@ export const treasuryActions: TreasuryActions = {
 }
 
 export const governanceActions: GovernanceActions = {
-  updateConfig: (newConfig) => ({
+  // Encodes the update via the program's real serializer. JSON.stringify is not
+  // a valid instruction encoding and would additionally throw on the bigint
+  // fields (votingPeriod/executionDelay). The DAO account meta is included so
+  // the program can locate the account being updated.
+  updateConfig: (newConfig, dao) => ({
     programId: GOVERNANCE_PROGRAM_ID,
-    accounts: [],
-    data: Buffer.from(JSON.stringify(newConfig)),
+    accounts: dao ? [{ pubkey: dao, isSigner: false, isWritable: true }] : [],
+    data: serializeUpdateDaoConfigData(
+      newConfig.votingPeriod ?? null,
+      newConfig.quorum ?? null,
+      newConfig.approvalThreshold ?? null,
+      newConfig.executionDelay ?? null,
+    ),
   }),
 
   addVetoAuthority: (authority) => ({

@@ -6,26 +6,37 @@ import type { Connection, PublicKey } from '@solana/web3.js'
 import type { VoteRecord, Proposal } from '../types'
 
 /**
- * Get vote record for a _voter on a _proposal
+ * Get the vote record for a voter on a proposal.
+ *
+ * Vote records are PDA accounts owned by the governance program, which is not
+ * deployed. Returning null would be indistinguishable from "the voter has not
+ * voted", so this throws instead.
  */
 export async function getVoteRecord(
   _connection: Connection,
   _proposal: PublicKey,
   _voter: PublicKey
 ): Promise<VoteRecord | null> {
-  // In production, would query vote record PDA account
-  return null
+  throw new Error(
+    'getVoteRecord is not implemented: the governance program that owns vote ' +
+    'record accounts is not deployed, so votes cannot be read from the chain.'
+  )
 }
 
 /**
- * Get all votes for a _proposal
+ * Get all votes for a proposal.
+ *
+ * Would rely on getProgramAccounts against the undeployed governance program.
+ * Returning an empty array would falsely imply "no votes", so this throws.
  */
 export async function getProposalVotes(
   _connection: Connection,
   _proposal: PublicKey
 ): Promise<VoteRecord[]> {
-  // In production, would use getProgramAccounts
-  return []
+  throw new Error(
+    'getProposalVotes is not implemented: the governance program that owns vote ' +
+    'record accounts is not deployed, so votes cannot be listed from the chain.'
+  )
 }
 
 /**

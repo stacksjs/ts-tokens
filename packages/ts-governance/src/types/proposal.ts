@@ -86,7 +86,7 @@ export interface TreasuryActions {
 }
 
 export interface GovernanceActions {
-  updateConfig: (newConfig: Partial<import('./dao').DAOConfig>) => ProposalAction
+  updateConfig: (newConfig: Partial<import('./dao').DAOConfig>, dao?: PublicKey) => ProposalAction
   addVetoAuthority: (authority: PublicKey) => ProposalAction
   removeVetoAuthority: () => ProposalAction
 }

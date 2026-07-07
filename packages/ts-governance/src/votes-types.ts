@@ -127,7 +127,7 @@ export interface Votes {
 
   proposal: {
     create(input: CreateProposalInput): Promise<{ proposal: Proposal; signature: string }>
-    status(proposal: PublicKey | Proposal): Promise<ProposalStatusResult>
+    status(proposal: PublicKey | Proposal, dao?: DAO): Promise<ProposalStatusResult>
     cancel(proposal: PublicKey): Promise<{ signature: string }>
     execute(proposal: PublicKey): Promise<{ signature: string }>
     list(dao: PublicKey, status?: ProposalStatus): Promise<Proposal[]>
@@ -135,7 +135,7 @@ export interface Votes {
 
   actions: {
     transferFromTreasury(input: TransferFromTreasuryInput): ProposalAction
-    updateConfig(newConfig: Partial<DAOConfig>): ProposalAction
+    updateConfig(newConfig: Partial<DAOConfig>, dao?: PublicKey): ProposalAction
     mintTokens(
       mint: PublicKey,
       destination: PublicKey,

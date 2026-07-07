@@ -39,7 +39,7 @@ import { cancelProposal, executeProposal, calculateProposalResult } from './prop
 import { getProposals } from './proposals/queries'
 import { treasuryActions, governanceActions, tokenActions } from './proposals/actions'
 import { castVote } from './voting/cast'
-import { getVotingPowerSnapshot, calculateVoteBreakdown, getVotingTimeRemaining } from './voting'
+import { getVotingPowerSnapshot, getVotingTimeRemaining } from './voting'
 import { delegateVotingPower, undelegateVotingPower } from './delegation/delegate'
 import { getTotalDelegatedPower } from './delegation/queries'
 import { parseDuration } from './dao/create'
@@ -90,38 +90,44 @@ export function createVotes(config: VotesConfig): Votes {
         })
       },
 
-      async status(proposal: PublicKey | Proposal): Promise<ProposalStatusResult> {
-        // If we already have a Proposal object, use it directly
+      async status(proposal: PublicKey | Proposal, dao?: DAO): Promise<ProposalStatusResult> {
+        // If we already have a Proposal object, use it directly. Otherwise the
+        // proposal must be read from the (undeployed) governance program, which
+        // throws — we do not invent a lifecycle state for a proposal we can't
+        // read.
         let p: Proposal
         if ('status' in proposal && 'forVotes' in proposal) {
           p = proposal as Proposal
         } else {
-          // Fetch from chain — fallback to a "not found" result if null
           const fetched = await import('./proposals/queries').then(m =>
             m.getProposal(connection, proposal as PublicKey),
           )
           if (!fetched) {
-            return {
-              status: 'cancelled',
-              votesFor: 0n,
-              votesAgainst: 0n,
-              votesAbstain: 0n,
-              quorumReached: false,
-              passingThreshold: false,
-              timeRemaining: { seconds: 0n, formatted: 'Ended' },
-            }
+            throw new Error(
+              `Proposal ${(proposal as PublicKey).toBase58()} not found`,
+            )
           }
           p = fetched
         }
 
-        const breakdown = calculateVoteBreakdown(p)
         const timeRemaining = getVotingTimeRemaining(p)
 
-        // For quorum / threshold checks we need DAO context. When unavailable
-        // we fall back to a generous check.
-        const totalVotes = breakdown.totalVotes
-        const quorumReached = totalVotes > 0n
-        const passingThreshold = p.forVotes > p.againstVotes
+        // Quorum and approval are evaluated against the DAO's configured
+        // thresholds and total voting power. Without the DAO context those
+        // percentages cannot be judged, so both are reported false rather than
+        // guessed from raw vote counts.
+        let quorumReached = false
+        let passingThreshold = false
+        if (dao) {
+          const result = calculateProposalResult(
+            p,
+            dao.config.quorum,
+            dao.config.approvalThreshold,
+            dao.totalVotingPower,
+          )
+          quorumReached = result.reason !== 'Quorum not reached'
+          passingThreshold = result.passed
+        }
 
         return {
           status: p.status,
@@ -163,8 +169,8 @@ export function createVotes(config: VotesConfig): Votes {
         return treasuryActions.transferSOL(input.from, input.to, amount)
       },
 
-      updateConfig(newConfig: Partial<DAOConfig>) {
-        return governanceActions.updateConfig(newConfig)
+      updateConfig(newConfig: Partial<DAOConfig>, dao?: PublicKey) {
+        return governanceActions.updateConfig(newConfig, dao)
       },
 
       mintTokens(
@@ -218,22 +224,25 @@ export function createVotes(config: VotesConfig): Votes {
       const daoAddress = toAddress(dao)
       const voterKey = voter ?? wallet.publicKey
 
-      // We need the governance token to get a snapshot.
-      // Attempt to read from a DAO object if provided, otherwise
-      // query from chain.
+      // The governance token is needed to read the voter's live balance. A DAO
+      // object supplies it directly; a bare address would require reading DAO
+      // state from the undeployed governance program (getDAO throws).
       let governanceToken: PublicKey
       if ('governanceToken' in dao && typeof (dao as any).toBase58 !== 'function') {
         governanceToken = (dao as DAO).governanceToken
       } else {
+        // Throws: DAO state cannot be read while the program is undeployed.
         const daoInfo = await getDAO(connection, daoAddress)
-        if (!daoInfo) {
-          return { own: 0n, delegated: 0n, total: 0n }
-        }
-        governanceToken = daoInfo.governanceToken
+        governanceToken = daoInfo!.governanceToken
       }
 
       const currentTime = BigInt(Math.floor(Date.now() / 1000))
       const snapshot = await getVotingPowerSnapshot(connection, voterKey, governanceToken, currentTime)
+
+      // Delegated power lives in the (undeployed) governance program's
+      // delegation accounts, so getTotalDelegatedPower throws. The voter's own
+      // live balance is real, but a truthful *total* cannot include delegated
+      // power that we cannot read — so surface that rather than reporting 0n.
       const delegated = await getTotalDelegatedPower(connection, daoAddress, voterKey)
 
       return {

@@ -4,18 +4,22 @@
 
 import type { Connection, Keypair } from '@solana/web3.js'
 import type { Proposal, CreateProposalOptions } from '../types'
-import { getProposalAddress } from '../programs/program'
-import { getDAO } from '../dao/queries'
 
 /**
- * Create a new proposal with PDA-based addressing
+ * Create a new proposal.
+ *
+ * Validates the proposal inputs, but does not fabricate a transaction: the
+ * governance program that persists proposal accounts (and the DAO state needed
+ * to derive the proposal index and voting window) is not deployed, so this
+ * throws rather than returning a fake signature. Input validation runs first so
+ * callers still get a meaningful error for bad input.
  */
 export async function createProposal(
-  connection: Connection,
-  proposer: Keypair,
+  _connection: Connection,
+  _proposer: Keypair,
   options: CreateProposalOptions
 ): Promise<{ proposal: Proposal; signature: string }> {
-  const { dao, title, description, actions } = options
+  const { title, actions } = options
 
   if (!title || title.length === 0) {
     throw new Error('Title is required')
@@ -27,32 +31,8 @@ export async function createProposal(
     throw new Error('At least one action is required')
   }
 
-  const daoInfo = await getDAO(connection, dao)
-  const currentTime = BigInt(Math.floor(Date.now() / 1000))
-
-  // Derive proposal index from DAO state (use proposalCount)
-  const proposalIndex = daoInfo?.proposalCount ?? 0n
-  const proposalAddress = getProposalAddress(dao, proposalIndex)
-
-  const proposal: Proposal = {
-    address: proposalAddress,
-    dao,
-    index: proposalIndex,
-    proposer: proposer.publicKey,
-    title,
-    description,
-    status: 'active',
-    forVotes: 0n,
-    againstVotes: 0n,
-    abstainVotes: 0n,
-    startTime: currentTime,
-    endTime: currentTime + (daoInfo?.config.votingPeriod ?? 432000n),
-    actions,
-    createdAt: currentTime,
-  }
-
-  return {
-    proposal,
-    signature: `proposal_created_${proposalAddress.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'createProposal is not implemented: the governance program that stores ' +
+    'proposal accounts is not deployed. No proposal was created on-chain.'
+  )
 }

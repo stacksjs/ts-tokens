@@ -124,13 +124,15 @@ describe('validateDAOConfig', () => {
     expect(errors.some(e => /approval threshold/i.test(e))).toBe(true)
   })
 
-  test('approval threshold below quorum produces an error', () => {
+  test('approval threshold below quorum is valid (different denominators)', () => {
+    // quorum and approvalThreshold are percentages of different denominators
+    // (turnout vs. total supply), so approvalThreshold < quorum is NOT an error.
     const errors = validateDAOConfig({
       votingPeriod: '5 days',
       quorum: 60,
       approvalThreshold: 40,
     })
-    expect(errors.some(e => /threshold.*>=.*quorum|threshold should be/i.test(e))).toBe(true)
+    expect(errors).toEqual([])
   })
 
   test('invalid voting period format produces an error', () => {
@@ -179,6 +181,19 @@ describe('calculateProposalResult', () => {
     const result = calculateProposalResult(proposal, 10, 50, 1000n)
     expect(result.passed).toBe(true)
     expect(result.reason).toMatch(/passed/i)
+  })
+
+  test('all-abstain proposal does not pass (no deciding votes)', () => {
+    // Meets quorum (500/1000 = 50% >= 10%) but has zero for/against votes, so
+    // there is no support to approve. Must NOT report passed:true.
+    const proposal = makeProposal({
+      forVotes: 0n,
+      againstVotes: 0n,
+      abstainVotes: 500n,
+    })
+    const result = calculateProposalResult(proposal, 10, 50, 1000n)
+    expect(result.passed).toBe(false)
+    expect(result.reason).toMatch(/deciding/i)
   })
 })
 
@@ -411,6 +426,34 @@ describe('governanceActions', () => {
   test('updateConfig uses governance program ID', () => {
     const action = governanceActions.updateConfig({ quorum: 20 })
     expect(action.programId.toBase58()).toBe(GOVERNANCE_PROGRAM_ID.toBase58())
+  })
+
+  test('updateConfig serializes bigint fields without throwing', () => {
+    // votingPeriod/executionDelay are bigint; JSON.stringify would throw on them.
+    // The real serializer must encode them into the instruction data.
+    const action = governanceActions.updateConfig({
+      votingPeriod: 432000n,
+      executionDelay: 86400n,
+      quorum: 20,
+      approvalThreshold: 66,
+    })
+    expect(Buffer.isBuffer(action.data)).toBe(true)
+    // discriminator(8) + votingPeriod(1+8) + quorum(1+2) + approvalThreshold(1+2)
+    // + executionDelay(1+8) = 32 bytes
+    expect(action.data.length).toBe(32)
+    // updateDaoConfig discriminator is byte 1
+    expect(action.data[0]).toBe(1)
+    // votingPeriod present flag + value
+    expect(action.data[8]).toBe(1)
+    expect(action.data.readBigUInt64LE(9)).toBe(432000n)
+  })
+
+  test('updateConfig includes the DAO account meta when a dao is provided', () => {
+    const dao = Keypair.generate().publicKey
+    const action = governanceActions.updateConfig({ quorum: 20 }, dao)
+    expect(action.accounts.length).toBe(1)
+    expect(action.accounts[0].pubkey.equals(dao)).toBe(true)
+    expect(action.accounts[0].isWritable).toBe(true)
   })
 
   test('addVetoAuthority includes authority account', () => {

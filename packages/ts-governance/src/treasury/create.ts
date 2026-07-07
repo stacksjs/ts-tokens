@@ -2,31 +2,23 @@
  * Treasury Creation
  */
 
-import type { Connection, Keypair, PublicKey } from '@solana/web3.js'
+import type { Connection, Keypair } from '@solana/web3.js'
 import type { Treasury, CreateTreasuryOptions } from '../types'
-import { getTreasuryAddress } from '../programs/program'
 
 /**
- * Create a treasury for a DAO
+ * Create a treasury for a DAO.
+ *
+ * Depends on the governance program (undeployed) to create and own the treasury
+ * account, so this throws rather than returning a fabricated signature for a
+ * treasury that was never created on-chain.
  */
 export async function createTreasury(
   _connection: Connection,
   _authority: Keypair,
-  options: CreateTreasuryOptions
+  _options: CreateTreasuryOptions
 ): Promise<{ treasury: Treasury; signature: string }> {
-  const { dao } = options
-  const treasuryAddress = getTreasuryAddress(dao)
-
-  const treasury: Treasury = {
-    address: treasuryAddress,
-    dao,
-    solBalance: 0n,
-    tokenBalances: [],
-    createdAt: BigInt(Math.floor(Date.now() / 1000)),
-  }
-
-  return {
-    treasury,
-    signature: `treasury_created_${treasuryAddress.toBase58().slice(0, 8)}`,
-  }
+  throw new Error(
+    'createTreasury is not implemented: the governance program that owns ' +
+    'treasury accounts is not deployed. No treasury was created on-chain.'
+  )
 }

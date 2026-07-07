@@ -7,14 +7,20 @@
 import type { Connection, PublicKey } from '@solana/web3.js'
 
 /**
- * Configure a multisig wallet as DAO admin
+ * Configure a multisig wallet as DAO admin.
+ *
+ * Setting the DAO authority requires the governance program (undeployed), so
+ * this throws rather than echoing its inputs back as if a transaction had been
+ * built and the authority changed.
  */
 export function setMultisigAsDAOAdmin(
-  multisig: PublicKey,
-  dao: PublicKey
+  _multisig: PublicKey,
+  _dao: PublicKey
 ): { multisig: PublicKey; dao: PublicKey } {
-  // In production, would create transaction to set multisig as DAO authority
-  return { multisig, dao }
+  throw new Error(
+    'setMultisigAsDAOAdmin is not implemented: the governance program that ' +
+    'stores the DAO authority is not deployed.'
+  )
 }
 
 /**
@@ -36,10 +42,13 @@ export async function isMultisigAuthority(
  */
 export async function createMultisigProposal(
   _connection: Connection,
-  multisig: PublicKey,
-  dao: PublicKey,
-  instruction: { programId: PublicKey; data: Buffer }
+  _multisig: PublicKey,
+  _dao: PublicKey,
+  _instruction: { programId: PublicKey; data: Buffer }
 ): Promise<{ multisig: PublicKey; dao: PublicKey; instruction: { programId: PublicKey; data: Buffer } }> {
-  // In production, would build the multisig transaction wrapping the governance instruction
-  return { multisig, dao, instruction }
+  throw new Error(
+    'createMultisigProposal is not implemented: wrapping a governance ' +
+    'instruction in a multisig transaction requires the governance program, ' +
+    'which is not deployed.'
+  )
 }

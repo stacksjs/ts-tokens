@@ -8,22 +8,40 @@ import { calculateTimeWeightedPower } from './time-weighted'
 import type { TimeWeightConfig } from './time-weighted'
 
 /**
- * Get voting power for an address
+ * Get effective voting power for a voter on a specific proposal.
+ *
+ * The effective power is the voter's token balance snapshotted at the
+ * proposal's start slot, plus power delegated to them, minus power they
+ * delegated away. All three depend on the governance program's proposal and
+ * delegation account state, which is not deployed — the balance snapshot in
+ * particular cannot be reconstructed without the program recording it. Returning
+ * 0n would silently disenfranchise every voter, so this throws instead.
+ *
+ * To read a voter's live token balance (for a token-weighted DAO), use
+ * `getVotingPowerSnapshot` with the DAO's governance token.
  */
 export async function getVotingPower(
   _connection: Connection,
   _voter: PublicKey,
-  proposal: PublicKey
+  _proposal: PublicKey
 ): Promise<bigint> {
-  // In production:
-  // 1. Get token balance at proposal start time (snapshot)
-  // 2. Add delegated voting power
-  // 3. Subtract any power delegated to others
-  return 0n
+  throw new Error(
+    'getVotingPower is not implemented: the governance program that records the ' +
+    'per-proposal voting-power snapshot and delegation state is not deployed.'
+  )
 }
 
 /**
- * Get voting power snapshot
+ * Get a voter's live token-based voting power.
+ *
+ * Reads the voter's current governance-token balance via RPC. This is a genuine
+ * read of `votingPower` (own power). Two honest limitations:
+ * - `snapshotTime` cannot be honored as a *historical* snapshot: without the
+ *   governance program recording balances per proposal, only the live balance
+ *   is available. The value is echoed back so callers can label the reading.
+ * - `delegatedPower` is not sourced here — delegated power lives in the
+ *   (undeployed) governance program and must be summed separately (see
+ *   `getTotalDelegatedPower`). It is reported as 0n to avoid inventing a number.
  */
 export async function getVotingPowerSnapshot(
   connection: Connection,
