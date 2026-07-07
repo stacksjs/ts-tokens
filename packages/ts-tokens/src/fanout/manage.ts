@@ -14,6 +14,10 @@ export function addFanoutMember(
   fanoutId: string,
   member: { address: string; shares: number }
 ): FanoutWallet {
+  if (!Number.isInteger(member.shares) || member.shares <= 0) {
+    throw new Error('Member shares must be a positive integer')
+  }
+
   const state = loadFanoutState()
   const wallet = state.wallets[fanoutId]
   if (!wallet) throw new Error(`Fanout wallet not found: ${fanoutId}`)
@@ -69,6 +73,10 @@ export function updateMemberShares(
   const state = loadFanoutState()
   const wallet = state.wallets[fanoutId]
   if (!wallet) throw new Error(`Fanout wallet not found: ${fanoutId}`)
+
+  if (!Number.isInteger(newShares) || newShares <= 0) {
+    throw new Error('Member shares must be a positive integer')
+  }
 
   const member = wallet.members.find(m => m.address === memberAddress)
   if (!member) {

@@ -40,7 +40,10 @@ export async function distribute(
 
   // Determine total amount to distribute
   let totalAmount: bigint
-  if (options.amount) {
+  if (options.amount !== undefined) {
+    if (options.amount <= 0n) {
+      throw new Error('Distribution amount must be greater than zero')
+    }
     totalAmount = options.amount
   } else if (options.mint) {
     // SPL token — get payer's balance
@@ -63,8 +66,23 @@ export async function distribute(
   const payments: DistributionResult['payments'] = []
   const instructions: TransactionInstruction[] = []
 
-  for (const member of fanout.members) {
-    const memberAmount = (totalAmount * BigInt(member.shares)) / BigInt(fanout.totalShares)
+  // Pre-compute each member's floored share, then assign the rounding
+  // remainder to the largest-share member so no dust is left undistributed.
+  const totalShares = BigInt(fanout.totalShares)
+  const memberAmounts = fanout.members.map(m => (totalAmount * BigInt(m.shares)) / totalShares)
+  const distributed = memberAmounts.reduce((sum, a) => sum + a, 0n)
+  const remainder = totalAmount - distributed
+  if (remainder > 0n && fanout.members.length > 0) {
+    let largest = 0
+    for (let i = 1; i < fanout.members.length; i++) {
+      if (fanout.members[i].shares > fanout.members[largest].shares) largest = i
+    }
+    memberAmounts[largest] += remainder
+  }
+
+  for (let i = 0; i < fanout.members.length; i++) {
+    const member = fanout.members[i]
+    const memberAmount = memberAmounts[i]
     if (memberAmount <= 0n) continue
 
     const memberPubkey = new PublicKey(member.address)
