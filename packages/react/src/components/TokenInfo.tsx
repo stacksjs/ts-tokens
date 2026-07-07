@@ -1,20 +1,34 @@
 import React from 'react'
 import type { TokenProps } from '../types'
+import { useConnection } from '../context'
 
 export function TokenInfo({ mint, className, style }: TokenProps): JSX.Element {
+  const connection = useConnection()
   const [info, setInfo] = React.useState<any>(null)
+  const [error, setError] = React.useState<Error | null>(null)
 
   React.useEffect(() => {
+    let cancelled = false
+    setInfo(null)
+    setError(null)
+
     const fetchInfo = async () => {
-      const { getMintInfo, getConfig, createSolanaConnection } = await import('ts-tokens')
-      const config = await getConfig()
-      const connection = createSolanaConnection(config).raw
-      const data = await getMintInfo(connection, mint)
-      setInfo(data)
+      try {
+        // Use the connection from TokensProvider so this component queries the
+        // same cluster as its siblings rather than the global config's cluster.
+        const { getMintInfo } = await import('ts-tokens')
+        const data = await getMintInfo(connection, mint)
+        if (!cancelled) setInfo(data)
+      } catch (err) {
+        if (!cancelled) setError(err as Error)
+      }
     }
     fetchInfo()
-  }, [mint])
 
+    return () => { cancelled = true }
+  }, [connection, mint])
+
+  if (error) return <div className={className} style={style}>Error: {error.message}</div>
   if (!info) return <div className={className} style={style}>Loading...</div>
 
   return (

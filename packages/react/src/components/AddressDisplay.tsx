@@ -10,6 +10,14 @@ export interface AddressDisplayProps extends CommonProps {
 
 export function AddressDisplay({ address, truncate = true, chars = 4, copyable = true, className, style }: AddressDisplayProps): JSX.Element {
   const [copied, setCopied] = React.useState(false)
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Clear any pending timer on unmount to avoid setState-after-unmount.
+  React.useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
 
   const displayAddress = truncate ? `${address.slice(0, chars)}...${address.slice(-chars)}` : address
 
@@ -17,7 +25,9 @@ export function AddressDisplay({ address, truncate = true, chars = 4, copyable =
     if (!copyable) return
     await navigator.clipboard.writeText(address)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    // Reset any in-flight timer so rapid clicks do not stack timeouts.
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setCopied(false), 2000)
   }
 
   return (

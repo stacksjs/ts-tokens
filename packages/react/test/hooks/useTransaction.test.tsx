@@ -4,6 +4,9 @@ import { render, act, cleanup } from '@testing-library/react'
 
 const mockSendRawTransaction = mock(() => Promise.resolve('mocksig123abc456'))
 const mockConfirmTransaction = mock(() => Promise.resolve({ value: { err: null } }))
+const mockGetLatestBlockhash = mock(() =>
+  Promise.resolve({ blockhash: 'mockblockhash', lastValidBlockHeight: 1000 })
+)
 
 // Mock the context module so useTransaction can call useConnection
 // without requiring a real TokensProvider wrapper
@@ -11,6 +14,7 @@ mock.module('../../src/context', () => ({
   useConnection: () => ({
     sendRawTransaction: mockSendRawTransaction,
     confirmTransaction: mockConfirmTransaction,
+    getLatestBlockhash: mockGetLatestBlockhash,
   }),
   useConfig: () => ({ network: 'devnet', rpcUrl: 'https://api.devnet.solana.com' }),
 }))

@@ -1,5 +1,6 @@
 import React from 'react'
 import type { CommonProps } from '../types'
+import { formatFixed } from '../utils/format'
 
 export interface SolAmountProps extends CommonProps {
   amount: number | bigint
@@ -8,11 +9,15 @@ export interface SolAmountProps extends CommonProps {
 }
 
 export function SolAmount({ amount, decimals = 4, showSymbol = true, className, style }: SolAmountProps): JSX.Element {
-  const value = typeof amount === 'bigint' ? Number(amount) / 1e9 : amount
+  // For bigint lamports, convert to SOL with a bigint-safe formatter (9 decimals
+  // per SOL) so large balances above 2^53 are not rounded.
+  const display = typeof amount === 'bigint'
+    ? formatFixed(amount, 9, decimals)
+    : amount.toFixed(decimals)
 
   return (
     <span className={className} style={style}>
-      {value.toFixed(decimals)} {showSymbol && 'SOL'}
+      {display} {showSymbol && 'SOL'}
     </span>
   )
 }

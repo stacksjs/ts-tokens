@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { PublicKey } from '@solana/web3.js'
 import { useConnection } from '../context'
 
 export interface TreasuryState {
@@ -12,24 +11,18 @@ export interface TreasuryState {
 
 export function useTreasury(daoAddress: string): TreasuryState {
   const connection = useConnection()
-  const [solBalance, _setSolBalance] = useState<number>(0)
-  const [tokens, _setTokens] = useState<Array<{ mint: string; amount: bigint }>>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 
   const fetchTreasury = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      // In production, fetch treasury balance
-    } catch (err) {
-      setError(err as Error)
-    } finally {
-      setLoading(false)
-    }
+    setLoading(true)
+    // Treasury account resolution is not implemented. Surface an honest error
+    // rather than returning a zero balance as a successful load.
+    setError(new Error('Treasury is not supported: the governance program is not deployed and treasury balance resolution is not implemented.'))
+    setLoading(false)
   }, [connection, daoAddress])
 
   useEffect(() => { fetchTreasury() }, [fetchTreasury])
 
-  return { solBalance, tokens, loading, error, refetch: fetchTreasury }
+  return { solBalance: 0, tokens: [], loading, error, refetch: fetchTreasury }
 }

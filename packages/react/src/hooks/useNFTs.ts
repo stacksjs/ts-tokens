@@ -28,7 +28,7 @@ export function useNFTs(owner: string): NFTsState {
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 
-  const fetchNFTs = useCallback(async () => {
+  const fetchNFTs = useCallback(async (isCurrent: () => boolean = () => true) => {
     try {
       setLoading(true)
       setError(null)
@@ -36,6 +36,7 @@ export function useNFTs(owner: string): NFTsState {
       const { getNFTsByOwner, fetchOffChainMetadata } = await import('ts-tokens')
 
       const metadata = await getNFTsByOwner(owner, config)
+      if (!isCurrent()) return
 
       const nftList: NFTDisplayInfo[] = await Promise.all(
         metadata.map(async (m) => {
@@ -58,22 +59,25 @@ export function useNFTs(owner: string): NFTsState {
         })
       )
 
+      if (!isCurrent()) return
       setNFTs(nftList)
     } catch (err) {
-      setError(err as Error)
+      if (isCurrent()) setError(err as Error)
     } finally {
-      setLoading(false)
+      if (isCurrent()) setLoading(false)
     }
   }, [connection, config, owner])
 
   useEffect(() => {
-    fetchNFTs()
+    let cancelled = false
+    fetchNFTs(() => !cancelled)
+    return () => { cancelled = true }
   }, [fetchNFTs])
 
   return {
     nfts,
     loading,
     error,
-    refetch: fetchNFTs,
+    refetch: () => fetchNFTs(),
   }
 }

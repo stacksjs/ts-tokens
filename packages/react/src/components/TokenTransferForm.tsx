@@ -5,10 +5,17 @@ import { useTokenBalance, useTransaction } from '../hooks'
 export interface TokenTransferFormProps extends CommonProps {
   mint: string
   owner: string
+  /**
+   * Builds and signs the transfer transaction, returning the serialized bytes
+   * to submit. This form only handles input and validation; it cannot build or
+   * sign a transaction on its own, so a caller must supply it (typically wiring
+   * in a wallet-adapter signer).
+   */
+  buildTransaction?: (params: { mint: string; owner: string; recipient: string; amount: number }) => Promise<Uint8Array> | Uint8Array
   onTransfer?: (signature: string) => void
 }
 
-export function TokenTransferForm({ mint, owner, onTransfer, className, style }: TokenTransferFormProps): JSX.Element {
+export function TokenTransferForm({ mint, owner, buildTransaction, onTransfer, className, style }: TokenTransferFormProps): JSX.Element {
   const { uiBalance, decimals, loading: balanceLoading } = useTokenBalance(mint, owner)
   const { pending, error, send, reset } = useTransaction()
   const [recipient, setRecipient] = useState('')
@@ -36,10 +43,16 @@ export function TokenTransferForm({ mint, owner, onTransfer, className, style }:
       return
     }
 
+    if (!buildTransaction) {
+      setValidationError('Transfer is not wired up: provide a buildTransaction prop to sign and submit the transaction.')
+      return
+    }
+
     try {
-      // The actual transaction building would be done by the consumer
-      // This form manages the UI state and validation
-      const sig = await send(new Uint8Array())
+      // This form manages the UI state and validation; the caller supplies the
+      // signed, serialized transaction via buildTransaction.
+      const tx = await buildTransaction({ mint, owner, recipient: recipient.trim(), amount: numAmount })
+      const sig = await send(tx)
       onTransfer?.(sig)
     } catch {
       // Error is captured in the hook state

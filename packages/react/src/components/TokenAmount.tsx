@@ -1,5 +1,6 @@
 import React from 'react'
 import type { CommonProps } from '../types'
+import { formatFixed } from '../utils/format'
 
 export interface TokenAmountProps extends CommonProps {
   amount: number | bigint
@@ -10,13 +11,15 @@ export interface TokenAmountProps extends CommonProps {
 }
 
 export function TokenAmount({ amount, decimals = 9, displayDecimals = 4, symbol, showSymbol = true, className, style }: TokenAmountProps): JSX.Element {
-  const value = typeof amount === 'bigint'
-    ? Number(amount) / Math.pow(10, decimals)
-    : amount
+  // For bigint base units, use a bigint-safe formatter so amounts above 2^53
+  // are not rounded by a Number conversion.
+  const display = typeof amount === 'bigint'
+    ? formatFixed(amount, decimals, displayDecimals)
+    : amount.toFixed(displayDecimals)
 
   return (
     <span className={className} style={style}>
-      {value.toFixed(displayDecimals)} {showSymbol && symbol && symbol}
+      {display} {showSymbol && symbol && symbol}
     </span>
   )
 }

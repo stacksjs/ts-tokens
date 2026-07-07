@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { PublicKey } from '@solana/web3.js'
 import { useConnection } from '../context'
 
 export interface ProposalInfo {
@@ -21,24 +20,18 @@ export interface UseProposalsReturn {
 
 export function useProposals(daoAddress: string): UseProposalsReturn {
   const connection = useConnection()
-  const [proposals, setProposals] = useState<ProposalInfo[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 
   const fetchProposals = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      // In production, would query program accounts
-      setProposals([])
-    } catch (err) {
-      setError(err as Error)
-    } finally {
-      setLoading(false)
-    }
+    setLoading(true)
+    // Querying proposal program accounts is not implemented. Surface an honest
+    // error rather than returning an empty list as a successful load.
+    setError(new Error('Proposals are not supported: the governance program is not deployed and proposal account queries are not implemented.'))
+    setLoading(false)
   }, [connection, daoAddress])
 
   useEffect(() => { fetchProposals() }, [fetchProposals])
 
-  return { proposals, loading, error, refetch: fetchProposals }
+  return { proposals: [], loading, error, refetch: fetchProposals }
 }

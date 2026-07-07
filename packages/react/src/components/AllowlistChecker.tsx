@@ -1,20 +1,23 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import type { CandyMachineProps } from '../types'
 import { useWallet } from '../hooks'
-import { useCandyMachine } from '../hooks'
 
 export interface AllowlistCheckerProps extends CandyMachineProps {
   allowlist?: string[]
   onResult?: (eligible: boolean) => void
 }
 
-export function AllowlistChecker({ candyMachine, allowlist, onResult, className, style }: AllowlistCheckerProps): JSX.Element {
+export function AllowlistChecker({ allowlist, onResult, className, style }: AllowlistCheckerProps): JSX.Element {
   const { publicKey } = useWallet()
-  const { candyMachine: cm, loading } = useCandyMachine(candyMachine)
   const [eligible, setEligible] = useState<boolean | null>(null)
 
+  // Keep onResult in a ref so an inline callback from the parent does not
+  // re-run this effect (and potentially loop) on every parent render.
+  const onResultRef = useRef(onResult)
+  useEffect(() => { onResultRef.current = onResult }, [onResult])
+
   useEffect(() => {
-    if (!publicKey || loading) {
+    if (!publicKey) {
       setEligible(null)
       return
     }
@@ -23,15 +26,11 @@ export function AllowlistChecker({ candyMachine, allowlist, onResult, className,
     const isEligible = allowlist ? allowlist.includes(address) : true
 
     setEligible(isEligible)
-    onResult?.(isEligible)
-  }, [publicKey, loading, allowlist, onResult])
+    onResultRef.current?.(isEligible)
+  }, [publicKey, allowlist])
 
   if (!publicKey) {
     return <div className={className} style={style}>Connect your wallet to check eligibility</div>
-  }
-
-  if (loading) {
-    return <div className={className} style={style}>Checking eligibility...</div>
   }
 
   if (eligible === null) {

@@ -6,8 +6,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { PublicKey } from '@solana/web3.js'
-import { getAssociatedTokenAddress, getAccount } from '@solana/spl-token'
+import { getAssociatedTokenAddress, getAccount, TokenAccountNotFoundError } from '@solana/spl-token'
 import { useConnection } from '../context'
+import { formatUnits } from '../utils/format'
 
 /**
  * Token balance state
@@ -34,7 +35,7 @@ export function useTokenBalance(
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 
-  const fetchBalance = useCallback(async () => {
+  const fetchBalance = useCallback(async (isCurrent: () => boolean = () => true) => {
     if (!owner) {
       setLoading(false)
       return
@@ -50,35 +51,48 @@ export function useTokenBalance(
       // Get ATA
       const ata = await getAssociatedTokenAddress(mintPubkey, ownerPubkey)
 
-      // Get account info
-      const account = await getAccount(connection, ata)
-      setBalance(account.amount)
-
-      // Get mint info for decimals
+      // Get mint info for decimals (fetch regardless of whether the ATA exists)
       const mintInfo = await connection.getParsedAccountInfo(mintPubkey)
+      if (!isCurrent()) return
       if (mintInfo.value) {
         const data = (mintInfo.value.data as any).parsed?.info
         if (data) {
           setDecimals(data.decimals)
         }
       }
-    } catch (err) {
-      if ((err as Error).message?.includes('could not find account')) {
-        // Account doesn't exist, balance is 0
-        setBalance(0n)
-      } else {
-        setError(err as Error)
+
+      // Get account info
+      try {
+        const account = await getAccount(connection, ata)
+        if (!isCurrent()) return
+        setBalance(account.amount)
+      } catch (err) {
+        if (!isCurrent()) return
+        // @solana/spl-token throws TokenAccountNotFoundError (with an empty
+        // message) when the owner has no ATA for the mint yet. That is a
+        // balance of 0, not an error.
+        if (err instanceof TokenAccountNotFoundError || (err as Error)?.name === 'TokenAccountNotFoundError') {
+          setBalance(0n)
+        } else {
+          throw err
+        }
       }
+    } catch (err) {
+      if (isCurrent()) setError(err as Error)
     } finally {
-      setLoading(false)
+      if (isCurrent()) setLoading(false)
     }
   }, [connection, mint, owner])
 
   useEffect(() => {
-    fetchBalance()
+    let cancelled = false
+    fetchBalance(() => !cancelled)
+    return () => { cancelled = true }
   }, [fetchBalance])
 
-  const uiBalance = Number(balance) / Math.pow(10, decimals)
+  // Exact conversion via string formatting to avoid Number precision loss for
+  // amounts above 2^53.
+  const uiBalance = Number(formatUnits(balance, decimals))
 
   return {
     balance,
@@ -86,6 +100,6 @@ export function useTokenBalance(
     decimals,
     loading,
     error,
-    refetch: fetchBalance,
+    refetch: () => fetchBalance(),
   }
 }

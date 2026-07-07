@@ -22,6 +22,13 @@ export interface TokensContextValue {
 const TokensContext = createContext<TokensContextValue | null>(null)
 
 /**
+ * Stable default for the optional `config` prop. Defined at module scope so the
+ * default does not create a new object on every render (which would defeat the
+ * useMemo below and recreate the context value each render).
+ */
+const EMPTY_CONFIG: Partial<TokenConfig> = {}
+
+/**
  * Tokens provider props
  */
 export interface TokensProviderProps {
@@ -36,7 +43,7 @@ export interface TokensProviderProps {
 export function TokensProvider({
   children,
   endpoint,
-  config = {},
+  config = EMPTY_CONFIG,
 }: TokensProviderProps): JSX.Element {
   const connection = useMemo(() => new Connection(endpoint, 'confirmed'), [endpoint])
 

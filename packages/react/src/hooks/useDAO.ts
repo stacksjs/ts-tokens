@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { PublicKey } from '@solana/web3.js'
 import { useConnection } from '../context'
 
 export interface DAOState {
@@ -20,30 +19,27 @@ export interface DAOState {
 
 export function useDAO(daoAddress: string): DAOState {
   const connection = useConnection()
-  const [name, setName] = useState<string | null>(null)
-  const [proposalCount, _setProposalCount] = useState<number>(0)
-  const [totalVotingPower, _setTotalVotingPower] = useState<bigint>(0n)
-  const [config, _setConfig] = useState<DAOState['config']>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 
   const fetchDAO = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const pubkey = new PublicKey(daoAddress)
-      const accountInfo = await connection.getAccountInfo(pubkey)
-      if (!accountInfo) {
-        setName(null)
-      }
-    } catch (err) {
-      setError(err as Error)
-    } finally {
-      setLoading(false)
-    }
+    setLoading(true)
+    // Governance account deserialization is not implemented. Surface an honest
+    // error rather than returning fabricated zeros as a successful load.
+    setError(new Error('DAO governance is not supported: the governance program is not deployed and DAO account decoding is not implemented.'))
+    setLoading(false)
   }, [connection, daoAddress])
 
   useEffect(() => { fetchDAO() }, [fetchDAO])
 
-  return { name, address: daoAddress, proposalCount, totalVotingPower, config, loading, error, refetch: fetchDAO }
+  return {
+    name: null,
+    address: daoAddress,
+    proposalCount: 0,
+    totalVotingPower: 0n,
+    config: null,
+    loading,
+    error,
+    refetch: fetchDAO,
+  }
 }

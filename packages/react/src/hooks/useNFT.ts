@@ -28,7 +28,7 @@ export function useNFT(mint: string): NFTState {
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 
-  const fetchNFT = useCallback(async () => {
+  const fetchNFT = useCallback(async (isCurrent: () => boolean = () => true) => {
     try {
       setLoading(true)
       setError(null)
@@ -37,12 +37,14 @@ export function useNFT(mint: string): NFTState {
       const { getNFTMetadata, fetchOffChainMetadata } = await import('ts-tokens')
 
       const metadata = await getNFTMetadata(mint, config)
+      if (!isCurrent()) return
       if (!metadata) {
         throw new Error('NFT not found')
       }
 
       // Fetch off-chain metadata
       const offChain = await fetchOffChainMetadata(metadata.uri)
+      if (!isCurrent()) return
 
       setNFT({
         mint,
@@ -54,20 +56,22 @@ export function useNFT(mint: string): NFTState {
         attributes: (offChain as any)?.attributes,
       })
     } catch (err) {
-      setError(err as Error)
+      if (isCurrent()) setError(err as Error)
     } finally {
-      setLoading(false)
+      if (isCurrent()) setLoading(false)
     }
   }, [connection, config, mint])
 
   useEffect(() => {
-    fetchNFT()
+    let cancelled = false
+    fetchNFT(() => !cancelled)
+    return () => { cancelled = true }
   }, [fetchNFT])
 
   return {
     nft,
     loading,
     error,
-    refetch: fetchNFT,
+    refetch: () => fetchNFT(),
   }
 }

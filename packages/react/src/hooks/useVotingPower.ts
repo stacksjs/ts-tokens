@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { PublicKey } from '@solana/web3.js'
 import { useConnection } from '../context'
 
 export interface VotingPowerState {
@@ -13,25 +12,19 @@ export interface VotingPowerState {
 
 export function useVotingPower(daoAddress: string, voterAddress?: string): VotingPowerState {
   const connection = useConnection()
-  const [ownPower, _setOwnPower] = useState<bigint>(0n)
-  const [delegatedPower, _setDelegatedPower] = useState<bigint>(0n)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 
   const fetchPower = useCallback(async () => {
     if (!voterAddress) { setLoading(false); return }
-    try {
-      setLoading(true)
-      setError(null)
-      // In production, query voting power
-    } catch (err) {
-      setError(err as Error)
-    } finally {
-      setLoading(false)
-    }
+    setLoading(true)
+    // Voting power resolution is not implemented. Surface an honest error
+    // rather than returning zero power as a successful load.
+    setError(new Error('Voting power is not supported: the governance program is not deployed and voting power resolution is not implemented.'))
+    setLoading(false)
   }, [connection, daoAddress, voterAddress])
 
   useEffect(() => { fetchPower() }, [fetchPower])
 
-  return { ownPower, delegatedPower, totalPower: ownPower + delegatedPower, loading, error, refetch: fetchPower }
+  return { ownPower: 0n, delegatedPower: 0n, totalPower: 0n, loading, error, refetch: fetchPower }
 }

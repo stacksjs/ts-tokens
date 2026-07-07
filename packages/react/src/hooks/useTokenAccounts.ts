@@ -29,7 +29,7 @@ export function useTokenAccounts(owner: string): TokenAccountsState {
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 
-  const fetchAccounts = useCallback(async () => {
+  const fetchAccounts = useCallback(async (isCurrent: () => boolean = () => true) => {
     try {
       setLoading(true)
       setError(null)
@@ -40,6 +40,7 @@ export function useTokenAccounts(owner: string): TokenAccountsState {
         ownerPubkey,
         { programId: TOKEN_PROGRAM_ID }
       )
+      if (!isCurrent()) return
 
       const tokens: TokenDisplayInfo[] = tokenAccounts.value
         .filter(({ account }) => {
@@ -59,22 +60,25 @@ export function useTokenAccounts(owner: string): TokenAccountsState {
           }
         })
 
+      if (!isCurrent()) return
       setAccounts(tokens)
     } catch (err) {
-      setError(err as Error)
+      if (isCurrent()) setError(err as Error)
     } finally {
-      setLoading(false)
+      if (isCurrent()) setLoading(false)
     }
   }, [connection, owner])
 
   useEffect(() => {
-    fetchAccounts()
+    let cancelled = false
+    fetchAccounts(() => !cancelled)
+    return () => { cancelled = true }
   }, [fetchAccounts])
 
   return {
     accounts,
     loading,
     error,
-    refetch: fetchAccounts,
+    refetch: () => fetchAccounts(),
   }
 }

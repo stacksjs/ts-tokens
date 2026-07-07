@@ -3,7 +3,7 @@ import type { CandyMachineProps } from '../types'
 import { useCandyMachine } from '../hooks'
 
 export interface MintButtonProps extends CandyMachineProps {
-  onMint?: () => void
+  onMint?: () => void | Promise<void>
   disabled?: boolean
 }
 
@@ -15,7 +15,7 @@ export function MintButton({ candyMachine, onMint, disabled, className, style }:
     if (disabled || minting || !cm || cm.isSoldOut) return
     setMinting(true)
     try {
-      onMint?.()
+      await onMint?.()
     } finally {
       setMinting(false)
     }

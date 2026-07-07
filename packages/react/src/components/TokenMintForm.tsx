@@ -4,10 +4,17 @@ import { useTransaction } from '../hooks'
 
 export interface TokenMintFormProps extends CommonProps {
   mint: string
+  /**
+   * Builds and signs the mint transaction, returning the serialized bytes to
+   * submit. This form only handles input and validation; it cannot build or
+   * sign a transaction on its own, so a caller must supply it (typically wiring
+   * in a wallet-adapter signer).
+   */
+  buildTransaction?: (params: { mint: string; amount: number; destination: string }) => Promise<Uint8Array> | Uint8Array
   onMint?: (signature: string) => void
 }
 
-export function TokenMintForm({ mint, onMint, className, style }: TokenMintFormProps): JSX.Element {
+export function TokenMintForm({ mint, buildTransaction, onMint, className, style }: TokenMintFormProps): JSX.Element {
   const { pending, error, send, reset } = useTransaction()
   const [amount, setAmount] = useState('')
   const [destination, setDestination] = useState('')
@@ -24,8 +31,14 @@ export function TokenMintForm({ mint, onMint, className, style }: TokenMintFormP
       return
     }
 
+    if (!buildTransaction) {
+      setValidationError('Minting is not wired up: provide a buildTransaction prop to sign and submit the transaction.')
+      return
+    }
+
     try {
-      const sig = await send(new Uint8Array())
+      const tx = await buildTransaction({ mint, amount: numAmount, destination: destination.trim() })
+      const sig = await send(tx)
       onMint?.(sig)
     } catch {
       // Error is captured in the hook state

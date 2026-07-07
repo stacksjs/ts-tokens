@@ -32,14 +32,22 @@ export function useTransaction(): UseTransactionReturn {
       setError(null)
       setConfirmed(false)
 
+      // Capture a recent blockhash so we can confirm against a valid block
+      // height. The deprecated signature-only confirmTransaction can reject on
+      // timeout even when the transaction actually landed.
+      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed')
+
       const sig = await connection.sendRawTransaction(signedTransaction)
       setSignature(sig)
 
-      // Wait for confirmation
-      const confirmation = await connection.confirmTransaction(sig, 'confirmed')
+      // Blockhash-based confirmation.
+      const confirmation = await connection.confirmTransaction(
+        { signature: sig, blockhash, lastValidBlockHeight },
+        'confirmed'
+      )
 
       if (confirmation.value.err) {
-        throw new Error(`Transaction failed: ${confirmation.value.err}`)
+        throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`)
       }
 
       setConfirmed(true)

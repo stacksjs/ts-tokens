@@ -1,6 +1,7 @@
 import React from 'react'
 import type { CandyMachineProps } from '../types'
 import { useCandyMachine } from '../hooks'
+import { formatFixed } from '../utils/format'
 
 export interface MintPriceProps extends CandyMachineProps {
   showSymbol?: boolean
@@ -13,11 +14,12 @@ export function MintPrice({ candyMachine, showSymbol = true, decimals = 4, class
   if (loading) return <span className={className} style={style}>...</span>
   if (!cm) return <span className={className} style={style}>--</span>
 
-  const price = Number(cm.price) / 1e9
+  // Convert lamports (9 decimals) to SOL with a bigint-safe formatter.
+  const price = formatFixed(cm.price, 9, decimals)
 
   return (
     <span className={className} style={style}>
-      {price.toFixed(decimals)} {showSymbol && 'SOL'}
+      {price} {showSymbol && 'SOL'}
     </span>
   )
 }
