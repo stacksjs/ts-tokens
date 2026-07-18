@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Generate your own fungible or non-fungible tokens.",
-  "author": "Chris Breuer <chris@stacksjs.org>",
+  "author": "Chris Breuer <chris@stacksjs.com>",
   "license": "MIT",
   "homepage": "https://github.com/stacksjs/ts-tokens#readme",
   "repository": {

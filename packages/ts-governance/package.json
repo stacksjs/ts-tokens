@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.1.0",
   "description": "DAO governance, proposals, voting, delegation, and treasury management for Solana.",
-  "author": "Chris Breuer <chris@stacksjs.org>",
+  "author": "Chris Breuer <chris@stacksjs.com>",
   "license": "MIT",
   "homepage": "https://github.com/stacksjs/ts-tokens/tree/main/packages/ts-governance#readme",
   "repository": {

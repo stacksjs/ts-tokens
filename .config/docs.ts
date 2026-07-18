@@ -1,9 +1,9 @@
-import type { BunPressConfig } from 'bunpress'
+import type { BunPressConfig } from '@stacksjs/bunpress'
 
 const config: BunPressConfig = {
   name: 'ts-tokens',
   description: 'Generate fungible or non-fungible tokens on Solana',
-  url: 'https://ts-tokens.stacksjs.org',
+  url: 'https://ts-tokens.stacksjs.com',
 
   theme: {
     primaryColor: '#14b8a6',

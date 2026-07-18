@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.1.0",
   "description": "Vue 3 components for Solana tokens and NFTs",
-  "author": "Chris Breuer <chris@stacksjs.org>",
+  "author": "Chris Breuer <chris@stacksjs.com>",
   "license": "MIT",
   "homepage": "https://github.com/stacksjs/ts-tokens/tree/main/packages/vue#readme",
   "repository": {

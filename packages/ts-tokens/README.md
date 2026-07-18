@@ -42,7 +42,7 @@ _Check out the package.json scripts for more commands._
 <div id="qrcode"></div>
 
 <script type="text/javascript">
-new QRCode(document.getElementById("qrcode"), "https://stacksjs.org");
+new QRCode(document.getElementById("qrcode"), "https://stacksjs.com");
 </script>
 ```
 
@@ -53,7 +53,7 @@ If you want to customize the QR code, you can pass in an options object:
 
 <script type="text/javascript">
 var qrCode = new QRCode(document.getElementById("qr-code"), {
-  text: "https://stacksjs.org",
+  text: "https://stacksjs.com",
   width: 128,
   height: 128,
   colorDark : "#000000",
@@ -67,7 +67,7 @@ You can also use methods to interact with the QR code:
 
 ```ts
 qrCode.clear() // clear the code
-qrCode.makeCode('https://docs.stacksjs.org') // create another code
+qrCode.makeCode('https://docs.stacksjs.com') // create another code
 ```
 
 ### Barcode
