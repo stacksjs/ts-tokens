@@ -13,8 +13,6 @@ docs/.vitepress/cache
 pantry_modules
 
 # Storybook
-packages/react/.storybook
-packages/react/src/**/*.stories.tsx
 storybook-static
 /pantry
 .zed
