@@ -43,8 +43,7 @@
     "dist"
   ],
   "scripts": {
-    "dev": "vite --config vite.config.ts",
-    "build": "bun build ./src/index.ts --outdir ./dist --target browser --sourcemap=external --external ts-tokens --external @solana/web3.js --external @solana/spl-token --external @solana/wallet-adapter-react --external react --external react-dom",
+    "build": "bun --bun build.ts",
     "lint": "bunx --bun pickier .",
     "lint:fix": "bunx --bun pickier . --fix",
     "release": "bun publish --access public --provenance",
@@ -60,6 +59,7 @@
   "peerDependencies": {
     "react": "^19.2.4",
     "react-dom": ">=19.2.4",
+    "@solana/spl-token": "^0.4.14",
     "@solana/wallet-adapter-react": ">=0.15.39",
     "@solana/wallet-adapter-react-ui": ">=0.9.39",
     "@solana/web3.js": "^1.98.4"
@@ -72,6 +72,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "better-dx": "^0.2.6",
+    "bun-plugin-dtsx": "^0.9.9",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
     "happy-dom": "^20.6.2",

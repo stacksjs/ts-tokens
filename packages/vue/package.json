@@ -45,7 +45,7 @@
   ],
   "scripts": {
     "dev": "vite --config vite.config.ts",
-    "build": "bun build ./src/index.ts --outdir ./dist --target browser --sourcemap=external --external ts-tokens --external @solana/web3.js --external @solana/spl-token --external vue",
+    "build": "vite build && bun --bun build-dts.ts",
     "lint": "bunx --bun pickier .",
     "lint:fix": "bunx --bun pickier . --fix",
     "release": "bun publish --access public --provenance",
@@ -58,11 +58,15 @@
   },
   "peerDependencies": {
     "vue": "^3.5.28",
+    "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.0",
     "@vue/test-utils": "^2.4.6",
     "better-dx": "^0.2.6",
+    "bun-plugin-dtsx": "^0.9.9",
+    "vite": "^7.1.0",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
     "happy-dom": "^20.6.2",

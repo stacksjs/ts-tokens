@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "types": ["bun", "node"],
+    "types": ["bun"],
     "lib": ["esnext", "dom", "dom.iterable"]
   },
   "include": ["src/**/*"],
