@@ -51,7 +51,8 @@ jobs:
 
       - name: Publish to npm
         run: |
-          cd packages/ts-tokens && bun publish --access public --provenance
+          cd packages/ts-governance && bun publish --access public --provenance
+          cd ../ts-tokens && bun publish --access public --provenance
           cd ../react && bun publish --access public --provenance
           cd ../vue && bun publish --access public --provenance
         env:

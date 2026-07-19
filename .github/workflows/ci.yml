@@ -81,7 +81,7 @@ jobs:
         run: bun install
 
       - name: Unit Test
-        run: bun test --coverage 2>&1 | tee coverage-output.txt
+        run: bun run test --coverage 2>&1 | tee coverage-output.txt
 
       - name: Check Coverage Threshold
         run: |
@@ -97,6 +97,35 @@ jobs:
           else
             echo "Coverage report not found — skipping threshold check"
           fi
+
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Use cached node_modules
+        uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('**/bun.lock') }}
+          restore-keys: |
+            node-modules-
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Build Packages
+        run: bun run build
+
+      - name: Install Playwright Browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: E2E Test
+        run: bun run test:e2e
 
   publish-commit:
     needs: [lint, typecheck, test]
@@ -117,7 +146,9 @@ jobs:
         run: bun run build
 
       - name: Publish Commit
+        # `pantry publish:commit` rewrites `workspace:*` ranges to the resolved
+        # sibling versions by default (pantry >= pantry-pm/pantry@c66b2d6).
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: pantry publish:commit './packages/ts-tokens' && pantry publish:commit './packages/react' && pantry publish:commit './packages/vue'
+        run: pantry publish:commit './packages/ts-governance' && pantry publish:commit './packages/ts-tokens' && pantry publish:commit './packages/react' && pantry publish:commit './packages/vue'
         env:
           PANTRY_REGISTRY_TOKEN: ${{ secrets.PANTRY_TOKEN }}
