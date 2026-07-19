@@ -80,17 +80,37 @@ export function addComputeLimit(
 
 /**
  * Estimate compute units for a transaction
+ *
+ * Simulates with the given payer (a simulation without a fee payer and recent
+ * blockhash fails on most clusters). Returns `undefined` — with a warning —
+ * when no estimate can be produced, rather than silently inventing 200000.
  */
 export async function estimateComputeUnits(
   connection: Connection,
   transaction: Transaction,
-  _payer: PublicKey
-): Promise<number> {
+  payer: PublicKey
+): Promise<number | undefined> {
   try {
+    if (!transaction.feePayer) {
+      transaction.feePayer = payer
+    }
+    if (!transaction.recentBlockhash) {
+      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash
+    }
+
     const simulation = await connection.simulateTransaction(transaction)
-    return simulation.value.unitsConsumed ?? 200000
-  } catch {
-    return 200000 // Default fallback
+    if (simulation.value.err) {
+      console.warn(
+        `estimateComputeUnits: simulation failed (${JSON.stringify(simulation.value.err)}) — no estimate available`,
+      )
+      return undefined
+    }
+    return simulation.value.unitsConsumed ?? undefined
+  } catch (error) {
+    console.warn(
+      `estimateComputeUnits: ${error instanceof Error ? error.message : String(error)} — no estimate available`,
+    )
+    return undefined
   }
 }
 

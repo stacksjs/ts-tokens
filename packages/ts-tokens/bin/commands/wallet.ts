@@ -1,7 +1,6 @@
 import {
   walletGenerate, walletShow, walletBalance, walletAirdrop,
-  walletImport, walletEncrypt, walletDecrypt,
-  walletUnlock, walletLock, walletKeyringInfo,
+  walletImport, walletEncrypt, walletDecrypt, walletKeyringInfo,
 } from '../../src/cli/commands/wallet'
 
 export function register(cli: any): void {
@@ -38,30 +37,16 @@ export function register(cli: any): void {
 
   cli
     .command('wallet:encrypt', 'Encrypt current keypair to keyring')
-    .option('--password <password>', 'Encryption password')
+    .option('--password <password>', 'Encryption password (prefer TOKENS_KEYRING_PASSWORD or the interactive prompt)')
     .action(async (options: { password?: string }) => {
       await walletEncrypt(options)
     })
 
   cli
-    .command('wallet:decrypt', 'Load wallet from encrypted keyring')
-    .option('--password <password>', 'Decryption password')
+    .command('wallet:decrypt', 'Decrypt the keyring and show its public key')
+    .option('--password <password>', 'Decryption password (prefer TOKENS_KEYRING_PASSWORD or the interactive prompt)')
     .action(async (options: { password?: string }) => {
       await walletDecrypt(options)
-    })
-
-  cli
-    .command('wallet:unlock', 'Start a signing session')
-    .option('--password <password>', 'Keyring password')
-    .option('--timeout <minutes>', 'Session timeout in minutes', { default: '30' })
-    .action(async (options: { password?: string; timeout?: string }) => {
-      await walletUnlock(options)
-    })
-
-  cli
-    .command('wallet:lock', 'End the signing session')
-    .action(async () => {
-      await walletLock()
     })
 
   cli

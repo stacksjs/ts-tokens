@@ -80,7 +80,7 @@ export function register(cli: any): void {
     })
 
   cli
-    .command('marketplace:cleanup', 'Clean up expired marketplace records')
+    .command('marketplace:cleanup', 'Recover expired marketplace records (refunds offers, returns escrows, revokes delegates)')
     .action(async () => {
       await marketplaceCleanup()
     })

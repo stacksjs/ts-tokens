@@ -6,6 +6,7 @@
 
 import type { ChainDriver, DriverFactory, DriverRegistry } from '../types'
 import type { TokenConfig, Chain } from '../types'
+import { SolanaDriver } from './solana/driver'
 
 // Export Solana driver
 export * from './solana'
@@ -76,6 +77,9 @@ export function listDrivers(): Chain[] {
 /**
  * Create a new, independent driver registry instance.
  *
+ * The returned registry has its OWN backing map: registering a driver in one
+ * instance does not affect the module-level registry or any other instance.
+ *
  * @returns A DriverRegistry with register, get, has, and list methods
  *
  * @example
@@ -85,19 +89,20 @@ export function listDrivers(): Chain[] {
  * ```
  */
 export function createDriverRegistry(): DriverRegistry {
+  const registryDrivers = new Map<string, DriverFactory>()
   return {
     register: (chain: string, factory: DriverFactory) => {
-      drivers.set(chain, factory)
+      registryDrivers.set(chain, factory)
     },
     get: (chain: string, config: TokenConfig) => {
-      const factory = drivers.get(chain)
+      const factory = registryDrivers.get(chain)
       if (!factory) {
         throw new Error(`No driver registered for chain "${chain}"`)
       }
       return factory(config)
     },
-    has: (chain: string) => drivers.has(chain),
-    list: () => Array.from(drivers.keys()),
+    has: (chain: string) => registryDrivers.has(chain),
+    list: () => Array.from(registryDrivers.keys()),
   }
 }
 
@@ -130,6 +135,13 @@ export function autoDetectDriver(config: TokenConfig): ChainDriver {
  * Default driver registry
  */
 export const driverRegistry: DriverRegistry = createDriverRegistry()
+
+// Register the built-in Solana driver so getDriver(), autoDetectDriver(), and
+// the default registry work out of the box. Other chains register their own
+// factories with registerDriver().
+const solanaFactory: DriverFactory = (config: TokenConfig) => new SolanaDriver(config)
+registerDriver('solana', solanaFactory)
+driverRegistry.register('solana', solanaFactory)
 
 // Re-export driver types
 export type { ChainDriver, DriverFactory, DriverRegistry }

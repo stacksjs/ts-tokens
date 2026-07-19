@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import {
   getRpcUrl,
   getExplorerUrl,
@@ -9,8 +9,26 @@ import {
   defaults,
 } from '../src/config'
 import { DEFAULT_RPC_ENDPOINTS, DEFAULT_EXPLORER_URLS } from '../src/types'
+import * as fs from 'node:fs'
+import * as os from 'node:os'
+import * as path from 'node:path'
+
+let savedConfigDir: string | undefined
 
 beforeEach(() => {
+  // Isolate the user-level overlay so the real ~/.ts-tokens/config.json can
+  // never influence getCurrentConfig()/getConfig() in tests.
+  savedConfigDir = process.env.TOKENS_CONFIG_DIR
+  process.env.TOKENS_CONFIG_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-tokens-config-test-'))
+  resetConfig()
+})
+
+afterEach(() => {
+  if (savedConfigDir === undefined) {
+    delete process.env.TOKENS_CONFIG_DIR
+  } else {
+    process.env.TOKENS_CONFIG_DIR = savedConfigDir
+  }
   resetConfig()
 })
 
@@ -122,5 +140,64 @@ describe('defaults', () => {
     expect(defaults.securityChecks).toBe(true)
     expect(defaults.autoCreateAccounts).toBe(true)
     expect(defaults.storageProvider).toBe('arweave')
+  })
+})
+
+describe('config overlay path & project config', () => {
+  test('getConfigOverlayPath honors TOKENS_CONFIG_DIR', async () => {
+    const { getConfigOverlayPath } = await import('../src/config')
+    expect(getConfigOverlayPath()).toBe(path.join(process.env.TOKENS_CONFIG_DIR!, 'config.json'))
+  })
+
+  test('findProjectConfigPath finds tokens.config.* in bunfig order', async () => {
+    const { findProjectConfigPath } = await import('../src/config')
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-tokens-findcfg-'))
+    expect(findProjectConfigPath(dir)).toBeNull()
+
+    fs.writeFileSync(path.join(dir, 'tokens.config.json'), '{}')
+    expect(findProjectConfigPath(dir)).toBe(path.join(dir, 'tokens.config.json'))
+
+    // .ts wins over .json (bunfig resolution order)
+    fs.writeFileSync(path.join(dir, 'tokens.config.ts'), 'export default {}')
+    expect(findProjectConfigPath(dir)).toBe(path.join(dir, 'tokens.config.ts'))
+  })
+
+  test('saveProjectConfig creates tokens.config.json when none exists', async () => {
+    const { saveProjectConfig } = await import('../src/config')
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-tokens-saveproj-'))
+
+    const { path: written, config } = saveProjectConfig({ network: 'testnet' }, dir)
+    expect(written).toBe(path.join(dir, 'tokens.config.json'))
+    expect(config.network).toBe('testnet')
+    expect(JSON.parse(fs.readFileSync(written, 'utf-8')).network).toBe('testnet')
+  })
+
+  test('saveProjectConfig deep-merges into an existing JSON config', async () => {
+    const { saveProjectConfig } = await import('../src/config')
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-tokens-mergeproj-'))
+    fs.writeFileSync(
+      path.join(dir, 'tokens.config.json'),
+      JSON.stringify({ network: 'devnet', wallet: { keypairPath: '/tmp/a.json' } }),
+    )
+
+    saveProjectConfig({ wallet: { keypairEnv: 'TOKENS_KEYPAIR' } }, dir)
+    const written = JSON.parse(fs.readFileSync(path.join(dir, 'tokens.config.json'), 'utf-8'))
+    expect(written.wallet.keypairEnv).toBe('TOKENS_KEYPAIR')
+    expect(written.wallet.keypairPath).toBe('/tmp/a.json')
+    expect(written.network).toBe('devnet')
+  })
+
+  test('saveProjectConfig refuses TypeScript/JavaScript project configs', async () => {
+    const { saveProjectConfig } = await import('../src/config')
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-tokens-tsproj-'))
+    fs.writeFileSync(path.join(dir, 'tokens.config.ts'), 'export default {}')
+
+    expect(() => saveProjectConfig({ network: 'testnet' }, dir)).toThrow('--global')
+  })
+
+  test('getCurrentConfig applies the overlay before getConfig() has run', async () => {
+    const { saveConfigOverlay, getCurrentConfig } = await import('../src/config')
+    saveConfigOverlay({ network: 'mainnet-beta' })
+    expect(getCurrentConfig().network).toBe('mainnet-beta')
   })
 })

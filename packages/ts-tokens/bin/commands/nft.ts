@@ -1,6 +1,6 @@
 import {
   nftCreate, nftMint, nftTransfer, nftBurn, nftInfo, nftList,
-  collectionCreate, collectionInfo, collectionItems, collectionVerify, collectionUpdate,
+  collectionCreate, collectionInfo, collectionVerify, collectionUpdate,
   coreCreate, coreCollection, coreTransfer, coreInfo,
 } from '../../src/cli/commands/nft'
 
@@ -67,13 +67,6 @@ export function register(cli: any): void {
     })
 
   cli
-    .command('collection:items <address>', 'List NFTs in a collection')
-    .option('--limit <limit>', 'Maximum items to list', { default: '50' })
-    .action(async (address: string, options: { limit?: string }) => {
-      await collectionItems(address, options)
-    })
-
-  cli
     .command('collection:verify <collection> <nft>', 'Verify an NFT belongs to a collection')
     .action(async (collection: string, nft: string) => {
       await collectionVerify(collection, nft)
@@ -109,6 +102,11 @@ export function register(cli: any): void {
     .action(async (address: string) => {
       await coreInfo(address)
     })
+
+  // NOTE: collection:items is intentionally not registered — enumerating a
+  // collection's members is impossible via plain RPC (the collection field is
+  // at a variable offset) and requires the DAS API, which this CLI does not
+  // wire up. The handler remains available programmatically.
 
   cli
     .command('collection:update <address>', 'Update collection metadata')

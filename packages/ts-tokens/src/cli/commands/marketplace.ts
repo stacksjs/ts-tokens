@@ -1,6 +1,6 @@
 /** CLI marketplace command handlers. */
 
-import { success, error, keyValue, header, info, formatSol, formatAddress } from '../utils'
+import { success, error, keyValue, header, info, warn, formatSol, formatAddress } from '../utils'
 import { withSpinner } from '../utils/spinner'
 import { getConfig } from '../../config'
 
@@ -317,20 +317,38 @@ export async function marketplaceOffers(mint: string | undefined, options: { min
 
 export async function marketplaceCleanup(): Promise<void> {
   try {
-    const { cleanupExpired } = await import('../../marketplace/store')
-    const result = cleanupExpired()
-    const total = result.listings + result.offers + result.escrows + result.auctions
+    const config = await getConfig()
+    // recoverExpired actively recovers on-chain assets (refunds escrowed SOL,
+    // returns escrowed NFTs, revokes live delegate approvals) and only then
+    // updates local state. The legacy cleanupExpired() merely flipped local
+    // statuses, stranding funds and leaving delegate approvals live.
+    const { recoverExpired } = await import('../../marketplace/store')
 
-    if (total === 0) {
+    const summary = await withSpinner(
+      'Recovering expired records (on-chain transactions may take a moment)',
+      () => recoverExpired(config),
+    )
+
+    const { recovered, failed, auctions } = summary
+    const totalRecovered = recovered.listings + recovered.offers + recovered.escrows
+
+    if (totalRecovered === 0 && auctions === 0 && failed.length === 0) {
       info('No expired records found')
       return
     }
 
-    success('Cleaned up expired records')
-    if (result.listings > 0) keyValue('Listings', String(result.listings))
-    if (result.offers > 0) keyValue('Offers', String(result.offers))
-    if (result.escrows > 0) keyValue('Escrows', String(result.escrows))
-    if (result.auctions > 0) keyValue('Auctions', String(result.auctions))
+    success('Expired record recovery complete')
+    if (recovered.listings > 0) keyValue('Listings delisted (delegate revoked)', String(recovered.listings))
+    if (recovered.offers > 0) keyValue('Offers refunded', String(recovered.offers))
+    if (recovered.escrows > 0) keyValue('Escrows returned to seller', String(recovered.escrows))
+    if (auctions > 0) keyValue('Auctions ended', String(auctions))
+
+    if (failed.length > 0) {
+      warn(`${failed.length} record(s) could not be recovered — left in place for a later retry:`)
+      for (const f of failed) {
+        keyValue(`${f.kind} ${f.id}`, f.error)
+      }
+    }
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)

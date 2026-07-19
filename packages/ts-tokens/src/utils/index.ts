@@ -37,8 +37,7 @@ export async function retry<T>(
       lastError = error instanceof Error ? error : new Error(String(error))
 
       if (attempt < maxRetries) {
-        const delay = baseDelay * Math.pow(2, attempt)
-        await sleep(delay)
+        await sleep(getRetryDelay(lastError, attempt, baseDelay))
       }
     }
   }
@@ -47,26 +46,131 @@ export async function retry<T>(
 }
 
 /**
+ * Compute the delay before the next retry attempt.
+ *
+ * Honors server-provided Retry-After hints (rate limits / 429) attached to the
+ * error by RPC/HTTP clients in common shapes (`error.retryAfter`,
+ * `error.retry_after`, or a `retry-after` header). Otherwise applies
+ * exponential backoff with full jitter: a random delay in
+ * `[0, baseDelay * 2^attempt]`, which avoids thundering-herd retries.
+ */
+function getRetryDelay(error: Error, attempt: number, baseDelay: number): number {
+  const anyErr = error as any
+  const retryAfter = anyErr?.retryAfter
+    ?? anyErr?.retry_after
+    ?? anyErr?.headers?.['retry-after']
+    ?? (typeof anyErr?.headers?.get === 'function' ? anyErr.headers.get('retry-after') : undefined)
+
+  if (retryAfter !== undefined && retryAfter !== null) {
+    // Retry-After is specified in seconds (an HTTP-date is not supported —
+    // fall through to backoff in that case).
+    const seconds = typeof retryAfter === 'number' ? retryAfter : Number(retryAfter)
+    if (Number.isFinite(seconds) && seconds >= 0) {
+      return seconds * 1000 + Math.random() * 1000
+    }
+  }
+
+  const ceiling = baseDelay * Math.pow(2, attempt)
+  return Math.random() * ceiling
+}
+
+/**
  * Format lamports to SOL
+ *
+ * Uses bigint math end-to-end so values above Number.MAX_SAFE_INTEGER (2^53)
+ * are rendered exactly. The fractional part is rounded half-up at `decimals`
+ * (matching `Number.prototype.toFixed` closely enough for display).
  *
  * @param lamports - Amount in lamports
  * @param decimals - Number of decimal places to show
  * @returns Formatted SOL amount
  */
 export function lamportsToSol(lamports: bigint | number, decimals: number = 9): string {
+  if (typeof lamports === 'number' && !Number.isInteger(lamports)) {
+    throw new Error(`lamportsToSol: lamports must be an integer, got ${lamports}`)
+  }
   const value = typeof lamports === 'bigint' ? lamports : BigInt(lamports)
-  const sol = Number(value) / 1e9
-  return sol.toFixed(decimals)
+  const negative = value < 0n
+  const abs = negative ? -value : value
+  const whole = abs / 1_000_000_000n
+  const fraction = abs % 1_000_000_000n
+  const fracStr = fraction.toString().padStart(9, '0')
+
+  if (decimals >= 9) {
+    return `${negative ? '-' : ''}${whole.toString()}.${fracStr.padEnd(decimals, '0')}`
+  }
+
+  if (decimals <= 0) {
+    // Round to a whole number using the first fraction digit.
+    const rounded = Number(fracStr[0]) >= 5 ? whole + 1n : whole
+    return `${negative ? '-' : ''}${rounded.toString()}`
+  }
+
+  let display = fracStr.slice(0, decimals)
+  // Round half-up based on the first dropped digit.
+  if (Number(fracStr[decimals]) >= 5) {
+    const bumped = (BigInt(display) + 1n).toString().padStart(decimals, '0')
+    if (bumped.length > decimals) {
+      // Rounding carried into the whole part (e.g. 1.999… → 2.00).
+      return `${negative ? '-' : ''}${(whole + 1n).toString()}.${'0'.repeat(decimals)}`
+    }
+    display = bumped
+  }
+
+  return `${negative ? '-' : ''}${whole.toString()}.${display}`
+}
+
+/**
+ * Expand exponential notation (e.g. "1e-9") into a plain decimal string.
+ * Non-exponential input is returned unchanged.
+ */
+function expandExponential(str: string): string {
+  if (!/[eE]/.test(str)) return str
+  const [mantissa, expPart] = str.split(/[eE]/)
+  const exponent = parseInt(expPart, 10)
+  if (!Number.isFinite(exponent)) {
+    throw new Error(`Invalid numeric string: "${str}"`)
+  }
+  const negative = mantissa.startsWith('-')
+  const unsigned = negative ? mantissa.slice(1) : mantissa
+  const pointIndex = unsigned.indexOf('.')
+  const intLen = pointIndex === -1 ? unsigned.length : pointIndex
+  const digits = unsigned.replace('.', '')
+  const newPoint = intLen + exponent
+
+  let out: string
+  if (newPoint <= 0) {
+    out = `0.${'0'.repeat(-newPoint)}${digits}`
+  } else if (newPoint >= digits.length) {
+    out = digits + '0'.repeat(newPoint - digits.length)
+  } else {
+    out = `${digits.slice(0, newPoint)}.${digits.slice(newPoint)}`
+  }
+  return (negative ? '-' : '') + out
 }
 
 /**
  * Convert SOL to lamports
  *
+ * Parses the decimal string representation instead of multiplying by 1e9, so
+ * values like 1.005 convert exactly (1.005 * 1e9 is not representable in
+ * binary floating point and used to produce 1004999999).
+ *
  * @param sol - Amount in SOL
  * @returns Amount in lamports
  */
 export function solToLamports(sol: number): bigint {
-  return BigInt(Math.floor(sol * 1e9))
+  if (typeof sol !== 'number' || Number.isNaN(sol) || !Number.isFinite(sol)) {
+    throw new Error(`solToLamports: expected a finite number, got ${String(sol)}`)
+  }
+  if (sol < 0) {
+    throw new Error(`solToLamports: SOL amount cannot be negative, got ${sol}`)
+  }
+
+  const [intPart, fracPart = ''] = expandExponential(String(sol)).split('.')
+  // Truncate beyond 9 decimal places: a lamport is indivisible (floor semantics).
+  const frac9 = fracPart.padEnd(9, '0').slice(0, 9)
+  return BigInt(intPart) * 1_000_000_000n + BigInt(frac9)
 }
 
 /**
@@ -105,10 +209,30 @@ export function formatTokenAmount(
  * @param amount - Amount string (e.g., "1.5")
  * @param decimals - Token decimals
  * @returns Raw token amount
+ * @throws On negative input, malformed input, or more decimal places than the
+ *   mint supports (truncating money silently is never acceptable)
  */
 export function parseTokenAmount(amount: string, decimals: number): bigint {
-  const [whole, fraction = ''] = amount.split('.')
-  const paddedFraction = fraction.padEnd(decimals, '0').slice(0, decimals)
+  const trimmed = amount.trim()
+
+  if (trimmed.startsWith('-')) {
+    throw new Error(`parseTokenAmount: amount cannot be negative, got "${amount}"`)
+  }
+  if (!/^\d+(?:\.\d+)?$/.test(trimmed)) {
+    throw new Error(
+      `parseTokenAmount: invalid amount "${amount}" — expected a non-negative decimal number like "12.5"`,
+    )
+  }
+
+  const [whole, fraction = ''] = trimmed.split('.')
+  if (fraction.length > decimals) {
+    throw new Error(
+      `parseTokenAmount: "${amount}" has too many decimal places ` +
+      `(this mint supports at most ${decimals})`,
+    )
+  }
+
+  const paddedFraction = fraction.padEnd(decimals, '0')
   return BigInt(whole + paddedFraction)
 }
 
@@ -158,6 +282,19 @@ export function generateSeed(): Uint8Array {
  */
 export function hexToBytes(hex: string): Uint8Array {
   const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex
+
+  if (!/^[0-9a-fA-F]*$/.test(cleanHex)) {
+    throw new Error(
+      'hexToBytes: invalid hex string — only the characters 0-9, a-f and A-F are allowed',
+    )
+  }
+  if (cleanHex.length % 2 !== 0) {
+    throw new Error(
+      `hexToBytes: odd-length hex string (${cleanHex.length} characters) — ` +
+      'hex input must contain complete byte pairs',
+    )
+  }
+
   const bytes = new Uint8Array(cleanHex.length / 2)
   for (let i = 0; i < bytes.length; i++) {
     bytes[i] = parseInt(cleanHex.slice(i * 2, i * 2 + 2), 16)

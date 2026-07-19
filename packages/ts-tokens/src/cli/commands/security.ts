@@ -188,7 +188,33 @@ export async function securityAddress(address: string): Promise<void> {
       recommendations: [...repCheck.recommendations, ...scamCheck.recommendations],
     }
 
-    info(formatAddressCheck(combined, address))
+    // An unperformed check must never print SAFE. When a check reports
+    // checked === false (no data source configured), say so explicitly.
+    if (repCheck.checked === false || scamCheck.checked === false) {
+      const lines: string[] = []
+      lines.push(`Address Check: ${address}`)
+      lines.push('Status: NOT CHECKED — no reputation/scam database is configured, safety cannot be determined')
+
+      if (combined.warnings.length > 0) {
+        lines.push('')
+        lines.push('Warnings:')
+        for (const w of combined.warnings) {
+          lines.push(`  [!] ${w}`)
+        }
+      }
+
+      if (combined.recommendations.length > 0) {
+        lines.push('')
+        lines.push('Recommendations:')
+        for (const r of combined.recommendations) {
+          lines.push(`  - ${r}`)
+        }
+      }
+
+      info(lines.join('\n'))
+    } else {
+      info(formatAddressCheck(combined, address))
+    }
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)
@@ -216,11 +242,15 @@ export async function securityWatch(address: string, options: { interval?: strin
     keyValue('Interval', `${intervalMs}ms`)
     info('Press Ctrl+C to stop')
 
+    // Print only events that arrived since the last print — the monitor's
+    // event list only grows, so a high-water mark dedupes re-prints.
+    let printedEvents = 0
     setInterval(() => {
-      const events = monitor.getRecentEvents(10)
-      for (const event of events) {
-        info(formatSecurityEvent(event))
+      const events = monitor.getRecentEvents(Number.MAX_SAFE_INTEGER)
+      for (let i = printedEvents; i < events.length; i++) {
+        info(formatSecurityEvent(events[i]))
       }
+      printedEvents = events.length
     }, intervalMs)
 
     process.on('SIGINT', () => {

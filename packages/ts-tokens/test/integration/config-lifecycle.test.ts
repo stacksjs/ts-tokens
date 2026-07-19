@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import {
   defaults,
   mergeConfig,
@@ -8,9 +8,26 @@ import {
 } from '../../src/config'
 import type { SolanaNetwork } from '../../src/types'
 import { DEFAULT_RPC_ENDPOINTS, DEFAULT_EXPLORER_URLS } from '../../src/types'
+import * as fs from 'node:fs'
+import * as os from 'node:os'
+import * as path from 'node:path'
+
+let savedConfigDir: string | undefined
 
 describe('Config Lifecycle — Integration', () => {
   beforeEach(() => {
+    // Isolate the user-level overlay from the real user home.
+    savedConfigDir = process.env.TOKENS_CONFIG_DIR
+    process.env.TOKENS_CONFIG_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-tokens-config-lifecycle-'))
+    resetConfig()
+  })
+
+  afterEach(() => {
+    if (savedConfigDir === undefined) {
+      delete process.env.TOKENS_CONFIG_DIR
+    } else {
+      process.env.TOKENS_CONFIG_DIR = savedConfigDir
+    }
     resetConfig()
   })
 

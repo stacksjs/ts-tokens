@@ -39,6 +39,21 @@ describe('lamportsToSol', () => {
   test('respects custom decimals', () => {
     expect(lamportsToSol(1_000_000_000n, 2)).toBe('1.00')
   })
+
+  test('is exact for values above 2^53 (no Number precision loss)', () => {
+    // 9007199254740993 is not representable as a double (rounds to ...992)
+    expect(lamportsToSol(9_007_199_254_740_993n)).toBe('9007199.254740993')
+    expect(lamportsToSol(18_446_744_073_709_551_615n)).toBe('18446744073.709551615')
+  })
+
+  test('rounds half-up at the requested decimals', () => {
+    expect(lamportsToSol(1_999_999_999n, 2)).toBe('2.00')
+    expect(lamportsToSol(1_944_444_444n, 2)).toBe('1.94')
+  })
+
+  test('rejects non-integer number input', () => {
+    expect(() => lamportsToSol(1.5)).toThrow('integer')
+  })
 })
 
 describe('solToLamports', () => {
@@ -54,8 +69,31 @@ describe('solToLamports', () => {
     expect(solToLamports(0.5)).toBe(500_000_000n)
   })
 
+  test('converts 1.005 exactly (no float multiplication error)', () => {
+    // 1.005 * 1e9 === 1004999999.9999999 in binary floating point
+    expect(solToLamports(1.005)).toBe(1_005_000_000n)
+  })
+
+  test('converts one lamport expressed in SOL', () => {
+    expect(solToLamports(0.000000001)).toBe(1n)
+  })
+
   test('floors fractional lamports', () => {
     expect(solToLamports(0.0000000001)).toBe(0n)
+  })
+
+  test('handles exponential-notation stringification', () => {
+    // String(1e-9) is "1e-9"; the parser must expand it, not choke on "e"
+    expect(solToLamports(1e-9)).toBe(1n)
+  })
+
+  test('rejects negative amounts', () => {
+    expect(() => solToLamports(-1)).toThrow('negative')
+  })
+
+  test('rejects non-finite input', () => {
+    expect(() => solToLamports(Number.NaN)).toThrow()
+    expect(() => solToLamports(Number.POSITIVE_INFINITY)).toThrow()
   })
 })
 
@@ -94,8 +132,19 @@ describe('parseTokenAmount', () => {
     expect(parseTokenAmount('1.500000', 6)).toBe(1_500_000n)
   })
 
-  test('truncates excess decimal places', () => {
-    expect(parseTokenAmount('1.1234567', 6)).toBe(1_123_456n)
+  test('throws on excess decimal places instead of silently truncating', () => {
+    expect(() => parseTokenAmount('1.1234567', 6)).toThrow('too many decimal places')
+  })
+
+  test('throws on negative input', () => {
+    expect(() => parseTokenAmount('-1', 6)).toThrow('negative')
+    expect(() => parseTokenAmount('-0.5', 9)).toThrow('negative')
+  })
+
+  test('throws on malformed input', () => {
+    expect(() => parseTokenAmount('', 6)).toThrow('invalid amount')
+    expect(() => parseTokenAmount('abc', 6)).toThrow('invalid amount')
+    expect(() => parseTokenAmount('1.2.3', 6)).toThrow('invalid amount')
   })
 
   test('parses zero', () => {
@@ -130,6 +179,16 @@ describe('hexToBytes', () => {
 
   test('handles empty string', () => {
     expect(hexToBytes('')).toEqual(new Uint8Array(0))
+  })
+
+  test('throws a descriptive Error on odd-length hex (not RangeError)', () => {
+    expect(() => hexToBytes('abc')).toThrow('odd-length hex string')
+    expect(() => hexToBytes('abc')).not.toThrow(RangeError)
+  })
+
+  test('throws on non-hex characters', () => {
+    expect(() => hexToBytes('zz')).toThrow('invalid hex string')
+    expect(() => hexToBytes('01 02')).toThrow('invalid hex string')
   })
 })
 
@@ -247,6 +306,38 @@ describe('retry', () => {
     }, 2, 10)).rejects.toThrow('always fails')
     expect(attempts).toBe(3) // initial + 2 retries
   })
+
+  test('jitter keeps backoff within the exponential ceiling', async () => {
+    // Full jitter draws delay from [0, base * 2^attempt], so with base 200ms
+    // a single retry must complete well under the old fixed 200ms ceiling…
+    // and must still actually retry (behavior unchanged by jitter).
+    let attempts = 0
+    const start = Date.now()
+    const result = await retry(async () => {
+      attempts++
+      if (attempts < 2) throw new Error('flaky')
+      return 'recovered'
+    }, 1, 200)
+    const elapsed = Date.now() - start
+    expect(result).toBe('recovered')
+    expect(attempts).toBe(2)
+    expect(elapsed).toBeLessThan(200 + 150) // jittered delay is in [0, 200]
+  })
+
+  test('honors retryAfter hints attached to the error', async () => {
+    let attempts = 0
+    const start = Date.now()
+    await expect(retry(async () => {
+      attempts++
+      const err = new Error('rate limited') as Error & { retryAfter: number }
+      err.retryAfter = 1 // seconds
+      throw err
+    }, 1, 10)).rejects.toThrow('rate limited')
+    const elapsed = Date.now() - start
+    // 1s Retry-After + up to 1s jitter (never the 10ms base delay)
+    expect(elapsed).toBeGreaterThanOrEqual(950)
+    expect(attempts).toBe(2)
+  }, 10_000)
 })
 
 describe('generateSeed', () => {

@@ -1,8 +1,40 @@
 /** Wallet CLI command handlers. */
 
-import { success, error, keyValue, header, info, formatSol } from '../utils'
+import { success, error, keyValue, header, info, warn, formatSol } from '../utils'
 import { withSpinner } from '../utils/spinner'
 import { getConfig, saveConfigOverlay, getConfigOverlayPath } from '../../config'
+
+/**
+ * Resolve a keyring password from (in priority order):
+ *
+ * 1. the `--password` flag — kept for scripting, but warns because flags leak
+ *    into shell history and process listings
+ * 2. the `TOKENS_KEYRING_PASSWORD` environment variable
+ * 3. an interactive masked prompt (only on a TTY, never in CI)
+ *
+ * Exits with a clear error when none is available.
+ */
+async function resolveKeyringPasswordFrom(flagPassword: string | undefined, purpose: string): Promise<string> {
+  if (flagPassword) {
+    warn('Warning: --password leaks into shell history and process listings.')
+    warn('Prefer the TOKENS_KEYRING_PASSWORD environment variable or the interactive prompt.')
+    return flagPassword
+  }
+
+  if (process.env.TOKENS_KEYRING_PASSWORD) {
+    return process.env.TOKENS_KEYRING_PASSWORD
+  }
+
+  if (process.stdout.isTTY && !process.env.CI) {
+    const { promptSecret } = await import('../utils/prompt')
+    return promptSecret(purpose)
+  }
+
+  error('No keyring password provided.')
+  error('Set TOKENS_KEYRING_PASSWORD, or re-run interactively to be prompted.')
+  error('(--password works for scripting but leaks to shell history.)')
+  process.exit(1)
+}
 
 export async function walletGenerate(options: { output?: string }): Promise<void> {
   try {
@@ -104,10 +136,7 @@ export async function walletImport(keypairPath: string): Promise<void> {
 }
 
 export async function walletEncrypt(options: { password?: string }): Promise<void> {
-  if (!options.password) {
-    error('--password is required')
-    process.exit(1)
-  }
+  const password = await resolveKeyringPasswordFrom(options.password, 'Choose a keyring password')
 
   try {
     const config = await getConfig()
@@ -118,7 +147,7 @@ export async function walletEncrypt(options: { password?: string }): Promise<voi
     encryptAndSaveKeypair(
       keypair.secretKey,
       keypair.publicKey.toBase58(),
-      options.password
+      password
     )
 
     success('Keypair encrypted and saved to keyring')
@@ -130,56 +159,22 @@ export async function walletEncrypt(options: { password?: string }): Promise<voi
 }
 
 export async function walletDecrypt(options: { password?: string }): Promise<void> {
-  if (!options.password) {
-    error('--password is required')
-    process.exit(1)
-  }
+  const password = await resolveKeyringPasswordFrom(options.password, 'Keyring password')
 
   try {
     const { loadKeypairFromKeyring, setWallet } = await import('../../drivers/solana/wallet')
-    const keypair = loadKeypairFromKeyring(options.password)
+    const keypair = loadKeypairFromKeyring(password)
     setWallet(keypair)
 
-    success('Wallet loaded from keyring (this process only)')
+    success('Wallet decrypted from keyring')
     keyValue('Public Key', keypair.publicKey.toBase58())
-    info('This decrypted wallet lives in memory for the current command only.')
-    info('It is NOT persisted — a new CLI invocation will require the password again.')
+    info('The decrypted wallet lives in memory for this command only and is NOT persisted.')
+    info('To use the keyring for signing, set TOKENS_KEYRING_PASSWORD in your environment —')
+    info('every command then loads the keyring automatically (see wallet.keyringPath config).')
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)
   }
-}
-
-export async function walletUnlock(options: { password?: string; timeout?: string }): Promise<void> {
-  if (!options.password) {
-    error('--password is required')
-    process.exit(1)
-  }
-
-  try {
-    const { startSession } = await import('../../security/session')
-    const timeoutMs = parseInt(options.timeout || '30') * 60 * 1000
-    startSession(options.password, { timeoutMs })
-
-    success('Signing session started (this process only)')
-    info(`In-memory session expires after ${options.timeout || '30'} minutes OR when this command exits — whichever comes first.`)
-    info('There is no persistent daemon: a separate CLI invocation will not see this session.')
-  } catch (err) {
-    error(err instanceof Error ? err.message : String(err))
-    process.exit(1)
-  }
-}
-
-export async function walletLock(): Promise<void> {
-  const { endSession, isSessionActive } = await import('../../security/session')
-
-  if (!isSessionActive()) {
-    info('No active session to lock')
-    return
-  }
-
-  endSession()
-  success('Signing session ended')
 }
 
 export async function walletKeyringInfo(): Promise<void> {

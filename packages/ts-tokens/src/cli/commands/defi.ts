@@ -6,6 +6,30 @@ import { getConfig } from '../../config'
 
 const SOL_MINT = 'So11111111111111111111111111111111111111112'
 
+/**
+ * Fetch the on-chain decimals for both mints of a limit order.
+ * Hardcoding 9/9 here misprices 6-decimal tokens (USDC & co.) by 10^3.
+ */
+async function fetchMintDecimals(
+  config: Awaited<ReturnType<typeof getConfig>>,
+  makingMint: string,
+  takingMint: string,
+): Promise<{ makingDecimals: number; takingDecimals: number }> {
+  const { createConnection } = await import('../../drivers/solana/connection')
+  const { getMintWithProgram } = await import('../../token/program')
+  const { PublicKey } = await import('@solana/web3.js')
+
+  const connection = createConnection(config)
+  const [making, taking] = await Promise.all([
+    getMintWithProgram(connection, new PublicKey(makingMint)),
+    getMintWithProgram(connection, new PublicKey(takingMint)),
+  ])
+  return {
+    makingDecimals: making.mint.decimals,
+    takingDecimals: taking.mint.decimals,
+  }
+}
+
 export async function defiLimitBuy(outputMint: string, amount: string, price: string, options: {
   inputMint?: string
   expire?: string
@@ -14,12 +38,15 @@ export async function defiLimitBuy(outputMint: string, amount: string, price: st
     const config = await getConfig()
     const { createLimitOrder, calculateTakingAmount } = await import('../../defi/jupiter-limit')
 
+    const inputMint = options.inputMint || SOL_MINT
+    const { makingDecimals, takingDecimals } = await fetchMintDecimals(config, inputMint, outputMint)
+
     const makingAmount = BigInt(amount)
-    const takingAmount = calculateTakingAmount(makingAmount, parseFloat(price), 9, 9)
+    const takingAmount = calculateTakingAmount(makingAmount, parseFloat(price), makingDecimals, takingDecimals)
 
     const result = await withSpinner('Creating limit buy order...', () =>
       createLimitOrder({
-        inputMint: options.inputMint || SOL_MINT,
+        inputMint,
         outputMint,
         makingAmount,
         takingAmount,
@@ -44,13 +71,16 @@ export async function defiLimitSell(inputMint: string, amount: string, price: st
     const config = await getConfig()
     const { createLimitOrder, calculateTakingAmount } = await import('../../defi/jupiter-limit')
 
+    const outputMint = options.outputMint || SOL_MINT
+    const { makingDecimals, takingDecimals } = await fetchMintDecimals(config, inputMint, outputMint)
+
     const makingAmount = BigInt(amount)
-    const takingAmount = calculateTakingAmount(makingAmount, parseFloat(price), 9, 9)
+    const takingAmount = calculateTakingAmount(makingAmount, parseFloat(price), makingDecimals, takingDecimals)
 
     const result = await withSpinner('Creating limit sell order...', () =>
       createLimitOrder({
         inputMint,
-        outputMint: options.outputMint || SOL_MINT,
+        outputMint,
         makingAmount,
         takingAmount,
         expireAt: options.expire ? Math.floor(Date.now() / 1000) + parseInt(options.expire) : undefined,

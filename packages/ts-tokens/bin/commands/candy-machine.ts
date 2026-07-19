@@ -16,9 +16,10 @@ export function register(cli: any): void {
     })
 
   cli
-    .command('candy:add <candy-machine> <items-file>', 'Add config lines from JSON file')
-    .action(async (candyMachine: string, itemsFile: string) => {
-      await candyAdd(candyMachine, itemsFile)
+    .command('candy:add <candy-machine> <items-file>', 'Add config lines from JSON file (appends after loaded lines)')
+    .option('--offset <index>', 'Start index for the new config lines (default: append after the last loaded line)')
+    .action(async (candyMachine: string, itemsFile: string, options: { offset?: string }) => {
+      await candyAdd(candyMachine, itemsFile, options)
     })
 
   cli
@@ -47,7 +48,7 @@ export function register(cli: any): void {
     })
 
   cli
-    .command('candy:upload <path>', 'Upload assets and create config lines')
+    .command('candy:upload <path>', 'Upload assets to storage (prints next steps; does not add config lines)')
     .option('--storage <provider>', 'Storage provider (arweave/ipfs/shadow)', { default: 'arweave' })
     .action(async (assetsPath: string, options: { storage?: string }) => {
       await candyUpload(assetsPath, options)

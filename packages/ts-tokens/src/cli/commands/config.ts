@@ -1,10 +1,31 @@
 /** CLI config command handlers. */
 
 import { success, error, header, keyValue, info } from '../utils'
-import { getConfig, saveConfigOverlay, getConfigOverlayPath } from '../../config'
+import { getConfig, saveConfigOverlay, getConfigOverlayPath, saveProjectConfig } from '../../config'
 import type { SolanaNetwork } from '../../types'
 
 const VALID_NETWORKS = ['mainnet-beta', 'devnet', 'testnet', 'localnet']
+
+/**
+ * Where a config write should land: the project config (default) or the
+ * user-level overlay (`--global`).
+ */
+interface ConfigWriteOptions {
+  global?: boolean
+}
+
+/**
+ * Persist a config update to the requested target and report where it went.
+ */
+function persistConfigUpdate(updates: Record<string, any>, options: ConfigWriteOptions): void {
+  if (options.global) {
+    saveConfigOverlay(updates)
+    info(`Persisted to ${getConfigOverlayPath()} (user-level, applies to all projects)`)
+  } else {
+    const { path } = saveProjectConfig(updates)
+    info(`Persisted to ${path} (project)`)
+  }
+}
 
 export async function configInit(options: { network?: string }): Promise<void> {
   const network = options.network || 'devnet'
@@ -64,39 +85,49 @@ export async function configShow(): Promise<void> {
   }
 }
 
-export async function configNetwork(network: string): Promise<void> {
+export async function configNetwork(network: string, options: ConfigWriteOptions = {}): Promise<void> {
   if (!VALID_NETWORKS.includes(network)) {
     error(`Invalid network: ${network}`)
     error(`Valid networks: ${VALID_NETWORKS.join(', ')}`)
     process.exit(1)
   }
-  saveConfigOverlay({ network: network as SolanaNetwork })
-  success(`Switched to ${network}`)
-  info(`Persisted to ${getConfigOverlayPath()}`)
+  try {
+    persistConfigUpdate({ network: network as SolanaNetwork }, options)
+    success(`Switched to ${network}`)
+  } catch (err) {
+    error(err instanceof Error ? err.message : String(err))
+    process.exit(1)
+  }
 }
 
-export async function configSet(key: string, value: string): Promise<void> {
+/**
+ * Coerce a raw CLI string into a config value: booleans and numeric strings
+ * become their native types; an empty string stays an empty string (it must
+ * NOT become 0 via `Number('')`).
+ */
+function coerceConfigValue(value: string): any {
+  if (value === '') return ''
+  if (value === 'true') return true
+  if (value === 'false') return false
+  if (!isNaN(Number(value))) return Number(value)
+  return value
+}
+
+export async function configSet(key: string, value: string, options: ConfigWriteOptions = {}): Promise<void> {
   try {
     const updates: Record<string, any> = {}
     const keys = key.split('.')
 
-    if (keys.length === 1) {
-      if (value === 'true') updates[key] = true
-      else if (value === 'false') updates[key] = false
-      else if (!isNaN(Number(value))) updates[key] = Number(value)
-      else updates[key] = value
-    } else {
-      let obj: Record<string, any> = updates
-      for (let i = 0; i < keys.length - 1; i++) {
-        obj[keys[i]] = {}
-        obj = obj[keys[i]]
-      }
-      obj[keys[keys.length - 1]] = value
+    // Nested keys get the same leaf coercion as flat keys.
+    let obj: Record<string, any> = updates
+    for (let i = 0; i < keys.length - 1; i++) {
+      obj[keys[i]] = {}
+      obj = obj[keys[i]]
     }
+    obj[keys[keys.length - 1]] = coerceConfigValue(value)
 
-    saveConfigOverlay(updates)
+    persistConfigUpdate(updates, options)
     success(`Set ${key} = ${value}`)
-    info(`Persisted to ${getConfigOverlayPath()}`)
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)

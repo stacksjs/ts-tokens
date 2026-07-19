@@ -1,12 +1,12 @@
 import {
-  batchRetry, batchStatus, batchMetadata, batchCreateAlt, batchExtendAlt,
+  batchFailures, batchStatus, batchMetadata, batchCreateAlt, batchExtendAlt,
 } from '../../src/cli/commands/batch'
 
 export function register(cli: any): void {
   cli
-    .command('batch:retry <recovery-file>', 'Retry failed items from recovery state')
+    .command('batch:failures <recovery-file>', 'List failed items from a batch recovery state file')
     .action(async (recoveryFile: string) => {
-      await batchRetry(recoveryFile)
+      await batchFailures(recoveryFile)
     })
 
   cli

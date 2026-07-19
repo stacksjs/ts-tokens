@@ -1,4 +1,4 @@
-import { upload, uploadAssets, uploadMetadata, storageBalance, storageFund } from '../../src/cli/commands/storage'
+import { upload, uploadAssets, uploadMetadata } from '../../src/cli/commands/storage'
 
 export function register(cli: any): void {
   cli
@@ -24,17 +24,7 @@ export function register(cli: any): void {
       await uploadMetadata(filePath, options)
     })
 
-  cli
-    .command('storage:balance', 'Check storage balance')
-    .option('--provider <provider>', 'Storage provider', { default: 'arweave' })
-    .action(async (options: { provider?: string }) => {
-      await storageBalance(options)
-    })
-
-  cli
-    .command('storage:fund <amount>', 'Fund storage account')
-    .option('--provider <provider>', 'Storage provider', { default: 'arweave' })
-    .action(async (amount: string, options: { provider?: string }) => {
-      await storageFund(amount, options)
-    })
+  // NOTE: storage:balance / storage:fund are intentionally not registered —
+  // no storage adapter implements getBalance()/fund(), so the commands could
+  // only ever fail.
 }

@@ -64,11 +64,12 @@ export async function prefetchTokenAccounts(
     METADATA_PROGRAM_ID,
   )
 
-  const accounts = await getMultipleAccountsBatched(connection, [mint, ata, metadataAddress])
+  // The mint is NOT fetched again here — getMintWithProgram already fetched
+  // and unpacked it above, so batch only the remaining two accounts.
+  const accounts = await getMultipleAccountsBatched(connection, [ata, metadataAddress])
 
   return {
-    // getMintWithProgram already fetched and unpacked the mint account.
-    mint: accounts.get(mint.toBase58()) ?? mintAccount,
+    mint: mintAccount,
     tokenAccount: accounts.get(ata.toBase58()),
     metadata: accounts.get(metadataAddress.toBase58()),
   }

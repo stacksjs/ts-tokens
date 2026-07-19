@@ -67,7 +67,18 @@ describe('Config Commands', () => {
   })
 
   test('config:show outputs JSON config and exits 0', () => {
-    const { stdout, exitCode } = runCLI(['config:show'])
+    // Seed a project config with an object value so the rendered output
+    // contains a JSON object with at least one brace (flat default config
+    // renders as plain key: value lines).
+    const fs = require('node:fs')
+    const os = require('node:os')
+    const path = require('node:path')
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-tokens-cli-show-'))
+    fs.writeFileSync(
+      path.join(cwd, 'tokens.config.json'),
+      JSON.stringify({ network: 'devnet', wallet: { keypairEnv: 'TOKENS_KEYPAIR' } }),
+    )
+    const { stdout, exitCode } = runCLI(['config:show'], { cwd })
     expect(exitCode).toBe(0)
     // The output should contain a JSON object with at least one brace
     expect(stdout).toContain('{')
@@ -276,10 +287,11 @@ describe('Collection Commands — Error Cases', () => {
     expect(combined.length).toBeGreaterThan(0)
   })
 
-  test('collection:items without args shows error or help', () => {
+  test('collection:items is no longer registered (needs DAS API, not plain RPC)', () => {
     const { stdout, stderr, exitCode } = runCLI(['collection:items'])
     const combined = (stdout + stderr).toLowerCase()
-    expect(combined.length).toBeGreaterThan(0)
+    expect(combined).toContain('not found')
+    expect(exitCode).toBe(1)
   })
 
   test('collection:verify without args shows error or help', () => {
@@ -457,17 +469,22 @@ describe('Wallet Keyring & Session CLI Commands — Error Cases', () => {
     expect(exitCode).not.toBe(0)
   })
 
-  test('wallet:unlock without --password shows error', () => {
-    const { stdout, stderr, exitCode } = runCLI(['wallet:unlock'])
-    const combined = (stdout + stderr).toLowerCase()
-    expect(combined).toMatch(/error|password|required/)
-    expect(exitCode).not.toBe(0)
+  test('wallet:encrypt with --password prints a leak warning to stderr', () => {
+    const { stderr } = runCLI(['wallet:encrypt', '--password', 'test-password'])
+    expect(stderr.toLowerCase()).toContain('warning')
+    expect(stderr).toContain('TOKENS_KEYRING_PASSWORD')
   })
 
-  test('wallet:lock without active session shows info message', () => {
+  test('wallet:unlock is removed (sessions cannot outlive the process)', () => {
+    const { stdout, stderr, exitCode } = runCLI(['wallet:unlock'])
+    expect(stdout + stderr).toContain('not found')
+    expect(exitCode).toBe(1)
+  })
+
+  test('wallet:lock is removed alongside wallet:unlock', () => {
     const { stdout, stderr, exitCode } = runCLI(['wallet:lock'])
-    const combined = (stdout + stderr).toLowerCase()
-    expect(combined).toMatch(/no active session|session/)
+    expect(stdout + stderr).toContain('not found')
+    expect(exitCode).toBe(1)
   })
 
   test('wallet:keyring-info without keyring shows info message', () => {
@@ -482,17 +499,23 @@ describe('Wallet Keyring & Session CLI Commands — Error Cases', () => {
 // ---------------------------------------------------------------------------
 
 describe('Batch Recovery CLI Commands — Error Cases', () => {
-  test('batch:retry without file arg shows error or help', () => {
-    const { stdout, stderr, exitCode } = runCLI(['batch:retry'])
+  test('batch:failures without file arg shows error or help', () => {
+    const { stdout, stderr, exitCode } = runCLI(['batch:failures'])
     const combined = (stdout + stderr).toLowerCase()
     expect(combined.length).toBeGreaterThan(0)
   })
 
-  test('batch:retry with non-existent file shows error', () => {
-    const { stdout, stderr, exitCode } = runCLI(['batch:retry', '/tmp/nonexistent-recovery.json'])
+  test('batch:failures with non-existent file shows error', () => {
+    const { stdout, stderr, exitCode } = runCLI(['batch:failures', '/tmp/nonexistent-recovery.json'])
     const combined = (stdout + stderr).toLowerCase()
     expect(combined).toMatch(/error|not found/)
     expect(exitCode).not.toBe(0)
+  })
+
+  test('batch:retry is renamed to batch:failures', () => {
+    const { stdout, stderr, exitCode } = runCLI(['batch:retry'])
+    expect(stdout + stderr).toContain('not found')
+    expect(exitCode).toBe(1)
   })
 
   test('batch:status without file arg shows error or help', () => {
@@ -537,10 +560,18 @@ describe('Exit Codes & Output Formatting', () => {
     expect(combined.length).toBeGreaterThan(0)
   })
 
-  test('config:show output is valid JSON', () => {
-    const { stdout } = runCLI(['config:show'])
-    // The output may have a prefix line like "Current configuration:"
-    // Extract the JSON portion (first { to last })
+  test('config:show output contains valid JSON for object values', () => {
+    // Seed a project config with an object value; config:show renders object
+    // values as JSON.
+    const fs = require('node:fs')
+    const os = require('node:os')
+    const path = require('node:path')
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'ts-tokens-cli-show-'))
+    fs.writeFileSync(
+      path.join(cwd, 'tokens.config.json'),
+      JSON.stringify({ network: 'devnet', wallet: { keypairEnv: 'TOKENS_KEYPAIR' } }),
+    )
+    const { stdout } = runCLI(['config:show'], { cwd })
     const jsonStart = stdout.indexOf('{')
     const jsonEnd = stdout.lastIndexOf('}')
     expect(jsonStart).toBeGreaterThanOrEqual(0)

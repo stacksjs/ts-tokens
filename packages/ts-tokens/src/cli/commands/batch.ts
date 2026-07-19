@@ -4,7 +4,7 @@ import { success, error, keyValue, header, info } from '../utils'
 import { withSpinner } from '../utils/spinner'
 import { getConfig } from '../../config'
 
-export async function batchRetry(recoveryFile: string): Promise<void> {
+export async function batchFailures(recoveryFile: string): Promise<void> {
   try {
     const { loadRecoveryState, getRetryItems, formatRecoverySummary } = await import('../../batch/recovery')
 
@@ -21,7 +21,7 @@ export async function batchRetry(recoveryFile: string): Promise<void> {
     for (const item of retryItems) {
       keyValue(`#${item.index} ${item.recipient}`, item.error ?? 'Unknown error')
     }
-    info('\nTo retry, re-run the batch operation with these recipients.')
+    info('\nTo retry these items, re-run the original batch operation with these recipients.')
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)

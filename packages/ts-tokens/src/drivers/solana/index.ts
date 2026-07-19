@@ -8,6 +8,7 @@ export * from './connection'
 export * from './wallet'
 export * from './transaction'
 export * from './account'
+export * from './driver'
 
 // Re-export for convenience
 export { SolanaConnection, createSolanaConnection } from './connection'

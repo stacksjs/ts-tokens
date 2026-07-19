@@ -48,6 +48,53 @@ async function resolveNamedPriorityFee(
 }
 
 /**
+ * Wall-clock timeout for confirming a transaction whose true
+ * lastValidBlockHeight is unknowable (see sendAndConfirmTransaction).
+ */
+const CONFIRMATION_POLL_TIMEOUT_MS = 60_000
+
+/**
+ * Poll signature status until the transaction reaches the requested
+ * commitment or the wall-clock timeout elapses. Returns the transaction error
+ * (if it failed on-chain) or null on success. Throws on timeout.
+ */
+async function pollSignatureStatus(
+  connection: Connection,
+  signature: TransactionSignature,
+  commitment: 'processed' | 'confirmed' | 'finalized',
+  timeoutMs: number,
+): Promise<unknown> {
+  const start = Date.now()
+
+  for (;;) {
+    const { value } = await connection.getSignatureStatus(signature)
+
+    if (value) {
+      if (value.err) {
+        return value.err
+      }
+      const reached =
+        commitment === 'processed'
+          ? value.confirmationStatus != null
+          : commitment === 'confirmed'
+            ? value.confirmationStatus === 'confirmed' || value.confirmationStatus === 'finalized'
+            : value.confirmationStatus === 'finalized'
+      if (reached) {
+        return null
+      }
+    }
+
+    if (Date.now() - start > timeoutMs) {
+      throw new Error(
+        `Transaction confirmation timed out after ${timeoutMs}ms (signature: ${signature})`,
+      )
+    }
+
+    await sleep(1000)
+  }
+}
+
+/**
  * Build a transaction from instructions
  *
  * @param connection - Solana connection
@@ -172,28 +219,42 @@ export async function sendAndConfirmTransaction(
     const blockhash = transaction instanceof Transaction
       ? transaction.recentBlockhash!
       : transaction.message.recentBlockhash
-    let lastValidBlockHeight = transaction instanceof Transaction
+    const lastValidBlockHeight = transaction instanceof Transaction
       ? transaction.lastValidBlockHeight
       : undefined
-    if (lastValidBlockHeight == null) {
-      const latest = await connection.getLatestBlockhash(options?.commitment ?? 'confirmed')
-      lastValidBlockHeight = latest.lastValidBlockHeight
+
+    let confirmationError: unknown = null
+
+    if (lastValidBlockHeight != null) {
+      // Legacy transactions built by buildTransaction() carry the
+      // lastValidBlockHeight that belongs to their blockhash — a matched pair.
+      const confirmation = await connection.confirmTransaction(
+        {
+          signature,
+          blockhash,
+          lastValidBlockHeight,
+        },
+        options?.commitment ?? 'confirmed'
+      )
+      confirmationError = confirmation.value.err
+    } else {
+      // Versioned transactions (and legacy txs built elsewhere) pair their
+      // ORIGINAL blockhash with an unknowable expiry. Fetching a FRESH
+      // lastValidBlockHeight here would wait past the real expiry, so poll
+      // signature status against a wall-clock timeout instead.
+      confirmationError = await pollSignatureStatus(
+        connection,
+        signature,
+        options?.commitment ?? 'confirmed',
+        CONFIRMATION_POLL_TIMEOUT_MS,
+      )
     }
 
-    const confirmation = await connection.confirmTransaction(
-      {
-        signature,
-        blockhash,
-        lastValidBlockHeight,
-      },
-      options?.commitment ?? 'confirmed'
-    )
-
-    if (confirmation.value.err) {
+    if (confirmationError) {
       return {
         signature,
         confirmed: false,
-        error: JSON.stringify(confirmation.value.err),
+        error: JSON.stringify(confirmationError),
       }
     }
 

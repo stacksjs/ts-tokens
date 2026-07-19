@@ -125,16 +125,22 @@ export async function devFund(address: string, amount: number): Promise<void> {
   header('Fund Account')
 
   try {
-    const { execSync } = await import('node:child_process')
+    const { spawnSync } = await import('node:child_process')
 
     keyValue('Address', address)
     keyValue('Amount', `${amount} SOL`)
 
     await withSpinner(`Airdropping ${amount} SOL`, async () => {
-      execSync(
-        `solana airdrop ${amount} ${address} --url http://localhost:8899`,
-        { stdio: 'pipe', timeout: 15_000, encoding: 'utf-8' },
+      // argv form (no shell) — the address is user input and must never be
+      // interpolated into a shell string.
+      const result = spawnSync(
+        'solana',
+        ['airdrop', String(amount), address, '--url', 'http://localhost:8899'],
+        { timeout: 15_000, encoding: 'utf-8' },
       )
+      if (result.error || result.status !== 0) {
+        throw new Error(result.stderr?.trim() || result.error?.message || 'airdrop failed')
+      }
     }, `Airdropped ${amount} SOL to ${address}`)
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
@@ -175,10 +181,15 @@ export async function devTime(timestamp: number): Promise<void> {
 
     // Attempt the actual warp if the validator supports it
     try {
-      execSync(
-        `solana warp-slot ${timestamp} --url http://localhost:8899`,
-        { stdio: 'pipe', timeout: 10_000, encoding: 'utf-8' },
+      const { spawnSync } = await import('node:child_process')
+      const result = spawnSync(
+        'solana',
+        ['warp-slot', String(timestamp), '--url', 'http://localhost:8899'],
+        { timeout: 10_000, encoding: 'utf-8' },
       )
+      if (result.error || result.status !== 0) {
+        throw new Error(result.stderr?.trim() || result.error?.message || 'warp-slot failed')
+      }
       success(`Warped to slot ${timestamp}`)
     } catch {
       info('Direct slot warp not supported by this validator version.')

@@ -41,6 +41,22 @@ export function loadKeypairFromFile(keypairPath: string): Keypair {
     throw new Error(`Keypair file not found: ${absolutePath}`)
   }
 
+  // A keypair file readable by group/others leaks the private key. Warn (don't
+  // fail — the file may be intentional on shared dev machines) like ssh does.
+  if (process.platform !== 'win32') {
+    try {
+      const mode = fs.statSync(absolutePath).mode & 0o777
+      if (mode & 0o077) {
+        process.stderr.write(
+          `Warning: keypair file ${absolutePath} has permissions ${mode.toString(8).padStart(3, '0')} — ` +
+          `group/others can read your private key. Run: chmod 600 "${absolutePath}"\n`,
+        )
+      }
+    } catch {
+      // Best-effort warning only; never block loading on a stat failure.
+    }
+  }
+
   const content = fs.readFileSync(absolutePath, 'utf-8')
   const secretKey = new Uint8Array(JSON.parse(content))
 
@@ -113,19 +129,34 @@ export function parseSecretKeyInput(input: string): Uint8Array {
 }
 
 /**
- * Load keypair from stdin (reads fd 0 synchronously)
+ * Load keypair from stdin (reads fd 0 synchronously until EOF)
  *
  * @returns Keypair instance
  */
 export function loadKeypairFromStdin(): Keypair {
   const fd = fs.openSync('/dev/stdin', 'r')
-  const buf = Buffer.alloc(1024)
-  const bytesRead = fs.readSync(fd, buf, 0, 1024, null)
-  fs.closeSync(fd)
+  try {
+    // Read in a loop: a single read() may return fewer bytes than requested
+    // (pipes deliver data as it arrives), which truncated larger inputs.
+    const chunks: Buffer[] = []
+    let total = 0
+    const buf = Buffer.alloc(1024)
+    for (;;) {
+      const bytesRead = fs.readSync(fd, buf, 0, buf.length, null)
+      if (bytesRead === 0) break
+      chunks.push(Buffer.from(buf.subarray(0, bytesRead)))
+      total += bytesRead
+      if (total > 1024 * 1024) {
+        throw new Error('loadKeypairFromStdin: input exceeds 1 MiB — not a valid keypair')
+      }
+    }
 
-  const input = buf.slice(0, bytesRead).toString('utf-8')
-  const secretKey = parseSecretKeyInput(input)
-  return Keypair.fromSecretKey(secretKey)
+    const input = Buffer.concat(chunks).toString('utf-8')
+    const secretKey = parseSecretKeyInput(input)
+    return Keypair.fromSecretKey(secretKey)
+  } finally {
+    fs.closeSync(fd)
+  }
 }
 
 /**
@@ -339,9 +370,18 @@ export function saveKeypair(keypair: Keypair, filePath: string): void {
     fs.mkdirSync(dir, { recursive: true })
   }
 
-  // Save with restricted permissions
+  // Save with restricted permissions. `writeFileSync`'s mode only applies when
+  // the file is newly created, so chmod afterwards to cover overwrites of
+  // pre-existing (possibly world-readable) files.
   const content = JSON.stringify(Array.from(keypair.secretKey))
   fs.writeFileSync(absolutePath, content, { mode: 0o600 })
+  if (process.platform !== 'win32') {
+    try {
+      fs.chmodSync(absolutePath, 0o600)
+    } catch {
+      // Non-fatal: the file content is correct, only the permission fix failed.
+    }
+  }
 }
 
 /**

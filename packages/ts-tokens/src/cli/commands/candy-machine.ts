@@ -74,7 +74,7 @@ export async function candyCreate(options: {
   }
 }
 
-export async function candyAdd(candyMachine: string, itemsFile: string): Promise<void> {
+export async function candyAdd(candyMachine: string, itemsFile: string, options: { offset?: string } = {}): Promise<void> {
   try {
     const config = await getConfig()
     const { addConfigLines } = await import('../../nft/candy-machine/create')
@@ -83,12 +83,32 @@ export async function candyAdd(candyMachine: string, itemsFile: string): Promise
     const content = fs.readFileSync(itemsFile, 'utf-8')
     const items: Array<{ name: string; uri: string }> = JSON.parse(content)
 
+    // Append after the last loaded config line instead of always writing at
+    // index 0 (which overwrites existing lines). --offset overrides.
+    let startIndex: number
+    if (options.offset !== undefined) {
+      startIndex = parseInt(options.offset)
+      if (!Number.isFinite(startIndex) || startIndex < 0) {
+        error(`Invalid --offset: ${options.offset}`)
+        process.exit(1)
+      }
+    } else {
+      const { getCandyMachineItems } = await import('../../nft/candy-machine/query')
+      const loaded = await withSpinner('Reading loaded config lines', () =>
+        getCandyMachineItems(candyMachine, config),
+      )
+      startIndex = loaded.length === 0 ? 0 : Math.max(...loaded.map(i => i.index)) + 1
+    }
+
+    info(`Adding ${items.length} config line(s) starting at index ${startIndex}`)
+
     const result = await withSpinner(
       `Adding ${items.length} config lines to ${candyMachine}`,
-      () => addConfigLines(candyMachine, 0, items, config),
+      () => addConfigLines(candyMachine, startIndex, items, config),
       'Config lines added'
     )
 
+    keyValue('Start index', String(startIndex))
     keyValue('Signature', result.signature)
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
@@ -254,6 +274,15 @@ export async function candyUpload(assetsPath: string, options: { storage?: strin
       keyValue(r.file, r.uri)
     }
     success(`Uploaded ${results.length} file(s)`)
+
+    // Uploading only puts the files on storage — it does NOT create config
+    // lines on the Candy Machine. Point at the follow-up command.
+    info('')
+    info('Next steps:')
+    info('  1. Create an items JSON file mapping item names to the uploaded URIs:')
+    info('       [{ "name": "NFT #1", "uri": "https://…" }, …]')
+    info('  2. Add them to your Candy Machine:')
+    info('       tokens candy:add <candy-machine> <items-file>')
   } catch (err) {
     error(err instanceof Error ? err.message : String(err))
     process.exit(1)

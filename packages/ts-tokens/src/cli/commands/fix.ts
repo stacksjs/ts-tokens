@@ -24,20 +24,23 @@ const FIX_REGISTRY: Record<ErrorCode, FixEntry> = {
   INSUFFICIENT_BALANCE: {
     description: 'Your wallet does not have enough SOL or tokens for this operation.',
     steps: [
-      'Check your current balance: tokens wallet balance',
-      'On devnet/testnet, request an airdrop: solana airdrop 2',
+      'Check your current balance: tokens wallet:balance',
+      'On devnet/testnet, request an airdrop: tokens wallet:airdrop 2 (or: solana airdrop 2)',
       'On mainnet, transfer SOL from another wallet or purchase from an exchange.',
       'Ensure you have enough SOL for both the operation and the transaction fee.',
     ],
     autoFix: async () => {
       info('Attempting devnet airdrop of 2 SOL...')
       try {
-        const { execSync } = await import('node:child_process')
-        const output = execSync('solana airdrop 2 --url devnet', {
+        const { spawnSync } = await import('node:child_process')
+        const result = spawnSync('solana', ['airdrop', '2', '--url', 'devnet'], {
           encoding: 'utf-8',
           timeout: 30_000,
         })
-        success(`Airdrop result: ${output.trim()}`)
+        if (result.error || result.status !== 0) {
+          throw new Error(result.stderr?.trim() || result.error?.message || 'airdrop failed')
+        }
+        success(`Airdrop result: ${result.stdout.trim()}`)
       } catch {
         error('Airdrop failed. You may not be on devnet, or the faucet is rate-limited.')
         info('Try again later or fund your wallet manually.')
@@ -58,7 +61,7 @@ const FIX_REGISTRY: Record<ErrorCode, FixEntry> = {
   AUTHORITY_ERROR: {
     description: 'You do not have the required authority (mint, freeze, or update) for this operation.',
     steps: [
-      'Check the current authorities: tokens token info <mint>',
+      'Check the current authorities: tokens authority <mint>',
       'Ensure your wallet keypair matches the required authority.',
       'If authority was transferred, contact the new authority holder.',
       'If authority was revoked, this operation can no longer be performed.',
@@ -69,10 +72,9 @@ const FIX_REGISTRY: Record<ErrorCode, FixEntry> = {
     description: 'The transaction failed to execute on-chain.',
     steps: [
       'Check the transaction logs for detailed error output.',
-      'Verify the transaction signature on a block explorer.',
+      'Inspect the transaction on a block explorer: https://explorer.solana.com/tx/<signature>',
       'Ensure all accounts are correctly initialized.',
       'If the blockhash expired, retry the transaction.',
-      'Use "tokens debug tx <signature>" to analyze the failure.',
     ],
   },
 
@@ -103,8 +105,8 @@ const FIX_REGISTRY: Record<ErrorCode, FixEntry> = {
       'Check that tokens.config.ts exists in your project root.',
       'Verify the file exports a valid configuration object.',
       'Required fields: chain, network.',
-      'Run "tokens config show" to display the current configuration.',
-      'Regenerate defaults with "tokens config init".',
+      'Run "tokens config:show" to display the current configuration.',
+      'Regenerate defaults with "tokens config:init".',
     ],
   },
 
