@@ -156,28 +156,8 @@ console.log('New mint:', nft.mint)
 
 ## CLI Usage
 
-```bash
-# Create tree
-tokens cnft:tree --depth 14 --buffer 64
-
-# Mint cNFT
-tokens cnft:mint <tree> \
-  --collection <collection> \
-  --name "My cNFT" \
-  --uri https://...
-
-# Batch mint
-tokens cnft:batch <tree> --assets ./assets/
-
-# Transfer
-tokens cnft:transfer <asset-id> --to <recipient>
-
-# Get info
-tokens cnft:info <asset-id>
-
-# Decompress
-tokens cnft:decompress <asset-id>
-```
+Compressed NFT operations are library-only APIs; the CLI does not currently
+expose `cnft:*` commands.
 
 ## RPC Requirements
 

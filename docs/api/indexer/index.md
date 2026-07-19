@@ -190,22 +190,8 @@ if (collection) {
 
 ## CLI Usage
 
-```bash
-# Get asset info
-tokens das:asset <mint>
-
-# Get assets by owner
-tokens das:owner <wallet> --limit 100
-
-# Get assets by collection
-tokens das:collection <collection> --limit 100
-
-# Get asset proof
-tokens das:proof <compressed-nft-mint>
-
-# Transaction history
-tokens history <wallet> --type NFT_SALE
-```
+The DAS/indexer clients are library-only APIs; the CLI does not currently
+expose DAS commands.
 
 ## Using with Connection
 

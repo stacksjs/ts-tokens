@@ -82,10 +82,10 @@ const result = await createToken({
 
 ```bash
 # Create a new token
-tokens token:create --name "My Token" --symbol MTK --decimals 9
+tokens create --name "My Token" --symbol MTK --decimals 9
 
 # Create with initial supply
-tokens token:create --name "My Token" --symbol MTK --decimals 9 --supply 1000000
+tokens create --name "My Token" --symbol MTK --decimals 9 --supply 1000000
 ```
 
 ## Related

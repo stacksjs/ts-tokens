@@ -21,7 +21,7 @@ export SOLANA_PRIVATE_KEY="your-base58-private-key"
 
 ```bash
 tokens config:network devnet
-tokens wallet:airdrop --amount 2
+tokens wallet:airdrop 2
 ```
 
 ## Run

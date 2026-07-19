@@ -121,24 +121,21 @@ console.log('Signers:', multisig.signers)
 ```bash
 # Create multi-sig
 tokens multisig:create \
-  --signers <addr1>,<addr2>,<addr3> \
+  --owners <addr1>,<addr2>,<addr3> \
   --threshold 2
 
 # Set as mint authority
-tokens token:authority <mint> --mint-authority <multisig>
+tokens authority <mint> --transfer-mint <multisig>
 
 # Create transaction
 tokens multisig:propose <multisig> \
-  --instruction mint \
-  --mint <token> \
-  --amount 1000 \
-  --to <recipient>
+  --instruction-data <hex>
 
-# Sign transaction
-tokens multisig:sign <tx-id>
+# Approve transaction
+tokens multisig:approve <multisig> <tx-index>
 
 # Execute transaction
-tokens multisig:execute <tx-id>
+tokens multisig:execute <multisig> <tx-index>
 
 # List pending
 tokens multisig:pending <multisig>

@@ -117,7 +117,7 @@ For best display across wallets:
 
 ```bash
 # Create token with metadata
-tokens token:create \
+tokens create \
   --name "My Token" \
   --symbol MTK \
   --decimals 9 \
@@ -133,7 +133,7 @@ tokens token:metadata <mint> \
 tokens token:metadata <mint> --uri https://arweave.net/new...
 
 # Upload metadata file
-tokens storage:upload ./metadata.json --provider arweave
+tokens upload ./metadata.json --provider arweave
 ```
 
 ## Token Lists

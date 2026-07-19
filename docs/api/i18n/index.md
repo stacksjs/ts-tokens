@@ -117,10 +117,10 @@ i18n.formatBytes(1048576) // '1.00 MB'
 
 ```bash
 # Set language
-tokens config set language es
+tokens config:set language es
 
 # View in Spanish
-tokens token info <mint>
+tokens info <mint>
 # Output in Spanish
 ```
 

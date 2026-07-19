@@ -1,291 +1,105 @@
-<p align="center"><img src=".github/art/cover.jpg" alt="Social Card of this repo"></p>
+# vue-tokens
 
-[![npm version](https://img.shields.io/npm/v/tokens?style=flat-square)](https://npmjs.com/package/tokens)
-[![GitHub Actions](https://img.shields.io/github/actions/workflow/status/stacksjs/tokens/ci.yml?style=flat-square&branch=main)](https://github.com/stacksjs/tokens/actions?query=workflow%3Aci)
-[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
-<!-- [![npm downloads][npm-downloads-src]][npm-downloads-href] -->
-<!-- [![Codecov][codecov-src]][codecov-href] -->
+> Vue 3 components and composables for Solana tokens and NFTs.
 
-# QR & Barcode Library & CLI
-
-> A QR & Barcode Library for Node.js/Bun, the CLI, including all major browsers.
-
-## Features
-
-- 🤖 **QR Code**: Customizable Generation & Reading
-- 📊 **Barcode**: `CODE128`, `EAN`, `EAN-13`, `EAN-8`, `EAN-5`, `EAN-2`, `UPC (A)`, `CODE39`, `ITF-14`, `MSI`, `Pharmacode`, `Codabar`—Generation & Reading
-- 📦 **Lightweight**: Zero dependencies
-- 🚀 **Fast**: Built with performance in mind
-- 📜 **TypeScript**: Strongly typed
-- 📚 **Simple**: Easy to use
-- 📖 **Documentation**: Well-documented
-- 🛠 **Library & CLI**: Interact in different ways
+Ready-to-use wallet, token, NFT, candy-machine, and governance UI for Vue 3 apps, built on top of [`ts-tokens`](https://github.com/stacksjs/ts-tokens).
 
 ## Install
 
-It's simple to install the library and CLI:
+```sh
+# Using bun (recommended)
+bun add vue-tokens ts-tokens
+
+# Using npm
+npm install vue-tokens ts-tokens
+```
+
+Peer dependencies you'll also want in your app:
 
 ```sh
-npm install tokens
-bun add tokens
-yarn add tokens
-pnpm add tokens
+bun add vue @solana/web3.js @solana/spl-token
 ```
 
-_Check out the package.json scripts for more commands._
+## Plugin Setup
 
-## Usage
-
-### QR Code
-
-```html
-<div id="qrcode"></div>
-
-<script type="text/javascript">
-new QRCode(document.getElementById("qrcode"), "https://stacksjs.com");
-</script>
-```
-
-If you want to customize the QR code, you can pass in an options object:
-
-```html
-<div id="qr-code"></div>
-
-<script type="text/javascript">
-var qrCode = new QRCode(document.getElementById("qr-code"), {
-  text: "https://stacksjs.com",
-  width: 128,
-  height: 128,
-  colorDark : "#000000",
-  colorLight : "#ffffff",
-  correctLevel : QRCode.CorrectLevel.H
-});
-</script>
-```
-
-You can also use methods to interact with the QR code:
+Install the `TokensPlugin` on your app. It creates a Solana `Connection` and a token config and provides them to every component and composable:
 
 ```ts
-qrCode.clear() // clear the code
-qrCode.makeCode('https://docs.stacksjs.com') // create another code
-```
+import { createApp } from 'vue'
+import { TokensPlugin } from 'vue-tokens'
+import App from './App.vue'
 
-### Barcode
+const app = createApp(App)
 
-A lightweight Barcode library with zero dependencies. It supports multiple barcode formats and works in browsers and with _Node.js & Bun_.
-
-#### Supported Formats
-
-- [CODE128](https://github.com/lindell/JsBarcode/wiki/CODE128)
-  - CODE128 (automatic mode switching)
-  - CODE128 A/B/C (force mode)
-- [EAN](https://github.com/lindell/JsBarcode/wiki/EAN)
-  - EAN-13
-  - EAN-8
-  - EAN-5
-  - EAN-2
-  - UPC (A)
-  - UPC (E)
-- [CODE39](https://github.com/lindell/JsBarcode/wiki/CODE39)
-- [ITF](https://github.com/lindell/JsBarcode/wiki/ITF-14)
-  - ITF
-  - ITF-14
-- [MSI](https://github.com/lindell/JsBarcode/wiki/MSI)
-  - MSI10
-  - MSI11
-  - MSI1010
-  - MSI1110
-- [Pharmacode](https://github.com/lindell/JsBarcode/wiki/pharmacode)
-- [Codabar](https://github.com/lindell/JsBarcode/wiki/codabar)
-
-#### Browser Example
-
-````html
-<svg id="barcode"></svg>
-<!-- or -->
-<canvas id="barcode"></canvas>
-<!-- or -->
-<img id="barcode"/>
-````
-
-##### Simple example
-
-````javascript
-Barcode('#barcode', 'Hi!')
-````
-
-![Result](https://s3-eu-west-1.amazonaws.com/js-barcode/barcodes/simple.svg)
-
-#### Example with options
-
-```ts
-Barcode('#barcode', '1234', {
-  format: 'pharmacode',
-  lineColor: '#0aa',
-  width: 4,
-  height: 40,
-  displayValue: false
-})
-```
-
-![Result](https://s3-eu-west-1.amazonaws.com/js-barcode/barcodes/advanced.svg)
-
-#### More advanced use case
-
-````javascript
-Barcode('#barcode')
-  .options({ font: 'OCR-B' }) // Will affect all barcodes
-  .EAN13('1234567890128', { fontSize: 18, textMargin: 0 })
-  .blank(20) // Create space between the barcodes
-  .EAN5('12345', { height: 85, textPosition: 'top', fontSize: 16, marginTop: 15 })
-  .render()
-````
-
-![Result](https://s3-eu-west-1.amazonaws.com/js-barcode/barcodes/simple.svg)
-
-#### Or define the value and options in the HTML element
-
-Use any `barcode-_` or `data-_` as attributes where `*` is any option.
-
-````html
-<svg class="barcode"
-  barcode-format="upc"
-  barcode-value="123456789012"
-  barcode-text-margin="0"
-  barcode-font-options="bold">
-</svg>
-````
-
-And then initialize it with:
-
-```ts
-Barcode('.barcode').init()
-```
-
-![Result](https://s3-eu-west-1.amazonaws.com/js-barcode/barcodes/init.svg)
-
-#### Retrieve the barcode values so you can render it any way you'd like
-
-Pass in an object which will be filled with data.
-
-```javascript
-const data = {}
-Barcode(data, 'text', { ...options })
-```
-
-data will be filled with a ```encodings``` property which has all the needed values. See docs for examples of what data looks like.
-
-#### Node.js & Bun
-
-----
-
-#### With canvas
-
-```ts
-import { Barcode } from 'ts-tokens'
-import { createCanvas } from 'canvas'
-
-const canvas = createCanvas()
-
-Barcode(canvas, 'Hello')
-
-// As this is a node-canvas, you can configure it as you like:
-// see https://github.com/Automattic/node-canvas for more information
-```
-
-#### With svg
-
-```ts
-import { DOMImplementation, XMLSerializer } from 'xmldom'
-
-const xmlSerializer = new XMLSerializer()
-const document = new DOMImplementation().createDocument('http://www.w3.org/1999/xhtml', 'html', null)
-const svgNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-
-Barcode(svgNode, 'test', {
-  xmlDocument: document,
+app.use(TokensPlugin, {
+  endpoint: 'https://api.devnet.solana.com',
+  // config: { … } — optional Partial<TokenConfig> overrides
 })
 
-const svgText = xmlSerializer.serializeToString(svgNode)
+app.mount('#app')
 ```
 
-#### Options
+## Example: Token Balance Component + Composable
 
-For information about how to use the options, see the docs.
+```vue
+<script setup lang="ts">
+import { TokenBalance, useTokens, useTokenBalance } from 'vue-tokens'
+import { ref } from 'vue'
 
-| Option | Default value | Type |
-|--------|---------------|------|
-| [`format`](https://github.com/lindell/JsBarcode/wiki/Options#format) | `"auto" (CODE128)` | `String` |
-| [`width`](https://github.com/lindell/JsBarcode/wiki/Options#width) | `2` | `Number` |
-| [`height`](https://github.com/lindell/JsBarcode/wiki/Options#height) | `100` | `Number` |
-| [`displayValue`](https://github.com/lindell/JsBarcode/wiki/Options#display-value) | `true` | `Boolean` |
-| [`text`](https://github.com/lindell/JsBarcode/wiki/Options#text) | `undefined` | `String` |
-| [`fontOptions`](https://github.com/lindell/JsBarcode/wiki/Options#font-options) | `""` | `String` |
-| [`font`](https://github.com/lindell/JsBarcode/wiki/Options#font) | `"monospace"` | `String` |
-| [`textAlign`](https://github.com/lindell/JsBarcode/wiki/Options#text-align) | `"center"` | `String` |
-| [`textPosition`](https://github.com/lindell/JsBarcode/wiki/Options#text-position) | `"bottom"` | `String` |
-| [`textMargin`](https://github.com/lindell/JsBarcode/wiki/Options#text-margin) | `2` | `Number` |
-| [`fontSize`](https://github.com/lindell/JsBarcode/wiki/Options#font-size) | `20` | `Number` |
-| [`background`](https://github.com/lindell/JsBarcode/wiki/Options#background)  | `"#ffffff"` | `String (CSS color)` |
-| [`lineColor`](https://github.com/lindell/JsBarcode/wiki/Options#line-color) | `"#000000"` | `String (CSS color)` |
-| [`margin`](https://github.com/lindell/JsBarcode/wiki/Options#margins) | `10` | `Number` |
-| [`marginTop`](https://github.com/lindell/JsBarcode/wiki/Options#margins) | `undefined` | `Number` |
-| [`marginBottom`](https://github.com/lindell/JsBarcode/wiki/Options#margins) | `undefined` | `Number` |
-| [`marginLeft`](https://github.com/lindell/JsBarcode/wiki/Options#margins) | `undefined` | `Number` |
-| [`marginRight`](https://github.com/lindell/JsBarcode/wiki/Options#margins) | `undefined` | `Number` |
-| [`valid`](https://github.com/lindell/JsBarcode/wiki/Options#valid) | `function(valid){}` | `Function` |
+// Access the provided connection/config anywhere in the app
+const { connection, config } = useTokens()
 
-## Testing
+// Composables expose reactive refs for custom UIs
+const owner = ref('7v91N7iZ9mNicL8NBf7HhkZpVb7J9f4YkW3h4VnV3xYz')
+const { uiBalance, loading, error, refetch } = useTokenBalance(
+  'So11111111111111111111111111111111111111112',
+  owner,
+)
+</script>
 
-```bash
-bun test
+<template>
+  <!-- Components come with their own fetching and rendering -->
+  <TokenBalance
+    mint="So11111111111111111111111111111111111111112"
+    :owner="owner"
+  />
+
+  <button :disabled="loading" @click="refetch">
+    {{ loading ? 'Loading…' : `Balance: ${uiBalance}` }}
+  </template>
+</template>
 ```
+
+## What's Inside
+
+- **Wallet components** — `WalletAddress`, `WalletBalance`, `WalletConnectButton`, `WalletDisconnectButton`, `WalletMultiButton`
+- **Token components** — `TokenBalance`, `TokenInfo`, `TokenList`, `TokenTransferForm`, `TokenMintForm`
+- **NFT components** — `NFTCard`, `NFTGrid`, `NFTGallery`, `NFTDetails`, `NFTTransferButton`, `NFTBurnButton`
+- **Candy Machine components** — `MintButton`, `MintCounter`, `MintProgress`, `MintPrice`, `CandyMachineProvider`, `AllowlistChecker`, `CountdownTimer`
+- **Governance components** — `DAOProvider`, `ProposalList`, `ProposalCard`, `ProposalDetails`, `VoteButton`, `VotingPower`, `DelegateForm`, `TreasuryBalance`
+- **Composables** — `useConnection`, `useConfig`, `useTokenBalance`, `useTokenAccounts`, `useNFT`, `useNFTs`, `useTransaction`, `useCandyMachine`, `useWallet`, `useDAO`, `useProposals`, `useVotingPower`, `useTreasury`
+- **Plugin** — `TokensPlugin`, `createTokens`, `useTokens`, `TokensKey`
+
+Subpath imports are available if you prefer narrower entry points:
+
+```ts
+import { TokenBalance } from 'vue-tokens/components'
+import { useTokenBalance } from 'vue-tokens/composables'
+```
+
+## Documentation
+
+- [ts-tokens documentation](https://ts-tokens.dev)
+- [Core library](https://github.com/stacksjs/ts-tokens/tree/main/packages/ts-tokens)
 
 ## Changelog
 
-Please see our [releases](https://github.com/stackjs/tokens/releases) page for more information on what has changed recently.
+Please see the [releases](https://github.com/stacksjs/ts-tokens/releases) page for more information on what has changed recently.
 
 ## Contributing
 
-Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
-
-## Community
-
-For help, discussion about best practices, or any other conversation that would benefit from being searchable:
-
-[Discussions on GitHub](https://github.com/stacksjs/tokens/discussions)
-
-For casual chit-chat with others using this package:
-
-[Join the Stacks Discord Server](https://discord.gg/stacksjs)
-
-## Postcardware
-
-Stacks OSS will always stay open-sourced, and we will always love to receive postcards from wherever Stacks is used! _And we also publish them on our website. Thank you, Spatie._
-
-Our address: Stacks.js, 12665 Village Ln #2306, Playa Vista, CA 90094, United States 🌎
-
-## Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Stacks development. If you are interested in becoming a sponsor, please reach out to us.
-
-- [JetBrains](https://www.jetbrains.com/)
-- [The Solana Foundation](https://solana.com/)
-
-## Credit
-
-Many thanks for the libraries that laid the groundwork:
-
-- **QRCode.js**: <https://github.com/davidshimjs/qrcodejs>
-- **JsBarcode**: <https://github.com/lindell/JsBarcode>
+Please see [CONTRIBUTING](https://github.com/stacksjs/ts-tokens/blob/main/.github/CONTRIBUTING.md) for details.
 
 ## License
 
-The MIT License (MIT). Please see [LICENSE](LICENSE.md) for more information.
-
-Made with 💙
-
-<!-- Badges -->
-
-<!-- [codecov-src]: https://img.shields.io/codecov/c/gh/stacksjs/tokens/main?style=flat-square
-[codecov-href]: https://codecov.io/gh/stacksjs/tokens -->
+The MIT License (MIT). Please see [LICENSE](https://github.com/stacksjs/ts-tokens/blob/main/LICENSE.md) for more information.

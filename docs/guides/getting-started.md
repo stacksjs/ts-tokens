@@ -99,7 +99,7 @@ const nft = await mintNFT({
 tokens config:init
 
 # Create a token
-tokens token:create --name "My Token" --symbol MTK --decimals 9
+tokens create --name "My Token" --symbol MTK --decimals 9
 
 # Create an NFT
 tokens nft:create --name "My NFT" --symbol MNFT --uri https://...

@@ -15,8 +15,7 @@ tokens wallet:generate --output ./my-wallet.json
 
 | Option | Description |
 |--------|-------------|
-| `--output`, `-o` | Output file path |
-| `--force` | Overwrite existing file |
+| `--output <path>` | Output path for the keypair file |
 
 ### Output
 
@@ -30,11 +29,10 @@ Generated new wallet:
 
 ## `tokens wallet:show`
 
-Display wallet address and info.
+Display the current wallet address.
 
 ```bash
 tokens wallet:show
-tokens wallet:show --keypair ./my-wallet.json
 ```
 
 ### Output
@@ -47,18 +45,11 @@ SOL Balance: 2.5 SOL
 
 ## `tokens wallet:balance`
 
-Check SOL balance.
+Check the current wallet's SOL balance.
 
 ```bash
 tokens wallet:balance
-tokens wallet:balance --address <address>
 ```
-
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--address`, `-a` | Check balance of specific address |
 
 ### Output
 
@@ -66,20 +57,14 @@ tokens wallet:balance --address <address>
 Balance: 2.500000000 SOL
 ```
 
-## `tokens wallet:airdrop`
+## `tokens wallet:airdrop [amount]`
 
-Request devnet/testnet SOL airdrop.
+Request a devnet/testnet SOL airdrop.
 
 ```bash
 tokens wallet:airdrop
-tokens wallet:airdrop --amount 2
+tokens wallet:airdrop 2
 ```
-
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--amount`, `-a` | Amount of SOL to request (default: 1) |
 
 ### Output
 
@@ -96,43 +81,60 @@ Requesting 2 SOL airdrop...
 - Limited to 2 SOL per request
 - Rate limited by the network
 
-## `tokens wallet:transfer`
+## `tokens wallet:import <path>`
 
-Transfer SOL to another address.
+Import a keypair from a file.
 
 ```bash
-tokens wallet:transfer --to <address> --amount 1
+tokens wallet:import ./my-keypair.json
+```
+
+## `tokens wallet:encrypt`
+
+Encrypt the current keypair into the system keyring.
+
+```bash
+tokens wallet:encrypt --password <password>
+```
+
+## `tokens wallet:decrypt`
+
+Load the wallet from the encrypted keyring.
+
+```bash
+tokens wallet:decrypt --password <password>
+```
+
+## `tokens wallet:unlock`
+
+Start a signing session so repeated commands do not prompt for the password.
+
+```bash
+tokens wallet:unlock --password <password> --timeout 60
 ```
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `--to`, `-t` | Recipient address |
-| `--amount`, `-a` | Amount of SOL to transfer |
+| `--password <password>` | Keyring password |
+| `--timeout <minutes>` | Session timeout in minutes (default: `30`) |
 
-### Output
+## `tokens wallet:lock`
 
-```text
-Transferring 1 SOL to ABC123...
-✅ Transfer successful!
-   Signature: XYZ789...
-```
-
-## `tokens wallet:history`
-
-View recent transactions.
+End the active signing session.
 
 ```bash
-tokens wallet:history
-tokens wallet:history --limit 20
+tokens wallet:lock
 ```
 
-### Options
+## `tokens wallet:keyring-info`
 
-| Option | Description |
-|--------|-------------|
-| `--limit`, `-l` | Number of transactions to show |
+Show the keyring public key without decrypting the keypair.
+
+```bash
+tokens wallet:keyring-info
+```
 
 ## Related
 

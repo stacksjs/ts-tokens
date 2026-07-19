@@ -141,17 +141,17 @@ if (!valid) {
 ## CLI Usage
 
 ```bash
-# Batch transfer from CSV
-tokens batch:transfer <mint> --file ./recipients.csv
+# Airdrop tokens to a list of recipients
+tokens airdrop <mint> ./recipients.csv --amount 1000
 
-# Batch mint
-tokens batch:mint <mint> --file ./recipients.csv
+# Batch update metadata from a JSON file
+tokens batch:metadata ./updates.json
 
-# Batch NFT mint
-tokens batch:nft <collection> --assets ./assets/
+# Check the status of an interrupted batch run
+tokens batch:status ./batch-recovery.json
 
-# Estimate cost
-tokens batch:estimate --file ./recipients.csv
+# Retry failed items from an interrupted batch run
+tokens batch:retry ./batch-recovery.json
 ```
 
 ## Best Practices

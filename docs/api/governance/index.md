@@ -177,34 +177,9 @@ tokenActions.transferAuthority(mint, newAuthority)
 
 ## CLI Usage
 
-```bash
-# Create DAO
-tokens dao:create \
-  --name "My DAO" \
-  --token <governance-token> \
-  --quorum 10 \
-  --threshold 66
-
-# Create proposal
-tokens dao:propose <dao> \
-  --title "Fund Development" \
-  --description "ipfs://..." \
-  --action transfer-sol --to <recipient> --amount 10
-
-# Vote
-tokens dao:vote <proposal> --for
-tokens dao:vote <proposal> --against
-
-# Execute
-tokens dao:execute <proposal>
-
-# Delegate
-tokens dao:delegate <delegate-address>
-
-# Get info
-tokens dao:info <dao>
-tokens dao:proposal <proposal>
-```
+DAO management is a library-only API; the CLI does not currently expose
+`dao:*` commands. Multisig authority management is available via
+`tokens multisig:*` (see [Multisig](/api/multisig/index.md)).
 
 ## Governance Parameters
 

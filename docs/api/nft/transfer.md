@@ -83,7 +83,7 @@ try {
 ## CLI Usage
 
 ```bash
-tokens nft:transfer <mint> --to <recipient>
+tokens nft:transfer <mint> <recipient>
 ```
 
 ## Programmable NFTs (pNFTs)

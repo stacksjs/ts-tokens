@@ -141,7 +141,7 @@ tokens nft:create \
   --collection <collection-mint>
 
 # List collection NFTs
-tokens collection:info <collection-mint>
+tokens collection:items <collection-mint>
 ```
 
 ## Batch Minting

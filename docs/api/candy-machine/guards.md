@@ -250,18 +250,16 @@ await setCandyGuard('CANDY_MACHINE_ADDRESS', {
 
 ## CLI Usage
 
+Guards are configured when the Candy Machine is created, via
+`tokens candy:create --config ./candy-machine.json`. Use `tokens candy:guards`
+to inspect the guards on an existing machine:
+
 ```bash
-# Add SOL payment
-tokens cm:guards <cm> --add sol-payment --amount 1 --destination <treasury>
+# Create a Candy Machine with guards from a config file
+tokens candy:create --config ./candy-machine.json
 
-# Add start date
-tokens cm:guards <cm> --add start-date --date "2024-01-01T00:00:00Z"
-
-# Add mint limit
-tokens cm:guards <cm> --add mint-limit --limit 3
-
-# Add allowlist
-tokens cm:guards <cm> --add allowlist --file ./merkle.json
+# Show the guards configured on a machine
+tokens candy:guards <candy-machine>
 ```
 
 ## Related

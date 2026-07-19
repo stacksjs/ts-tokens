@@ -35,12 +35,14 @@ bunx ts-tokens <command>
 
 | Command | Description |
 |---------|-------------|
-| `tokens token:create` | Create fungible token |
-| `tokens token:mint` | Mint tokens |
-| `tokens token:transfer` | Transfer tokens |
-| `tokens token:burn` | Burn tokens |
-| `tokens token:info` | Get token info |
-| `tokens token:balance` | Check token balance |
+| `tokens create` | Create fungible token |
+| `tokens mint <mint> <amount>` | Mint tokens |
+| `tokens transfer <mint> <amount> <to>` | Transfer tokens |
+| `tokens burn <mint> <amount>` | Burn tokens |
+| `tokens info <mint>` | Get token info |
+| `tokens balance <mint>` | Check token balance |
+| `tokens holders <mint>` | List token holders |
+| `tokens authority <mint>` | Manage token authorities |
 
 ### NFTs
 
@@ -68,16 +70,16 @@ tokens config:init
 tokens config:network devnet
 
 # Get airdrop
-tokens wallet:airdrop --amount 2
+tokens wallet:airdrop 2
 
 # Create a token
-tokens token:create --name "My Token" --symbol MTK --decimals 9 --supply 1000000
+tokens create --name "My Token" --symbol MTK --decimals 9 --supply 1000000
 
 # Create an NFT
 tokens nft:create --name "My NFT" --symbol MNFT --uri https://arweave.net/...
 
 # Transfer tokens
-tokens token:transfer <mint> --amount 1000 --to <recipient>
+tokens transfer <mint> 1000 <recipient>
 ```
 
 ## Global Options

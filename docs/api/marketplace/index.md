@@ -140,17 +140,14 @@ const tensorCollectionUrl = tensor.getCollectionUrl('degods')
 ## CLI Usage
 
 ```bash
-# Get collection stats
-tokens nft:stats degods
+# Show active listings
+tokens marketplace:listings
 
-# Get collection listings
-tokens nft:listings degods --limit 10
+# Show active auctions
+tokens marketplace:auctions
 
-# Get NFT activity
-tokens nft:activity <mint>
-
-# Get trending collections
-tokens nft:trending --period 24h
+# Show offers for an NFT
+tokens marketplace:offers <mint>
 ```
 
 ## Cross-Marketplace

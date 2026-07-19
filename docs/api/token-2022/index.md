@@ -155,10 +155,10 @@ tokens create --token-2022 --interest-rate 500 --name "Yield Token" --symbol YIE
 tokens create --token-2022 --soulbound --name "Badge" --symbol BADGE
 
 # Collect fees
-tokens fees collect <mint>
+tokens fees:collect <mint>
 
 # Withdraw fees
-tokens fees withdraw <mint> --to <treasury>
+tokens fees:withdraw <mint> --destination <treasury>
 ```
 
 ## Combining Extensions

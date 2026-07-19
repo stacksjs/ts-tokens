@@ -86,12 +86,6 @@ const config = await getConfig()
 await verifyCreator('NFT*MINT*ADDRESS', config)
 ```
 
-Using CLI:
-
-```bash
-tokens nft:verify-creator <mint>
-```
-
 ## Updating Royalties
 
 If the NFT is mutable, you can update royalties:

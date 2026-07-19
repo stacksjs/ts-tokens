@@ -70,11 +70,11 @@ for (const { address, amount } of recipients) {
 ## CLI Usage
 
 ```bash
-# Mint tokens
-tokens token:mint <mint> --amount 1000000 --to <recipient>
+# Mint tokens to a recipient
+tokens mint <mint> 1000000 --to <recipient>
 
 # Mint to self
-tokens token:mint <mint> --amount 1000000
+tokens mint <mint> 1000000
 ```
 
 ## Notes

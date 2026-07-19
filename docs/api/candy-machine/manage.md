@@ -127,19 +127,16 @@ await revealCandyMachine('CANDY_MACHINE_ADDRESS', {
 
 ```bash
 # Get info
-tokens cm:info <candy-machine>
+tokens candy:info <candy-machine>
 
-# Update
-tokens cm:update <candy-machine> --royalty 750
+# Add config lines from a JSON file
+tokens candy:add <candy-machine> ./items.json
 
-# Add config lines
-tokens cm:upload <candy-machine> --assets ./assets/
+# Upload assets and create config lines
+tokens candy:upload ./assets/
 
 # Withdraw
-tokens cm:withdraw <candy-machine>
-
-# Transfer authority
-tokens cm:authority <candy-machine> --new-authority <address>
+tokens candy:withdraw <candy-machine>
 ```
 
 ## Monitoring
@@ -153,7 +150,7 @@ const progress = {
   total: Number(cm.itemsAvailable),
   minted: Number(cm.itemsRedeemed),
   remaining: Number(cm.itemsAvailable - cm.itemsRedeemed),
-  percentage: Number((cm.itemsRedeemed _ 100n) / cm.itemsAvailable),
+  percentage: Number((cm.itemsRedeemed * 100n) / cm.itemsAvailable),
 }
 
 console.log(`Progress: ${progress.minted}/${progress.total} (${progress.percentage}%)`)

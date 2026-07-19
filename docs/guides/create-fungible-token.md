@@ -98,16 +98,16 @@ You can also use the CLI for quick operations:
 
 ```bash
 # Create token
-tokens token:create --name "My Token" --symbol MAT --decimals 9 --supply 1000000000000
+tokens create --name "My Token" --symbol MAT --decimals 9 --supply 1000000000000
 
 # Mint more
-tokens token:mint <mint> --amount 500000000000 --to <recipient>
+tokens mint <mint> 500000000000 --to <recipient>
 
 # Transfer
-tokens token:transfer <mint> --amount 100000000000 --to <recipient>
+tokens transfer <mint> 100000000000 <recipient>
 
 # Check balance
-tokens token:balance <mint>
+tokens balance <mint>
 ```
 
 ## Understanding Decimals

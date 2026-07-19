@@ -30,12 +30,12 @@ export function activate(context: vscode.ExtensionContext): void {
     'ts-tokens.showCommands',
     async () => {
       const items: vscode.QuickPickItem[] = [
-        { label: 'Create Token', description: 'tokens token create' },
-        { label: 'Create NFT', description: 'tokens nft create' },
-        { label: 'Create Collection', description: 'tokens collection create' },
+        { label: 'Create Token', description: 'tokens create' },
+        { label: 'Create NFT', description: 'tokens nft:create' },
+        { label: 'Create Collection', description: 'tokens collection:create' },
         { label: 'Start Dev Validator', description: 'tokens dev' },
-        { label: 'Upload to Storage', description: 'tokens storage upload' },
-        { label: 'Show Config', description: 'tokens config show' },
+        { label: 'Upload to Storage', description: 'tokens upload' },
+        { label: 'Show Config', description: 'tokens config:show' },
         { label: 'Fix Error', description: 'tokens fix <errorCode>' },
       ]
 

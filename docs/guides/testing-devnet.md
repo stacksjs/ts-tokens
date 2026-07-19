@@ -43,7 +43,7 @@ tokens wallet:generate --output ~/.config/solana/devnet.json
 solana airdrop 2 --url devnet
 
 # Using ts-tokens CLI
-tokens wallet:airdrop --amount 2
+tokens wallet:airdrop 2
 
 # Or programmatically
 import { requestAirdrop, getConfig } from 'ts-tokens'

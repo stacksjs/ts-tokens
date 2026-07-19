@@ -2,31 +2,31 @@
 
 Create and manage fungible tokens.
 
-## `tokens token:create`
+## `tokens create`
 
 Create a new fungible token.
 
 ```bash
-tokens token:create --name "My Token" --symbol MTK --decimals 9
-tokens token:create --name "My Token" --symbol MTK --decimals 9 --supply 1000000
+tokens create --name "My Token" --symbol MTK --decimals 9
+tokens create --name "My Token" --symbol MTK --decimals 9 --supply 1000000
 ```
 
-### Required Options
+### Options
 
 | Option | Description |
 |--------|-------------|
-| `--name`, `-n` | Token name |
-| `--symbol`, `-s` | Token symbol (max 10 chars) |
-| `--decimals`, `-d` | Decimal places (0-9) |
-
-### Optional Options
-
-| Option | Description |
-|--------|-------------|
-| `--supply` | Initial supply to mint |
-| `--mint-authority` | Custom mint authority |
-| `--freeze-authority` | Custom freeze authority |
-| `--metadata-uri` | URI for token metadata |
+| `--name <name>` | Token name |
+| `--symbol <symbol>` | Token symbol |
+| `--decimals <decimals>` | Decimal places (default: `9`) |
+| `--supply <supply>` | Initial supply to mint |
+| `--metadata-uri <uri>` | URI for token metadata |
+| `--token-2022` | Use the Token-2022 program |
+| `--transfer-fee <bps>` | Enable transfer fees (basis points) |
+| `--max-fee <amount>` | Maximum transfer fee |
+| `--interest-rate <rate>` | Interest-bearing rate (basis points) |
+| `--soulbound` | Non-transferable (soulbound) |
+| `--confidential` | Enable confidential transfers |
+| `--default-frozen` | New accounts start frozen |
 
 ### Example Output
 
@@ -39,60 +39,44 @@ Creating token...
 View on Explorer: https://explorer.solana.com/address/ABC123...
 ```
 
-## `tokens token:mint`
+## `tokens mint <mint> <amount>`
 
 Mint additional tokens.
 
 ```bash
-tokens token:mint <mint> --amount 1000000
-tokens token:mint <mint> --amount 1000000 --to <recipient>
+tokens mint <mint> 1000000
+tokens mint <mint> 1000000 --to <recipient>
 ```
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `--amount`, `-a` | Amount to mint (in base units) |
-| `--to`, `-t` | Recipient address (default: self) |
+| `--to <address>` | Recipient address (default: self) |
 
-## `tokens token:transfer`
+## `tokens transfer <mint> <amount> <to>`
 
 Transfer tokens to another address.
 
 ```bash
-tokens token:transfer <mint> --amount 1000 --to <recipient>
+tokens transfer <mint> 1000 <recipient>
 ```
 
-### Options
+## `tokens burn <mint> <amount>`
 
-| Option | Description |
-|--------|-------------|
-| `--amount`, `-a` | Amount to transfer |
-| `--to`, `-t` | Recipient address |
-| `--memo` | Optional memo |
-
-## `tokens token:burn`
-
-Burn tokens from your account.
+Burn tokens from your account. To burn your entire balance, pass the full
+balance as the amount.
 
 ```bash
-tokens token:burn <mint> --amount 1000
-tokens token:burn <mint> --all
+tokens burn <mint> 1000
 ```
 
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--amount`, `-a` | Amount to burn |
-| `--all` | Burn all tokens |
-
-## `tokens token:info`
+## `tokens info <mint>`
 
 Get token information.
 
 ```bash
-tokens token:info <mint>
+tokens info <mint>
 ```
 
 ### Example Output
@@ -108,38 +92,48 @@ Token Info:
   Freeze Authority: None
 ```
 
-## `tokens token:balance`
+## `tokens balance <mint>`
 
-Check token balance.
+Check your token balance for a mint.
 
 ```bash
-tokens token:balance <mint>
-tokens token:balance <mint> --address <owner>
+tokens balance <mint>
+```
+
+## `tokens holders <mint>`
+
+List token holders.
+
+```bash
+tokens holders <mint>
+tokens holders <mint> --limit 50
 ```
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `--address`, `-a` | Owner address to check |
+| `--limit <limit>` | Maximum number of holders to show (default: `20`) |
 
-## `tokens token:accounts`
+## `tokens authority <mint>`
 
-List all token accounts.
+Manage token authorities.
 
 ```bash
-tokens token:accounts
-tokens token:accounts --owner <address>
+tokens authority <mint> --transfer-mint <new-address>
+tokens authority <mint> --revoke-mint
+tokens authority <mint> --transfer-freeze <new-address>
+tokens authority <mint> --revoke-freeze
 ```
 
-### Example Output
+### Options
 
-```text
-Token Accounts:
-  MTK (ABC123...): 1,000.00
-  USDC (DEF456...): 500.00
-  SOL: 2.5
-```
+| Option | Description |
+|--------|-------------|
+| `--transfer-mint <address>` | Transfer mint authority to address |
+| `--revoke-mint` | Revoke mint authority |
+| `--transfer-freeze <address>` | Transfer freeze authority to address |
+| `--revoke-freeze` | Revoke freeze authority |
 
 ## Related
 

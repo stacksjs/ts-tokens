@@ -91,13 +91,8 @@ function MyComponent() {
 
 ## Styling
 
-Components are unstyled by default. Add your own styles or use the included CSS:
-
-```tsx
-import 'react-tokens/styles.css'
-```
-
-Or style with Tailwind:
+Components are unstyled by default — add your own styles, for example with
+Tailwind:
 
 ```tsx
 <TokenBalance

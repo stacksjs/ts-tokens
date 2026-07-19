@@ -135,13 +135,10 @@ if (eligibility.canMint) {
 
 ```bash
 # Mint one NFT
-tokens cm:mint <candy-machine>
+tokens candy:mint <candy-machine>
 
 # Mint multiple
-tokens cm:mint <candy-machine> --count 5
-
-# Mint with group
-tokens cm:mint <candy-machine> --group OG --proof ./proof.json
+tokens candy:mint <candy-machine> --count 5
 ```
 
 ## Related

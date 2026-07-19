@@ -54,7 +54,7 @@ async function airdrop(
       const result = await transfer(
         mintAddress,
         address,
-        Number(baseUnits),
+        baseUnits,
         config
       )
 

@@ -73,9 +73,9 @@ For more details, see the [API documentation](/api/tokens/create).
 ## CLI
 
 ```bash
-tokens create-token --name "My Token" --symbol MTK --decimals 9
-tokens mint --mint TOKEN_MINT_ADDRESS --amount 1000
-tokens transfer --mint TOKEN_MINT_ADDRESS --amount 500 --to RECIPIENT_ADDRESS
+tokens create --name "My Token" --symbol MTK --decimals 9
+tokens mint TOKEN_MINT_ADDRESS 1000
+tokens transfer TOKEN_MINT_ADDRESS 500 RECIPIENT_ADDRESS
 tokens --help
 tokens --version
 ```

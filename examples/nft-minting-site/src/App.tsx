@@ -30,12 +30,12 @@ function App() {
       return
     }
 
-    setStatus('Minting NFT...')
+    setStatus('Simulating mint (dry run)...')
 
     try {
       // In a real app you'd call createNFT with a proper config.
       // This example demonstrates the wallet adapter integration.
-      setStatus(`Ready to mint "${name}" with URI: ${uri} (connect to devnet to execute)`)
+      setStatus(`Dry run: would mint "${name}" with URI: ${uri} — no transaction was sent (mint simulated)`)
     } catch (err) {
       setStatus(`Mint failed: ${err instanceof Error ? err.message : err}`)
     }
@@ -69,7 +69,7 @@ function App() {
             value={uri}
             onChange={(e) => setUri(e.target.value)}
           />
-          <button onClick={handleMint}>Mint NFT</button>
+          <button onClick={handleMint}>Dry run — mint simulated</button>
         </section>
       )}
 

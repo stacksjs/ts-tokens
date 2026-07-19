@@ -182,22 +182,8 @@ console.log('Unique Depositors:', stats.uniqueDepositors)
 
 ## CLI Usage
 
-```bash
-# Create treasury
-tokens treasury create --dao <dao-address>
-
-# Get info
-tokens treasury info <treasury-address>
-
-# Deposit
-tokens treasury deposit <treasury> --mint <token> --amount 1000
-
-# Create spending proposal
-tokens treasury propose <treasury> --to <recipient> --amount 1000
-
-# View history
-tokens treasury history <treasury>
-```
+Treasury management is a library-only API; the CLI does not currently expose
+`treasury` commands.
 
 ## Related
 

@@ -159,23 +159,23 @@ console.log('Remaining rewards:', stats.remainingRewards)
 tokens staking:create-pool \
   --stake-mint <mint> \
   --reward-mint <mint> \
-  --rate 1000000 \
-  --duration 2592000
+  --reward-rate 1000000 \
+  --reward-duration 2592000
 
 # Stake tokens
-tokens staking:stake <pool> --amount 1000
+tokens staking:stake <pool> 1000
 
-# Check rewards
-tokens staking:rewards <pool>
+# Show your active stakes (includes claimable rewards)
+tokens staking:my-stakes
 
 # Claim rewards
 tokens staking:claim <pool>
 
 # Unstake
-tokens staking:unstake <pool> --amount 500
+tokens staking:unstake <pool> 500
 
 # Pool info
-tokens staking:info <pool>
+tokens staking:pool-info <pool>
 ```
 
 ## Reward Calculation

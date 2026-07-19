@@ -72,10 +72,7 @@ const results = await batchTransferTokens(mintAddress, transfers, config)
 
 ```bash
 # Transfer tokens
-tokens token:transfer <mint> --amount 1000000 --to <recipient>
-
-# Transfer with memo
-tokens token:transfer <mint> --amount 1000000 --to <recipient> --memo "Payment"
+tokens transfer <mint> 1000000 <recipient>
 ```
 
 ## Notes

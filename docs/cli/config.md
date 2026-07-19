@@ -8,6 +8,7 @@ Initialize a new configuration file.
 
 ```bash
 tokens config:init
+tokens config:init --network mainnet-beta
 ```
 
 Creates a `tokens.config.ts` file in the current directory with default settings.
@@ -16,8 +17,7 @@ Creates a `tokens.config.ts` file in the current directory with default settings
 
 | Option | Description |
 |--------|-------------|
-| `--network` | Initial network (mainnet-beta, devnet, testnet) |
-| `--force` | Overwrite existing config |
+| `--network <network>` | Initial network (mainnet-beta, devnet, testnet, localnet) (default: `devnet`) |
 
 ## `tokens config:show`
 
@@ -36,7 +36,7 @@ Wallet: ~/.config/solana/id.json
 Storage: arweave
 ```
 
-## `tokens config:network`
+## `tokens config:network <network>`
 
 Set the active network.
 
@@ -46,31 +46,24 @@ tokens config:network mainnet-beta
 tokens config:network testnet
 ```
 
-## `tokens config:rpc`
+## `tokens config:set <key> <value>`
 
-Set a custom RPC URL.
+Set a configuration value, such as a custom RPC URL, the wallet keypair
+path, or the default storage provider.
 
 ```bash
-tokens config:rpc https://my-rpc.example.com
+tokens config:set rpcUrl https://my-rpc.example.com
+tokens config:set wallet ~/.config/solana/id.json
+tokens config:set storage ipfs
 ```
 
-## `tokens config:wallet`
+## `tokens config:get <key>`
 
-Set the wallet keypair path.
-
-```bash
-tokens config:wallet ~/.config/solana/id.json
-tokens config:wallet ./my-keypair.json
-```
-
-## `tokens config:storage`
-
-Set the default storage provider.
+Read a single configuration value.
 
 ```bash
-tokens config:storage arweave
-tokens config:storage ipfs
-tokens config:storage shadow-drive
+tokens config:get rpcUrl
+tokens config:get storage
 ```
 
 ## Environment Variables

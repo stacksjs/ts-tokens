@@ -88,10 +88,9 @@ interface CreateCandyMachineResult {
 ## CLI Usage
 
 ```bash
-tokens cm:create \
+tokens candy:create \
   --collection <mint> \
   --items 1000 \
-  --price 1 \
   --symbol MNFT \
   --royalty 500
 ```

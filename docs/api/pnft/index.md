@@ -294,22 +294,22 @@ for (const r of recipients) {
 
 ```bash
 # Create pNFT
-tokens pnft create --name "My pNFT" --royalty 5
+tokens pnft:create --name "My pNFT" --symbol PNFT --uri https://...
 
 # Create soulbound
-tokens sbt create --name "Badge" --recovery <authority>
+tokens sbt:create --name "Badge" --symbol SBT --uri https://... --recovery-authority <authority>
 
 # Check rules
-tokens pnft rules <mint>
+tokens pnft:rules <mint>
 
 # Add rule
-tokens pnft add-rule <mint> --type deny-list --addresses <addr1,addr2>
+tokens pnft:add-rule <mint> --type deny_list --addresses <addr1,addr2>
 
 # Check if transfer allowed
-tokens pnft can-transfer <mint> --to <recipient>
+tokens pnft:can-transfer <mint> <recipient>
 
 # Transfer
-tokens pnft transfer <mint> --to <recipient>
+tokens pnft:transfer <mint> <recipient>
 ```
 
 ## Related

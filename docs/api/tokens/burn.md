@@ -55,10 +55,10 @@ await closeTokenAccount(mintAddress, config)
 
 ```bash
 # Burn tokens
-tokens token:burn <mint> --amount 1000000
+tokens burn <mint> 1000000
 
-# Burn all tokens
-tokens token:burn <mint> --all
+# Burn all tokens (pass your full balance as the amount)
+tokens burn <mint> <full-balance>
 ```
 
 ## Notes

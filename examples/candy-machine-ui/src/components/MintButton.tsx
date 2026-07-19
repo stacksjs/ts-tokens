@@ -10,7 +10,7 @@ export function MintButton({ candyMachineId }: Props) {
 
   async function handleMint() {
     setMinting(true)
-    setStatus('Minting from Candy Machine...')
+    setStatus('Simulating mint (dry run)...')
 
     try {
       // In a real app, call mintFromCandyMachine from ts-tokens:
@@ -18,7 +18,7 @@ export function MintButton({ candyMachineId }: Props) {
       // import { mintFromCandyMachine } from 'ts-tokens'
       // const result = await mintFromCandyMachine(candyMachineId, config)
       //
-      setStatus(`Ready to mint from CM: ${candyMachineId}`)
+      setStatus(`Dry run for Candy Machine: ${candyMachineId} — no transaction was sent (mint simulated)`)
     } catch (err) {
       setStatus(`Mint failed: ${err instanceof Error ? err.message : err}`)
     } finally {
@@ -29,7 +29,7 @@ export function MintButton({ candyMachineId }: Props) {
   return (
     <div>
       <button onClick={handleMint} disabled={minting}>
-        {minting ? 'Minting...' : 'Mint NFT'}
+        {minting ? 'Simulating...' : 'Dry run — mint simulated'}
       </button>
       {status && <p>{status}</p>}
     </div>

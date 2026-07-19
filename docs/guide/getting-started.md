@@ -61,50 +61,51 @@ export default {
 ### Programmatic Configuration
 
 ```typescript
-import { configure } from 'ts-tokens'
+import { setConfig } from 'ts-tokens'
 
-configure({
+const config = setConfig({
   network: 'mainnet-beta',
   rpcUrl: 'https://your-rpc-endpoint.com',
-  wallet: keypair, // Keypair instance
 })
 ```
+
+`setConfig` applies the configuration in-memory for the current process and
+returns the merged `TokenConfig`.
 
 ## Connection
 
 ### Create Connection
 
 ```typescript
-import { createConnection, getConnection } from 'ts-tokens'
+import { getConfig } from 'ts-tokens'
+import { createSolanaConnection } from 'ts-tokens/drivers'
 
-// Create connection
-const connection = createConnection({
-  rpcUrl: 'https://api.devnet.solana.com',
-  commitment: 'confirmed',
-})
+// Create a connection from your config
+const config = await getConfig()
+const connection = createSolanaConnection(config)
 
-// Get default connection (uses config)
-const defaultConnection = getConnection()
+// The underlying web3.js Connection is available via `.raw`
+const slot = await connection.raw.getSlot()
 ```
 
 ### Using Wallet
 
 ```typescript
-import { loadWallet, createWallet } from 'ts-tokens'
+import { getConfig, loadWallet, createWallet } from 'ts-tokens'
 
-// Load wallet from file
-const wallet = await loadWallet('~/.config/solana/id.json')
+const config = await getConfig()
 
-// Load from secret key
-const wallet = await loadWallet(secretKeyArray)
+// Load the configured wallet keypair (from wallet.keypairPath,
+// TOKENS_KEYPAIR, or ~/.config/solana/id.json)
+const keypair = loadWallet(config)
+console.log('Address:', keypair.publicKey.toBase58())
 
-// Create new wallet
-const newWallet = createWallet()
-console.log('New address:', newWallet.publicKey.toBase58())
-
-// Request airdrop (devnet only)
-await requestAirdrop(wallet.publicKey, 1) // 1 SOL
+// Create a signing wallet wrapper
+const wallet = createWallet(config)
+console.log('Wallet address:', wallet.publicKey)
 ```
+
+To fund a devnet wallet, use the CLI: `tokens wallet:airdrop 1` (1 SOL).
 
 ## Token Operations
 
@@ -256,57 +257,76 @@ await thawAccount({
 
 ## Storage Providers
 
+The default storage provider is `arweave`. Uploads can also fall back across
+providers via `uploadWithFallback`, whose default order is
+`arweave → ipfs → shadow-drive`. The `local` filesystem adapter is **not**
+part of the fallback chain (its `localhost` URLs are not publicly resolvable)
+— it is only used when explicitly configured.
+
 ### Arweave
 
-```typescript
-import { ArweaveStorage } from 'ts-tokens'
+Uploads go through an Irys node and are signed with your Solana keypair, so
+you need a keypair configured (`wallet.keypairPath`, the `TOKENS_KEYPAIR`
+environment variable, or `~/.config/solana/id.json`) **and** a funded Irys
+balance.
 
-const storage = new ArweaveStorage({
-  host: 'arweave.net',
-  port: 443,
-  protocol: 'https',
+```typescript
+import { createArweaveAdapter } from 'ts-tokens/storage'
+
+const storage = createArweaveAdapter({
+  gateway: 'https://arweave.net',
+  irysNode: 'https://node1.irys.xyz',
 })
 
-// Upload metadata
-const uri = await storage.upload({
+// Upload a metadata JSON object
+const result = await storage.uploadJson({
   name: 'My Token',
   symbol: 'MTK',
   description: 'My awesome token',
   image: 'https://example.com/image.png',
 })
+
+console.log('Metadata URI:', result.url)
 ```
 
 ### IPFS
 
-```typescript
-import { IPFSStorage } from 'ts-tokens'
+IPFS uploads require a pinning service (Pinata JWT via `pinningApiKey` or the
+`PINATA_JWT` environment variable) or a local node (`apiEndpoint`).
 
-const storage = new IPFSStorage({
-  gateway: 'https://ipfs.io/ipfs/',
-  apiUrl: 'https://api.pinata.cloud',
-  apiKey: 'your-api-key',
+```typescript
+import { createIPFSAdapter } from 'ts-tokens/storage'
+
+const storage = createIPFSAdapter({
+  gateway: 'https://ipfs.io',
+  pinningService: 'pinata',
+  pinningApiKey: 'your-pinata-jwt',
 })
 
-const uri = await storage.upload(metadata)
+const result = await storage.uploadJson(metadata)
+console.log('Metadata URI:', result.url)
 ```
 
 ### Shadow Drive
 
+Shadow Drive requires a pre-created storage account and an `endpoint` pointing
+at a running SHDW storage node (the legacy hosted GenesysGo endpoint is
+defunct).
+
 ```typescript
-import { ShadowDriveStorage } from 'ts-tokens'
+import { getConfig } from 'ts-tokens'
+import { createShadowDriveAdapter } from 'ts-tokens/storage'
 
-const storage = new ShadowDriveStorage({
-  wallet: walletKeypair,
+const config = await getConfig()
+const storage = createShadowDriveAdapter({
+  storageAccount: '<your-storage-account>',
+  endpoint: 'https://your-shdw-node.example.com',
 })
+storage.setTokenConfig(config)
 
-// Create storage account
-const storageAccount = await storage.createAccount({
-  name: 'my-storage',
-  size: '1GB',
-})
-
-// Upload file
-const uri = await storage.upload(file, storageAccount)
+// Upload a file
+const result = await storage.uploadFile('./image.png')
+console.log('File URI:', result.url)
 ```
 
 ## TypeScript Types

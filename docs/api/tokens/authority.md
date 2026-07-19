@@ -112,25 +112,19 @@ await thawAccount(
 
 ```bash
 # View authorities
-tokens token:info <mint>
+tokens info <mint>
 
 # Transfer mint authority
-tokens token:authority <mint> --mint-authority <new-address>
+tokens authority <mint> --transfer-mint <new-address>
 
 # Revoke mint authority
-tokens token:authority <mint> --revoke-mint
+tokens authority <mint> --revoke-mint
 
 # Transfer freeze authority
-tokens token:authority <mint> --freeze-authority <new-address>
+tokens authority <mint> --transfer-freeze <new-address>
 
 # Revoke freeze authority
-tokens token:authority <mint> --revoke-freeze
-
-# Freeze account
-tokens token:freeze <token-account> --mint <mint>
-
-# Thaw account
-tokens token:thaw <token-account> --mint <mint>
+tokens authority <mint> --revoke-freeze
 ```
 
 ## Best Practices

@@ -2,52 +2,48 @@
 
 Create and manage Candy Machines for NFT drops.
 
-## `tokens cm:create`
+## `tokens candy:create`
 
 Create a new Candy Machine.
 
 ```bash
-tokens cm:create \
+tokens candy:create \
   --collection <collection-mint> \
   --items 1000 \
-  --price 1 \
-  --symbol MNFT
+  --symbol MNFT \
+  --royalty 500
 ```
 
-### Required Options
-
-| Option | Description |
-|--------|-------------|
-| `--collection` | Collection mint address |
-| `--items` | Number of items available |
-| `--price` | Price in SOL |
-| `--symbol` | NFT symbol |
-
-### Optional Options
-
-| Option | Description |
-|--------|-------------|
-| `--royalty` | Royalty in basis points |
-| `--go-live` | Go live date (ISO format) |
-| `--end-date` | End date (ISO format) |
-| `--hidden` | Use hidden settings for reveal |
-| `--sequential` | Mint in sequential order |
-
-## `tokens cm:upload`
-
-Upload NFT assets and config lines.
+Or load the full configuration (including guards) from a JSON file:
 
 ```bash
-tokens cm:upload <candy-machine> --assets ./assets/
+tokens candy:create --config ./candy-machine.json
 ```
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `--assets`, `-a` | Path to assets directory |
-| `--storage` | Storage provider (arweave, ipfs) |
-| `--batch-size` | Items per batch (default: 10) |
+| `--items <n>` | Number of items available |
+| `--symbol <symbol>` | Collection symbol |
+| `--royalty <bps>` | Royalty in basis points |
+| `--collection <address>` | Collection NFT address |
+| `--config <path>` | Load candy machine config (including guards) from JSON file |
+
+## `tokens candy:upload <path>`
+
+Upload NFT assets and create config lines.
+
+```bash
+tokens candy:upload ./assets/
+tokens candy:upload ./assets/ --storage ipfs
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--storage <provider>` | Storage provider (arweave, ipfs, shadow) (default: `arweave`) |
 
 ### Assets Directory Structure
 
@@ -60,27 +56,35 @@ assets/
 └── ...
 ```
 
-## `tokens cm:mint`
+## `tokens candy:add <candy-machine> <items-file>`
+
+Add config lines to a Candy Machine from a JSON file.
+
+```bash
+tokens candy:add <candy-machine> ./items.json
+```
+
+## `tokens candy:mint <candy-machine>`
 
 Mint an NFT from a Candy Machine.
 
 ```bash
-tokens cm:mint <candy-machine>
-tokens cm:mint <candy-machine> --count 5
+tokens candy:mint <candy-machine>
+tokens candy:mint <candy-machine> --count 5
 ```
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `--count`, `-c` | Number to mint (default: 1) |
+| `--count <n>` | Number to mint (default: `1`) |
 
-## `tokens cm:info`
+## `tokens candy:info <candy-machine>`
 
 Get Candy Machine information.
 
 ```bash
-tokens cm:info <candy-machine>
+tokens candy:info <candy-machine>
 ```
 
 ### Example Output
@@ -97,42 +101,32 @@ Candy Machine Info:
   Status: Active
 ```
 
-## `tokens cm:update`
+## `tokens candy:withdraw <candy-machine>`
 
-Update Candy Machine settings.
-
-```bash
-tokens cm:update <candy-machine> --price 2
-tokens cm:update <candy-machine> --go-live "2024-02-01T00:00:00Z"
-```
-
-## `tokens cm:withdraw`
-
-Withdraw funds from Candy Machine.
+Withdraw funds from a Candy Machine.
 
 ```bash
-tokens cm:withdraw <candy-machine>
+tokens candy:withdraw <candy-machine>
 ```
 
-## `tokens cm:guards`
+## `tokens candy:delete <candy-machine>`
 
-Manage Candy Machine guards.
+Delete a Candy Machine and reclaim rent.
 
 ```bash
-# Add SOL payment guard
-tokens cm:guards <candy-machine> --add sol-payment --amount 1 --destination <address>
-
-# Add start date guard
-tokens cm:guards <candy-machine> --add start-date --date "2024-01-01T00:00:00Z"
-
-# Add allowlist guard
-tokens cm:guards <candy-machine> --add allowlist --file ./allowlist.json
-
-# Add mint limit guard
-tokens cm:guards <candy-machine> --add mint-limit --limit 3
+tokens candy:delete <candy-machine>
 ```
 
-### Available Guards
+## `tokens candy:guards <candy-machine>`
+
+Show the guards configured on a Candy Machine.
+
+```bash
+tokens candy:guards <candy-machine>
+```
+
+Guards are configured at creation time via `tokens candy:create --config
+./candy-machine.json`. Guards you can configure include:
 
 | Guard | Description |
 |-------|-------------|

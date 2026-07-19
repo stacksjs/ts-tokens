@@ -229,18 +229,15 @@ console.log('Account diffs:', diff.accountDiffs)
 
 ## CLI Usage
 
+The debugging helpers above are library APIs. The CLI exposes two related
+utility commands:
+
 ```bash
-# Analyze transaction
-tokens debug tx <signature>
+# Verify a transaction
+tokens verify <signature>
 
-# Inspect account
-tokens debug account <address>
-
-# Simulate transaction
-tokens debug simulate --instruction <base64>
-
-# Compare transactions
-tokens debug compare <sig1> <sig2>
+# Decode transaction or account data
+tokens decode <base64-data> --type transaction
 ```
 
 ## Related

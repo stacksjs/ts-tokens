@@ -122,18 +122,20 @@ if (impact > 0.01) {
 
 ## CLI Usage
 
+The swap helpers above are library APIs. The CLI exposes limit-order and DCA
+commands:
+
 ```bash
-# Get swap quote
-tokens swap:quote --from USDC --to SOL --amount 100
+# Create a limit buy/sell order
+tokens defi:limit-buy <output-mint> <amount> <price>
+tokens defi:limit-sell <input-mint> <amount> <price>
 
-# Execute swap
-tokens swap --from USDC --to SOL --amount 100 --slippage 0.5
+# List open limit orders
+tokens defi:limit-list
 
-# Get token price
-tokens price <mint>
-
-# Get pool info
-tokens pool:info <pool-address>
+# Create / close a DCA position
+tokens defi:dca-create
+tokens defi:dca-close <dca>
 ```
 
 ## Best Practices

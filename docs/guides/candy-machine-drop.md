@@ -160,22 +160,21 @@ console.log('Minted NFT:', nft.mint)
 ## Using the CLI
 
 ```bash
-# Create candy machine
-tokens cm:create \
+# Upload assets and create config lines
+tokens candy:upload ./assets/
+
+# Create candy machine (guards such as sol-payment are configured here)
+tokens candy:create \
   --collection <collection-mint> \
   --items 1000 \
-  --price 1 \
-  --symbol MNFT
+  --symbol MNFT \
+  --config ./candy-machine.json
 
-# Upload assets
-tokens cm:upload <candy-machine> --assets ./assets/
-
-# Add guards
-tokens cm:guards <candy-machine> \
-  --add sol-payment --amount 1 --destination <treasury>
+# Show the configured guards
+tokens candy:guards <candy-machine>
 
 # Mint
-tokens cm:mint <candy-machine>
+tokens candy:mint <candy-machine>
 ```
 
 ## Guard Types

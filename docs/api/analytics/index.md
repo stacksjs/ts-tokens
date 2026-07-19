@@ -201,21 +201,11 @@ const json = analytics.exportData(data, { format: 'json' })
 
 ## CLI Usage
 
+Most analytics helpers are library APIs. The CLI exposes the holder listing:
+
 ```bash
 # Holder distribution
-tokens analytics holders <mint> --limit 100
-
-# Trading volume
-tokens analytics volume <mint> --period 24h
-
-# Price history
-tokens analytics history <mint> --period 7d
-
-# Whale watch
-tokens analytics whale-watch <mint> --min 1000000
-
-# Export
-tokens analytics holders <mint> --export csv --output holders.csv
+tokens holders <mint> --limit 100
 ```
 
 ## Related

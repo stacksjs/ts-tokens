@@ -1,24 +1,23 @@
 # Storage Commands
 
-Upload and manage files on decentralized storage.
-
-## `tokens storage:upload`
-
 Upload files to decentralized storage.
 
+## `tokens upload <path>`
+
+Upload a file to decentralized storage.
+
 ```bash
-tokens storage:upload ./image.png
-tokens storage:upload ./metadata.json --provider arweave
-tokens storage:upload ./assets/ --provider ipfs
+tokens upload ./image.png
+tokens upload ./metadata.json --provider arweave
+tokens upload ./image.png --provider ipfs --type image/png
 ```
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `--provider`, `-p` | Storage provider (arweave, ipfs, shadow-drive) |
-| `--batch-size` | Files per batch (default: 10) |
-| `--concurrent` | Concurrent uploads (default: 5) |
+| `--provider <provider>` | Storage provider (arweave, ipfs, shadow) (default: `arweave`) |
+| `--type <type>` | Content type (image, json, etc.) |
 
 ### Example Output
 
@@ -30,13 +29,21 @@ Uploading image.png...
    Cost: 0.0001 SOL
 ```
 
-## `tokens storage:upload-dir`
+## `tokens upload-assets <directory>`
 
-Upload an entire directory.
+Bulk upload an entire directory of assets.
 
 ```bash
-tokens storage:upload-dir ./assets/ --provider arweave
+tokens upload-assets ./assets/ --provider arweave
+tokens upload-assets ./assets/ --provider arweave --output ./manifest.json
 ```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--provider <provider>` | Storage provider (default: `arweave`) |
+| `--output <path>` | Output manifest path |
 
 ### Example Output
 
@@ -51,83 +58,19 @@ Uploading 100 files...
    Base URI: https://arweave.net/folder123/
 ```
 
-## `tokens storage:info`
+## `tokens upload-metadata <path>`
 
-Get information about an uploaded file.
-
-```bash
-tokens storage:info https://arweave.net/abc123
-```
-
-### Example Output
-
-```text
-Storage Info:
-  Provider: Arweave
-  Transaction ID: abc123xyz
-  Size: 245 KB
-  Content-Type: image/png
-  Status: Confirmed
-  Uploaded: 2024-01-15 10:30:00 UTC
-```
-
-## `tokens storage:download`
-
-Download a file from storage.
+Upload a metadata JSON file.
 
 ```bash
-tokens storage:download https://arweave.net/abc123 --output ./downloaded.png
+tokens upload-metadata ./metadata/0.json --provider arweave
 ```
 
-## `tokens storage:pin`
+### Options
 
-Pin content on IPFS.
-
-```bash
-tokens storage:pin QmXyz... --provider pinata
-```
-
-## `tokens storage:unpin`
-
-Unpin content from IPFS.
-
-```bash
-tokens storage:unpin QmXyz... --provider pinata
-```
-
-## `tokens storage:estimate`
-
-Estimate upload cost.
-
-```bash
-tokens storage:estimate ./image.png --provider arweave
-tokens storage:estimate ./assets/ --provider arweave
-```
-
-### Example Output
-
-```text
-Cost Estimate:
-  Files: 100
-  Total size: 24.5 MB
-  Provider: Arweave
-  Estimated cost: 0.01 SOL (~$2.50)
-```
-
-## `tokens storage:config`
-
-Configure storage providers.
-
-```bash
-# Set default provider
-tokens storage:config --default arweave
-
-# Configure Pinata
-tokens storage:config --pinata-key YOUR_API_KEY --pinata-secret YOUR_SECRET
-
-# Configure NFT.Storage
-tokens storage:config --nft-storage-key YOUR_KEY
-```
+| Option | Description |
+|--------|-------------|
+| `--provider <provider>` | Storage provider (default: `arweave`) |
 
 ## Provider Comparison
 
@@ -152,16 +95,13 @@ export SHADOW_DRIVE_KEYPAIR=./keypair.json
 
 ```bash
 # 1. Upload images
-tokens storage:upload-dir ./images/ --provider arweave
+tokens upload-assets ./images/ --provider arweave
 
-# 2. Generate metadata with image URIs
-tokens metadata:generate ./images/ --output ./metadata/
+# 2. Upload metadata JSON files
+tokens upload-assets ./metadata/ --provider arweave
 
-# 3. Upload metadata
-tokens storage:upload-dir ./metadata/ --provider arweave
-
-# 4. Use metadata URIs for minting
-tokens nft:create --uri https://arweave.net/metadata/0.json
+# 3. Mint an NFT from an uploaded metadata URI
+tokens nft:mint https://arweave.net/metadata/0.json --name "My NFT" --symbol MNFT
 ```
 
 ## Related

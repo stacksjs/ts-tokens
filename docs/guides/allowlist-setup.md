@@ -103,14 +103,15 @@ const nft = await mintFromCandyMachine(
 ## Using the CLI
 
 ```bash
-# Generate Merkle tree from file
-tokens allowlist:create --input ./allowlist.json --output ./merkle.json
+# Create the candy machine with the allowlist guard (guards are set at
+# creation time via the config file)
+tokens candy:create --config ./candy-machine.json
 
-# Add allowlist guard
-tokens cm:guards <candy-machine> --add allowlist --file ./merkle.json
+# Show the configured guards
+tokens candy:guards <candy-machine>
 
-# Mint with proof
-tokens cm:mint <candy-machine> --proof ./my-proof.json
+# Mint
+tokens candy:mint <candy-machine>
 ```
 
 ## Multiple Allowlist Tiers

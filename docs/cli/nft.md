@@ -11,22 +11,15 @@ tokens nft:create --name "My NFT" --symbol MNFT --uri https://arweave.net/...
 tokens nft:create --name "My NFT" --symbol MNFT --uri https://... --collection <mint>
 ```
 
-### Required Options
+### Options
 
 | Option | Description |
 |--------|-------------|
-| `--name`, `-n` | NFT name |
-| `--symbol`, `-s` | NFT symbol |
-| `--uri`, `-u` | Metadata URI |
-
-### Optional Options
-
-| Option | Description |
-|--------|-------------|
-| `--collection` | Collection mint address |
-| `--royalty` | Royalty in basis points (500 = 5%) |
-| `--creators` | Creator addresses and shares |
-| `--mutable` | Allow metadata updates (default: true) |
+| `--name <name>` | NFT name |
+| `--symbol <symbol>` | NFT symbol |
+| `--uri <uri>` | Metadata URI |
+| `--collection <address>` | Collection address |
+| `--royalty <bps>` | Royalty in basis points (e.g., 500 = 5%) |
 
 ### Example
 
@@ -39,15 +32,32 @@ tokens nft:create \
   --collection ABC123...
 ```
 
-## `tokens nft:transfer`
+## `tokens nft:mint <uri>`
+
+Mint an NFT from an existing metadata URI.
+
+```bash
+tokens nft:mint https://arweave.net/metadata/0.json --name "My NFT" --symbol MNFT
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--name <name>` | NFT name |
+| `--symbol <symbol>` | NFT symbol |
+| `--royalty <bps>` | Royalty in basis points |
+| `--collection <address>` | Collection address |
+
+## `tokens nft:transfer <mint> <to>`
 
 Transfer an NFT.
 
 ```bash
-tokens nft:transfer <mint> --to <recipient>
+tokens nft:transfer <mint> <recipient>
 ```
 
-## `tokens nft:burn`
+## `tokens nft:burn <mint>`
 
 Burn an NFT.
 
@@ -55,7 +65,7 @@ Burn an NFT.
 tokens nft:burn <mint>
 ```
 
-## `tokens nft:info`
+## `tokens nft:info <mint>`
 
 Get NFT information.
 
@@ -79,13 +89,13 @@ NFT Info:
 
 ```
 
-## `tokens nft:list`
+## `tokens nft:list [owner]`
 
-List NFTs owned by an address.
+List NFTs owned by an address (defaults to the configured wallet).
 
 ```bash
 tokens nft:list
-tokens nft:list --owner <address>
+tokens nft:list <owner-address>
 ```
 
 ### Example Output
@@ -107,30 +117,24 @@ Create a new NFT collection.
 tokens collection:create --name "My Collection" --symbol MCOL --uri https://...
 ```
 
-### Required Options
+### Options
 
 | Option | Description |
 |--------|-------------|
-| `--name`, `-n` | Collection name |
-| `--symbol`, `-s` | Collection symbol |
-| `--uri`, `-u` | Collection metadata URI |
+| `--name <name>` | Collection name |
+| `--symbol <symbol>` | Collection symbol |
+| `--uri <uri>` | Collection metadata URI |
+| `--royalty <bps>` | Royalty in basis points (e.g., 500 = 5%) |
 
-### Optional Options
-
-| Option | Description |
-|--------|-------------|
-| `--royalty` | Default royalty for items |
-| `--size` | Expected collection size |
-
-## `tokens collection:verify`
+## `tokens collection:verify <collection> <nft>`
 
 Verify an NFT belongs to a collection.
 
 ```bash
-tokens collection:verify <nft-mint> --collection <collection-mint>
+tokens collection:verify <collection-mint> <nft-mint>
 ```
 
-## `tokens collection:info`
+## `tokens collection:info <address>`
 
 Get collection information.
 
@@ -149,6 +153,37 @@ Collection Info:
   Minted: 42
   Royalty: 5%
 ```
+
+## `tokens collection:items <address>`
+
+List the NFTs in a collection.
+
+```bash
+tokens collection:items <collection-mint>
+tokens collection:items <collection-mint> --limit 100
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--limit <limit>` | Maximum items to list (default: `50`) |
+
+## `tokens collection:update <address>`
+
+Update collection metadata.
+
+```bash
+tokens collection:update <collection-mint> --name "New Name" --uri https://arweave.net/new...
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--name <name>` | New collection name |
+| `--symbol <symbol>` | New symbol |
+| `--uri <uri>` | New metadata URI |
 
 ## Related
 

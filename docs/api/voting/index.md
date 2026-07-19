@@ -209,16 +209,8 @@ if (!nftResult.valid) {
 
 ## CLI Usage
 
-```bash
-# Get voting power
-tokens voting power <dao> --voter <address>
-
-# Compare mechanisms
-tokens voting compare <token> --mechanism quadratic
-
-# Check eligibility
-tokens voting eligible <dao> --voter <address>
-```
+Voting power helpers are library-only APIs; the CLI does not currently expose
+`voting` commands.
 
 ## Related
 

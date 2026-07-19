@@ -169,14 +169,8 @@ console.log('Attributes:', offChain.attributes)
 # Get metadata
 tokens nft:info <mint>
 
-# Update metadata
-tokens nft:update <mint> --name "New Name" --uri "https://..."
-
-# Verify creator
-tokens nft:verify-creator <mint>
-
-# Make immutable
-tokens nft:update <mint> --immutable
+# Update collection metadata
+tokens collection:update <collection> --name "New Name" --uri "https://..."
 ```
 
 ## Related

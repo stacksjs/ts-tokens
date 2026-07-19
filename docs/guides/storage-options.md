@@ -242,16 +242,16 @@ await updateMetadataUri(
 
 ```bash
 # Upload to Arweave
-tokens storage:upload ./image.png --provider arweave
+tokens upload ./image.png --provider arweave
 
 # Upload to IPFS
-tokens storage:upload ./image.png --provider ipfs
+tokens upload ./image.png --provider ipfs
 
 # Upload directory
-tokens storage:upload ./assets/ --provider arweave
+tokens upload-assets ./assets/ --provider arweave
 
-# Check storage status
-tokens storage:info <uri>
+# Upload a metadata JSON file
+tokens upload-metadata ./metadata/0.json --provider arweave
 ```
 
 ## Cost Calculator
