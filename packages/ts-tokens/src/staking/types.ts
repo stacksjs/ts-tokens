@@ -140,7 +140,12 @@ export interface RewardsCalculation {
 export interface PoolStats {
   totalStaked: bigint
   totalStakers: number
-  totalRewardsDistributed: bigint
+  /**
+   * Cumulative rewards distributed by the pool. `null` when untracked —
+   * there is no on-chain counter for this, so it cannot be measured from
+   * the pool account alone. Never a fabricated `0n`.
+   */
+  totalRewardsDistributed: bigint | null
   currentApr: number
   remainingRewards: bigint
   timeUntilEmpty: bigint

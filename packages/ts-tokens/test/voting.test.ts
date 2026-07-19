@@ -392,3 +392,62 @@ describe('calculateNFTVotingPower (trait-weighted)', () => {
     ).rejects.toThrow(/traitWeights/i)
   })
 })
+
+// ---------------------------------------------------------------------------
+// Honest failures — no fabricated zero data
+// ---------------------------------------------------------------------------
+
+describe('honest failures instead of silent zero data', () => {
+  test('calculateNFTVotingPower throws (NFT enumeration needs DAS / indexing)', async () => {
+    const collection = Keypair.generate().publicKey
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const connection = {} as any
+
+    await expect(
+      calculateNFTVotingPower(connection, Keypair.generate().publicKey, {
+        collection,
+        oneNftOneVote: true,
+      })
+    ).rejects.toThrow(/not implemented/i)
+  })
+
+  test('getCollectionVotingStats throws instead of returning zeros', async () => {
+    const { getCollectionVotingStats } = await import('../src/voting/nft-voting')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const connection = {} as any
+
+    await expect(
+      getCollectionVotingStats(connection, Keypair.generate().publicKey)
+    ).rejects.toThrow(/not implemented/i)
+  })
+
+  test('validateNFTVote propagates the not-implemented failure', async () => {
+    const { validateNFTVote } = await import('../src/voting/nft-voting')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const connection = {} as any
+
+    await expect(
+      validateNFTVote(connection, Keypair.generate().publicKey, {
+        collection: Keypair.generate().publicKey,
+        oneNftOneVote: true,
+      })
+    ).rejects.toThrow(/not implemented/i)
+  })
+
+  test('checkDoubleVoting throws instead of reporting "not voted"', async () => {
+    const { checkDoubleVoting } = await import('../src/voting/token-weighted')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const connection = {} as any
+    const snapshot = {
+      proposal: Keypair.generate().publicKey,
+      slot: 1,
+      timestamp: Date.now(),
+      totalSupply: 100n,
+      holders: new Map<string, bigint>(),
+    }
+
+    await expect(
+      checkDoubleVoting(connection, Keypair.generate().publicKey, Keypair.generate().publicKey, snapshot)
+    ).rejects.toThrow(/not implemented/i)
+  })
+})

@@ -11,16 +11,25 @@ export interface SecurityCheckResult {
   safe: boolean
   warnings: string[]
   recommendations: string[]
+  /**
+   * `false` when the check could not actually be performed (e.g. the data
+   * source it needs is not configured or unavailable). When `checked` is
+   * `false`, `safe` is always `false` as well: an unperformed check must
+   * never report "safe". Omitted (undefined) means the check ran normally.
+   */
+  checked?: boolean
 }
 
 /**
- * Check if an address is a known scam address
- * In production, this would check against a database
+ * Check if an address is a known scam address.
+ *
+ * There is no reputation/scam database wired into this library, so the
+ * reputation of an address CANNOT be determined here. Only the address
+ * format is verified; the reputation verdict is reported honestly as
+ * NOT CHECKED (`checked: false`, `safe: false`) instead of a fabricated
+ * "safe".
  */
 export async function checkAddressReputation(address: string): Promise<SecurityCheckResult> {
-  const warnings: string[] = []
-  const recommendations: string[] = []
-
   // Basic validation
   try {
     new PublicKey(address)
@@ -32,12 +41,13 @@ export async function checkAddressReputation(address: string): Promise<SecurityC
     }
   }
 
-  // In production, check against known scam database
-  // For now, just return safe
   return {
-    safe: true,
-    warnings,
-    recommendations,
+    safe: false,
+    checked: false,
+    warnings: ['NOT CHECKED — no address reputation database is configured'],
+    recommendations: [
+      'Cross-reference the address with a public scam database (e.g. SolanaFM, Chainabuse) before interacting',
+    ],
   }
 }
 
@@ -110,24 +120,101 @@ export function checkUnusualAmount(
 }
 
 /**
- * Check authority before sensitive operation
+ * Check authority before a sensitive operation.
+ *
+ * This is a real on-chain check for mint/freeze authority: the mint account
+ * is fetched, its owner is verified to be the SPL Token or Token-2022
+ * program, and the authority stored in the mint layout is compared against
+ * `expectedAuthority`.
+ *
+ * The 'update' (Metaplex metadata) authority cannot be checked here — it
+ * lives in the metadata PDA, not the mint account — so that case is
+ * reported honestly as NOT CHECKED (`checked: false`, `safe: false`).
  */
 export async function checkAuthority(
-  _connection: Connection,
+  connection: Connection,
   mint: PublicKey,
-  _expectedAuthority: PublicKey,
-  _authorityType: 'mint' | 'freeze' | 'update'
+  expectedAuthority: PublicKey,
+  authorityType: 'mint' | 'freeze' | 'update'
 ): Promise<SecurityCheckResult> {
-  const warnings: string[] = []
-  const recommendations: string[] = []
+  if (authorityType === 'update') {
+    return {
+      safe: false,
+      checked: false,
+      warnings: ['NOT CHECKED — the metadata update authority lives in the Metaplex metadata account, which this check does not read'],
+      recommendations: ['Fetch the metadata account and compare its updateAuthority field manually'],
+    }
+  }
 
-  // In production, fetch mint info and verify authority
-  // For now, return basic check
+  let accountInfo
+  try {
+    accountInfo = await connection.getAccountInfo(mint)
+  } catch (error) {
+    return {
+      safe: false,
+      checked: false,
+      warnings: [`NOT CHECKED — could not fetch mint account: ${(error as Error).message}`],
+      recommendations: ['Retry against a healthy RPC endpoint before relying on this check'],
+    }
+  }
+
+  if (!accountInfo) {
+    return {
+      safe: false,
+      warnings: ['Mint account not found'],
+      recommendations: ['Verify the mint address is correct'],
+    }
+  }
+
+  const { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } = await import('@solana/spl-token')
+  if (!accountInfo.owner.equals(TOKEN_PROGRAM_ID) && !accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
+    return {
+      safe: false,
+      warnings: [`Account is not owned by a token program (owner: ${accountInfo.owner.toBase58()}) — cannot parse authority`],
+      recommendations: ['Verify the address is an SPL Token or Token-2022 mint'],
+    }
+  }
+
+  // SPL Mint layout (shared by Token and Token-2022 for the first 82 bytes):
+  //   mintAuthorityOption u32 @0, mintAuthority @4..36,
+  //   supply u64 @36..44, decimals @44, isInitialized @45,
+  //   freezeAuthorityOption u32 @46, freezeAuthority @50..82.
+  if (accountInfo.data.length < 82) {
+    return {
+      safe: false,
+      warnings: [`Account data too short for a mint (${accountInfo.data.length} bytes < 82) — cannot parse authority`],
+      recommendations: ['Verify the address is a mint account, not a token account'],
+    }
+  }
+
+  const data = accountInfo.data
+  const optionOffset = authorityType === 'mint' ? 0 : 46
+  const keyOffset = authorityType === 'mint' ? 4 : 50
+  const hasAuthority = data.readUInt32LE(optionOffset) === 1
+
+  if (!hasAuthority) {
+    return {
+      safe: false,
+      warnings: [`The ${authorityType} authority has been revoked — no account holds it`],
+      recommendations: [`Do not attempt ${authorityType} operations on this mint; they will fail on-chain`],
+    }
+  }
+
+  const onChainAuthority = new PublicKey(data.subarray(keyOffset, keyOffset + 32))
+  if (!onChainAuthority.equals(expectedAuthority)) {
+    return {
+      safe: false,
+      warnings: [
+        `${authorityType} authority mismatch — on-chain: ${onChainAuthority.toBase58()}, expected: ${expectedAuthority.toBase58()}`,
+      ],
+      recommendations: ['The transaction would fail on-chain; verify which account actually holds the authority'],
+    }
+  }
 
   return {
     safe: true,
-    warnings,
-    recommendations,
+    warnings: [],
+    recommendations: [],
   }
 }
 

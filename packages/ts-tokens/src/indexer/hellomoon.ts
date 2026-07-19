@@ -2,6 +2,12 @@
  * Hello Moon Analytics Integration
  *
  * NFT and DeFi analytics via Hello Moon API.
+ *
+ * @deprecated The Hello Moon API (rest-api.hellomoon.io) is DEFUNCT — the
+ * service has shut down and these endpoints no longer respond. This client
+ * is kept only for backward compatibility and will fail at request time.
+ * Use the DAS-based indexer (src/indexer/das.ts) or another analytics
+ * provider instead.
  */
 
 export interface HelloMoonConfig {
@@ -10,10 +16,23 @@ export interface HelloMoonConfig {
 
 const HELLO_MOON_API = 'https://rest-api.hellomoon.io/v0'
 
+let deprecationWarned = false
+
+/**
+ * @deprecated The Hello Moon API is defunct; constructing this client logs a
+ * one-time deprecation warning.
+ */
 export class HelloMoonClient {
   private apiKey: string
 
   constructor(config: HelloMoonConfig) {
+    if (!deprecationWarned) {
+      deprecationWarned = true
+      console.warn(
+        '[ts-tokens] HelloMoonClient is deprecated: the Hello Moon API is defunct. ' +
+        'Use the DAS-based indexer (src/indexer/das) or another analytics provider instead.'
+      )
+    }
     this.apiKey = config.apiKey
   }
 

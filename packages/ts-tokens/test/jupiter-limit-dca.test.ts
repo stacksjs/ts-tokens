@@ -83,6 +83,29 @@ describe('formatLimitOrder', () => {
     const formatted = formatLimitOrder(order)
     expect(formatted).toContain('Expires:')
   })
+
+  test('does not render NaN% when oriMakingAmount is 0', () => {
+    const order: LimitOrder = {
+      publicKey: 'order789',
+      account: {
+        maker: 'maker',
+        inputMint: 'mint1',
+        outputMint: 'mint2',
+        oriMakingAmount: '0',
+        oriTakingAmount: '0',
+        makingAmount: '0',
+        takingAmount: '0',
+        borrowMakingAmount: '0',
+        expiredAt: null,
+        createdAt: 1700000000,
+        updatedAt: 1700000000,
+      },
+    }
+
+    const formatted = formatLimitOrder(order)
+    expect(formatted).not.toContain('NaN')
+    expect(formatted).toContain('Filled: 0.0%')
+  })
 })
 
 // ---------------------------------------------------------------------------

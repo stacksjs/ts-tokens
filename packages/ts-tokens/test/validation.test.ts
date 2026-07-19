@@ -86,12 +86,17 @@ describe('isValidDecimals', () => {
     expect(isValidDecimals(6)).toEqual({ valid: true })
   })
 
+  test('valid — 10 through 255 (on-chain u8 allows them)', () => {
+    expect(isValidDecimals(10)).toEqual({ valid: true })
+    expect(isValidDecimals(255)).toEqual({ valid: true })
+  })
+
   test('invalid — negative', () => {
     expect(isValidDecimals(-1).valid).toBe(false)
   })
 
-  test('invalid — 10', () => {
-    expect(isValidDecimals(10).valid).toBe(false)
+  test('invalid — above 255', () => {
+    expect(isValidDecimals(256).valid).toBe(false)
   })
 
   test('invalid — not an integer', () => {

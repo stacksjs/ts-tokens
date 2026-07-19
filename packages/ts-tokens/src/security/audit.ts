@@ -60,6 +60,45 @@ export async function auditToken(
 
     const data = mintInfo.data
 
+    // Only SPL Token / Token-2022 mint accounts can be audited as tokens.
+    // Parsing any other account (a wallet, a token account, a program)
+    // through the mint layout would produce fabricated findings.
+    const { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } = await import('@solana/spl-token')
+    if (!mintInfo.owner.equals(TOKEN_PROGRAM_ID) && !mintInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
+      return {
+        timestamp: new Date(),
+        target: mint.toBase58(),
+        targetType: 'token',
+        riskScore: 100,
+        findings: [{
+          severity: 'critical',
+          category: 'type',
+          title: 'Not a token mint account',
+          description: `Account is owned by ${mintInfo.owner.toBase58()}, not the SPL Token or Token-2022 program — refusing to parse it as a mint`,
+        }],
+        recommendations: ['Verify the address is an SPL Token or Token-2022 mint'],
+        summary: 'Account is not a token mint',
+      }
+    }
+
+    // SPL Mint layout is 82 bytes minimum (Token-2022 appends extensions).
+    if (data.length < 82) {
+      return {
+        timestamp: new Date(),
+        target: mint.toBase58(),
+        targetType: 'token',
+        riskScore: 100,
+        findings: [{
+          severity: 'critical',
+          category: 'type',
+          title: 'Not a token mint account',
+          description: `Account data is ${data.length} bytes; a mint requires at least 82 — refusing to parse`,
+        }],
+        recommendations: ['Verify the address is a mint account, not a token account'],
+        summary: 'Account data too short to be a mint',
+      }
+    }
+
     // SPL Mint layout: mintAuthorityOption u32 @0, mintAuthority @4..36,
     // supply u64 @36..44, decimals @44, isInitialized @45,
     // freezeAuthorityOption u32 @46, freezeAuthority @50..82.
@@ -210,17 +249,22 @@ export async function auditWallet(
       riskScore += 15
     }
 
-    // Check for token accounts
-    const tokenAccounts = await connection.getParsedTokenAccountsByOwner(wallet, {
-      programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
-    })
+    // Check for token accounts across both token programs (legacy SPL Token
+    // and Token-2022). Counting only legacy accounts would miss every
+    // Token-2022 holding and underreport the wallet's exposure.
+    const { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } = await import('@solana/spl-token')
+    let tokenAccountCount = 0
+    for (const programId of [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID]) {
+      const accounts = await connection.getParsedTokenAccountsByOwner(wallet, { programId })
+      tokenAccountCount += accounts.value.length
+    }
 
-    if (tokenAccounts.value.length > 50) {
+    if (tokenAccountCount > 50) {
       findings.push({
         severity: 'low',
         category: 'accounts',
         title: 'Many token accounts',
-        description: `Wallet has ${tokenAccounts.value.length} token accounts`,
+        description: `Wallet has ${tokenAccountCount} token accounts`,
         recommendation: 'Consider closing unused token accounts to reclaim rent',
       })
       recommendations.push('Close unused token accounts to reclaim SOL')
@@ -230,7 +274,7 @@ export async function auditWallet(
       severity: 'info',
       category: 'summary',
       title: 'Wallet overview',
-      description: `Balance: ${balance / 1e9} SOL, Token accounts: ${tokenAccounts.value.length}`,
+      description: `Balance: ${balance / 1e9} SOL, Token accounts: ${tokenAccountCount}`,
     })
 
   } catch (error) {

@@ -86,12 +86,14 @@ export async function getVotingPowerSnapshot(
 /**
  * Delegate voting power. Not implemented — governance program undeployed.
  * Inputs are validated first so misuse is reported clearly.
+ *
+ * If `amount` is not specified, the full voting power is delegated.
  */
 export async function delegateVotingPower(
   _connection: Connection,
   delegator: Keypair,
   delegate: PublicKey,
-  amount?: bigint // If not specified, delegate all
+  amount?: bigint
 ): Promise<{ delegation: Delegation; signature: string }> {
   if (delegate.equals(delegator.publicKey)) {
     throw new Error('Cannot delegate voting power to yourself')

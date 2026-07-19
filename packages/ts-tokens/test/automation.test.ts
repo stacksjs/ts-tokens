@@ -35,6 +35,7 @@ import {
   saveSchedulerState,
   generateId,
   cleanupJobs,
+  resetStaleRunningJobs,
 } from '../src/automation/scheduler'
 
 // Mint automation
@@ -169,6 +170,91 @@ describe('getNextRun', () => {
     expect(next.getUTCMinutes()).toBe(30)
     // Should be at 11:30 since we're past 10:30
     expect(next.getUTCHours()).toBe(11)
+  })
+
+  test('POSIX OR: fires on day-of-month even when day-of-week does not match', () => {
+    // "0 9 1 * 1" = 09:00 on the 1st of the month OR on any Monday
+    const schedule = parseCronExpression('0 9 1 * 1')
+    // From just after Monday 2025-06-30 09:00 — the next Monday would be
+    // 2025-07-07, but the 1st (Tuesday 2025-07-01) matches via day-of-month
+    // even though it is NOT a Monday.
+    const next = getNextRun(schedule, new Date('2025-06-30T10:00:00Z'))
+
+    expect(next.getUTCDate()).toBe(1) // the 1st
+    expect(next.getUTCDay()).not.toBe(1) // not a Monday (2025-07-01 is a Tuesday)
+    expect(next.getUTCHours()).toBe(9)
+    expect(next.getUTCMinutes()).toBe(0)
+  })
+
+  test('POSIX OR: fires on day-of-week even when day-of-month does not match', () => {
+    const schedule = parseCronExpression('0 9 1 * 1')
+    // From Sunday 2025-06-15 — the next match is Monday the 16th, which is
+    // NOT the 1st of the month.
+    const next = getNextRun(schedule, new Date('2025-06-15T10:00:00Z'))
+
+    expect(next.getUTCDay()).toBe(1) // Monday
+    expect(next.getUTCDate()).toBe(16) // not the 1st
+    expect(next.getUTCHours()).toBe(9)
+  })
+
+  test('POSIX OR: skips dates matching neither day field', () => {
+    const schedule = parseCronExpression('0 9 1 * 1')
+    // From just after 09:00 on Tuesday 2025-07-01 (matched via DOM) — the
+    // next match is Monday 2025-07-07 (neither the 1st nor before it).
+    const next = getNextRun(schedule, new Date('2025-07-01T10:00:00Z'))
+
+    expect(next.getUTCDay()).toBe(1) // Monday
+    expect(next.getUTCDate()).toBe(7)
+  })
+
+  test('AND semantics preserved when one day field is *', () => {
+    const schedule = parseCronExpression('0 9 * * 1') // Mondays only
+    const next = getNextRun(schedule, new Date('2025-06-15T10:00:00Z'))
+    expect(next.getUTCDay()).toBe(1)
+    expect(next.getUTCDate()).toBe(16)
+
+    const domOnly = parseCronExpression('0 9 1 * *') // 1st of month only
+    const nextDom = getNextRun(domOnly, new Date('2025-06-15T10:00:00Z'))
+    expect(nextDom.getUTCDate()).toBe(1)
+    expect(nextDom.getUTCDay()).not.toBe(1) // 2025-07-01 is a Tuesday
+  })
+})
+
+describe('resetStaleRunningJobs', () => {
+  test('resets jobs stranded in running state by a crash', () => {
+    const state = loadSchedulerState(storePath)
+    state.jobs['stuck-job'] = {
+      id: 'stuck-job',
+      name: 'Stuck Job',
+      status: 'running',
+      scheduledAt: 1000,
+      createdAt: 1000,
+      executedAt: 2000, // long ago
+      action: { type: 'transfer', mint: 'a', to: 'b', amount: '1' },
+    }
+    saveSchedulerState(state, storePath)
+
+    const reset = resetStaleRunningJobs(storePath, 1000)
+    expect(reset).toBe(1)
+    expect(getJob('stuck-job', storePath)?.status).toBe('scheduled')
+  })
+
+  test('leaves recently-started running jobs alone', () => {
+    const state = loadSchedulerState(storePath)
+    state.jobs['live-job'] = {
+      id: 'live-job',
+      name: 'Live Job',
+      status: 'running',
+      scheduledAt: Date.now(),
+      createdAt: Date.now(),
+      executedAt: Date.now(), // just started
+      action: { type: 'transfer', mint: 'a', to: 'b', amount: '1' },
+    }
+    saveSchedulerState(state, storePath)
+
+    const reset = resetStaleRunningJobs(storePath, 60000)
+    expect(reset).toBe(0)
+    expect(getJob('live-job', storePath)?.status).toBe('running')
   })
 })
 

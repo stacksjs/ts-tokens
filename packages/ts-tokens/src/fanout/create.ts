@@ -28,12 +28,19 @@ export function loadFanoutState(storePath?: string): FanoutState {
 }
 
 /**
- * Save fanout state
+ * Save fanout state atomically.
+ *
+ * Writes to a unique temp file in the same directory, then renames it over
+ * the target. rename(2) is atomic on the same filesystem, so a crash
+ * mid-write can never leave a truncated state file. (Same pattern as
+ * src/vesting/schedule.ts.)
  */
 export function saveFanoutState(state: FanoutState, storePath?: string): void {
   const filePath = storePath ?? getFanoutStatePath()
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
-  fs.writeFileSync(filePath, JSON.stringify(state, null, 2), { mode: 0o600 })
+  const tmpPath = `${filePath}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`
+  fs.writeFileSync(tmpPath, JSON.stringify(state, null, 2), { mode: 0o600 })
+  fs.renameSync(tmpPath, filePath)
 }
 
 /**

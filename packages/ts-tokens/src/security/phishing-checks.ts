@@ -5,6 +5,7 @@
  */
 
 import type { SecurityCheckResult } from './checks'
+import { decode as decodeBase58, isValid as isValidBase58 } from '../utils/base58'
 
 /**
  * Check for unlimited approval amounts
@@ -91,16 +92,20 @@ export function checkFakeTokenName(name: string, symbol: string, knownTokens: Ar
 }
 
 /**
- * Check token against a registry
+ * Check token against a registry.
+ *
+ * No token registry (Jupiter strict list, community registry, etc.) is
+ * wired into this library, so membership CANNOT be determined here. The
+ * verdict is reported honestly as NOT CHECKED (`checked: false`,
+ * `safe: false`) instead of a fabricated "safe".
  */
 export function checkTokenRegistry(_mint: string): SecurityCheckResult {
-  const warnings: string[] = []
-  const recommendations: string[] = []
-
-  // Placeholder for registry check
-  recommendations.push('Verify the token is listed on a trusted registry (e.g. Jupiter strict list)')
-
-  return { safe: true, warnings, recommendations }
+  return {
+    safe: false,
+    checked: false,
+    warnings: ['NOT CHECKED — no token registry lookup is configured'],
+    recommendations: ['Verify the token is listed on a trusted registry (e.g. Jupiter strict list)'],
+  }
 }
 
 /**
@@ -221,36 +226,98 @@ export function checkExternalNFTLinks(metadata: { external_url?: string; animati
 }
 
 /**
- * Check for known drainer patterns in instructions
+ * Check for known drainer patterns in instructions.
+ *
+ * Decodes each instruction's data (hex, base64, or base58) and, for
+ * instructions targeting the SPL Token or Token-2022 program, inspects the
+ * first byte (the instruction discriminator):
+ *   4 = Approve, 6 = SetAuthority.
+ * More than two token approvals in one transaction is a classic drainer
+ * shape; any SetAuthority is flagged for review.
  */
 export function checkDrainerPattern(instructions: Array<{ programId: string; data?: string }>): SecurityCheckResult {
   const warnings: string[] = []
   const recommendations: string[] = []
 
-  // Check for multiple approve + transfer patterns
-  const approveCount = instructions.filter(ix =>
-    ix.data && ix.data.startsWith('04') // SPL Token approve instruction
-  ).length
+  const TOKEN_PROGRAM_ID_STR = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+  const TOKEN_2022_PROGRAM_ID_STR = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb'
+  const SPL_TOKEN_APPROVE = 4
+  const SPL_TOKEN_SET_AUTHORITY = 6
+
+  const isTokenProgram = (pid: string) =>
+    pid === TOKEN_PROGRAM_ID_STR || pid === TOKEN_2022_PROGRAM_ID_STR
+
+  const tokenIxs = instructions.filter(ix => isTokenProgram(ix.programId))
+  const discriminators = tokenIxs
+    .map(ix => decodeInstructionData(ix.data)?.[0])
+    .filter((d): d is number => d !== undefined)
+
+  const approveCount = discriminators.filter(d => d === SPL_TOKEN_APPROVE).length
+  const setAuthorityCount = discriminators.filter(d => d === SPL_TOKEN_SET_AUTHORITY).length
 
   if (approveCount > 2) {
     warnings.push('Multiple token approval instructions detected — possible drainer pattern')
     recommendations.push('Review each approval carefully before signing')
   }
 
-  return { safe: approveCount <= 2, warnings, recommendations }
+  if (setAuthorityCount > 0) {
+    warnings.push(`${setAuthorityCount} SetAuthority instruction(s) detected — token account ownership can be reassigned`)
+    recommendations.push('Verify every SetAuthority target before signing; drainers use it to seize accounts')
+  }
+
+  return { safe: approveCount <= 2 && setAuthorityCount === 0, warnings, recommendations }
 }
 
 /**
- * Check address against known scam database
+ * Decode instruction data that may be hex-, base64-, or base58-encoded.
+ * Returns undefined when the data cannot be decoded.
+ */
+function decodeInstructionData(data?: string): Uint8Array | undefined {
+  if (!data) return undefined
+
+  // Hex (with or without 0x prefix)
+  const hex = data.startsWith('0x') ? data.slice(2) : data
+  if (/^[0-9a-fA-F]+$/.test(hex) && hex.length % 2 === 0) {
+    return Uint8Array.from(Buffer.from(hex, 'hex'))
+  }
+
+  // Base64
+  try {
+    const buf = Buffer.from(data, 'base64')
+    if (buf.length > 0 && buf.toString('base64').replace(/=+$/, '') === data.replace(/=+$/, '')) {
+      return Uint8Array.from(buf)
+    }
+  } catch {
+    // fall through to base58
+  }
+
+  // Base58 (solana raw instruction encoding)
+  try {
+    if (isValidBase58(data)) {
+      return decodeBase58(data)
+    }
+  } catch {
+    // not decodable
+  }
+
+  return undefined
+}
+
+/**
+ * Check address against a known scam database.
+ *
+ * No scam database (API or local) is wired into this library, so this
+ * CANNOT be determined here. The verdict is reported honestly as
+ * NOT CHECKED (`checked: false`, `safe: false`) instead of a fabricated
+ * "safe".
  */
 export function checkKnownScamDatabase(_address: string): SecurityCheckResult {
-  const warnings: string[] = []
-  const recommendations: string[] = []
-
-  // Placeholder — in production, check against an API or local database
-  recommendations.push('Cross-reference addresses with known scam databases')
-
-  return { safe: true, warnings, recommendations }
+  return {
+    safe: false,
+    checked: false,
+    warnings: ['NOT CHECKED — no scam database is configured'],
+    recommendations: ['Cross-reference addresses with known scam databases (e.g. Chainabuse, SolanaFM)'],
+  }
 }
 
 // Simple Levenshtein distance

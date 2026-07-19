@@ -139,8 +139,8 @@ export async function getTokenPrice(mint: PublicKey): Promise<TokenPrice> {
     mint,
     // price v2 returns price as a numeric string.
     priceUsd: Number(priceData.price),
-    priceChange24h: 0, // Not available in this endpoint
-    volume24h: 0,
+    // priceChange24h / volume24h are not available from this endpoint —
+    // left undefined rather than fabricated as 0.
     source: 'jupiter',
     timestamp: Date.now(),
   }
@@ -168,8 +168,7 @@ export async function getTokenPrices(mints: PublicKey[]): Promise<Map<string, To
       prices.set(address, {
         mint,
         priceUsd: Number(priceData.price),
-        priceChange24h: 0,
-        volume24h: 0,
+        // priceChange24h / volume24h not available from this endpoint.
         source: 'jupiter',
         timestamp: Date.now(),
       })

@@ -4,7 +4,7 @@
 
 import { describe, test, expect } from 'bun:test'
 import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID, MintLayout } from '@solana/spl-token'
 import {
   STAKING_PROGRAM_ID,
   DISCRIMINATORS,
@@ -51,7 +51,9 @@ import {
   calculateAPR,
   calculatePenalty,
   validatePoolConfig,
+  getPoolStats,
 } from '../src/staking/pool'
+import { createMockConnection } from './helpers/mock-connection'
 import {
   validateStakeAmount,
   calculateNFTPoints,
@@ -305,6 +307,27 @@ describe('Instruction builders', () => {
     const ix = createLiquidUnstakeInstruction(owner, liquidPool, stakeVault, receiptMint, tokenAccount, tokenAccount, 500n)
     expect(ix.data.readBigUInt64LE(8)).toBe(500n)
   })
+
+  test('owner is a required signer on every owner-authorized instruction', () => {
+    // An owner account marked non-signer would let anyone forge the
+    // instruction without the owner's signature.
+    const cases: Array<[string, { keys: Array<{ pubkey: PublicKey; isSigner: boolean }> }]> = [
+      ['unstake', createUnstakeInstruction(owner, pool, stakeEntry, stakeVault, tokenAccount, 100n)],
+      ['claimRewards', createClaimRewardsInstruction(owner, pool, stakeEntry, rewardVault, tokenAccount)],
+      ['compound', createCompoundRewardsInstruction(owner, pool, stakeEntry, rewardVault, stakeVault)],
+      ['emergencyUnstake', createEmergencyUnstakeInstruction(owner, pool, stakeEntry, stakeVault, tokenAccount)],
+      ['unstakeNFT', createUnstakeNFTInstruction(owner, nftPool, nftStakeEntry, nftMint, ownerNFTAccount, vaultNFTAccount)],
+      ['claimNFTRewards', createClaimNFTRewardsInstruction(owner, nftPool, nftStakeEntry, rewardVault, tokenAccount)],
+      ['liquidStake', createLiquidStakeInstruction(owner, liquidPool, stakeVault, receiptMint, tokenAccount, tokenAccount, 100n)],
+      ['liquidUnstake', createLiquidUnstakeInstruction(owner, liquidPool, stakeVault, receiptMint, tokenAccount, tokenAccount, 100n)],
+    ]
+
+    for (const [name, ix] of cases) {
+      const ownerKey = ix.keys[0]
+      expect(ownerKey.pubkey.equals(owner)).toBe(true)
+      expect(ownerKey.isSigner, `${name}: owner must be a signer`).toBe(true)
+    }
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -353,6 +376,113 @@ describe('calculatePendingRewards', () => {
     const pool = makePool({ totalStaked: 1000n, rewardRate: 10n, lastUpdateTime: 1000n })
     const rewards = calculatePendingRewards(pool, 500n, 10000n, 2000n)
     expect(rewards).toBe(0n)
+  })
+
+  test('clamps accrual at the reward period end', () => {
+    // rewardDuration=86400, lastUpdateTime=1000 → reward end = 87400.
+    // currentTime=187400 is 100000s past lastUpdateTime, but accrual must
+    // stop at 86400s.
+    const pool = makePool({ totalStaked: 1000n, rewardRate: 10n, lastUpdateTime: 1000n, rewardDuration: 86400n })
+    const clamped = calculatePendingRewards(pool, 500n, 0n, 187400n)
+    // timeDelta clamped to 86400: newRewards = (10 * 86400 * 500) / 1000 = 432000
+    expect(clamped).toBe(432000n)
+
+    // Same pool, mid-period — no clamping.
+    const mid = calculatePendingRewards(pool, 500n, 0n, 2000n)
+    expect(mid).toBe(5000n)
+  })
+
+  test('returns 0 when currentTime is past the reward period end relative to zero delta', () => {
+    const pool = makePool({ totalStaked: 1000n, rewardRate: 10n, lastUpdateTime: 1000n, rewardDuration: 0n })
+    // reward end == lastUpdateTime → no accrual at all
+    expect(calculatePendingRewards(pool, 500n, 0n, 999999n)).toBe(0n)
+  })
+
+  test('returns 0 on clock skew (currentTime before lastUpdateTime)', () => {
+    const pool = makePool({ totalStaked: 1000n, rewardRate: 10n, lastUpdateTime: 5000n })
+    expect(calculatePendingRewards(pool, 500n, 0n, 1000n)).toBe(0n)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 4b. getPoolStats
+// ---------------------------------------------------------------------------
+
+describe('getPoolStats', () => {
+  function buildPoolAccountData(opts: {
+    authority: PublicKey
+    stakeMint: PublicKey
+    rewardMint: PublicKey
+    totalStaked?: bigint
+    rewardRate?: bigint
+    rewardDuration?: bigint
+    lastUpdateTime?: bigint
+  }): Buffer {
+    const data = Buffer.alloc(160)
+    data.set(opts.authority.toBuffer(), 8)
+    data.set(opts.stakeMint.toBuffer(), 40)
+    data.set(opts.rewardMint.toBuffer(), 72)
+    data.writeBigUInt64LE(opts.totalStaked ?? 1_000_000n, 104)
+    data.writeBigUInt64LE(opts.rewardRate ?? 100n, 112)
+    data.writeBigUInt64LE(opts.rewardDuration ?? 86400n, 120)
+    data.writeBigUInt64LE(opts.lastUpdateTime ?? 1000n, 128)
+    // rewardPerTokenStored (136), minStakeDuration (144), penalty (152), paused (154) left zero
+    return data
+  }
+
+  function buildMintAccountData(decimals: number): Buffer {
+    const data = Buffer.alloc(MintLayout.span)
+    MintLayout.encode(
+      {
+        mintAuthorityOption: 0,
+        mintAuthority: PublicKey.default,
+        supply: 1_000_000n,
+        decimals,
+        isInitialized: true,
+        freezeAuthorityOption: 0,
+        freezeAuthority: PublicKey.default,
+      },
+      data
+    )
+    return data
+  }
+
+  test('reports totalRewardsDistributed as null instead of a fabricated value', async () => {
+    const poolAddress = Keypair.generate().publicKey
+    const stakeMint = Keypair.generate().publicKey
+    const rewardMint = Keypair.generate().publicKey
+    const poolData = buildPoolAccountData({
+      authority: Keypair.generate().publicKey,
+      stakeMint,
+      rewardMint,
+    })
+
+    const connection = createMockConnection({
+      getAccountInfo: async (address: PublicKey) => {
+        if (address.equals(poolAddress)) {
+          return { data: poolData, owner: STAKING_PROGRAM_ID, executable: false, lamports: 1_000_000, rentEpoch: 0 }
+        }
+        if (address.equals(stakeMint)) {
+          return { data: buildMintAccountData(9), owner: TOKEN_PROGRAM_ID, executable: false, lamports: 1_000_000, rentEpoch: 0 }
+        }
+        if (address.equals(rewardMint)) {
+          return { data: buildMintAccountData(6), owner: TOKEN_PROGRAM_ID, executable: false, lamports: 1_000_000, rentEpoch: 0 }
+        }
+        return null
+      },
+      getTokenAccountBalance: async () => ({
+        value: { amount: '5000', decimals: 6, uiAmount: 0.005, uiAmountString: '0.005' },
+      }),
+      getProgramAccounts: async () => [],
+    })
+
+    const stats = await getPoolStats(connection, poolAddress)
+    expect(stats).not.toBeNull()
+    // Not tracked on-chain: must be null, never a fabricated 0n
+    expect(stats!.totalRewardsDistributed).toBeNull()
+    expect(stats!.totalStaked).toBe(1_000_000n)
+    expect(stats!.totalStakers).toBe(0)
+    expect(stats!.remainingRewards).toBe(5000n)
   })
 })
 
@@ -526,6 +656,13 @@ describe('NFT points calculation', () => {
     const secondsPerDay = 86400n
     const points = calculateNFTPoints(0n, secondsPerDay, 100n, secondsPerDay * 2n)
     expect(points).toBe(100n) // 1 day from lastClaim
+  })
+
+  test('clamps at 0 on clock skew (currentTime before stake/claim time)', () => {
+    // currentTime earlier than both stakedAt and lastClaimTime would
+    // previously yield negative points.
+    expect(calculateNFTPoints(1000n, 2000n, 100n, 500n)).toBe(0n)
+    expect(calculateNFTPoints(86400n, 86400n, 100n, 0n)).toBe(0n)
   })
 })
 

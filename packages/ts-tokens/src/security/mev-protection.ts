@@ -23,12 +23,18 @@ export function recommendPrivateSubmission(txValue: number): SecurityCheckResult
 }
 
 /**
- * Check timing randomization
+ * Check timing randomization.
+ *
+ * There is no submission-timing metadata available at this layer, so the
+ * predictability of transaction timing CANNOT be assessed here. The
+ * verdict is reported honestly as NOT CHECKED (`checked: false`,
+ * `safe: false`) instead of a fabricated "safe".
  */
 export function checkTimingRandomization(): SecurityCheckResult {
   return {
-    safe: true,
-    warnings: [],
+    safe: false,
+    checked: false,
+    warnings: ['NOT CHECKED — timing analysis requires transaction submission metadata that is not available here'],
     recommendations: [
       'Add random delays between transactions to reduce predictability',
       'Avoid submitting large swaps at predictable times',

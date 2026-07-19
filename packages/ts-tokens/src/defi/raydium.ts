@@ -12,6 +12,43 @@ import type { LiquidityPool, CreatePoolOptions, AddLiquidityOptions, RemoveLiqui
 const RAYDIUM_API = 'https://api-v3.raydium.io'
 
 /**
+ * Parse an API amount field into a bigint without lossy float math.
+ *
+ * Amount fields from pool APIs are usually decimal *strings*; routing them
+ * through Number() silently rounds anything above 2^53. Integer strings are
+ * parsed directly by BigInt; decimal strings are truncated toward zero via
+ * string slicing (fractional base units cannot exist on-chain, and string
+ * truncation never rounds the integer part the way Math.floor(Number(x))
+ * does above 2^53).
+ */
+function parseAmountToBigInt(value: unknown): bigint {
+  if (value === null || value === undefined || value === '') return 0n
+  if (typeof value === 'bigint') return value
+
+  if (typeof value === 'number') {
+    // Already a float — convert through its string form so the truncation is
+    // decimal-exact for the value as printed (precision above 2^53 was lost
+    // at JSON.parse and cannot be recovered).
+    return parseAmountToBigInt(String(value))
+  }
+
+  const str = String(value).trim()
+  // Exponent notation ("1e6") — rare from these APIs; expand via Number and
+  // re-parse the printed decimal form.
+  if (/e/i.test(str)) {
+    return parseAmountToBigInt(String(Number(str)))
+  }
+
+  const negative = str.startsWith('-')
+  const unsigned = negative ? str.slice(1) : str
+  const integerPart = unsigned.split('.')[0]
+  if (!/^\d+$/.test(integerPart)) return 0n
+
+  const parsed = BigInt(integerPart)
+  return negative ? -parsed : parsed
+}
+
+/**
  * Parse a v3 pool object into a LiquidityPool.
  *
  * The v3 shape nests mints/amounts under mintA/mintB and vault/reserve fields;
@@ -24,10 +61,10 @@ function parseV3Pool(poolAddress: PublicKey, pool: any): LiquidityPool {
     protocol: 'raydium',
     tokenA: new PublicKey(pool.mintA?.address ?? pool.baseMint ?? pool.mintA),
     tokenB: new PublicKey(pool.mintB?.address ?? pool.quoteMint ?? pool.mintB),
-    reserveA: BigInt(Math.floor(Number(pool.mintAmountA ?? pool.baseReserve ?? 0))),
-    reserveB: BigInt(Math.floor(Number(pool.mintAmountB ?? pool.quoteReserve ?? 0))),
+    reserveA: parseAmountToBigInt(pool.mintAmountA ?? pool.baseReserve ?? 0),
+    reserveB: parseAmountToBigInt(pool.mintAmountB ?? pool.quoteReserve ?? 0),
     lpMint: new PublicKey(pool.lpMint?.address ?? pool.lpMint ?? PublicKey.default),
-    lpSupply: BigInt(Math.floor(Number(pool.lpAmount ?? pool.lpSupply ?? 0))),
+    lpSupply: parseAmountToBigInt(pool.lpAmount ?? pool.lpSupply ?? 0),
     fee: pool.feeRate ?? pool.fee ?? 0.0025, // 0.25% default
     apy: pool.day?.apr ?? pool.apy,
   }

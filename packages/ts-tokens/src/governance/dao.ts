@@ -32,6 +32,7 @@ function parseDuration(duration: string | bigint): bigint {
 /**
  * Create a new DAO
  */
+// eslint-disable-next-line pickier/no-unused-vars
 export async function createDAO(
   _connection: Connection,
   payer: Keypair,

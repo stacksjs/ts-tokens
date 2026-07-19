@@ -45,11 +45,15 @@ export function isValidTokenSymbol(symbol: string): { valid: boolean; error?: st
 }
 
 /**
- * Validate decimals
+ * Validate decimals.
+ *
+ * On-chain the decimals field is a u8, so any integer 0-255 is valid
+ * (values above 9 are unusual but legal — e.g. Token-2022 interest-bearing
+ * or UI-heavy display tokens).
  */
 export function isValidDecimals(decimals: number): { valid: boolean; error?: string } {
-  if (decimals < 0 || decimals > 9) {
-    return { valid: false, error: 'Decimals must be between 0 and 9' }
+  if (decimals < 0 || decimals > 255) {
+    return { valid: false, error: 'Decimals must be between 0 and 255' }
   }
   if (!Number.isInteger(decimals)) {
     return { valid: false, error: 'Decimals must be an integer' }

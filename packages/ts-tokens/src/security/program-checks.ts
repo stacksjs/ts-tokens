@@ -81,16 +81,19 @@ export function checkUpgradeableByUnknown(upgradeAuth: string): SecurityCheckRes
 }
 
 /**
- * Check for known vulnerabilities in a program
+ * Check for known vulnerabilities in a program.
+ *
+ * No vulnerability database is wired into this library, so this CANNOT be
+ * determined here. The verdict is reported honestly as NOT CHECKED
+ * (`checked: false`, `safe: false`) instead of a fabricated "safe".
  */
 export function checkKnownVulnerabilities(_programId: string): SecurityCheckResult {
-  const warnings: string[] = []
-  const recommendations: string[] = []
-
-  // Placeholder — in production, check against a vulnerability database
-  recommendations.push('Check program audit reports for known vulnerabilities')
-
-  return { safe: true, warnings, recommendations }
+  return {
+    safe: false,
+    checked: false,
+    warnings: ['NOT CHECKED — no vulnerability database is configured'],
+    recommendations: ['Check program audit reports for known vulnerabilities'],
+  }
 }
 
 /**
@@ -152,16 +155,20 @@ export function checkSandwichVectors(instructions: Array<{ programId: string; da
 }
 
 /**
- * Check if program IDL is available
+ * Check if program IDL is available.
+ *
+ * IDL account lookup is not implemented (no anchor IDL fetch is wired in),
+ * so availability CANNOT be determined here. The verdict is reported
+ * honestly as NOT CHECKED (`checked: false`, `safe: false`) instead of a
+ * fabricated "safe".
  */
 export function checkIdlAvailable(_programId: string): SecurityCheckResult {
-  const warnings: string[] = []
-  const recommendations: string[] = []
-
-  // Placeholder — in production, check for IDL account on chain
-  recommendations.push('Programs with published IDLs are more transparent and easier to audit')
-
-  return { safe: true, warnings, recommendations }
+  return {
+    safe: false,
+    checked: false,
+    warnings: ['NOT CHECKED — IDL account lookup is not implemented'],
+    recommendations: ['Programs with published IDLs are more transparent and easier to audit'],
+  }
 }
 
 /**

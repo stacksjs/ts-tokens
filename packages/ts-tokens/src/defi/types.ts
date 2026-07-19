@@ -101,8 +101,10 @@ export interface CreatePoolOptions {
 export interface TokenPrice {
   mint: PublicKey
   priceUsd: number
-  priceChange24h: number
-  volume24h: number
+  /** 24h price change %. Undefined when the source endpoint does not provide it — never a fabricated 0. */
+  priceChange24h?: number
+  /** 24h volume in USD. Undefined when the source endpoint does not provide it — never a fabricated 0. */
+  volume24h?: number
   marketCap?: number
   source: string
   timestamp: number

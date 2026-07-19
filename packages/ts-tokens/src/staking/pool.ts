@@ -114,7 +114,11 @@ export async function getPoolStats(
   return {
     totalStaked: pool.totalStaked,
     totalStakers,
-    totalRewardsDistributed: 0n, // TODO: Track via reward vault delta or on-chain counter
+    // Not tracked: there is no on-chain counter of cumulative distributions,
+    // and reconstructing one from reward-vault deltas is not implemented.
+    // Reported as null (not a fabricated 0n) so callers can distinguish
+    // "no rewards distributed" from "not measured".
+    totalRewardsDistributed: null,
     currentApr: apr,
     remainingRewards: rewardBalance,
     timeUntilEmpty,
@@ -122,7 +126,13 @@ export async function getPoolStats(
 }
 
 /**
- * Calculate pending rewards for a staker
+ * Calculate pending rewards for a staker.
+ *
+ * Rewards stop accruing at the end of the pool's reward period
+ * (`lastUpdateTime + rewardDuration`): without clamping, a `currentTime`
+ * past the period finish would keep minting rewards the vault never
+ * funded. A `currentTime` before `lastUpdateTime` (clock skew) yields no
+ * new rewards.
  */
 export function calculatePendingRewards(
   pool: StakingPool,
@@ -134,7 +144,11 @@ export function calculatePendingRewards(
     return 0n
   }
 
-  const timeDelta = currentTime - pool.lastUpdateTime
+  const rewardEnd = pool.lastUpdateTime + pool.rewardDuration
+  const effectiveTime = currentTime < rewardEnd ? currentTime : rewardEnd
+  const timeDelta = effectiveTime > pool.lastUpdateTime
+    ? effectiveTime - pool.lastUpdateTime
+    : 0n
   const newRewards = (pool.rewardRate * timeDelta * stakedAmount) / pool.totalStaked
   const totalRewards = (stakedAmount * pool.rewardPerTokenStored) / BigInt(1e18) + newRewards
 

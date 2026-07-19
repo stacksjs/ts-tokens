@@ -18,6 +18,14 @@ export async function calculateNFTVotingPower(
   voter: PublicKey,
   config: NFTVotingConfig
 ): Promise<VotingPower> {
+  // Validate configuration BEFORE touching the network: oneNftOneVote false
+  // without traitWeights is a configuration error with no possible weighting.
+  if (!config.oneNftOneVote && !config.traitWeights) {
+    throw new Error(
+      'NFT voting config requires traitWeights when oneNftOneVote is false'
+    )
+  }
+
   // Get NFTs owned by voter in collection
   const nfts = await getNFTsInCollection(connection, voter, config.collection)
 
@@ -35,12 +43,6 @@ export async function calculateNFTVotingPower(
       scaledPower += calculateTraitWeight(nft.traits, config.traitWeights)
     }
     totalPower = scaledPower / TRAIT_WEIGHT_SCALE
-  } else {
-    // oneNftOneVote is false but no trait weights were supplied — there is no
-    // way to weight the vote, so this is a configuration error.
-    throw new Error(
-      'NFT voting config requires traitWeights when oneNftOneVote is false'
-    )
   }
 
   return {
@@ -59,8 +61,16 @@ async function getNFTsInCollection(
   _owner: PublicKey,
   _collection: PublicKey
 ): Promise<Array<{ mint: PublicKey; traits: Map<string, string> }>> {
-  // In production, would use DAS API or on-chain data
-  return []
+  // Enumerating a voter's NFTs with their traits requires either the DAS
+  // (Digital Asset Standard) API on a DAS-enabled RPC, or an on-chain index
+  // of collection members. Neither is configured here. Returning [] would
+  // silently give every voter zero power — throw instead of fabricating a
+  // disenfranchisement.
+  throw new Error(
+    'NFT membership lookup is not implemented: enumerating NFTs (with traits) ' +
+    'owned by a wallet in a collection requires the DAS API or on-chain indexing, ' +
+    'neither of which is configured.'
+  )
 }
 
 /**
@@ -159,12 +169,13 @@ export async function getCollectionVotingStats(
   totalVotingPower: bigint
   uniqueHolders: number
 }> {
-  // In production, would query collection data
-  return {
-    totalNFTs: 0,
-    totalVotingPower: 0n,
-    uniqueHolders: 0,
-  }
+  // Total supply and holder distribution of a collection require the DAS API
+  // or on-chain indexing; neither is configured. Returning zeros would
+  // silently fabricate an empty collection — throw instead.
+  throw new Error(
+    'getCollectionVotingStats is not implemented: collection supply and holder ' +
+    'counts require the DAS API or on-chain indexing, neither of which is configured.'
+  )
 }
 
 /**

@@ -206,7 +206,11 @@ export async function getNFTStakeInfo(
 }
 
 /**
- * Calculate NFT staking points
+ * Calculate NFT staking points.
+ *
+ * Clamped at 0: a `currentTime` earlier than the stake/last-claim time
+ * (clock skew between client and chain) would otherwise produce negative
+ * points and corrupt reward accounting.
  */
 export function calculateNFTPoints(
   stakedAt: bigint,
@@ -217,6 +221,10 @@ export function calculateNFTPoints(
   const startTime = lastClaimTime > stakedAt ? lastClaimTime : stakedAt
   const duration = currentTime - startTime
   const secondsPerDay = 24n * 60n * 60n
+
+  if (duration <= 0n) {
+    return 0n
+  }
 
   return (duration * pointsPerDay) / secondsPerDay
 }

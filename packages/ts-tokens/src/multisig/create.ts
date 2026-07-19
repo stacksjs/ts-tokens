@@ -235,6 +235,18 @@ export async function setTokenAuthorityMultisig(
     )
   }
 
+  // Transferring a mint/freeze authority is IRREVERSIBLE once signed: if the
+  // target is not actually an initialized multisig account, the authority is
+  // handed to an arbitrary (possibly uncontrollable) address. Verify the
+  // target is a real multisig before building the instruction.
+  if (!(await isMultisig(connection, options.multisig))) {
+    throw new Error(
+      `Refusing to transfer ${options.authorityType} authority: ${options.multisig.toBase58()} ` +
+      `is not an initialized SPL multisig account. Create the multisig first (createMultisig); ` +
+      `this operation is irreversible on-chain.`
+    )
+  }
+
   const instruction = createSetAuthorityInstruction(
     options.mint,
     payer.publicKey,

@@ -14,9 +14,15 @@ export async function getStakedVotingPower(
   _voter: PublicKey,
   _pool: PublicKey
 ): Promise<bigint> {
-  // In production, would read stake entry from ts-tokens/staking
-  // and return the staked amount as voting power
-  return 0n
+  // Reading the voter's stake entry requires the staking program's account
+  // layout and a deployed program to read it from; neither is available in
+  // this package. Returning 0n would silently disenfranchise every staker,
+  // so this throws instead (same honest-failure pattern as
+  // ../voting/power.ts getVotingPower).
+  throw new Error(
+    'getStakedVotingPower is not implemented: reading a stake entry requires ' +
+    'the staking program (on-chain indexing), which is not deployed.'
+  )
 }
 
 /**
@@ -40,7 +46,11 @@ export async function getStakeEntryAge(
   _voter: PublicKey,
   _pool: PublicKey
 ): Promise<bigint> {
-  // In production, would read the stake entry timestamp
-  // and compute (now - stakedAt)
-  return 0n
+  // The stake-entry timestamp lives in the (undeployed) staking program's
+  // accounts. Returning 0n would silently zero every time-weighted vote —
+  // throw instead.
+  throw new Error(
+    'getStakeEntryAge is not implemented: reading a stake entry timestamp ' +
+    'requires the staking program (on-chain indexing), which is not deployed.'
+  )
 }

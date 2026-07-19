@@ -89,11 +89,34 @@ export async function getLendingPools(
 }
 
 /**
+ * Best lending rate for a single protocol
+ */
+export interface LendingRate {
+  protocol: LendingProtocol
+  supplyApy: number
+  borrowApy: number
+}
+
+/**
+ * Result of a cross-protocol rate comparison
+ */
+export interface BestLendingRatesResult {
+  /** Rates from protocols that responded successfully, best supply APY first */
+  rates: LendingRate[]
+  /**
+   * Protocols that failed to respond, with the error each produced. When
+   * this is non-empty, `rates` may be missing the actual best rate — treat
+   * the "best" as provisional during outages instead of silently wrong.
+   */
+  errors: Array<{ protocol: LendingProtocol; error: string }>
+}
+
+/**
  * Get best lending rates across protocols for a given token
  */
 export async function getBestLendingRates(
   mint: PublicKey,
-): Promise<Array<{ protocol: LendingProtocol; supplyApy: number; borrowApy: number }>> {
+): Promise<BestLendingRatesResult> {
   const protocols: LendingProtocol[] = ['solend', 'kamino', 'marginfi']
 
   const results = await Promise.allSettled(
@@ -105,10 +128,23 @@ export async function getBestLendingRates(
     })
   )
 
-  return results
-    .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled' && r.value !== null)
-    .map(r => r.value)
-    .sort((a, b) => b.supplyApy - a.supplyApy)
+  const rates: LendingRate[] = []
+  const errors: BestLendingRatesResult['errors'] = []
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i]
+    if (result.status === 'fulfilled') {
+      if (result.value !== null) rates.push(result.value)
+    } else {
+      errors.push({
+        protocol: protocols[i],
+        error: result.reason instanceof Error ? result.reason.message : String(result.reason),
+      })
+    }
+  }
+
+  rates.sort((a, b) => b.supplyApy - a.supplyApy)
+  return { rates, errors }
 }
 
 /**

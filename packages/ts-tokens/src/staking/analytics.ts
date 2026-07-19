@@ -16,7 +16,7 @@ import { STAKING_PROGRAM_ID } from './program'
 /**
  * Get staking history for a user in a pool
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line
 export async function getStakingHistory(
   connection: Connection,
   pool: PublicKey,

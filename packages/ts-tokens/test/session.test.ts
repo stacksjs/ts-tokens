@@ -73,14 +73,20 @@ describe('endSession', () => {
   })
 
   test('zeroes out the decrypted secret key material on end', () => {
-    // We verify that endSession clears the session (keypair no longer accessible)
-    // and that the internal reference is cleaned up
+    // Capture the live keypair BEFORE ending the session, then verify the
+    // actual secret key bytes are overwritten in place (not just that the
+    // session reference is dropped).
     startSession(PASSWORD, sessionOpts())
-    expect(getSessionKeypair()).not.toBeNull()
+    const kp = getSessionKeypair()
+    expect(kp).not.toBeNull()
+    const originalSecret = Uint8Array.from(kp!.secretKey)
+    expect(originalSecret.some(b => b !== 0)).toBe(true)
 
     endSession()
 
-    // After ending, the session keypair should be inaccessible
+    // The keypair's own secretKey array must be zeroed in place
+    expect(kp!.secretKey.every(b => b === 0)).toBe(true)
+    // And the session is cleared
     expect(getSessionKeypair()).toBeNull()
     expect(isSessionActive()).toBe(false)
   })

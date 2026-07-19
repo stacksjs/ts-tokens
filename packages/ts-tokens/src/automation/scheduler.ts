@@ -62,7 +62,12 @@ export function loadSchedulerState(storePath?: string): SchedulerState {
 }
 
 /**
- * Save scheduler state to disk
+ * Save scheduler state to disk atomically.
+ *
+ * Writes to a unique temp file in the same directory, then renames it over
+ * the target. rename(2) is atomic on the same filesystem, so a crash
+ * mid-write can never leave a truncated state file that would corrupt job
+ * accounting. (Same pattern as src/vesting/schedule.ts.)
  */
 export function saveSchedulerState(state: SchedulerState, storePath?: string): string {
   const filePath = storePath ?? getSchedulerStatePath()
@@ -73,7 +78,9 @@ export function saveSchedulerState(state: SchedulerState, storePath?: string): s
     fs.mkdirSync(dir, { recursive: true })
   }
 
-  fs.writeFileSync(resolved, JSON.stringify(state, null, 2), { mode: 0o600 })
+  const tmpPath = `${resolved}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`
+  fs.writeFileSync(tmpPath, JSON.stringify(state, null, 2), { mode: 0o600 })
+  fs.renameSync(tmpPath, resolved)
   return resolved
 }
 
@@ -293,6 +300,10 @@ export async function processDueJobs(
 /**
  * Run the scheduler as a polling loop
  *
+ * On start, any job stranded in 'running' by a previous crash (its
+ * executedAt is older than the poll interval, so no live poller could
+ * still be executing it) is reset to 'scheduled' so it runs again.
+ *
  * Returns a handle with a stop() method.
  */
 export function runScheduler(
@@ -302,12 +313,18 @@ export function runScheduler(
 ): { stop: () => void } {
   let running = true
 
+  // Crash recovery: a job left in 'running' by a killed process never gets
+  // its completion write, so without this reset it would be stranded forever.
+  resetStaleRunningJobs(storePath, intervalMs)
+
   const poll = async () => {
     while (running) {
       try {
         await processDueJobs(config, storePath)
-      } catch {
-        // Silently continue on errors
+      } catch (pollError) {
+        console.error(
+          `[scheduler] Poll failed: ${pollError instanceof Error ? pollError.message : String(pollError)}`
+        )
       }
       await new Promise(resolve => setTimeout(resolve, intervalMs))
     }
@@ -318,6 +335,33 @@ export function runScheduler(
   return {
     stop: () => { running = false },
   }
+}
+
+/**
+ * Reset jobs stranded in 'running' state back to 'scheduled'.
+ *
+ * A job whose `executedAt` is older than `staleMs` cannot still be executing
+ * under any live poller with that interval, so it must belong to a crashed
+ * process. Returns the number of jobs reset.
+ */
+export function resetStaleRunningJobs(storePath?: string, staleMs: number = 60000): number {
+  const state = loadSchedulerState(storePath)
+  const cutoff = Date.now() - staleMs
+  let reset = 0
+
+  for (const job of Object.values(state.jobs)) {
+    if (job.status === 'running' && (job.executedAt ?? 0) < cutoff) {
+      job.status = 'scheduled'
+      delete job.executedAt
+      reset++
+    }
+  }
+
+  if (reset > 0) {
+    saveSchedulerState(state, storePath)
+  }
+
+  return reset
 }
 
 /**

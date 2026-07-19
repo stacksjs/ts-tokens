@@ -134,41 +134,73 @@ export function runMintGuard(
   let running = true
   const storePath = options?.storePath
 
+  // Edge-triggered hook state: hooks fire once per transition into the
+  // started/ended state, not on every poll while the condition holds.
+  const startedFired = new Set<string>()
+  const endedFired = new Set<string>()
+
   const poll = async () => {
     while (running) {
       try {
         const schedules = listMintSchedules(storePath)
         const now = Date.now()
+        const activeMints = new Set(schedules.map(s => s.mint))
+
+        // Forget hooks for schedules that were removed so a re-added mint
+        // gets fresh edge transitions.
+        for (const mint of [...startedFired]) {
+          if (!activeMints.has(mint)) startedFired.delete(mint)
+        }
+        for (const mint of [...endedFired]) {
+          if (!activeMints.has(mint)) endedFired.delete(mint)
+        }
 
         for (const schedule of schedules) {
-          // Check if minting just opened
-          if (schedule.startTime && schedule.startTime <= now) {
+          // Fire onStart once, on the transition into the open window
+          if (schedule.startTime && schedule.startTime <= now && !startedFired.has(schedule.mint)) {
+            startedFired.add(schedule.mint)
             if (options?.onStart) {
               options.onStart(schedule.mint)
             }
           }
 
-          // Check if minting just ended
-          if (schedule.endTime && schedule.endTime <= now) {
+          // Fire onEnd once, on the transition past the end time
+          if (schedule.endTime && schedule.endTime <= now && !endedFired.has(schedule.mint)) {
+            endedFired.add(schedule.mint)
             if (options?.onEnd) {
               options.onEnd(schedule.mint)
             }
+          }
 
-            // Auto-revoke mint authority if configured
-            if (options?.autoRevoke) {
-              try {
-                const { revokeMintAuthority } = await import('../token/authority')
-                await revokeMintAuthority(schedule.mint, config)
-                // Remove schedule after revoking
-                removeMintSchedule(schedule.mint, storePath)
-              } catch {
-                // Continue on failure
+          // Auto-revoke mint authority if configured
+          if (schedule.endTime && schedule.endTime <= now && options?.autoRevoke) {
+            try {
+              const { revokeMintAuthority } = await import('../token/authority')
+              const result = await revokeMintAuthority(schedule.mint, config)
+              if (!result.confirmed) {
+                // Keep the schedule: deleting it would abandon the revoke and
+                // hide the failure. Log loudly instead.
+                console.error(
+                  `[mint-guard] revokeMintAuthority for ${schedule.mint} was not confirmed: ` +
+                  `${result.error ?? 'transaction not confirmed'}. Schedule kept; will retry.`
+                )
+                continue
               }
+              // Remove schedule only after the revoke is confirmed on-chain
+              removeMintSchedule(schedule.mint, storePath)
+            } catch (revokeError) {
+              console.error(
+                `[mint-guard] Failed to revoke mint authority for ${schedule.mint}: ` +
+                `${revokeError instanceof Error ? revokeError.message : String(revokeError)}. ` +
+                `Schedule kept; will retry.`
+              )
             }
           }
         }
-      } catch {
-        // Silently continue
+      } catch (pollError) {
+        console.error(
+          `[mint-guard] Poll failed: ${pollError instanceof Error ? pollError.message : String(pollError)}`
+        )
       }
       await new Promise(resolve => setTimeout(resolve, intervalMs))
     }

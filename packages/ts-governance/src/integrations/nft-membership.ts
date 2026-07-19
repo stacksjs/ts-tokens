@@ -14,8 +14,15 @@ export async function getNFTCollectionMembership(
   _voter: PublicKey,
   _collection: PublicKey
 ): Promise<{ isMember: boolean; nftCount: number }> {
-  // In production, would query NFT accounts from ts-tokens/nft
-  return { isMember: false, nftCount: 0 }
+  // Counting a wallet's NFTs in a collection requires the DAS (Digital Asset
+  // Standard) API or an on-chain collection index; neither is configured.
+  // Returning { isMember: false, nftCount: 0 } would silently strip every
+  // holder's membership/voting power — throw instead.
+  throw new Error(
+    'getNFTCollectionMembership is not implemented: enumerating NFTs owned by ' +
+    'a wallet in a collection requires the DAS API or on-chain indexing, neither ' +
+    'of which is configured.'
+  )
 }
 
 /**

@@ -107,17 +107,17 @@ export async function checkDoubleVoting(
   _proposal: PublicKey,
   _snapshot: VotingSnapshot
 ): Promise<{ hasVoted: boolean; transferred: boolean }> {
-  // TODO: implement double-voting detection. This requires on-chain state that
-  // is not available client-side without a deployed governance program:
-  //   1. Read the voter's vote-record PDA to see if they already voted.
-  //   2. Compare the voter's current balance against the snapshot balance to
-  //      detect tokens transferred after the snapshot slot.
-  // Until that program exists, this conservatively reports "not voted" rather
-  // than falsely blocking a legitimate voter.
-  return {
-    hasVoted: false,
-    transferred: false,
-  }
+  // Double-voting detection requires on-chain state that is not available
+  // client-side without a deployed governance program:
+  //   1. The voter's vote-record PDA (to see if they already voted).
+  //   2. The voter's balance at the snapshot slot vs. now (to detect tokens
+  //      transferred after the snapshot).
+  // Returning "not voted" would silently disable double-vote protection, so
+  // this throws instead of fabricating safety.
+  throw new Error(
+    'checkDoubleVoting is not implemented: vote-record PDAs and snapshot-slot ' +
+    'balance reconstruction require a deployed governance program / archive indexing.'
+  )
 }
 
 /**

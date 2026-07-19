@@ -113,8 +113,12 @@ export function isSessionActive(): boolean {
 export function endSession(): void {
   if (!activeSession) return
 
-  // Zero out the secret key bytes
+  // Zero out BOTH copies of the secret material: the decrypted buffer kept
+  // in secretKeyRef AND the Keypair's own secretKey array (Keypair.fromSecretKey
+  // copies the bytes, so zeroing only the source buffer would leave the key
+  // recoverable from the keypair).
   activeSession.secretKeyRef.fill(0)
+  activeSession.keypair.secretKey.fill(0)
 
   clearTimeout(activeSession.timer)
   activeSession = null

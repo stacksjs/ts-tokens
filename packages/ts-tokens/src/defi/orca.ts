@@ -134,11 +134,24 @@ export async function getOrcaPositions(
   _connection: Connection,
   owner: PublicKey,
 ): Promise<WhirlpoolPosition[]> {
-  const response = await fetch(
-    `${ORCA_WHIRLPOOL_API}/position/list?wallet=${owner.toBase58()}`
-  )
+  let response: Response
+  try {
+    response = await fetch(
+      `${ORCA_WHIRLPOOL_API}/position/list?wallet=${owner.toBase58()}`
+    )
+  } catch (error) {
+    // Network-level failure — surface it rather than masking an outage as
+    // "no positions".
+    throw new Error(
+      `Failed to reach Orca API: ${error instanceof Error ? error.message : String(error)}`
+    )
+  }
 
-  if (!response.ok) return []
+  // An HTTP failure is an outage, not an empty position list. Only a
+  // successful response with zero positions may return [].
+  if (!response.ok) {
+    throw new Error(`Orca API error: ${response.status} ${response.statusText}`)
+  }
 
   const data = await response.json()
 

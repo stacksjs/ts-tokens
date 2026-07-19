@@ -457,9 +457,11 @@ export async function createToken(
 }
 
 /**
- * Create a simple token with sensible defaults (devnet, 9 decimals).
+ * Create a simple token with sensible defaults (9 decimals).
  *
  * A convenience wrapper around {@link createToken} for quick prototyping.
+ * Network/RPC/wallet come from the persisted user configuration (getConfig)
+ * unless an explicit `config` override is passed.
  *
  * @param name - Human-readable token name
  * @param symbol - Short ticker symbol (e.g., "MTK")
@@ -480,18 +482,11 @@ export async function createSimpleToken(
   initialSupply?: bigint | number,
   config?: TokenConfig
 ): Promise<TokenResult> {
-  const defaultConfig: TokenConfig = config || {
-    chain: 'solana',
-    network: 'devnet',
-    commitment: 'confirmed',
-    verbose: false,
-    dryRun: false,
-    ipfsGateway: 'https://ipfs.io',
-    arweaveGateway: 'https://arweave.net',
-    storageProvider: 'arweave',
-    securityChecks: true,
-    autoCreateAccounts: true,
-  }
+  // Resolve through getConfig() so the user's persisted network/wallet/RPC
+  // overrides apply; only fall back to it when no explicit config is given.
+  // (Hand-building a devnet config here ignored the user's configuration.)
+  const { getConfig } = await import('../config')
+  const resolvedConfig: TokenConfig = config ?? await getConfig()
 
   return createToken(
     {
@@ -500,6 +495,6 @@ export async function createSimpleToken(
       decimals,
       initialSupply,
     },
-    defaultConfig
+    resolvedConfig
   )
 }

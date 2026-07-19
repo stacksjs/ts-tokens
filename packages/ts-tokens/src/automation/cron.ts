@@ -120,6 +120,11 @@ export function parseField(field: string, min: number, max: number): number[] {
  * Iterates forward from `from` (default: now) minute by minute,
  * returning the first timestamp that matches all cron fields.
  * Scans up to 366 days ahead.
+ *
+ * POSIX day matching: when BOTH day-of-month and day-of-week are
+ * restricted (not `*`), a date matches if it satisfies EITHER field
+ * (OR). When at least one of them is `*`, the restricted field alone
+ * must match (AND semantics for the two fields).
  */
 export function getNextRun(schedule: CronSchedule, from?: Date): Date {
   const start = from ? new Date(from) : new Date()
@@ -132,6 +137,11 @@ export function getNextRun(schedule: CronSchedule, from?: Date): Date {
   const maxIterations = 366 * 24 * 60
   const candidate = new Date(start)
 
+  // A field is "restricted" when it does not cover every possible value
+  // (i.e. the cron field was not `*`).
+  const domRestricted = schedule.daysOfMonth.length < 31
+  const dowRestricted = schedule.daysOfWeek.length < 7
+
   for (let i = 0; i < maxIterations; i++) {
     const month = candidate.getMonth() + 1 // 1-12
     const dayOfMonth = candidate.getDate()  // 1-31
@@ -139,10 +149,15 @@ export function getNextRun(schedule: CronSchedule, from?: Date): Date {
     const hour = candidate.getHours()       // 0-23
     const minute = candidate.getMinutes()   // 0-59
 
+    const domMatch = schedule.daysOfMonth.includes(dayOfMonth)
+    const dowMatch = schedule.daysOfWeek.includes(dayOfWeek)
+    const dayMatch = domRestricted && dowRestricted
+      ? domMatch || dowMatch   // POSIX OR when both fields are restricted
+      : domMatch && dowMatch   // one field is `*` — the other alone decides
+
     if (
       schedule.months.includes(month)
-      && schedule.daysOfMonth.includes(dayOfMonth)
-      && schedule.daysOfWeek.includes(dayOfWeek)
+      && dayMatch
       && schedule.hours.includes(hour)
       && schedule.minutes.includes(minute)
     ) {

@@ -2,8 +2,10 @@
  * Multi-Sig Module Tests
  */
 
-import { describe, test, expect } from 'bun:test'
+import { describe, test, expect, mock } from 'bun:test'
 import { Keypair, PublicKey, SystemProgram } from '@solana/web3.js'
+import type { Connection } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, MintLayout } from '@solana/spl-token'
 import {
   MULTISIG_PROGRAM_ID,
   DISCRIMINATORS,
@@ -29,8 +31,12 @@ import {
 import {
   validateMultisigConfig,
   createMultisig,
+  isMultisig,
+  setTokenAuthorityMultisig,
 } from '../src/multisig/create'
-import { createMockConnection } from './helpers/mock-connection'
+import { setWallet, clearWallet } from '../src/drivers/solana/wallet'
+import { createMockConnection, createTestConfig } from './helpers/mock-connection'
+import type { TokenConfig } from '../src/types'
 import type {
   MultisigResult,
   OnChainMultisig,
@@ -518,6 +524,132 @@ describe('Token authority integration types', () => {
       error: 'Something went wrong',
     }
     expect(result.error).toBe('Something went wrong')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 7b. isMultisig + authority-transfer guard
+// ---------------------------------------------------------------------------
+
+describe('isMultisig', () => {
+  const MULTISIG_ACCOUNT_SIZE = 355
+
+  function accountInfo(data: Buffer, owner: PublicKey) {
+    return { data, owner, executable: false, lamports: 1_000_000, rentEpoch: 0 }
+  }
+
+  function multisigData(initialized: boolean): Buffer {
+    const data = Buffer.alloc(MULTISIG_ACCOUNT_SIZE)
+    data[2] = initialized ? 1 : 0 // isInitialized flag
+    return data
+  }
+
+  test('returns true for an initialized classic SPL multisig', async () => {
+    const connection = createMockConnection({
+      getAccountInfo: async () => accountInfo(multisigData(true), TOKEN_PROGRAM_ID),
+    })
+    expect(await isMultisig(connection, Keypair.generate().publicKey)).toBe(true)
+  })
+
+  test('returns true for an initialized Token-2022 multisig', async () => {
+    const connection = createMockConnection({
+      getAccountInfo: async () => accountInfo(multisigData(true), TOKEN_2022_PROGRAM_ID),
+    })
+    expect(await isMultisig(connection, Keypair.generate().publicKey)).toBe(true)
+  })
+
+  test('returns false when the account does not exist', async () => {
+    const connection = createMockConnection({ getAccountInfo: async () => null })
+    expect(await isMultisig(connection, Keypair.generate().publicKey)).toBe(false)
+  })
+
+  test('returns false when the owner is not a token program', async () => {
+    const connection = createMockConnection({
+      getAccountInfo: async () => accountInfo(multisigData(true), SystemProgram.programId),
+    })
+    expect(await isMultisig(connection, Keypair.generate().publicKey)).toBe(false)
+  })
+
+  test('returns false when the account size is not the multisig layout', async () => {
+    const connection = createMockConnection({
+      getAccountInfo: async () => accountInfo(Buffer.alloc(100), TOKEN_PROGRAM_ID),
+    })
+    expect(await isMultisig(connection, Keypair.generate().publicKey)).toBe(false)
+  })
+
+  test('returns false when the multisig account is not initialized', async () => {
+    const connection = createMockConnection({
+      getAccountInfo: async () => accountInfo(multisigData(false), TOKEN_PROGRAM_ID),
+    })
+    expect(await isMultisig(connection, Keypair.generate().publicKey)).toBe(false)
+  })
+})
+
+// Installed only while the guard test runs; see the comment in that test for
+// why the module mock below delegates to the real implementation otherwise.
+let guardTestConnection: Connection | null = null
+
+describe('setTokenAuthorityMultisig guard', () => {
+  test('refuses to transfer authority to an address that is not an initialized multisig', async () => {
+    const payer = Keypair.generate()
+    const mint = Keypair.generate().publicKey
+    const fakeMultisig = Keypair.generate().publicKey
+
+    const mintData = Buffer.alloc(MintLayout.span)
+    MintLayout.encode(
+      {
+        mintAuthorityOption: 1,
+        mintAuthority: payer.publicKey,
+        supply: 1_000_000n,
+        decimals: 6,
+        isInitialized: true,
+        freezeAuthorityOption: 0,
+        freezeAuthority: PublicKey.default,
+      },
+      mintData
+    )
+
+    const mockConnection = createMockConnection({
+      getAccountInfo: async (address: PublicKey) => {
+        if (address.equals(mint)) {
+          return { data: mintData, owner: TOKEN_PROGRAM_ID, executable: false, lamports: 1_000_000, rentEpoch: 0 }
+        }
+        // The target "multisig" account does not exist on-chain
+        return null
+      },
+    })
+
+    // mock.module cannot be scoped to a single test file in bun's shared test
+    // process (mock.restore() does not undo module mocks), so the mock below
+    // delegates to the REAL createConnection unless this test has installed a
+    // mock connection — other test files therefore see real behavior.
+    //
+    // The real function must be captured in a local BEFORE mock.module runs:
+    // bun live-patches the module namespace, so reading
+    // `realConnectionModule.createConnection` after mocking returns the mock
+    // wrapper itself and the delegation recurses forever (busy-spins the
+    // shared test process) as soon as a later test file calls it.
+    const realConnectionModule = await import('../src/drivers/solana/connection')
+    const realCreateConnection = realConnectionModule.createConnection
+    mock.module('../src/drivers/solana/connection', () => ({
+      ...realConnectionModule,
+      createConnection: (config: TokenConfig) =>
+        guardTestConnection ?? realCreateConnection(config),
+    }))
+
+    guardTestConnection = mockConnection
+    try {
+      setWallet(payer)
+      await expect(
+        setTokenAuthorityMultisig(
+          { mint, authorityType: 'mint', multisig: fakeMultisig },
+          createTestConfig()
+        )
+      ).rejects.toThrow(/not an initialized SPL multisig/)
+    } finally {
+      guardTestConnection = null
+      clearWallet()
+    }
   })
 })
 

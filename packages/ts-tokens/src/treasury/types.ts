@@ -90,13 +90,17 @@ export interface TreasuryTransaction {
 }
 
 /**
- * Treasury stats
+ * Treasury stats.
+ *
+ * History-derived aggregates (deposits, withdrawals, transaction and
+ * depositor counts) are `null` when the treasury's transaction history has
+ * not been indexed — never a fabricated zero.
  */
 export interface TreasuryStats {
-  totalDeposits: bigint
-  totalWithdrawals: bigint
-  transactionCount: number
-  uniqueDepositors: number
+  totalDeposits: bigint | null
+  totalWithdrawals: bigint | null
+  transactionCount: number | null
+  uniqueDepositors: number | null
   tokenCount: number
 }
 

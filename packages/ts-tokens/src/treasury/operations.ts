@@ -42,6 +42,17 @@ export async function deposit(
   const connection = createConnection(config)
   const payer = loadWallet(config)
 
+  // The transfer is signed by the loaded wallet, so `from` must BE that
+  // wallet. Any other address would produce a transaction that fails
+  // on-chain (or worse, appears to authorize a third party's funds).
+  if (!from.equals(payer.publicKey)) {
+    throw new Error(
+      `Cannot deposit from ${from.toBase58()}: the loaded wallet ` +
+      `(${payer.publicKey.toBase58()}) signs the transfer, so it can only ` +
+      `deposit its own funds. Load the depositor's wallet instead.`
+    )
+  }
+
   const { mint: mintInfo, programId } = await getMintWithProgram(connection, mint)
 
   const sourceAta = await getAssociatedTokenAddress(mint, from, false, programId)
@@ -192,7 +203,11 @@ export async function executeSpendingProposal(
 }
 
 /**
- * Get spending proposal
+ * Get spending proposal.
+ *
+ * @deprecated Experimental stub: proposal state lives in the governance
+ * program, which is not deployed — no data source exists yet. Always
+ * returns `null` (fails closed: callers must not treat null as "approved").
  */
 export async function getSpendingProposal(
   _connection: Connection,
@@ -203,7 +218,11 @@ export async function getSpendingProposal(
 }
 
 /**
- * Get pending spending proposals
+ * Get pending spending proposals.
+ *
+ * @deprecated Experimental stub: proposal state lives in the governance
+ * program, which is not deployed — no data source exists yet. Always
+ * returns `[]` (fails closed).
  */
 export async function getPendingProposals(
   _connection: Connection,
@@ -214,7 +233,11 @@ export async function getPendingProposals(
 }
 
 /**
- * Get _treasury transaction history
+ * Get _treasury transaction history.
+ *
+ * @deprecated Experimental stub: transaction history indexing is not
+ * implemented — no data source exists yet. Always returns `[]`
+ * (fails closed).
  */
 export async function getTransactionHistory(
   _connection: Connection,
@@ -244,7 +267,12 @@ export async function setSpendingLimits(
 }
 
 /**
- * Get spending limits
+ * Get spending limits.
+ *
+ * @deprecated Experimental stub: spending limits live in the governance
+ * program, which is not deployed — no data source exists yet. Always
+ * returns `null` (fails closed: `checkWithdrawalLimits` treats null as
+ * "limits unknown → not allowed").
  */
 export async function getSpendingLimits(
   _connection: Connection,

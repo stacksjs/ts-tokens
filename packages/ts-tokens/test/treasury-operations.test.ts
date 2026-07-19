@@ -6,16 +6,23 @@
  * points.
  */
 
-import { describe, test, expect } from 'bun:test'
+import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID, MintLayout } from '@solana/spl-token'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import * as os from 'node:os'
 import {
   calculateTreasuryValue,
   checkWithdrawalLimits,
   executeSpendingProposal,
   setSpendingLimits,
+  deposit,
 } from '../src/treasury/operations'
-import { createMockConnection } from './helpers/mock-connection'
+import { getTreasuryStats } from '../src/treasury/create'
+import { encryptAndSaveKeypair } from '../src/security/keyring'
+import { startSession, endSession } from '../src/security/session'
+import { createMockConnection, createTestConfig } from './helpers/mock-connection'
 
 function buildMintData(decimals: number): Buffer {
   const data = Buffer.alloc(MintLayout.span)
@@ -116,5 +123,56 @@ describe('undeployed governance guards', () => {
         }
       )
     ).rejects.toThrow('not implemented')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getTreasuryStats — history aggregates are null, not fabricated zeros
+// ---------------------------------------------------------------------------
+
+describe('getTreasuryStats', () => {
+  test('reports history aggregates as null (not 0n) with historyAvailable=false', async () => {
+    const connection = createMockConnection() // getParsedTokenAccountsByOwner → []
+    const stats = await getTreasuryStats(connection, Keypair.generate().publicKey)
+
+    expect(stats.totalDeposits).toBeNull()
+    expect(stats.totalWithdrawals).toBeNull()
+    expect(stats.transactionCount).toBeNull()
+    expect(stats.uniqueDepositors).toBeNull()
+    expect(stats.tokenCount).toBe(0)
+    expect(stats.historyAvailable).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// deposit — `from` must be the loaded wallet
+// ---------------------------------------------------------------------------
+
+describe('deposit wallet check', () => {
+  let keyringDir: string
+  const PASSWORD = 'treasury-test-pw'
+  const wallet = Keypair.generate()
+
+  beforeEach(() => {
+    keyringDir = fs.mkdtempSync(path.join(os.tmpdir(), 'treasury-test-'))
+    encryptAndSaveKeypair(wallet.secretKey, wallet.publicKey.toBase58(), PASSWORD, { keyringDir })
+    startSession(PASSWORD, { keyringDir })
+  })
+
+  afterEach(() => {
+    endSession()
+    fs.rmSync(keyringDir, { recursive: true, force: true })
+  })
+
+  test('throws early when `from` is not the loaded wallet', async () => {
+    const stranger = Keypair.generate().publicKey
+    await expect(
+      deposit(createTestConfig(), {
+        treasury: Keypair.generate().publicKey,
+        mint: Keypair.generate().publicKey,
+        amount: 100n,
+        from: stranger,
+      })
+    ).rejects.toThrow(/Cannot deposit from/)
   })
 })

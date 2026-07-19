@@ -84,6 +84,9 @@ export async function createLimitOrder(
   transaction.sign([payer])
 
   const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(`Failed to create limit order: ${result.error ?? 'transaction not confirmed'}`)
+  }
 
   return {
     signature: result.signature,
@@ -122,6 +125,9 @@ export async function cancelLimitOrders(
     const transaction = VersionedTransaction.deserialize(Buffer.from(txData, 'base64'))
     transaction.sign([payer])
     const result = await sendAndConfirmTransaction(connection, transaction)
+    if (!result.confirmed) {
+      throw new Error(`Failed to cancel limit order: ${result.error ?? 'transaction not confirmed'}`)
+    }
     signatures.push(result.signature)
   }
 
@@ -190,13 +196,20 @@ export function formatLimitOrder(order: LimitOrder): string {
   const takingAmountNum = Number(account.takingAmount)
   const _price = takingAmountNum > 0 ? makingAmountNum / takingAmountNum : 0
 
+  // Guard the filled percentage against a zero/non-numeric oriMakingAmount —
+  // dividing by it would render "NaN%".
+  const oriMakingNum = Number(account.oriMakingAmount)
+  const filledPct = Number.isFinite(oriMakingNum) && oriMakingNum > 0
+    ? `${((1 - makingAmountNum / oriMakingNum) * 100).toFixed(1)}%`
+    : '0.0%'
+
   return [
     `Order: ${order.publicKey}`,
     `  Input: ${account.inputMint}`,
     `  Output: ${account.outputMint}`,
     `  Making: ${account.makingAmount} / ${account.oriMakingAmount}`,
     `  Taking: ${account.takingAmount} / ${account.oriTakingAmount}`,
-    `  Filled: ${((1 - makingAmountNum / Number(account.oriMakingAmount)) * 100).toFixed(1)}%`,
+    `  Filled: ${filledPct}`,
     account.expiredAt ? `  Expires: ${new Date(account.expiredAt * 1000).toISOString()}` : '  No expiry',
     `  Created: ${new Date(account.createdAt * 1000).toISOString()}`,
   ].join('\n')

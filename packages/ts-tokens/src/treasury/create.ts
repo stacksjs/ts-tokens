@@ -110,10 +110,10 @@ export async function getTreasuryStats(
   const balances = await getTreasuryBalances(connection, treasury)
 
   return {
-    totalDeposits: 0n,
-    totalWithdrawals: 0n,
-    transactionCount: 0,
-    uniqueDepositors: 0,
+    totalDeposits: null,
+    totalWithdrawals: null,
+    transactionCount: null,
+    uniqueDepositors: null,
     tokenCount: balances.length,
     historyAvailable: false,
   }

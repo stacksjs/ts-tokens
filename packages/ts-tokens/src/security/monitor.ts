@@ -4,7 +4,7 @@
  * Real-time security event monitoring for addresses.
  */
 
-import type { Connection } from '@solana/web3.js'
+import type { Connection, ConfirmedSignatureInfo } from '@solana/web3.js'
 import { PublicKey } from '@solana/web3.js'
 
 /**
@@ -97,14 +97,26 @@ export class SecurityMonitor {
     for (const address of this.addresses) {
       try {
         const pubkey = new PublicKey(address)
-        const opts: { limit: number; until?: string } = { limit: 10 }
-
         const lastSig = this.lastSignatures.get(address)
-        if (lastSig) {
-          opts.until = lastSig
-        }
 
-        const signatures = await this.connection.getSignaturesForAddress(pubkey, opts)
+        // Page through ALL signatures newer than the last one seen — a single
+        // limit-10 page would silently drop events when more than 10 land in
+        // one poll window. `until` bounds the scan at the previous watermark;
+        // `before` walks backwards page by page.
+        const signatures: ConfirmedSignatureInfo[] = []
+        let before: string | undefined
+        const MAX_PAGES = 10 // hard stop at 1000 signatures per address per poll
+        for (let page = 0; page < MAX_PAGES; page++) {
+          const opts: { limit: number; until?: string; before?: string } = { limit: 100 }
+          if (lastSig) opts.until = lastSig
+          if (before) opts.before = before
+
+          const batch = await this.connection.getSignaturesForAddress(pubkey, opts)
+          signatures.push(...batch)
+
+          if (batch.length < opts.limit) break // reached the watermark / history end
+          before = batch[batch.length - 1].signature
+        }
 
         if (signatures.length > 0) {
           this.lastSignatures.set(address, signatures[0].signature)

@@ -7,18 +7,20 @@
 
 import { describe, test, expect } from 'bun:test'
 import { Keypair, PublicKey } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { auditToken, auditCollection, auditWallet } from '../src/security/audit'
 import { createMockConnection } from './helpers/mock-connection'
 
 /**
  * Helper: build a mock AccountInfo object with a given data buffer.
+ * Defaults to SPL Token program ownership — a real mint's owner.
  */
-function mockAccountInfo(data: Buffer) {
+function mockAccountInfo(data: Buffer, owner: PublicKey = TOKEN_PROGRAM_ID) {
   return {
     data,
     executable: false,
     lamports: 0,
-    owner: PublicKey.default,
+    owner,
     rentEpoch: 0,
   }
 }
@@ -129,6 +131,41 @@ describe('auditToken', () => {
     expect(infoFinding!.title).toBe('Token supply information')
     expect(report.riskScore).toBe(0)
   })
+
+  test('rejects accounts not owned by a token program', async () => {
+    const data = Buffer.alloc(100)
+    data[0] = 1
+
+    const conn = createMockConnection({
+      // A random program/wallet owner — not a token program
+      getAccountInfo: async () => mockAccountInfo(data, Keypair.generate().publicKey),
+    })
+    const mint = Keypair.generate().publicKey
+
+    const report = await auditToken(conn, mint)
+
+    expect(report.riskScore).toBe(100)
+    expect(report.findings).toHaveLength(1)
+    expect(report.findings[0].severity).toBe('critical')
+    expect(report.findings[0].title).toBe('Not a token mint account')
+    expect(report.summary).toBe('Account is not a token mint')
+  })
+
+  test('rejects token-program accounts too short to be a mint', async () => {
+    // A 60-byte account owned by the token program cannot be a mint (>= 82)
+    const data = Buffer.alloc(60)
+
+    const conn = createMockConnection({
+      getAccountInfo: async () => mockAccountInfo(data),
+    })
+    const mint = Keypair.generate().publicKey
+
+    const report = await auditToken(conn, mint)
+
+    expect(report.riskScore).toBe(100)
+    expect(report.findings[0].title).toBe('Not a token mint account')
+    expect(report.summary).toBe('Account data too short to be a mint')
+  })
 })
 
 describe('auditCollection', () => {
@@ -210,8 +247,9 @@ describe('auditWallet', () => {
   test('returns low finding for many token accounts (>50)', async () => {
     const conn = createMockConnection({
       getBalance: async () => 1_000_000_000, // 1 SOL — below large balance threshold
-      getParsedTokenAccountsByOwner: async () => ({
-        value: new Array(60).fill({}),
+      // 60 legacy SPL accounts, 0 Token-2022 accounts
+      getParsedTokenAccountsByOwner: async (_wallet: unknown, filter: { programId?: PublicKey }) => ({
+        value: filter?.programId?.equals(TOKEN_PROGRAM_ID) ? new Array(60).fill({}) : [],
       }),
     })
     const wallet = Keypair.generate().publicKey
@@ -224,6 +262,23 @@ describe('auditWallet', () => {
     expect(accountsFinding!.description).toContain('60')
     expect(accountsFinding!.recommendation).toBe('Consider closing unused token accounts to reclaim rent')
     expect(report.recommendations).toContain('Close unused token accounts to reclaim SOL')
+  })
+
+  test('counts Token-2022 accounts alongside legacy SPL accounts', async () => {
+    const conn = createMockConnection({
+      getBalance: async () => 1_000_000_000,
+      // 30 legacy + 30 Token-2022 = 60 total → crosses the >50 threshold
+      getParsedTokenAccountsByOwner: async () => ({ value: new Array(30).fill({}) }),
+    })
+    const wallet = Keypair.generate().publicKey
+
+    const report = await auditWallet(conn, wallet)
+
+    const accountsFinding = report.findings.find(f => f.title === 'Many token accounts')
+    expect(accountsFinding).toBeDefined()
+    expect(accountsFinding!.description).toContain('60')
+    const summary = report.findings.find(f => f.category === 'summary')
+    expect(summary!.description).toContain('Token accounts: 60')
   })
 })
 
