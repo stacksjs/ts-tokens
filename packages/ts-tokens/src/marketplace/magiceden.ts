@@ -27,7 +27,10 @@ export async function getCollectionListings(
   )
 
   if (!response.ok) {
-    throw new Error(`Magic Eden API error: ${response.statusText}`)
+    throw new Error(
+      `Magic Eden API error ${response.status} (${response.statusText}) ` +
+      `fetching listings for collection "${collectionSymbol}"`
+    )
   }
 
   const data = await response.json()
@@ -52,17 +55,22 @@ export async function getCollectionListings(
  */
 export async function getCollectionStats(
   collectionSymbol: string
-): Promise<CollectionStats | null> {
+): Promise<CollectionStats> {
   const response = await fetch(`${ME_API}/collections/${collectionSymbol}/stats`)
 
   if (!response.ok) {
-    return null
+    throw new Error(
+      `Magic Eden API error ${response.status} (${response.statusText}) ` +
+      `fetching stats for collection "${collectionSymbol}"`
+    )
   }
 
   const data = await response.json()
 
   return {
-    collection: new PublicKey(data.collectionId ?? PublicKey.default),
+    // ME returns an opaque string collection id (not an on-chain address), so
+    // keep it raw — wrapping it in PublicKey throws on real API responses.
+    collection: data.collectionId ?? collectionSymbol,
     floorPrice: BigInt(Math.floor((data.floorPrice ?? 0) * 1e9)),
     volume24h: BigInt(Math.floor((data.volume24hr ?? 0) * 1e9)),
     volumeTotal: BigInt(Math.floor((data.volumeAll ?? 0) * 1e9)),
@@ -87,7 +95,10 @@ export async function getNFTActivity(
   )
 
   if (!response.ok) {
-    return []
+    throw new Error(
+      `Magic Eden API error ${response.status} (${response.statusText}) ` +
+      `fetching activity for ${mint.toBase58()}`
+    )
   }
 
   const data = await response.json()
@@ -119,7 +130,10 @@ export async function getNFTOffers(mint: PublicKey): Promise<NFTOffer[]> {
   const response = await fetch(`${ME_API}/tokens/${mint.toBase58()}/offers`)
 
   if (!response.ok) {
-    return []
+    throw new Error(
+      `Magic Eden API error ${response.status} (${response.statusText}) ` +
+      `fetching offers for ${mint.toBase58()}`
+    )
   }
 
   const data = await response.json()
@@ -152,7 +166,10 @@ export async function getPopularCollections(
   )
 
   if (!response.ok) {
-    return []
+    throw new Error(
+      `Magic Eden API error ${response.status} (${response.statusText}) ` +
+      'fetching popular collections'
+    )
   }
 
   return response.json()
@@ -167,7 +184,10 @@ export async function searchCollections(
   const response = await fetch(`${ME_API}/collections?q=${encodeURIComponent(query)}`)
 
   if (!response.ok) {
-    return []
+    throw new Error(
+      `Magic Eden API error ${response.status} (${response.statusText}) ` +
+      `searching collections for "${query}"`
+    )
   }
 
   return response.json()

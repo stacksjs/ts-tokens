@@ -44,7 +44,8 @@ import { getRoyaltyInfo, buildRoyaltyInstructions } from './royalties'
  */
 export async function createEscrow(
   options: CreateEscrowOptions,
-  config: TokenConfig
+  config: TokenConfig,
+  storePath?: string,
 ): Promise<EscrowRecord> {
   const connection = createConnection(config)
   const seller = loadWallet(config)
@@ -102,6 +103,14 @@ export async function createEscrow(
   transaction.partialSign(seller)
 
   const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    // Never persist the escrow keypair or mark the escrow funded: the NFT was
+    // not deposited on-chain, so the record would point at an empty escrow
+    // whose secret we must not keep.
+    throw new Error(
+      `Failed to deposit NFT into escrow: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 
   const escrow: EscrowRecord = {
     id: generateId('escrow'),
@@ -118,7 +127,7 @@ export async function createEscrow(
   }
 
   const escrowSecret = Buffer.from(escrowKeypair.secretKey).toString('base64')
-  saveEscrow(escrow, escrowSecret)
+  saveEscrow(escrow, escrowSecret, storePath)
 
   return escrow
 }
@@ -237,6 +246,11 @@ export async function settleEscrow(
   transaction.partialSign(escrowKeypair)
 
   const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(
+      `Failed to settle escrow: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 
   updateEscrowStatus(escrowId, 'settled')
   updateEscrowBuyer(escrowId, buyer.publicKey.toBase58())
@@ -251,15 +265,18 @@ export async function settleEscrow(
  * 1. NFT from escrow -> seller
  * 2. Close escrow ATA
  * Signed by seller + escrowKeypair
+ *
+ * The status only flips to 'cancelled' after the reclaim transaction confirms.
  */
 export async function cancelEscrow(
   escrowId: string,
-  config: TokenConfig
+  config: TokenConfig,
+  storePath?: string,
 ): Promise<void> {
   const connection = createConnection(config)
   const seller = loadWallet(config)
 
-  const escrow = getEscrow(escrowId)
+  const escrow = getEscrow(escrowId, storePath)
   if (!escrow) {
     throw new Error(`Escrow not found: ${escrowId}`)
   }
@@ -272,7 +289,7 @@ export async function cancelEscrow(
     throw new Error('Only the seller can cancel this escrow')
   }
 
-  const escrowKeypair = getEscrowKeypair(escrowId)
+  const escrowKeypair = getEscrowKeypair(escrowId, storePath)
   if (!escrowKeypair) {
     throw new Error('Escrow keypair not found in state')
   }
@@ -314,9 +331,14 @@ export async function cancelEscrow(
   transaction.partialSign(seller)
   transaction.partialSign(escrowKeypair)
 
-  await sendAndConfirmTransaction(connection, transaction)
+  const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(
+      `Failed to cancel escrow: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 
-  updateEscrowStatus(escrowId, 'cancelled')
+  updateEscrowStatus(escrowId, 'cancelled', storePath)
 }
 
 /**

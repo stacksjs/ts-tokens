@@ -103,33 +103,36 @@ export async function getCollectionStats(collectionId: string): Promise<Collecti
     }
   `
 
-  try {
-    const data = await tensorQuery<{
-      instrumentTV2: {
-        statsV2: {
-          buyNowPrice: string
-          numListed: number
-          numMints: number
-          volume24h: string
-          volumeAll: string
-        }
+  // tensorQuery throws on non-ok responses and GraphQL errors — let those
+  // propagate so an outage is never masked as "no stats". Only a genuinely
+  // unknown collection (null instrument) returns null.
+  const data = await tensorQuery<{
+    instrumentTV2: {
+      statsV2: {
+        buyNowPrice: string
+        numListed: number
+        numMints: number
+        volume24h: string
+        volumeAll: string
       }
-    }>(query, { slug: collectionId })
+    } | null
+  }>(query, { slug: collectionId })
 
-    const stats = data.instrumentTV2.statsV2
-
-    return {
-      collection: PublicKey.default, // Would need to resolve
-      floorPrice: BigInt(stats.buyNowPrice ?? 0),
-      volume24h: BigInt(stats.volume24h ?? 0),
-      volumeTotal: BigInt(stats.volumeAll ?? 0),
-      listedCount: stats.numListed ?? 0,
-      totalSupply: stats.numMints ?? 0,
-      owners: 0, // Not available in this query
-      avgPrice24h: 0n,
-    }
-  } catch {
+  if (!data.instrumentTV2) {
     return null
+  }
+
+  const stats = data.instrumentTV2.statsV2
+
+  return {
+    collection: PublicKey.default, // Would need to resolve
+    floorPrice: BigInt(stats.buyNowPrice ?? 0),
+    volume24h: BigInt(stats.volume24h ?? 0),
+    volumeTotal: BigInt(stats.volumeAll ?? 0),
+    listedCount: stats.numListed ?? 0,
+    totalSupply: stats.numMints ?? 0,
+    owners: 0, // Not available in this query
+    avgPrice24h: 0n,
   }
 }
 
@@ -165,41 +168,44 @@ export async function getNFTInfo(mint: PublicKey): Promise<{
     }
   `
 
-  try {
-    const data = await tensorQuery<{
-      mint: {
-        onchainId: string
-        activeListings: Array<{ tx: { sellerId: string; grossAmount: string } }>
-        activeBids: Array<{ bidder: string; price: string; expiry: number }>
-        lastSale?: { price: string; txAt: number }
-      }
-    }>(query, { mint: mint.toBase58() })
+  // tensorQuery throws on non-ok responses and GraphQL errors — let those
+  // propagate so an outage is never masked as "NFT not found". Only a
+  // genuinely unknown mint (null payload) returns null.
+  const data = await tensorQuery<{
+    mint: {
+      onchainId: string
+      activeListings: Array<{ tx: { sellerId: string; grossAmount: string } }>
+      activeBids: Array<{ bidder: string; price: string; expiry: number }>
+      lastSale?: { price: string; txAt: number }
+    } | null
+  }>(query, { mint: mint.toBase58() })
 
-    const mintData = data.mint
-
-    return {
-      listing: mintData.activeListings[0] ? {
-        mint,
-        seller: new PublicKey(mintData.activeListings[0].tx.sellerId),
-        price: BigInt(mintData.activeListings[0].tx.grossAmount),
-        marketplace: 'tensor' as const,
-        listingId: mintData.onchainId,
-      } : undefined,
-      offers: mintData.activeBids.map(bid => ({
-        mint,
-        buyer: new PublicKey(bid.bidder),
-        price: BigInt(bid.price),
-        marketplace: 'tensor' as const,
-        offerId: `${mint.toBase58()}_${bid.bidder}`,
-        expiry: bid.expiry,
-      })),
-      lastSale: mintData.lastSale ? {
-        price: BigInt(mintData.lastSale.price),
-        timestamp: mintData.lastSale.txAt,
-      } : undefined,
-    }
-  } catch {
+  if (!data.mint) {
     return null
+  }
+
+  const mintData = data.mint
+
+  return {
+    listing: mintData.activeListings[0] ? {
+      mint,
+      seller: new PublicKey(mintData.activeListings[0].tx.sellerId),
+      price: BigInt(mintData.activeListings[0].tx.grossAmount),
+      marketplace: 'tensor' as const,
+      listingId: mintData.onchainId,
+    } : undefined,
+    offers: mintData.activeBids.map(bid => ({
+      mint,
+      buyer: new PublicKey(bid.bidder),
+      price: BigInt(bid.price),
+      marketplace: 'tensor' as const,
+      offerId: `${mint.toBase58()}_${bid.bidder}`,
+      expiry: bid.expiry,
+    })),
+    lastSale: mintData.lastSale ? {
+      price: BigInt(mintData.lastSale.price),
+      timestamp: mintData.lastSale.txAt,
+    } : undefined,
   }
 }
 
@@ -232,26 +238,24 @@ export async function getTrendingCollections(
     }
   `
 
-  try {
-    const data = await tensorQuery<{
-      trendingCollections: Array<{
-        slug: string
-        name: string
-        imageUri: string
-        statsV2: { buyNowPrice: string; volume24h: string }
-      }>
-    }>(query, { period, limit })
+  // tensorQuery throws on non-ok responses and GraphQL errors — let those
+  // propagate so an outage is never masked as "no trending collections".
+  const data = await tensorQuery<{
+    trendingCollections: Array<{
+      slug: string
+      name: string
+      imageUri: string
+      statsV2: { buyNowPrice: string; volume24h: string }
+    }> | null
+  }>(query, { period, limit })
 
-    return data.trendingCollections.map(c => ({
-      slug: c.slug,
-      name: c.name,
-      imageUri: c.imageUri,
-      floorPrice: BigInt(c.statsV2.buyNowPrice ?? 0),
-      volume: BigInt(c.statsV2.volume24h ?? 0),
-    }))
-  } catch {
-    return []
-  }
+  return (data.trendingCollections ?? []).map(c => ({
+    slug: c.slug,
+    name: c.name,
+    imageUri: c.imageUri,
+    floorPrice: BigInt(c.statsV2.buyNowPrice ?? 0),
+    volume: BigInt(c.statsV2.volume24h ?? 0),
+  }))
 }
 
 /**

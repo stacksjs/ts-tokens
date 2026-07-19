@@ -41,16 +41,34 @@ export function getDistributionStatePath(): string {
 export function loadDistributionState(storePath?: string): DistributionState {
   const filePath = storePath ?? getDistributionStatePath()
   if (!fs.existsSync(filePath)) return { links: {}, campaigns: {} }
-  return JSON.parse(fs.readFileSync(filePath, 'utf-8'))
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'))
+  } catch (err) {
+    // A truncated state file must never be papered over: it holds claim-link
+    // secret keys, and continuing with partial data can strand funds.
+    throw new Error(
+      `State file corrupted at ${filePath}: ${err instanceof Error ? err.message : String(err)}. ` +
+      'Restore it from a backup — do not delete it, it may hold claim-link secrets.'
+    )
+  }
 }
 
 /**
- * Save distribution state
+ * Save distribution state atomically.
+ *
+ * Writes to a unique temp file in the same directory, then renames it over the
+ * target. rename(2) is atomic on the same filesystem, so a crash mid-write can
+ * never leave a truncated/partial state file that would corrupt claim-link
+ * secrets (whose loss strands funds). Concurrent writers each rename their own
+ * temp file, so the last writer wins without either observing a half-written
+ * file.
  */
 export function saveDistributionState(state: DistributionState, storePath?: string): void {
   const filePath = storePath ?? getDistributionStatePath()
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
-  fs.writeFileSync(filePath, JSON.stringify(state, null, 2), { mode: 0o600 })
+  const tmpPath = `${filePath}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`
+  fs.writeFileSync(tmpPath, JSON.stringify(state, null, 2), { mode: 0o600 })
+  fs.renameSync(tmpPath, filePath)
 }
 
 /**
@@ -65,7 +83,8 @@ function generateId(): string {
  */
 export async function createClaimLink(
   options: CreateClaimLinkOptions,
-  _config: TokenConfig
+  _config: TokenConfig,
+  storePath?: string,
 ): Promise<ClaimLink> {
   const ephemeralKeypair = Keypair.generate()
   const baseUrl = options.baseUrl || DEFAULT_BASE_URL
@@ -87,9 +106,9 @@ export async function createClaimLink(
   }
 
   // Persist
-  const state = loadDistributionState()
+  const state = loadDistributionState(storePath)
   state.links[link.id] = serializeLink(link, ephemeralKeypair.secretKey)
-  saveDistributionState(state)
+  saveDistributionState(state, storePath)
 
   return link
 }
@@ -99,9 +118,10 @@ export async function createClaimLink(
  */
 export async function fundClaimLink(
   linkId: string,
-  config: TokenConfig
+  config: TokenConfig,
+  storePath?: string,
 ): Promise<{ signature: string }> {
-  const state = loadDistributionState()
+  const state = loadDistributionState(storePath)
   const serialized = state.links[linkId]
   if (!serialized) throw new Error(`Claim link not found: ${linkId}`)
   if (serialized.status !== 'pending') {
@@ -166,11 +186,18 @@ export async function fundClaimLink(
   transaction.partialSign(payer)
 
   const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    // Do NOT mark the link funded: the transfer did not confirm, and flipping
+    // the status would strand the link as 'funded' with no funds on-chain.
+    throw new Error(
+      `Failed to fund claim link: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 
   // Update state
   serialized.status = 'funded'
   serialized.fundSignature = result.signature
-  saveDistributionState(state)
+  saveDistributionState(state, storePath)
 
   return { signature: result.signature }
 }

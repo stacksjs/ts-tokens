@@ -9,6 +9,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as os from 'node:os'
 import { PublicKey, Keypair } from '@solana/web3.js'
+import type { TokenConfig } from '../types'
 import type {
   MarketplaceState,
   SerializedListing,
@@ -59,11 +60,32 @@ export function loadState(storePath?: string): MarketplaceState {
   }
 
   const content = fs.readFileSync(resolved, 'utf-8')
-  return JSON.parse(content) as MarketplaceState
+  try {
+    return JSON.parse(content) as MarketplaceState
+  } catch (err) {
+    // A truncated state file (e.g. from a crash during a non-atomic write)
+    // must never be papered over: it holds escrow and delegate secrets, and
+    // continuing with partial data can strand funds.
+    throw new Error(
+      `State file corrupted at ${resolved}: ${err instanceof Error ? err.message : String(err)}. ` +
+      'Restore it from a backup — do not delete it, it may hold escrow/delegate secrets.'
+    )
+  }
 }
 
 /**
- * Save marketplace state to disk
+ * Save marketplace state to disk atomically.
+ *
+ * Writes to a unique temp file in the same directory, then renames it over the
+ * target. rename(2) is atomic on the same filesystem, so a crash mid-write can
+ * never leave a truncated/partial state file that would corrupt escrow and
+ * delegate secrets (whose loss strands funds). Concurrent writers each rename
+ * their own temp file, so the last writer wins without either observing a
+ * half-written file.
+ *
+ * ⚠️ SECURITY: this file contains delegate and escrow secret keys in base64.
+ * Anyone who can read it can transfer the listed NFTs and drain offer escrows.
+ * It is written mode-0600 — never loosen those permissions, share, or commit it.
  */
 export function saveState(state: MarketplaceState, storePath?: string): string {
   const filePath = storePath ?? getDefaultStorePath()
@@ -74,7 +96,9 @@ export function saveState(state: MarketplaceState, storePath?: string): string {
     fs.mkdirSync(dir, { recursive: true })
   }
 
-  fs.writeFileSync(resolved, JSON.stringify(state, null, 2), { mode: 0o600 })
+  const tmpPath = `${resolved}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`
+  fs.writeFileSync(tmpPath, JSON.stringify(state, null, 2), { mode: 0o600 })
+  fs.renameSync(tmpPath, resolved)
   return resolved
 }
 
@@ -354,6 +378,7 @@ export function serializeAuction(auction: AuctionRecord): SerializedAuction {
     })),
     startTime: auction.startTime,
     endTime: auction.endTime,
+    settleGracePeriod: auction.settleGracePeriod,
     currency: auction.currency,
     escrowId: auction.escrowId,
     settleSignature: auction.settleSignature,
@@ -381,6 +406,7 @@ export function deserializeAuction(s: SerializedAuction): AuctionRecord {
     })),
     startTime: s.startTime,
     endTime: s.endTime,
+    settleGracePeriod: s.settleGracePeriod,
     currency: s.currency,
     escrowId: s.escrowId,
     settleSignature: s.settleSignature,
@@ -463,7 +489,13 @@ export function getAuctionsForSeller(seller: string, storePath?: string): Auctio
 // ============================================
 
 /**
- * Remove expired listings, offers, escrows, and auctions
+ * Remove expired listings, offers, escrows, and auctions (status-only).
+ *
+ * ⚠️ This only flips local statuses — it does NOT recover on-chain assets:
+ * expired offers keep their escrowed SOL (bidder funds stranded), expired
+ * escrows keep the NFT locked, and expired listings keep a LIVE delegate
+ * approval on the seller's token account. Use the async `recoverExpired`
+ * instead to actively recover on-chain assets before marking records.
  */
 export function cleanupExpired(storePath?: string): {
   listings: number
@@ -508,4 +540,125 @@ export function cleanupExpired(storePath?: string): {
 
   saveState(state, storePath)
   return { listings, offers, escrows, auctions }
+}
+
+// ============================================
+// Expired-record recovery
+// ============================================
+
+/**
+ * A record whose on-chain recovery failed during `recoverExpired`.
+ */
+export interface RecoveryFailure {
+  kind: 'listing' | 'offer' | 'escrow'
+  id: string
+  error: string
+}
+
+/**
+ * Summary returned by `recoverExpired`.
+ */
+export interface RecoverExpiredSummary {
+  /** Records whose on-chain assets were recovered and status updated */
+  recovered: { listings: number; offers: number; escrows: number }
+  /** Expired records left in their current state because recovery failed */
+  failed: RecoveryFailure[]
+  /** Ended auctions marked 'ended' (no on-chain action needed) */
+  auctions: number
+}
+
+/**
+ * Recover on-chain assets for expired records, updating state only after the
+ * recovery transaction confirms:
+ *
+ * - expired offers: refund the bidder's escrowed SOL (refundOfferEscrow),
+ *   then mark 'expired'
+ * - expired escrows: transfer the NFT back to the seller and close the escrow
+ *   ATA (cancelEscrow), which marks the escrow 'cancelled'
+ * - expired listings: revoke the LIVE on-chain delegate approval (delistNFT),
+ *   which marks the listing 'cancelled'
+ * - ended auctions: marked 'ended' — settlement/cancellation handles the NFT
+ *
+ * If a recovery transaction fails, the record is LEFT IN ITS CURRENT STATE so
+ * it can be retried later, and the failure is reported in `failed`.
+ */
+export async function recoverExpired(
+  config: TokenConfig,
+  storePath?: string,
+): Promise<RecoverExpiredSummary> {
+  const now = Date.now()
+  const summary: RecoverExpiredSummary = {
+    recovered: { listings: 0, offers: 0, escrows: 0 },
+    failed: [],
+    auctions: 0,
+  }
+
+  // Dynamic imports keep this store module free of cycles with the trading
+  // modules (which themselves import the store).
+  const { refundOfferEscrow } = await import('./offers')
+  const { cancelEscrow } = await import('./escrow')
+  const { delistNFT } = await import('./listing')
+
+  // Expired offers — refund the bidder's escrowed SOL before marking expired.
+  for (const offer of Object.values(loadState(storePath).offers)) {
+    if (offer.status === 'active' && offer.expiry && offer.expiry < now) {
+      try {
+        await refundOfferEscrow(offer.id, config, storePath)
+        updateOfferStatus(offer.id, 'expired', storePath)
+        summary.recovered.offers++
+      } catch (err) {
+        summary.failed.push({
+          kind: 'offer',
+          id: offer.id,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+    }
+  }
+
+  // Expired escrows — return the NFT to the seller before marking.
+  for (const escrow of Object.values(loadState(storePath).escrows)) {
+    if (
+      (escrow.status === 'pending' || escrow.status === 'funded') &&
+      escrow.expiry &&
+      escrow.expiry < now
+    ) {
+      try {
+        await cancelEscrow(escrow.id, config, storePath)
+        summary.recovered.escrows++
+      } catch (err) {
+        summary.failed.push({
+          kind: 'escrow',
+          id: escrow.id,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+    }
+  }
+
+  // Expired listings — revoke the live delegate approval before marking.
+  for (const listing of Object.values(loadState(storePath).listings)) {
+    if (listing.status === 'active' && listing.expiry && listing.expiry < now) {
+      try {
+        await delistNFT(new PublicKey(listing.mint), config, storePath)
+        summary.recovered.listings++
+      } catch (err) {
+        summary.failed.push({
+          kind: 'listing',
+          id: listing.id,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+    }
+  }
+
+  // Ended auctions need no on-chain recovery — settle/cancel handles the NFT.
+  for (const auction of Object.values(loadState(storePath).auctions)) {
+    if ((auction.status === 'active' || auction.status === 'pending') && auction.endTime < now) {
+      updateAuctionStatus(auction.id, 'ended', storePath)
+      summary.auctions++
+    }
+  }
+
+  return summary
 }

@@ -267,6 +267,51 @@ describe('Royalty Calculations', () => {
     expect(result.payments[1].amount).toBe(300_000_000n)
     expect(result.payments[2].amount).toBe(200_000_000n)
   })
+
+  // Regression: malicious NFT metadata could advertise >100% royalties and
+  // make buyers pay more than the sale price (fund-loss fix #2).
+  test('should throw for sellerFeeBasisPoints above 10000 (over 100%)', () => {
+    expect(() =>
+      calculateRoyalties({
+        salePrice: 10_000_000_000n,
+        sellerFeeBasisPoints: 20000, // 200% — malicious NFT metadata
+        creators: [{ address: creator1, share: 100 }],
+      })
+    ).toThrow(/sellerFeeBasisPoints/)
+
+    expect(() =>
+      calculateRoyalties({
+        salePrice: 10_000_000_000n,
+        sellerFeeBasisPoints: 10001,
+        creators: [{ address: creator1, share: 100 }],
+      })
+    ).toThrow(/sellerFeeBasisPoints/)
+  })
+
+  test('should throw when creator shares sum above 100', () => {
+    expect(() =>
+      calculateRoyalties({
+        salePrice: 10_000_000_000n,
+        sellerFeeBasisPoints: 500,
+        creators: [
+          { address: creator1, share: 80 },
+          { address: creator2, share: 80 },
+        ],
+      })
+    ).toThrow(/shares sum/)
+  })
+
+  test('totalRoyalty can never exceed the sale price', () => {
+    // 100% royalty = exactly the sale price
+    const result = calculateRoyalties({
+      salePrice: 10_000_000_000n,
+      sellerFeeBasisPoints: 10000,
+      creators: [{ address: creator1, share: 100 }],
+    })
+
+    expect(result.totalRoyalty).toBe(10_000_000_000n)
+    expect(result.totalRoyalty <= result.salePrice).toBe(true)
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -463,6 +508,49 @@ describe('State Store', () => {
     expect(result.offers).toBe(1)
     expect(result.escrows).toBe(1)
     expect(result.auctions).toBe(1)
+  })
+
+  // Regression: saveState must write atomically (temp file + rename) so a
+  // crash can never truncate the file that holds escrow/delegate secrets.
+  test('should save state atomically and leave no temp files behind', () => {
+    const state: MarketplaceState = {
+      listings: {},
+      offers: {},
+      escrows: {},
+      auctions: {},
+    }
+    saveState(state, testStorePath)
+    saveState({ ...state, listings: { l1: { id: 'l1' } as never } }, testStorePath)
+
+    // Round-trip produces valid, loadable JSON
+    const loaded = loadState(testStorePath)
+    expect(Object.keys(loaded.listings)).toEqual(['l1'])
+
+    // No temp files left in the directory
+    const leftovers = fs
+      .readdirSync(path.dirname(testStorePath))
+      .filter(f => f.endsWith('.tmp'))
+    expect(leftovers).toEqual([])
+  })
+
+  test('should throw a clear corruption error instead of raw JSON errors', () => {
+    fs.writeFileSync(testStorePath, '{ "listings": {', 'utf-8')
+
+    expect(() => loadState(testStorePath)).toThrow(/State file corrupted at/)
+    expect(() => loadState(testStorePath)).toThrow(new RegExp(testStorePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  })
+
+  test('should persist the auction settleGracePeriod through serialization', () => {
+    const auction = makeTestAuction({ settleGracePeriod: 3_600_000 })
+    saveAuction(auction, testStorePath)
+
+    const loaded = getAuction(auction.id, testStorePath)
+    expect(loaded!.settleGracePeriod).toBe(3_600_000)
+
+    // Old records without the field deserialize with it undefined
+    const legacy = makeTestAuction()
+    saveAuction(legacy, testStorePath)
+    expect(getAuction(legacy.id, testStorePath)!.settleGracePeriod).toBeUndefined()
   })
 })
 

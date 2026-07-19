@@ -71,16 +71,20 @@ function generateId(): string {
 }
 
 /**
- * Calculate the cliff date from start date and cliff months
+ * Calculate the cliff date from start date and cliff months.
+ *
+ * All calendar math is UTC: local-timezone getMonth/setMonth would make cliff
+ * and end dates shift by the timezone offset whenever the state file moves
+ * between machines in different timezones.
  */
 function addMonths(timestamp: number, months: number): number {
   const date = new Date(timestamp)
-  const targetDay = date.getDate()
+  const targetDay = date.getUTCDate()
   // setMonth on e.g. Jan 31 + 1 rolls over to Mar 3; clamp to the last day of
   // the target month so cliff/end dates land where users expect.
-  date.setMonth(date.getMonth() + months, 1)
-  const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
-  date.setDate(Math.min(targetDay, lastDayOfMonth))
+  date.setUTCMonth(date.getUTCMonth() + months, 1)
+  const lastDayOfMonth = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate()
+  date.setUTCDate(Math.min(targetDay, lastDayOfMonth))
   return date.getTime()
 }
 
@@ -89,7 +93,8 @@ function addMonths(timestamp: number, months: number): number {
  */
 export async function createVestingSchedule(
   vestingConfig: VestingConfig,
-  _config: TokenConfig
+  _config: TokenConfig,
+  storePath?: string,
 ): Promise<VestingSchedule> {
   const cliffPercentage = vestingConfig.cliffPercentage ?? 0
 
@@ -135,9 +140,9 @@ export async function createVestingSchedule(
   }
 
   // Persist
-  const state = loadVestingState()
+  const state = loadVestingState(storePath)
   state.schedules[schedule.id] = serializeSchedule(schedule)
-  saveVestingState(state)
+  saveVestingState(state, storePath)
 
   return schedule
 }
@@ -147,9 +152,10 @@ export async function createVestingSchedule(
  */
 export async function fundVestingSchedule(
   vestingId: string,
-  config: TokenConfig
+  config: TokenConfig,
+  storePath?: string,
 ): Promise<{ signature: string }> {
-  const state = loadVestingState()
+  const state = loadVestingState(storePath)
   const serialized = state.schedules[vestingId]
   if (!serialized) throw new Error(`Vesting schedule not found: ${vestingId}`)
   if (serialized.status !== 'pending') {
@@ -194,6 +200,15 @@ export async function fundVestingSchedule(
   transaction.partialSign(payer)
 
   const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    // Do NOT persist the escrow keypair or mark the schedule active: the
+    // funding transfer did not confirm. Flipping the status would brick the
+    // schedule — an 'active' schedule cannot be re-funded and would have no
+    // funded escrow to claim from.
+    throw new Error(
+      `Failed to fund vesting schedule: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 
   // Persist the escrow keypair secret so claims can authorize transfers out of
   // the escrow. Stored only in the 0600-mode local state file.
@@ -201,7 +216,7 @@ export async function fundVestingSchedule(
   serialized.escrowAccount = escrowKeypair.publicKey.toBase58()
   serialized.escrowSecret = Buffer.from(escrowKeypair.secretKey).toString('base64')
   serialized.fundSignature = result.signature
-  saveVestingState(state)
+  saveVestingState(state, storePath)
 
   return { signature: result.signature }
 }

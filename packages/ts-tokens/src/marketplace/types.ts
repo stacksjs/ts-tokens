@@ -74,7 +74,12 @@ export interface MakeOfferOptions {
  * Collection stats
  */
 export interface CollectionStats {
-  collection: PublicKey
+  /**
+   * Collection identifier. Marketplace APIs do NOT all return an on-chain
+   * address here (Magic Eden returns an opaque string id), so this is kept as
+   * a raw string when the marketplace does not provide a public key.
+   */
+  collection: PublicKey | string
   floorPrice: bigint
   volume24h: bigint
   volumeTotal: bigint
@@ -300,6 +305,13 @@ export interface AuctionRecord {
   bids: AuctionBid[]
   startTime: number
   endTime: number
+  /**
+   * Settlement grace period in milliseconds, measured from `endTime`.
+   * During `endTime + settleGracePeriod` only the winning bidder can settle;
+   * afterwards the seller may cancel the auction even with bids present, so a
+   * non-settling top bidder cannot lock the NFT forever. Defaults to 24h.
+   */
+  settleGracePeriod?: number
   currency: PaymentCurrency
   escrowId?: string
   settleSignature?: string
@@ -317,6 +329,11 @@ export interface CreateAuctionOptions {
   duration: number
   priceDecrement?: bigint
   decrementInterval?: number
+  /**
+   * Settlement grace period in milliseconds for English auctions (default 24h).
+   * After endTime + settleGracePeriod the seller may cancel despite bids.
+   */
+  settleGracePeriod?: number
   currency?: PaymentCurrency
 }
 
@@ -426,6 +443,7 @@ export interface SerializedAuction {
   bids: Array<{ bidder: string; amount: string; timestamp: number }>
   startTime: number
   endTime: number
+  settleGracePeriod?: number
   currency: PaymentCurrency
   escrowId?: string
   settleSignature?: string

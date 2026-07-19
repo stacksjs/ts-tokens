@@ -242,42 +242,100 @@ export async function acceptOffer(
 }
 
 /**
- * Refund an offer's escrowed SOL back to the bidder, draining the escrow to 0.
+ * Fallback network fee (lamports) for the escrow refund transaction, used when
+ * the RPC cannot quote a fee. One signature => 5000 lamports.
  */
-async function refundOfferEscrow(offerId: string, config: TokenConfig): Promise<void> {
-  const offer = getOffer(offerId)
+const FALLBACK_REFUND_FEE_LAMPORTS = 5000n
+
+/**
+ * Refund an offer's escrowed SOL back to the bidder, draining the escrow to 0.
+ *
+ * The escrow account is the fee payer for its own refund transaction, so the
+ * transfer must leave enough lamports behind to cover the network fee —
+ * transferring the entire balance always fails (balance < balance + fee) and,
+ * if the failure went unchecked, the caller would mark the offer resolved
+ * while the bidder's SOL stays stranded in the escrow forever.
+ *
+ * Throws if the refund transaction is not confirmed, so callers never update
+ * the offer status on failure.
+ */
+export async function refundOfferEscrow(
+  offerId: string,
+  config: TokenConfig,
+  storePath?: string,
+): Promise<void> {
+  const offer = getOffer(offerId, storePath)
   if (!offer?.escrowAccount) return
 
-  const escrowKeypair = getOfferEscrowKeypair(offerId)
+  const escrowKeypair = getOfferEscrowKeypair(offerId, storePath)
   if (!escrowKeypair) return
 
   const connection = createConnection(config)
   const balance = BigInt(await connection.getBalance(escrowKeypair.publicKey))
   if (balance <= 0n) return
 
-  const instructions = [
+  const transferToBidder = (lamports: bigint) => [
     SystemProgram.transfer({
       fromPubkey: escrowKeypair.publicKey,
       toPubkey: offer.bidder,
-      lamports: balance,
+      lamports,
     }),
   ]
 
-  const transaction = await buildTransaction(connection, instructions, escrowKeypair.publicKey)
+  // Estimate the fee the escrow pays as fee payer. Solana fees depend on the
+  // number of signatures, not the transfer amount, so a probe transaction
+  // gives the real fee; fall back to a conservative fixed estimate.
+  let feeLamports = FALLBACK_REFUND_FEE_LAMPORTS
+  try {
+    const probe = await buildTransaction(
+      connection,
+      transferToBidder(balance > feeLamports ? balance - feeLamports : 1n),
+      escrowKeypair.publicKey
+    )
+    const { value } = await connection.getFeeForMessage(probe.compileMessage())
+    if (value != null && value > 0) {
+      feeLamports = BigInt(value)
+    }
+  } catch {
+    // Keep the fallback fee estimate.
+  }
+
+  const refundAmount = balance - feeLamports
+  if (refundAmount <= 0n) {
+    throw new Error(
+      `Offer escrow balance (${balance} lamports) cannot cover the network fee ` +
+      `(${feeLamports} lamports) — cannot refund the bidder.`
+    )
+  }
+
+  const transaction = await buildTransaction(
+    connection,
+    transferToBidder(refundAmount),
+    escrowKeypair.publicKey
+  )
   transaction.partialSign(escrowKeypair)
 
-  await sendAndConfirmTransaction(connection, transaction)
+  const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(
+      `Failed to refund offer escrow: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 }
 
 /**
- * Cancel an offer (by the bidder) and refund the escrowed SOL
+ * Cancel an offer (by the bidder) and refund the escrowed SOL.
+ *
+ * Throws (and leaves the offer 'active') if the refund transaction is not
+ * confirmed — the status is only updated after the bidder's SOL is back.
  */
 export async function cancelOffer(
   offerId: string,
-  config: TokenConfig
+  config: TokenConfig,
+  storePath?: string,
 ): Promise<void> {
   const bidder = loadWallet(config)
-  const offer = getOffer(offerId)
+  const offer = getOffer(offerId, storePath)
 
   if (!offer) {
     throw new Error(`Offer not found: ${offerId}`)
@@ -291,18 +349,26 @@ export async function cancelOffer(
     throw new Error('Only the bidder can cancel this offer')
   }
 
-  await refundOfferEscrow(offerId, config)
-  updateOfferStatus(offerId, 'cancelled')
+  await refundOfferEscrow(offerId, config, storePath)
+  updateOfferStatus(offerId, 'cancelled', storePath)
 }
 
 /**
- * Reject an offer (by the NFT owner) and refund the escrowed SOL to the bidder
+ * Reject an offer (by the current holder of the NFT) and refund the escrowed
+ * SOL to the bidder.
+ *
+ * Verifies on-chain that the caller's wallet actually holds the NFT before
+ * refunding. Throws (and leaves the offer 'active') if the refund transaction
+ * is not confirmed.
  */
 export async function rejectOffer(
   offerId: string,
-  config: TokenConfig
+  config: TokenConfig,
+  storePath?: string,
 ): Promise<void> {
-  const offer = getOffer(offerId)
+  const connection = createConnection(config)
+  const owner = loadWallet(config)
+  const offer = getOffer(offerId, storePath)
 
   if (!offer) {
     throw new Error(`Offer not found: ${offerId}`)
@@ -312,8 +378,25 @@ export async function rejectOffer(
     throw new Error(`Offer is not active (status: ${offer.status})`)
   }
 
-  await refundOfferEscrow(offerId, config)
-  updateOfferStatus(offerId, 'rejected')
+  // Authorization: only the current holder of the NFT may reject offers on it.
+  // Verify on-chain that the caller's wallet holds the mint (amount >= 1).
+  const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+    owner.publicKey,
+    { mint: offer.mint }
+  )
+  const holdsNft = tokenAccounts.value.some(({ account }) => {
+    const data = account.data
+    if (Buffer.isBuffer(data)) return false
+    const amount = (data as { parsed?: { info?: { tokenAmount?: { amount?: string } } } })
+      .parsed?.info?.tokenAmount?.amount
+    return typeof amount === 'string' && BigInt(amount) >= 1n
+  })
+  if (!holdsNft) {
+    throw new Error('Only the current holder of the NFT can reject offers on it')
+  }
+
+  await refundOfferEscrow(offerId, config, storePath)
+  updateOfferStatus(offerId, 'rejected', storePath)
 }
 
 /**

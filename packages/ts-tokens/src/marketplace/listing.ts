@@ -39,13 +39,23 @@ import { getRoyaltyInfo, buildRoyaltyInstructions } from './royalties'
 /**
  * List an NFT for direct sale using the delegate pattern
  *
+ * ⚠️ TRUST MODEL WARNING: a fresh delegate keypair is approved on the seller's
+ * NFT token account, and its secret key is stored base64-encoded in the local
+ * state file (~/.ts-tokens/marketplace-state.json). ANYONE who can read that
+ * file can transfer the listed NFT out of the seller's token account. Keep the
+ * file mode-0600, never share or commit it, and treat this machine as a
+ * trusted operator.
+ *
  * 1. Generates a delegate keypair, stored in state
  * 2. Builds tx: createApproveInstruction(sellerATA, delegate, seller, 1)
- * 3. Saves listing record with status 'active'
+ * 3. Saves listing record with status 'active' — only after the approve
+ *    transaction confirms, so no listing points at a delegate that was never
+ *    approved on-chain
  */
 export async function listNFT(
   options: CreateListingOptions,
-  config: TokenConfig
+  config: TokenConfig,
+  storePath?: string,
 ): Promise<LocalListing> {
   const connection = createConnection(config)
   const seller = loadWallet(config)
@@ -88,6 +98,14 @@ export async function listNFT(
   transaction.partialSign(seller)
 
   const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    // Never persist the delegate secret or the listing: without the on-chain
+    // approval the listing would be unbuyable, and the delegate key must not
+    // be retained for an approval that did not happen.
+    throw new Error(
+      `Failed to approve listing delegate: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 
   // Create listing record
   const listing: LocalListing = {
@@ -106,7 +124,7 @@ export async function listNFT(
 
   // Store with delegate secret
   const delegateSecret = Buffer.from(delegateKeypair.secretKey).toString('base64')
-  saveListing(listing, delegateSecret)
+  saveListing(listing, delegateSecret, storePath)
 
   return listing
 }
@@ -116,16 +134,18 @@ export async function listNFT(
  *
  * 1. Loads listing from state
  * 2. Builds tx: createRevokeInstruction(sellerATA, seller)
- * 3. Updates listing status to 'cancelled'
+ * 3. Updates listing status to 'cancelled' — only after the revoke confirms,
+ *    so a 'cancelled' listing never retains a live on-chain delegate
  */
 export async function delistNFT(
   mintAddress: PublicKey,
-  config: TokenConfig
+  config: TokenConfig,
+  storePath?: string,
 ): Promise<void> {
   const connection = createConnection(config)
   const seller = loadWallet(config)
 
-  const listing = getListingByMint(mintAddress.toBase58())
+  const listing = getListingByMint(mintAddress.toBase58(), storePath)
   if (!listing) {
     throw new Error(`No active listing found for mint ${mintAddress.toBase58()}`)
   }
@@ -150,9 +170,14 @@ export async function delistNFT(
   )
   transaction.partialSign(seller)
 
-  await sendAndConfirmTransaction(connection, transaction)
+  const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(
+      `Failed to revoke listing delegate: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 
-  updateListingStatus(listing.id, 'cancelled')
+  updateListingStatus(listing.id, 'cancelled', storePath)
 }
 
 /**
@@ -168,12 +193,13 @@ export async function delistNFT(
  */
 export async function buyListedNFT(
   mintAddress: PublicKey,
-  config: TokenConfig
+  config: TokenConfig,
+  storePath?: string,
 ): Promise<{ signature: string; listing: LocalListing }> {
   const connection = createConnection(config)
   const buyer = loadWallet(config)
 
-  const listing = getListingByMint(mintAddress.toBase58())
+  const listing = getListingByMint(mintAddress.toBase58(), storePath)
   if (!listing) {
     throw new Error(`No active listing found for mint ${mintAddress.toBase58()}`)
   }
@@ -184,11 +210,11 @@ export async function buyListedNFT(
 
   // Check expiry
   if (listing.expiry && listing.expiry < Date.now()) {
-    updateListingStatus(listing.id, 'cancelled')
+    updateListingStatus(listing.id, 'cancelled', storePath)
     throw new Error('Listing has expired')
   }
 
-  const delegateKeypair = getListingDelegateKeypair(listing.id)
+  const delegateKeypair = getListingDelegateKeypair(listing.id, storePath)
   if (!delegateKeypair) {
     throw new Error('Delegate keypair not found in state — listing may be corrupted')
   }
@@ -222,6 +248,14 @@ export async function buyListedNFT(
     listing.price,
     royaltyInfo
   )
+  // Defensive: royalties must never exceed the sale price. calculateRoyalties
+  // validates and caps, but never build settlement instructions that would pay
+  // creators more than the buyer spends.
+  if (totalRoyalty > listing.price) {
+    throw new Error(
+      `Computed royalty (${totalRoyalty}) exceeds sale price (${listing.price}) — aborting settlement`
+    )
+  }
   instructions.push(...royaltyIxs)
 
   // SOL transfer: buyer -> seller (price - royalty)
@@ -259,8 +293,13 @@ export async function buyListedNFT(
   transaction.partialSign(delegateKeypair)
 
   const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(
+      `Failed to buy listed NFT: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 
-  updateListingStatus(listing.id, 'sold')
+  updateListingStatus(listing.id, 'sold', storePath)
 
   return { signature: result.signature, listing }
 }

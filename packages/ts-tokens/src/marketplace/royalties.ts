@@ -51,9 +51,36 @@ export function getMetadataAddress(mint: PublicKey): PublicKey {
  * Secondary sale: totalRoyalty = salePrice * sellerFeeBasisPoints / 10000
  * Primary sale: 100% of proceeds distributed to creators by share
  * Each creator gets: totalRoyalty * share / 100
+ *
+ * Validates the inputs because sellerFeeBasisPoints and creator shares come
+ * from NFT metadata that anyone can write: a malicious NFT advertising e.g.
+ * 20000 bps would make a buyer pay 2x the sale price. Throws on
+ * sellerFeeBasisPoints > 10000 (100%) or creator shares summing above 100,
+ * and caps totalRoyalty at salePrice as a final invariant.
  */
 export function calculateRoyalties(options: RoyaltyCalculationOptions): RoyaltyDistributionResult {
   const { salePrice, sellerFeeBasisPoints, creators, isPrimarySale = false } = options
+
+  if (
+    !Number.isFinite(sellerFeeBasisPoints) ||
+    sellerFeeBasisPoints < 0 ||
+    sellerFeeBasisPoints > 10000
+  ) {
+    throw new Error(
+      `Invalid sellerFeeBasisPoints ${sellerFeeBasisPoints}: must be between 0 and ` +
+      '10000 (100%). Refusing to compute royalties — malformed or malicious NFT ' +
+      'metadata could otherwise overcharge the buyer.'
+    )
+  }
+
+  const totalShare = creators.reduce((sum, creator) => sum + creator.share, 0)
+  if (totalShare > 100) {
+    throw new Error(
+      `Creator shares sum to ${totalShare} (maximum 100). Refusing to compute ` +
+      'royalties — malformed or malicious NFT metadata could otherwise overcharge ' +
+      'the buyer.'
+    )
+  }
 
   if (salePrice <= 0n) {
     return {
@@ -71,6 +98,13 @@ export function calculateRoyalties(options: RoyaltyCalculationOptions): RoyaltyD
     totalRoyalty = salePrice
   } else {
     totalRoyalty = (salePrice * BigInt(sellerFeeBasisPoints)) / 10000n
+  }
+
+  // Invariant: royalties can never exceed the sale price. With the validation
+  // above this is unreachable, but keep the cap so a future code path can
+  // never pay out more than the buyer spends.
+  if (totalRoyalty > salePrice) {
+    totalRoyalty = salePrice
   }
 
   const payments: RoyaltyPayment[] = creators.map(creator => {

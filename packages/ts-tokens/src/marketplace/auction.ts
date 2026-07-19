@@ -40,10 +40,24 @@ import { createEscrow } from './escrow'
 import { getRoyaltyInfo, buildRoyaltyInstructions } from './royalties'
 
 /**
+ * Default settlement grace period for English auctions: 24 hours after
+ * `endTime`. During the grace period only the winning bidder can settle (their
+ * wallet pays the winning bid). After it, the seller may cancel the auction
+ * even with bids present, so a non-settling top bidder cannot lock the
+ * seller's NFT forever. Configurable per auction via
+ * `CreateAuctionOptions.settleGracePeriod`.
+ */
+export const DEFAULT_SETTLE_GRACE_PERIOD_MS = 86_400_000
+
+/**
  * Create an auction
  *
  * 1. Deposits NFT into escrow (reuses createEscrow)
  * 2. Creates auction record with type, times, pricing
+ *
+ * English auctions accept `options.settleGracePeriod` (ms, default 24h): the
+ * window after `endTime` in which only the winner can settle before the seller
+ * may cancel despite bids.
  */
 export async function createAuction(
   options: CreateAuctionOptions,
@@ -74,6 +88,12 @@ export async function createAuction(
     throw new Error('Only SOL-denominated auctions are supported')
   }
 
+  if (options.settleGracePeriod != null) {
+    if (!Number.isFinite(options.settleGracePeriod) || options.settleGracePeriod < 0) {
+      throw new Error('settleGracePeriod must be >= 0 milliseconds')
+    }
+  }
+
   // Deposit NFT into escrow
   const escrow = await createEscrow(
     {
@@ -98,6 +118,7 @@ export async function createAuction(
     bids: [],
     startTime: now,
     endTime: now + options.duration,
+    settleGracePeriod: options.settleGracePeriod,
     currency: options.currency ?? 'SOL',
     escrowId: escrow.id,
     createdAt: now,
@@ -263,6 +284,14 @@ export async function buyDutchAuction(
     currentPrice,
     royaltyInfo
   )
+  // Defensive: royalties must never exceed the sale price. calculateRoyalties
+  // validates and caps, but never build settlement instructions that would pay
+  // creators more than the buyer spends.
+  if (totalRoyalty > currentPrice) {
+    throw new Error(
+      `Computed royalty (${totalRoyalty}) exceeds sale price (${currentPrice}) — aborting settlement`
+    )
+  }
   instructions.push(...royaltyIxs)
 
   // SOL to seller
@@ -311,6 +340,11 @@ export async function buyDutchAuction(
   transaction.partialSign(escrowKeypair)
 
   const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(
+      `Failed to buy Dutch auction: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 
   updateAuctionSettle(auctionId, result.signature)
 
@@ -418,6 +452,14 @@ export async function settleAuction(
     auction.highestBid,
     royaltyInfo
   )
+  // Defensive: royalties must never exceed the sale price. calculateRoyalties
+  // validates and caps, but never build settlement instructions that would pay
+  // creators more than the buyer spends.
+  if (totalRoyalty > auction.highestBid) {
+    throw new Error(
+      `Computed royalty (${totalRoyalty}) exceeds sale price (${auction.highestBid}) — aborting settlement`
+    )
+  }
   instructions.push(...royaltyIxs)
 
   // SOL to seller
@@ -466,6 +508,11 @@ export async function settleAuction(
   transaction.partialSign(escrowKeypair)
 
   const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(
+      `Failed to settle auction: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 
   updateAuctionSettle(auctionId, result.signature)
 
@@ -477,15 +524,27 @@ export async function settleAuction(
 
 /**
  * Cancel an auction — return NFT from escrow to seller
+ *
+ * English auctions with bids cannot be cancelled during the settlement grace
+ * period (`endTime + settleGracePeriod`, default 24h — see
+ * DEFAULT_SETTLE_GRACE_PERIOD_MS): the winner has exclusive rights to settle
+ * in that window. After the grace period expires without settlement, the
+ * SELLER may cancel despite the bids, so a non-settling (griefer) top bidder
+ * cannot lock the NFT forever. Dutch auctions and bid-less English auctions
+ * can be cancelled at any time.
+ *
+ * The status only flips to 'cancelled' after the NFT-return transaction
+ * confirms.
  */
 export async function cancelAuction(
   auctionId: string,
-  config: TokenConfig
+  config: TokenConfig,
+  storePath?: string,
 ): Promise<void> {
   const connection = createConnection(config)
   const seller = loadWallet(config)
 
-  const auction = getAuction(auctionId)
+  const auction = getAuction(auctionId, storePath)
   if (!auction) {
     throw new Error(`Auction not found: ${auctionId}`)
   }
@@ -499,19 +558,29 @@ export async function cancelAuction(
   }
 
   if (auction.bids.length > 0 && auction.type === 'english') {
-    throw new Error('Cannot cancel an English auction with active bids')
+    // Only the winner can settle, so a non-settling top bidder could otherwise
+    // lock the seller's NFT forever. After endTime + the settlement grace
+    // period the seller may reclaim the NFT despite the bids.
+    const gracePeriod = auction.settleGracePeriod ?? DEFAULT_SETTLE_GRACE_PERIOD_MS
+    const graceEndsAt = auction.endTime + gracePeriod
+    if (Date.now() <= graceEndsAt) {
+      throw new Error(
+        'Cannot cancel an English auction with active bids until the settlement ' +
+        `grace period has passed (grace ends ${new Date(graceEndsAt).toISOString()})`
+      )
+    }
   }
 
   if (!auction.escrowId) {
     throw new Error('Auction has no escrow')
   }
 
-  const escrow = getEscrow(auction.escrowId)
+  const escrow = getEscrow(auction.escrowId, storePath)
   if (!escrow) {
     throw new Error('Escrow not found')
   }
 
-  const escrowKeypair = getEscrowKeypair(auction.escrowId)
+  const escrowKeypair = getEscrowKeypair(auction.escrowId, storePath)
   if (!escrowKeypair) {
     throw new Error('Escrow keypair not found')
   }
@@ -553,9 +622,14 @@ export async function cancelAuction(
   transaction.partialSign(seller)
   transaction.partialSign(escrowKeypair)
 
-  await sendAndConfirmTransaction(connection, transaction)
+  const result = await sendAndConfirmTransaction(connection, transaction)
+  if (!result.confirmed) {
+    throw new Error(
+      `Failed to cancel auction: ${result.error ?? 'transaction not confirmed'}`
+    )
+  }
 
-  updateAuctionStatus(auctionId, 'cancelled')
+  updateAuctionStatus(auctionId, 'cancelled', storePath)
 }
 
 /**

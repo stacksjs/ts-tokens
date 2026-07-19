@@ -17,7 +17,7 @@ export { listNFT, delistNFT, buyListedNFT, getActiveListings, getListingForMint 
 export { createEscrow, settleEscrow, cancelEscrow, getEscrowInfo } from './escrow'
 
 // P2P Trading — Offers
-export { makeOffer, cancelOffer, acceptOffer, rejectOffer, getOffersForNFT } from './offers'
+export { makeOffer, cancelOffer, acceptOffer, rejectOffer, refundOfferEscrow, getOffersForNFT } from './offers'
 
 // P2P Trading — Auctions
 export {
@@ -30,6 +30,7 @@ export {
   getAuctionInfo,
   getActiveAuctions,
   getEndedAuctions,
+  DEFAULT_SETTLE_GRACE_PERIOD_MS,
 } from './auction'
 
 // Royalties
@@ -44,7 +45,8 @@ export {
 } from './royalties'
 
 // State Store
-export { loadState, cleanupExpired } from './store'
+export { loadState, cleanupExpired, recoverExpired } from './store'
+export type { RecoveryFailure, RecoverExpiredSummary } from './store'
 
 // OpenSea
 export * as opensea from './opensea'
