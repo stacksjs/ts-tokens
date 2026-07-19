@@ -399,7 +399,7 @@ describe('tokenActions', () => {
     expect(action.data.readBigUInt64LE(1)).toBe(500n)
   })
 
-  test('transferAuthority (SetAuthority) encodes [6, 0, 1] + newAuthority bytes', () => {
+  test('transferAuthority (SetAuthority) encodes [6, 0, 1,0,0,0] + newAuthority bytes', () => {
     const mint = Keypair.generate().publicKey
     const currentAuthority = Keypair.generate().publicKey
     const newAuthority = Keypair.generate().publicKey
@@ -410,11 +410,13 @@ describe('tokenActions', () => {
     expect(action.accounts[0].isWritable).toBe(true)
     expect(action.accounts[1].pubkey.equals(currentAuthority)).toBe(true)
     expect(action.accounts[1].isSigner).toBe(true)
-    expect(action.data.length).toBe(3 + 32)
+    // SetAuthority (6), authorityType 0 (MintTokens), COption tag u32 LE (1 = Some),
+    // then the 32-byte pubkey. The 1-byte flag form is rejected by unpack_coption_key.
+    expect(action.data.length).toBe(6 + 32)
     expect(action.data[0]).toBe(6)
     expect(action.data[1]).toBe(0)
-    expect(action.data[2]).toBe(1)
-    expect(Buffer.from(action.data.subarray(3)).equals(newAuthority.toBuffer())).toBe(true)
+    expect([...action.data.subarray(2, 6)]).toEqual([1, 0, 0, 0])
+    expect(Buffer.from(action.data.subarray(6)).equals(newAuthority.toBuffer())).toBe(true)
   })
 })
 

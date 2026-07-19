@@ -143,11 +143,11 @@ export async function getCandyMachineItems(
   const itemsAvailable = Number(cm.data.itemsAvailable)
   const lineSize = settings.nameLength + settings.uriLength
 
-  // On-chain layout after the fixed 850-byte hidden section:
+  // On-chain layout after the fixed 816-byte hidden section:
   // u32 config-line count, then itemsAvailable * lineSize config lines,
   // then the taken bitmask (floor(items/8) + 1 bytes, MSB-first),
   // then itemsAvailable * 4 bytes of mint indices.
-  const HIDDEN_SECTION = 850
+  const HIDDEN_SECTION = 816
   const configLinesStart = HIDDEN_SECTION + 4
 
   const items: CandyMachineItem[] = []

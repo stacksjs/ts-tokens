@@ -26,14 +26,17 @@ export function initializeMint2(options: {
     { pubkey: options.mint, isSigner: false, isWritable: true },
   ]
 
-  const data = Buffer.alloc(67)
+  // SPL `unpack_coption_key` only accepts a 4-byte u32 LE tag + 32-byte key
+  // (Some) or 0 bytes (None) — a 1-byte flag layout is rejected on-chain.
+  const data = options.freezeAuthority ? Buffer.alloc(70) : Buffer.alloc(34)
   data[0] = 20 // InitializeMint2 instruction
   data[1] = options.decimals
   options.mintAuthority.toBuffer().copy(data, 2)
-  data[34] = options.freezeAuthority ? 1 : 0
   if (options.freezeAuthority) {
-    options.freezeAuthority.toBuffer().copy(data, 35)
+    data.writeUInt32LE(1, 34) // COption::Some tag (u32 LE)
+    options.freezeAuthority.toBuffer().copy(data, 38)
   }
+  // freezeAuthority === null => 34-byte instruction, no COption tail (None).
 
   return new TransactionInstruction({
     keys,
@@ -57,23 +60,24 @@ export function initializeTransferFeeConfig(options: {
   ]
 
   // TransferFeeExtension=26, sub-instruction InitializeTransferFeeConfig=0.
-  // Layout (78 bytes): [26, 0, authOpt(1), auth(32), wdOpt(1), wd(32), bps(u16), maxFee(u64)]
-  const data = Buffer.alloc(78)
+  // Both authorities are OptionalNonZeroPubkey = raw 32 bytes (all-zeros =
+  // None), NO flag byte — the same convention used below for transfer-hook,
+  // metadata-pointer, and confidential-transfer.
+  // Layout (76 bytes): [26, 0, auth(32), withdrawAuth(32), bps(u16 @66), maxFee(u64 @68)]
+  const data = Buffer.alloc(76)
   data[0] = 26
   data[1] = 0
 
-  data[2] = options.transferFeeConfigAuthority ? 1 : 0
   if (options.transferFeeConfigAuthority) {
-    options.transferFeeConfigAuthority.toBuffer().copy(data, 3)
+    options.transferFeeConfigAuthority.toBuffer().copy(data, 2)
   }
 
-  data[35] = options.withdrawWithheldAuthority ? 1 : 0
   if (options.withdrawWithheldAuthority) {
-    options.withdrawWithheldAuthority.toBuffer().copy(data, 36)
+    options.withdrawWithheldAuthority.toBuffer().copy(data, 34)
   }
 
-  data.writeUInt16LE(options.transferFeeBasisPoints, 68)
-  data.writeBigUInt64LE(options.maximumFee, 70)
+  data.writeUInt16LE(options.transferFeeBasisPoints, 66)
+  data.writeBigUInt64LE(options.maximumFee, 68)
 
   return new TransactionInstruction({
     keys,
@@ -208,12 +212,14 @@ export function initializeMintCloseAuthority(options: {
     { pubkey: options.mint, isSigner: false, isWritable: true },
   ]
 
-  const data = Buffer.alloc(34)
+  // InitializeMintCloseAuthority=25 takes an OptionalNonZeroPubkey: raw 32
+  // bytes, all-zeros = None, NO flag byte.
+  // Layout (33 bytes): [25, closeAuthority(32 raw)]
+  const data = Buffer.alloc(33)
   data[0] = 25 // InitializeMintCloseAuthority instruction
 
-  data[1] = options.closeAuthority ? 1 : 0
   if (options.closeAuthority) {
-    options.closeAuthority.toBuffer().copy(data, 2)
+    options.closeAuthority.toBuffer().copy(data, 1)
   }
 
   return new TransactionInstruction({

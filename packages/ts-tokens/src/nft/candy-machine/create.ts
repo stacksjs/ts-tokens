@@ -12,6 +12,7 @@ import {
   SystemProgram
 } from '@solana/web3.js'
 import * as fs from 'node:fs'
+import { getAssociatedTokenAddress } from '@solana/spl-token'
 import type { TokenConfig, TransactionResult, TransactionOptions } from '../../types'
 import { sendAndConfirmTransaction, buildTransaction } from '../../drivers/solana/transaction'
 import { loadWallet } from '../../drivers/solana/wallet'
@@ -21,11 +22,13 @@ import {
   addConfigLines as addConfigLinesInstruction,
   mintFromCandyMachine as mintFromCandyMachineInstruction,
 } from '../../programs/candy-machine/instructions'
-import { findCandyMachineAuthorityPda } from '../../programs/candy-machine/pda'
+import {
+  findCandyMachineAuthorityPda,
+  findCollectionDelegateRecordPda,
+} from '../../programs/candy-machine/pda'
 import {
   findMetadataPda,
   findMasterEditionPda,
-  findCollectionAuthorityPda,
 } from '../../programs/token-metadata/pda'
 import type { CandyMachineData } from '../../programs/candy-machine/types'
 import { addGuards } from './guards'
@@ -270,7 +273,7 @@ function calculateCandyMachineSpace(config: CandyMachineConfig): number {
   // lengths for every header field (symbol, creators, config-line prefixes),
   // regardless of the actual string lengths — see
   // CandyMachineData::get_space_for_candy in mpl-candy-machine.
-  const HIDDEN_SECTION = 850
+  const HIDDEN_SECTION = 816
 
   // Hidden-settings drops store no config lines on-chain
   if (config.hiddenSettings) {
@@ -353,9 +356,18 @@ export async function mintFromCandyMachine(
   const [nftMasterEdition] = findMasterEditionPda(mintKeypair.publicKey)
   const [collectionMetadata] = findMetadataPda(cm.collectionMint)
   const [collectionMasterEdition] = findMasterEditionPda(cm.collectionMint)
-  const [collectionAuthorityRecord] = findCollectionAuthorityPda(
+  // mint_v2 uses the token-metadata *collection delegate* record (V2 seeds),
+  // not the legacy collection authority record.
+  const [collectionDelegateRecord] = findCollectionDelegateRecordPda(
     cm.collectionMint,
+    cm.authority,
     authorityPda
+  )
+
+  // The minter's ATA receives the NFT.
+  const nftTokenAccount = await getAssociatedTokenAddress(
+    mintKeypair.publicKey,
+    payer.publicKey
   )
 
   const instruction = mintFromCandyMachineInstruction({
@@ -367,7 +379,8 @@ export async function mintFromCandyMachine(
     nftMintAuthority: payer.publicKey,
     nftMetadata,
     nftMasterEdition,
-    collectionAuthorityRecord,
+    tokenAccount: nftTokenAccount,
+    collectionDelegateRecord,
     collectionMint: cm.collectionMint,
     collectionMetadata,
     collectionMasterEdition,

@@ -312,7 +312,8 @@ export const tokenActions: TokenActions = {
       { pubkey: currentAuthority, isSigner: true, isWritable: false },
     ],
     // SPL Token SetAuthority (6): [instruction, authorityType (0=MintTokens),
-    // newAuthority option (1=Some)] followed by the 32-byte new authority.
-    data: Buffer.concat([Buffer.from([6, 0, 1]), newAuthority.toBuffer()]),
+    // COption tag (u32 LE: 1,0,0,0 = Some)] followed by the 32-byte new
+    // authority. unpack_coption_key rejects the 1-byte flag form.
+    data: Buffer.concat([Buffer.from([6, 0, 1, 0, 0, 0]), newAuthority.toBuffer()]),
   }),
 }

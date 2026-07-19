@@ -273,8 +273,10 @@ export async function printEdition(
       { pubkey: masterEdition, isSigner: false, isWritable: true },
       { pubkey: editionMint, isSigner: false, isWritable: true },
       { pubkey: editionMarker, isSigner: false, isWritable: true },
+      { pubkey: payer.publicKey, isSigner: true, isWritable: true }, // new mint authority
+      // Payer funds the edition-marker PDA — must be writable (see the raw
+      // builder in src/programs/token-metadata/instructions.ts).
       { pubkey: payer.publicKey, isSigner: true, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: false },
       { pubkey: payer.publicKey, isSigner: true, isWritable: false },
       { pubkey: masterAta, isSigner: false, isWritable: false },
       { pubkey: payer.publicKey, isSigner: false, isWritable: false },

@@ -44,6 +44,10 @@ export enum MplCoreInstruction {
 
 /**
  * Plugin type discriminators (on-chain values)
+ *
+ * These are the `Plugin` enum ordinals from mpl-core. AppData is NOT a Plugin
+ * variant — it is an external plugin adapter (ExternalPluginAdapter) with its
+ * own adapter-type enum — so it must not appear here.
  */
 export enum PluginTypeDiscriminator {
   Royalties = 0,
@@ -61,17 +65,20 @@ export enum PluginTypeDiscriminator {
   ImmutableMetadata = 12,
   VerifiedCreators = 13,
   Autograph = 14,
-  AppData = 15,
 }
 
 /**
  * Authority type discriminators
+ *
+ * On-chain mpl-core `PluginAuthority` ordinals: None=0, Owner=1,
+ * UpdateAuthority=2, Address=3 (Address carries a 32-byte pubkey payload,
+ * appended by the serializer).
  */
 export enum AuthorityType {
-  Owner = 0,
-  UpdateAuthority = 1,
-  Address = 2,
-  None = 3,
+  None = 0,
+  Owner = 1,
+  UpdateAuthority = 2,
+  Address = 3,
 }
 
 /**
@@ -102,10 +109,16 @@ export enum CoreAccountType {
   PluginHeaderV1 = 3,
   PluginRegistryV1 = 4,
   Collection = 5,
+  GroupV1 = 6,
 }
 
 /**
- * Map plugin type string to discriminator
+ * Map plugin type string to on-chain Plugin discriminator.
+ *
+ * Throws a descriptive Error for unknown plugin types and for external plugin
+ * adapters (e.g. AppData), which are NOT Plugin variants and cannot be
+ * initialized through the Plugin instruction path. Returning a sentinel like
+ * -1 would explode later as an opaque RangeError inside writeUInt8.
  */
 export function getPluginTypeDiscriminator(pluginType: string): number {
   const map: Record<string, number> = {
@@ -124,9 +137,16 @@ export function getPluginTypeDiscriminator(pluginType: string): number {
     ImmutableMetadata: PluginTypeDiscriminator.ImmutableMetadata,
     VerifiedCreators: PluginTypeDiscriminator.VerifiedCreators,
     Autograph: PluginTypeDiscriminator.Autograph,
-    AppData: PluginTypeDiscriminator.AppData,
   }
-  return map[pluginType] ?? -1
+  const discriminator = map[pluginType]
+  if (discriminator === undefined) {
+    throw new Error(
+      `Unknown plugin type "${pluginType}". It is not an mpl-core Plugin variant ` +
+      `(external plugin adapters such as AppData use the ExternalPluginAdapter ` +
+      `path, which is not supported by this builder).`
+    )
+  }
+  return discriminator
 }
 
 /**

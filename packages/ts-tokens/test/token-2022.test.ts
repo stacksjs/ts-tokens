@@ -86,12 +86,14 @@ describe('Extension Size Calculations', () => {
   })
 
   test('getMintSize computes base size correctly', () => {
-    const BASE_SIZE = 82 + 1 // base mint + account type
+    // Extended mints are padded to the legacy account size (165) with the
+    // account-type byte at offset 165 — NOT sized from the 82-byte base mint.
+    const BASE_SIZE = 165 + 1 // padded account size + account type
     expect(getMintSize([])).toBe(BASE_SIZE)
   })
 
   test('getMintSize includes type + length headers for each extension', () => {
-    const BASE_SIZE = 82 + 1
+    const BASE_SIZE = 165 + 1
     const TYPE_SIZE = 2
     const LENGTH_SIZE = 2
 
@@ -101,7 +103,7 @@ describe('Extension Size Calculations', () => {
   })
 
   test('getMintSize handles multiple extensions', () => {
-    const BASE_SIZE = 82 + 1
+    const BASE_SIZE = 165 + 1
     const HEADER = 2 + 2 // type + length
 
     const extensions = [
@@ -514,7 +516,7 @@ describe('Instruction Builders', () => {
   })
 
   // Existing instruction builders - verify they still work
-  test('initializeMint2 creates correct instruction', () => {
+  test('initializeMint2 creates correct 70-byte instruction with a freeze authority', () => {
     const freezeAuth = Keypair.generate().publicKey
     const ix = initializeMint2({
       mint,
@@ -524,12 +526,36 @@ describe('Instruction Builders', () => {
     })
 
     expect(ix.programId.toBase58()).toBe(TOKEN_2022_PROGRAM_ID.toBase58())
-    expect(ix.data[0]).toBe(20) // InitializeMint2
-    expect(ix.data[1]).toBe(9)  // decimals
-    expect(ix.data[34]).toBe(1) // has freeze authority
+    // Byte-exact layout: [20, decimals, mintAuthority(32), COption tag u32 LE (1), freezeAuthority(32)]
+    const expected = Buffer.alloc(70)
+    expected[0] = 20
+    expected[1] = 9
+    authority.toBuffer().copy(expected, 2)
+    expected.writeUInt32LE(1, 34)
+    freezeAuth.toBuffer().copy(expected, 38)
+    expect(ix.data).toHaveLength(70)
+    expect(Buffer.from(ix.data).equals(expected)).toBe(true)
   })
 
-  test('initializeTransferFeeConfig creates correct instruction', () => {
+  test('initializeMint2 creates correct 34-byte instruction without a freeze authority', () => {
+    const ix = initializeMint2({
+      mint,
+      decimals: 6,
+      mintAuthority: authority,
+      freezeAuthority: null,
+    })
+
+    // SPL unpack_coption_key reads 0 remaining bytes as COption::None — the
+    // instruction must carry NO tail after the mint authority.
+    const expected = Buffer.alloc(34)
+    expected[0] = 20
+    expected[1] = 6
+    authority.toBuffer().copy(expected, 2)
+    expect(ix.data).toHaveLength(34)
+    expect(Buffer.from(ix.data).equals(expected)).toBe(true)
+  })
+
+  test('initializeTransferFeeConfig creates correct 76-byte instruction', () => {
     const ix = initializeTransferFeeConfig({
       mint,
       transferFeeConfigAuthority: authority,
@@ -539,12 +565,52 @@ describe('Instruction Builders', () => {
     })
 
     expect(ix.programId.toBase58()).toBe(TOKEN_2022_PROGRAM_ID.toBase58())
-    expect(ix.data[0]).toBe(26) // TransferFeeExtension opcode
-    expect(ix.data[1]).toBe(0)  // sub-instruction InitializeTransferFeeConfig
-    // 78-byte layout: [26,0,authOpt,auth(32),wdOpt,wd(32),bps@68,maxFee@70]
-    expect(ix.data).toHaveLength(78)
-    expect(ix.data.readUInt16LE(68)).toBe(500)
-    expect(ix.data.readBigUInt64LE(70)).toBe(1000000n)
+    // Byte-exact layout (OptionalNonZeroPubkey = raw 32 bytes, no flag byte):
+    // [26, 0, auth(32 @2), withdrawAuth(32 @34), bps u16 LE @66, maxFee u64 LE @68]
+    const expected = Buffer.alloc(76)
+    expected[0] = 26
+    expected[1] = 0
+    authority.toBuffer().copy(expected, 2)
+    authority.toBuffer().copy(expected, 34)
+    expected.writeUInt16LE(500, 66)
+    expected.writeBigUInt64LE(1000000n, 68)
+    expect(ix.data).toHaveLength(76)
+    expect(Buffer.from(ix.data).equals(expected)).toBe(true)
+  })
+
+  test('initializeTransferFeeConfig zero-fills absent authorities', () => {
+    const ix = initializeTransferFeeConfig({
+      mint,
+      transferFeeConfigAuthority: null,
+      withdrawWithheldAuthority: null,
+      transferFeeBasisPoints: 100,
+      maximumFee: 42n,
+    })
+
+    expect(ix.data).toHaveLength(76)
+    expect(ix.data.subarray(2, 34).every(b => b === 0)).toBe(true)
+    expect(ix.data.subarray(34, 66).every(b => b === 0)).toBe(true)
+    expect(ix.data.readUInt16LE(66)).toBe(100)
+    expect(ix.data.readBigUInt64LE(68)).toBe(42n)
+  })
+
+  test('initializeMintCloseAuthority creates correct 33-byte instruction', () => {
+    const closeAuth = Keypair.generate().publicKey
+    const ix = initializeMintCloseAuthority({ mint, closeAuthority: closeAuth })
+
+    // Byte-exact layout: [25, closeAuthority(32 raw)]
+    const expected = Buffer.alloc(33)
+    expected[0] = 25
+    closeAuth.toBuffer().copy(expected, 1)
+    expect(ix.data).toHaveLength(33)
+    expect(Buffer.from(ix.data).equals(expected)).toBe(true)
+  })
+
+  test('initializeMintCloseAuthority zero-fills a null close authority', () => {
+    const ix = initializeMintCloseAuthority({ mint, closeAuthority: null })
+    expect(ix.data).toHaveLength(33)
+    expect(ix.data[0]).toBe(25)
+    expect(ix.data.subarray(1).every(b => b === 0)).toBe(true)
   })
 
   test('setTransferFee creates correct instruction', () => {

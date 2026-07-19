@@ -34,14 +34,14 @@ export interface TokenGroupMember {
 
 // SPL Token Group interface discriminators —
 // sha256("spl_token_group_interface:<name>")[0..8]
-const INITIALIZE_GROUP = Buffer.from([121, 113, 108, 39, 54, 51, 0, 4])
+const INITIALIZE_GROUP = Buffer.from([88, 13, 213, 85, 206, 182, 83, 46])
 const INITIALIZE_MEMBER = Buffer.from([152, 32, 222, 176, 223, 237, 116, 134])
 const UPDATE_GROUP_MAX_SIZE = Buffer.from([108, 37, 171, 143, 248, 30, 18, 110])
 
 /**
  * Create a token group instruction
  */
-function createInitializeGroupInstruction(
+export function createInitializeGroupInstruction(
   group: PublicKey,
   mint: PublicKey,
   mintAuthority: PublicKey,

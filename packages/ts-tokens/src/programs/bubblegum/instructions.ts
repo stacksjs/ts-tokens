@@ -236,10 +236,14 @@ export function burn(options: BurnOptions): TransactionInstruction {
  * voucher-based builder (with MetadataArgs serialization) is implemented.
  */
 export function decompressV1(_options: DecompressOptions): TransactionInstruction {
+  // DECOMPRESS_V1_DISCRIMINATOR is the real Anchor discriminator for
+  // `decompress_v1`; it is reserved here for the voucher-based builder
+  // described above so the implementation does not lose track of it.
   throw new Error(
     'decompressV1 is not implemented: Bubblegum decompression requires the ' +
     'redeem -> Voucher -> decompress_v1 flow with a MetadataArgs payload, not a ' +
-    'Merkle proof. The previous instruction shape could never succeed.'
+    'Merkle proof. The previous instruction shape could never succeed. ' +
+    `Reserved decompress_v1 discriminator: 0x${DECOMPRESS_V1_DISCRIMINATOR.toString('hex')}.`
   )
 }
 

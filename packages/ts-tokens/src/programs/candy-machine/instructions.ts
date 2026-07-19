@@ -9,7 +9,7 @@ import {
   SYSVAR_INSTRUCTIONS_PUBKEY,
   SYSVAR_SLOT_HASHES_PUBKEY,
 } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import type {
   InitializeCandyMachineOptions,
   AddConfigLinesOptions,
@@ -29,7 +29,7 @@ const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzj
 // Instruction discriminators (Anchor style: sha256('global:NAME')[0..8])
 const INITIALIZE_V2_DISCRIMINATOR = Buffer.from([67, 153, 175, 39, 218, 16, 38, 32])
 const ADD_CONFIG_LINES_DISCRIMINATOR = Buffer.from([223, 50, 224, 227, 151, 8, 115, 106])
-const MINT_DISCRIMINATOR = Buffer.from([51, 57, 225, 47, 182, 146, 137, 166])
+const MINT_V2_DISCRIMINATOR = Buffer.from([120, 121, 23, 146, 173, 110, 199, 205])
 const UPDATE_DISCRIMINATOR = Buffer.from([219, 200, 88, 176, 158, 63, 253, 127])
 const WITHDRAW_DISCRIMINATOR = Buffer.from([183, 18, 70, 156, 148, 109, 161, 34])
 const SET_AUTHORITY_DISCRIMINATOR = Buffer.from([133, 250, 37, 21, 110, 163, 26, 121])
@@ -132,7 +132,16 @@ export function addConfigLines(options: AddConfigLinesOptions): TransactionInstr
 }
 
 /**
- * Create a Mint instruction
+ * Create a Mint V2 instruction (`mint_v2`)
+ *
+ * This is the only mint instruction accepted by machines created with
+ * `initialize_v2` — the deprecated V1 `mint` instruction fails on-chain with
+ * InvalidAccountVersion against them.
+ *
+ * Account order matches the mpl-candy-machine `MintV2` struct. Optional
+ * accounts that are not provided carry the candy machine program id in their
+ * slot as the Anchor "None" marker; they must still be present because
+ * accounts follow them positionally.
  */
 export function mintFromCandyMachine(
   options: MintFromCandyMachineOptions
@@ -149,22 +158,81 @@ export function mintFromCandyMachine(
     { pubkey: options.nftMintAuthority, isSigner: true, isWritable: false },
     { pubkey: options.nftMetadata, isSigner: false, isWritable: true },
     { pubkey: options.nftMasterEdition, isSigner: false, isWritable: true },
-    { pubkey: options.collectionAuthorityRecord, isSigner: false, isWritable: false },
+    // Optional token account (program creates the ATA via CPI when absent).
+    {
+      pubkey: options.tokenAccount ?? CANDY_MACHINE_PROGRAM_ID,
+      isSigner: false,
+      isWritable: options.tokenAccount ? true : false,
+    },
+    // Optional token record (pNFTs only).
+    {
+      pubkey: options.tokenRecord ?? CANDY_MACHINE_PROGRAM_ID,
+      isSigner: false,
+      isWritable: options.tokenRecord ? true : false,
+    },
+    { pubkey: options.collectionDelegateRecord, isSigner: false, isWritable: false },
     { pubkey: options.collectionMint, isSigner: false, isWritable: false },
     { pubkey: options.collectionMetadata, isSigner: false, isWritable: true },
     { pubkey: options.collectionMasterEdition, isSigner: false, isWritable: false },
     { pubkey: options.collectionUpdateAuthority, isSigner: false, isWritable: false },
+    // Optional legacy collection authority record (legacy V1 collections only).
+    {
+      pubkey: options.collectionAuthorityRecord ?? CANDY_MACHINE_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    },
     { pubkey: TOKEN_METADATA_PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: ASSOCIATED_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    { pubkey: SYSVAR_INSTRUCTIONS_PUBKEY, isSigner: false, isWritable: false },
     { pubkey: SYSVAR_SLOT_HASHES_PUBKEY, isSigner: false, isWritable: false },
+    // Optional pNFT authorization-rules accounts; the program id marks "None".
+    {
+      pubkey: options.authorizationRulesProgram ?? CANDY_MACHINE_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    },
+    {
+      pubkey: options.authorizationRules ?? CANDY_MACHINE_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    },
   ]
+
+  const data = Buffer.concat([
+    MINT_V2_DISCRIMINATOR,
+    serializeMintV2Args(options.mintArgs, options.group),
+  ])
 
   return new TransactionInstruction({
     keys,
     programId: CANDY_MACHINE_PROGRAM_ID,
-    data: MINT_DISCRIMINATOR,
+    data,
   })
+}
+
+/**
+ * Serialize the mint_v2 instruction arguments:
+ * `mintArgs: Vec<u8>` (u32 length prefix + bytes) then an Option<String> label.
+ */
+function serializeMintV2Args(mintArgs?: Buffer, group?: string): Buffer {
+  const args = mintArgs ?? Buffer.alloc(0)
+
+  const lengthBuffer = Buffer.alloc(4)
+  lengthBuffer.writeUInt32LE(args.length)
+
+  let labelData: Buffer
+  if (group) {
+    const labelBuffer = Buffer.from(group)
+    const labelLengthBuffer = Buffer.alloc(4)
+    labelLengthBuffer.writeUInt32LE(labelBuffer.length)
+    labelData = Buffer.concat([Buffer.from([1]), labelLengthBuffer, labelBuffer])
+  } else {
+    labelData = Buffer.from([0]) // None
+  }
+
+  return Buffer.concat([lengthBuffer, args, labelData])
 }
 
 /**

@@ -73,14 +73,19 @@ export function getExtensionSize(type: ExtensionType): number {
 
 /**
  * Calculate total mint size with extensions
+ *
+ * Mints with extensions are zero-padded out to the legacy ACCOUNT_SIZE (165)
+ * — the account-type byte sits at offset 165 and TLV entries start at 166,
+ * which is exactly what parseExtensions below assumes. Sizing from the 82-byte
+ * base mint would under-allocate every extended mint by 83 bytes.
  */
 export function getMintSize(extensions: ExtensionType[]): number {
-  const BASE_MINT_SIZE = 82
+  const ACCOUNT_SIZE = 165
   const ACCOUNT_TYPE_SIZE = 1
   const TYPE_SIZE = 2
   const LENGTH_SIZE = 2
 
-  let size = BASE_MINT_SIZE + ACCOUNT_TYPE_SIZE
+  let size = ACCOUNT_SIZE + ACCOUNT_TYPE_SIZE
 
   for (const ext of extensions) {
     size += TYPE_SIZE + LENGTH_SIZE + getExtensionSize(ext)

@@ -103,7 +103,9 @@ describe('initializeCandyMachine (initializeV2)', () => {
   })
 })
 
-describe('mintFromCandyMachine (core mint)', () => {
+describe('mintFromCandyMachine (mint_v2)', () => {
+  const nftTokenAccount = key()
+  const collectionDelegateRecord = key()
   const ix = mintFromCandyMachine({
     candyMachine: key(),
     mintAuthority: key(),
@@ -112,38 +114,93 @@ describe('mintFromCandyMachine (core mint)', () => {
     nftMintAuthority: key(),
     nftMetadata: key(),
     nftMasterEdition: key(),
-    collectionAuthorityRecord: key(),
+    tokenAccount: nftTokenAccount,
+    collectionDelegateRecord,
     collectionMint: key(),
     collectionMetadata: key(),
     collectionMasterEdition: key(),
     collectionUpdateAuthority: key(),
   })
 
-  test('uses the mint discriminator and no args', () => {
-    expect(ix.data).toEqual(anchorDiscriminator('mint'))
-    expect(ix.data.length).toBe(8)
+  test('uses the mint_v2 discriminator [120,121,23,146,173,110,199,205]', () => {
+    const expected = Buffer.from([120, 121, 23, 146, 173, 110, 199, 205])
+    expect(anchorDiscriminator('mint_v2')).toEqual(expected)
+    expect(ix.data.subarray(0, 8)).toEqual(expected)
   })
 
-  test('has the 17-account mint list in order', () => {
-    expect(ix.keys.length).toBe(17)
+  test('does NOT use the deprecated mint discriminator', () => {
+    expect(ix.data.subarray(0, 8)).not.toEqual(anchorDiscriminator('mint'))
+  })
 
-    // candyMachine (w)
+  test('serializes mintArgs (Vec<u8>) and a None label by default', () => {
+    // disc(8) + u32 mintArgs len(0) + None label(1) = 13 bytes
+    expect(ix.data.length).toBe(8 + 4 + 1)
+    expect(ix.data.readUInt32LE(8)).toBe(0)
+    expect(ix.data[12]).toBe(0)
+  })
+
+  test('serializes a Some(label) when a group is given', () => {
+    const grouped = mintFromCandyMachine({
+      candyMachine: key(),
+      mintAuthority: key(),
+      payer: key(),
+      nftMint: key(),
+      nftMintAuthority: key(),
+      nftMetadata: key(),
+      nftMasterEdition: key(),
+      collectionDelegateRecord: key(),
+      collectionMint: key(),
+      collectionMetadata: key(),
+      collectionMasterEdition: key(),
+      collectionUpdateAuthority: key(),
+      group: 'VIP',
+    })
+    // disc(8) + u32 mintArgs len(0) + Some(1) + u32 label len(4) + "VIP"(3)
+    expect(grouped.data.length).toBe(8 + 4 + 1 + 4 + 3)
+    expect(grouped.data[12]).toBe(1)
+    expect(grouped.data.readUInt32LE(13)).toBe(3)
+    expect(grouped.data.subarray(17).toString('utf8')).toBe('VIP')
+  })
+
+  test('has the 24-account MintV2 list in IDL order', () => {
+    // 24 accounts: 20 required + 4 optional (tokenRecord, collectionAuthorityRecord,
+    // authRulesProgram, authRules) carrying the program-id "None" placeholder.
+    expect(ix.keys.length).toBe(24)
+
+    // candyMachine (w), authorityPda (w), mintAuthority (s), payer (s,w)
     expect(ix.keys[0]).toMatchObject({ isSigner: false, isWritable: true })
-    // authorityPda (w)
     expect(ix.keys[1]).toMatchObject({ isSigner: false, isWritable: true })
-    // mintAuthority (s)
     expect(ix.keys[2]).toMatchObject({ isSigner: true, isWritable: false })
-    // payer (s,w)
     expect(ix.keys[3]).toMatchObject({ isSigner: true, isWritable: true })
-    // nftMint (w) — defaults to signer so the program can create the account
-    expect(ix.keys[4]).toMatchObject({ isWritable: true })
+    // nftMint (s,w) — defaults to signer so the program can create the account
+    expect(ix.keys[4]).toMatchObject({ isSigner: true, isWritable: true })
     // nftMintAuthority (s)
     expect(ix.keys[5]).toMatchObject({ isSigner: true, isWritable: false })
-    // collectionAuthorityRecord present at index 8
-    expect(ix.keys[8]).toMatchObject({ isSigner: false, isWritable: false })
-    // programs and slothashes
-    expect(ix.keys[14].pubkey.equals(TOKEN_PROGRAM_ID)).toBe(true)
-    expect(ix.keys[16].pubkey.toBase58()).toBe('SysvarS1otHashes111111111111111111111111111')
+    // nftMetadata (w), nftMasterEdition (w)
+    expect(ix.keys[6]).toMatchObject({ isWritable: true })
+    expect(ix.keys[7]).toMatchObject({ isWritable: true })
+    // tokenAccount (w) at index 8
+    expect(ix.keys[8].pubkey.equals(nftTokenAccount)).toBe(true)
+    expect(ix.keys[8]).toMatchObject({ isWritable: true })
+    // tokenRecord placeholder at index 9
+    expect(ix.keys[9].pubkey.equals(CANDY_MACHINE_PROGRAM_ID)).toBe(true)
+    expect(ix.keys[9].isWritable).toBe(false)
+    // collectionDelegateRecord at index 10
+    expect(ix.keys[10].pubkey.equals(collectionDelegateRecord)).toBe(true)
+    // collectionMetadata (w) at index 12
+    expect(ix.keys[12]).toMatchObject({ isWritable: true })
+    // collectionAuthorityRecord placeholder at index 15
+    expect(ix.keys[15].pubkey.equals(CANDY_MACHINE_PROGRAM_ID)).toBe(true)
+    // programs and sysvars
+    expect(ix.keys[16].pubkey.toBase58()).toBe('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s')
+    expect(ix.keys[17].pubkey.equals(TOKEN_PROGRAM_ID)).toBe(true)
+    expect(ix.keys[18].pubkey.equals(ASSOCIATED_TOKEN_PROGRAM_ID)).toBe(true)
+    expect(ix.keys[19].pubkey.toBase58()).toBe('11111111111111111111111111111111')
+    expect(ix.keys[20].pubkey.toBase58()).toBe('Sysvar1nstructions1111111111111111111111111')
+    expect(ix.keys[21].pubkey.toBase58()).toBe('SysvarS1otHashes111111111111111111111111111')
+    // auth-rules placeholders
+    expect(ix.keys[22].pubkey.equals(CANDY_MACHINE_PROGRAM_ID)).toBe(true)
+    expect(ix.keys[23].pubkey.equals(CANDY_MACHINE_PROGRAM_ID)).toBe(true)
   })
 
   test('nftMintIsSigner=false matches the IDL non-signer flag', () => {
@@ -156,7 +213,7 @@ describe('mintFromCandyMachine (core mint)', () => {
       nftMintAuthority: key(),
       nftMetadata: key(),
       nftMasterEdition: key(),
-      collectionAuthorityRecord: key(),
+      collectionDelegateRecord: key(),
       collectionMint: key(),
       collectionMetadata: key(),
       collectionMasterEdition: key(),
@@ -165,8 +222,27 @@ describe('mintFromCandyMachine (core mint)', () => {
     expect(nonSigner.keys[4]).toMatchObject({ isSigner: false, isWritable: true })
   })
 
-  test('does not include the ATA program or a phantom token account', () => {
-    expect(ix.keys.some(k => k.pubkey.equals(ASSOCIATED_TOKEN_PROGRAM_ID))).toBe(false)
+  test('omitting the token account emits the program-id placeholder (program creates the ATA)', () => {
+    const noAta = mintFromCandyMachine({
+      candyMachine: key(),
+      mintAuthority: key(),
+      payer: key(),
+      nftMint: key(),
+      nftMintAuthority: key(),
+      nftMetadata: key(),
+      nftMasterEdition: key(),
+      collectionDelegateRecord: key(),
+      collectionMint: key(),
+      collectionMetadata: key(),
+      collectionMasterEdition: key(),
+      collectionUpdateAuthority: key(),
+    })
+    expect(noAta.keys[8].pubkey.equals(CANDY_MACHINE_PROGRAM_ID)).toBe(true)
+    expect(noAta.keys[8].isWritable).toBe(false)
+  })
+
+  test('targets the candy machine program', () => {
+    expect(ix.programId.equals(CANDY_MACHINE_PROGRAM_ID)).toBe(true)
   })
 })
 

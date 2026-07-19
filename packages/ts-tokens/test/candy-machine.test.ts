@@ -134,18 +134,24 @@ describe('initializeCandyMachine (initializeV2)', () => {
   })
 })
 
-describe('mintFromCandyMachine (v1 mint)', () => {
+describe('mintFromCandyMachine (mint_v2)', () => {
   const candyMachine = Keypair.generate().publicKey
   const mintAuthority = Keypair.generate().publicKey
   const payer = Keypair.generate().publicKey
   const nftMint = Keypair.generate().publicKey
   const collectionMint = Keypair.generate().publicKey
-  const collectionAuthorityRecord = Keypair.generate().publicKey
   const collectionUpdateAuthority = Keypair.generate().publicKey
+  const [authorityPda] = findCandyMachineAuthorityPda(candyMachine)
   const [nftMetadata] = findMetadataPda(nftMint)
   const [nftMasterEdition] = findMasterEditionPda(nftMint)
   const [collectionMetadata] = findMetadataPda(collectionMint)
   const [collectionMasterEdition] = findMasterEditionPda(collectionMint)
+  const [collectionDelegateRecord] = findCollectionDelegateRecordPda(
+    collectionMint,
+    collectionUpdateAuthority,
+    authorityPda
+  )
+  const nftTokenAccount = Keypair.generate().publicKey
 
   const ix = mintFromCandyMachine({
     candyMachine,
@@ -155,22 +161,28 @@ describe('mintFromCandyMachine (v1 mint)', () => {
     nftMintAuthority: payer,
     nftMetadata,
     nftMasterEdition,
-    collectionAuthorityRecord,
+    tokenAccount: nftTokenAccount,
+    collectionDelegateRecord,
     collectionMint,
     collectionMetadata,
     collectionMasterEdition,
     collectionUpdateAuthority,
   })
 
-  test('uses the mint discriminator with no args', () => {
-    // sha256('global:mint')[0..8]
-    expect([...ix.data]).toEqual([51, 57, 225, 47, 182, 146, 137, 166])
+  test('uses the mint_v2 discriminator', () => {
+    // sha256('global:mint_v2')[0..8]
+    expect([...ix.data.subarray(0, 8)]).toEqual([120, 121, 23, 146, 173, 110, 199, 205])
   })
 
-  test('has exactly 17 accounts in IDL order', () => {
-    const [authorityPda] = findCandyMachineAuthorityPda(candyMachine)
+  test('serializes empty mintArgs and a None label', () => {
+    const args = ix.data.subarray(8)
+    expect(args.readUInt32LE(0)).toBe(0)
+    expect(args[4]).toBe(0)
+    expect(args.length).toBe(5)
+  })
 
-    expect(ix.keys.length).toBe(17)
+  test('has exactly 24 accounts in MintV2 IDL order', () => {
+    expect(ix.keys.length).toBe(24)
     expect(ix.keys.map(k => k.pubkey.toBase58())).toEqual([
       candyMachine,
       authorityPda,
@@ -180,15 +192,22 @@ describe('mintFromCandyMachine (v1 mint)', () => {
       payer, // nftMintAuthority
       nftMetadata,
       nftMasterEdition,
-      collectionAuthorityRecord,
+      nftTokenAccount,
+      CANDY_MACHINE_PROGRAM_ID, // tokenRecord: None marker
+      collectionDelegateRecord,
       collectionMint,
       collectionMetadata,
       collectionMasterEdition,
       collectionUpdateAuthority,
+      CANDY_MACHINE_PROGRAM_ID, // collectionAuthorityRecord: None marker
       TOKEN_METADATA_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID,
       SystemProgram.programId,
+      SYSVAR_INSTRUCTIONS_PUBKEY,
       SYSVAR_SLOT_HASHES_PUBKEY,
+      CANDY_MACHINE_PROGRAM_ID, // authorizationRulesProgram: None marker
+      CANDY_MACHINE_PROGRAM_ID, // authorizationRules: None marker
     ].map(k => k.toBase58()))
   })
 
@@ -199,6 +218,28 @@ describe('mintFromCandyMachine (v1 mint)', () => {
 
   test('mint authority signs but is not writable', () => {
     expect(ix.keys[2]).toMatchObject({ isSigner: true, isWritable: false })
+  })
+
+  test('optional accounts use the program-id None placeholder and flip when provided', () => {
+    const tokenRecord = Keypair.generate().publicKey
+    const withRecord = mintFromCandyMachine({
+      candyMachine,
+      mintAuthority,
+      payer,
+      nftMint,
+      nftMintAuthority: payer,
+      nftMetadata,
+      nftMasterEdition,
+      tokenAccount: nftTokenAccount,
+      tokenRecord,
+      collectionDelegateRecord,
+      collectionMint,
+      collectionMetadata,
+      collectionMasterEdition,
+      collectionUpdateAuthority,
+    })
+    expect(withRecord.keys[9].pubkey.equals(tokenRecord)).toBe(true)
+    expect(withRecord.keys[9].isWritable).toBe(true)
   })
 })
 

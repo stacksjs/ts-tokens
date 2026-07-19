@@ -111,7 +111,12 @@ export interface AddConfigLinesOptions {
 }
 
 /**
- * Mint from Candy Machine options
+ * Mint from Candy Machine options (mint_v2)
+ *
+ * Accounts follow the mpl-candy-machine `MintV2` account order. Compared to
+ * the deprecated `mint` instruction this adds the token account, token record,
+ * collection delegate record, recent-slothashes sysvar and the optional
+ * authorization-rules accounts.
  */
 export interface MintFromCandyMachineOptions {
   candyMachine: PublicKey
@@ -124,20 +129,43 @@ export interface MintFromCandyMachineOptions {
   /**
    * Whether the NFT mint is a transaction signer (default true).
    *
-   * The program only creates the mint account when it signs, so this must be
-   * true when passing a freshly generated keypair (the usual flow). Set to
-   * false only when the mint account already exists on-chain.
+   * The program creates and initializes the mint account via CPI, which
+   * requires the mint to sign — keep this true when passing a freshly
+   * generated keypair (the usual flow). Set to false only when the mint
+   * account already exists and is initialized on-chain.
    */
   nftMintIsSigner?: boolean
   nftMintAuthority: PublicKey
   nftMetadata: PublicKey
   nftMasterEdition: PublicKey
-  /** Collection authority record (delegate) PDA */
-  collectionAuthorityRecord: PublicKey
+  /**
+   * Token account receiving the NFT (usually the payer's ATA). When omitted,
+   * the program creates the associated token account via CPI; the account
+   * slot then carries the program-id "None" placeholder.
+   */
+  tokenAccount?: PublicKey
+  /** Token record PDA (programmable NFTs only) */
+  tokenRecord?: PublicKey
+  /** Collection metadata delegate record (V2 seeds) — required */
+  collectionDelegateRecord: PublicKey
   collectionMint: PublicKey
   collectionMetadata: PublicKey
   collectionMasterEdition: PublicKey
   collectionUpdateAuthority: PublicKey
+  /**
+   * Legacy collection authority record — only for legacy (V1) collections
+   * delegated via `approve_collection_authority`. Leave unset for machines
+   * initialized with initialize_v2 (they use the V2 delegate record).
+   */
+  collectionAuthorityRecord?: PublicKey
+  /** Optional token auth rules program (programmable NFTs only) */
+  authorizationRulesProgram?: PublicKey
+  /** Optional token auth rules account (programmable NFTs only) */
+  authorizationRules?: PublicKey
+  /** Mint arguments (serialized guard data, usually empty for direct mints) */
+  mintArgs?: Buffer
+  /** Guard group label (only relevant for guarded machines) */
+  group?: string
 }
 
 /**

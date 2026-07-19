@@ -125,6 +125,12 @@ export async function getNFTsByCreator(
   return nfts
 }
 
+/** Result of {@link getCollectionInfo}. */
+export interface CollectionInfoResult {
+  metadata: NFTMetadata | null
+  size: number | null
+}
+
 /**
  * Get collection info.
  *
@@ -136,10 +142,7 @@ export async function getNFTsByCreator(
 export async function getCollectionInfo(
   collection: string,
   config: TokenConfig
-): Promise<{
-  metadata: NFTMetadata | null
-  size: number | null
-}> {
+): Promise<CollectionInfoResult> {
   const metadata = await getNFTMetadata(collection, config)
   return {
     metadata,

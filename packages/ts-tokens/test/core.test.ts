@@ -10,6 +10,7 @@ import {
   MPL_CORE_PROGRAM_ID,
   MplCoreInstruction,
   PluginTypeDiscriminator,
+  AuthorityType,
   getPluginTypeDiscriminator,
   serializeString,
   serializeU8,
@@ -23,6 +24,7 @@ import {
   transferV1,
   burnV1,
   updateV1,
+  updateCollectionV1,
   addPluginV1,
   removePluginV1,
 } from '../src/programs/mpl-core/instructions'
@@ -132,8 +134,12 @@ describe('getPluginTypeDiscriminator', () => {
     expect(getPluginTypeDiscriminator('Attributes')).toBe(PluginTypeDiscriminator.Attributes)
   })
 
-  test('returns -1 for unknown plugin type', () => {
-    expect(getPluginTypeDiscriminator('Unknown')).toBe(-1)
+  test('throws a descriptive error for unknown plugin types', () => {
+    expect(() => getPluginTypeDiscriminator('Unknown')).toThrow(/Unknown plugin type/)
+  })
+
+  test('throws a descriptive error for AppData (external plugin adapter, not a Plugin)', () => {
+    expect(() => getPluginTypeDiscriminator('AppData')).toThrow(/not an mpl-core Plugin variant/)
   })
 })
 
@@ -179,6 +185,167 @@ describe('createV2 instruction', () => {
     const collectionKey = ix.keys.find(k => k.pubkey.equals(collection.publicKey))
     expect(collectionKey).toBeTruthy()
     expect(collectionKey!.isWritable).toBe(true)
+  })
+})
+
+describe('AuthorityType discriminants (on-chain PluginAuthority)', () => {
+  test('matches the on-chain ordinals: None=0, Owner=1, UpdateAuthority=2, Address=3', () => {
+    expect(AuthorityType.None).toBe(0)
+    expect(AuthorityType.Owner).toBe(1)
+    expect(AuthorityType.UpdateAuthority).toBe(2)
+    expect(AuthorityType.Address).toBe(3)
+  })
+
+  // addPluginV1 serializes: [instruction(2), plugin(type byte), initAuthority
+  // Option]. TransferDelegate has no payload, so its plugin is a single byte —
+  // the authority byte is directly observable right after the Some flag.
+  const asset = Keypair.generate().publicKey
+  const payer = Keypair.generate().publicKey
+
+  test('explicit Owner authority serializes as Some(1)', () => {
+    const ix = addPluginV1({
+      asset,
+      payer,
+      plugin: { type: 'TransferDelegate', authority: { type: 'Owner' } },
+    })
+    expect([...ix.data]).toEqual([MplCoreInstruction.AddPluginV1, PluginTypeDiscriminator.TransferDelegate, 1, 1])
+  })
+
+  test('explicit UpdateAuthority authority serializes as Some(2)', () => {
+    const ix = addPluginV1({
+      asset,
+      payer,
+      plugin: { type: 'TransferDelegate', authority: { type: 'UpdateAuthority' } },
+    })
+    expect([...ix.data]).toEqual([MplCoreInstruction.AddPluginV1, PluginTypeDiscriminator.TransferDelegate, 1, 2])
+  })
+
+  test('explicit Address authority serializes as Some(3) + 32-byte pubkey', () => {
+    const delegate = Keypair.generate().publicKey
+    const ix = addPluginV1({
+      asset,
+      payer,
+      plugin: { type: 'TransferDelegate', authority: { type: 'Address', address: delegate.toBase58() } },
+    })
+    expect([...ix.data.subarray(0, 4)]).toEqual([MplCoreInstruction.AddPluginV1, PluginTypeDiscriminator.TransferDelegate, 1, 3])
+    expect(new PublicKey(ix.data.subarray(4, 36)).equals(delegate)).toBe(true)
+    expect(ix.data.length).toBe(4 + 32)
+  })
+
+  test('explicit None authority serializes as Some(0)', () => {
+    const ix = addPluginV1({
+      asset,
+      payer,
+      plugin: { type: 'TransferDelegate', authority: { type: 'None' } },
+    })
+    expect([...ix.data]).toEqual([MplCoreInstruction.AddPluginV1, PluginTypeDiscriminator.TransferDelegate, 1, 0])
+  })
+
+  test('absent authority serializes as None (default authority)', () => {
+    const ix = addPluginV1({
+      asset,
+      payer,
+      plugin: { type: 'TransferDelegate' },
+    })
+    expect([...ix.data]).toEqual([MplCoreInstruction.AddPluginV1, PluginTypeDiscriminator.TransferDelegate, 0])
+  })
+})
+
+describe('createV2 optional-account placeholders', () => {
+  test('undefined owner and updateAuthority carry the program-id placeholder', () => {
+    const asset = Keypair.generate()
+    const payer = Keypair.generate()
+    const collection = Keypair.generate()
+    const programId = new PublicKey(MPL_CORE_PROGRAM_ID)
+
+    const ix = createV2({
+      asset: asset.publicKey,
+      collection: collection.publicKey,
+      payer: payer.publicKey,
+      name: 'Test',
+      uri: 'https://example.com',
+    })
+
+    // Slots 4 (owner) and 5 (updateAuthority) must be the program id — passing
+    // the payer here used to break collection creates with ConflictingAuthority.
+    expect(ix.keys[4].pubkey.equals(programId)).toBe(true)
+    expect(ix.keys[4].isSigner).toBe(false)
+    expect(ix.keys[5].pubkey.equals(programId)).toBe(true)
+    expect(ix.keys[5].isSigner).toBe(false)
+    // Neither slot may fall back to the payer.
+    expect(ix.keys[4].pubkey.equals(payer.publicKey)).toBe(false)
+    expect(ix.keys[5].pubkey.equals(payer.publicKey)).toBe(false)
+  })
+
+  test('explicit owner and updateAuthority land in slots 4 and 5', () => {
+    const asset = Keypair.generate()
+    const payer = Keypair.generate()
+    const owner = Keypair.generate()
+    const updateAuthority = Keypair.generate()
+
+    const ix = createV2({
+      asset: asset.publicKey,
+      payer: payer.publicKey,
+      owner: owner.publicKey,
+      updateAuthority: updateAuthority.publicKey,
+      name: 'Test',
+      uri: 'https://example.com',
+    })
+
+    expect(ix.keys[4].pubkey.equals(owner.publicKey)).toBe(true)
+    expect(ix.keys[5].pubkey.equals(updateAuthority.publicKey)).toBe(true)
+  })
+})
+
+describe('updateCollectionV1 instruction', () => {
+  test('serializes ONLY { new_name, new_uri } in the args', () => {
+    const collection = Keypair.generate()
+    const payer = Keypair.generate()
+
+    const ix = updateCollectionV1({
+      collection: collection.publicKey,
+      payer: payer.publicKey,
+      newName: 'New Name',
+      newUri: 'https://example.com/new.json',
+      newUpdateAuthority: Keypair.generate().publicKey,
+    })
+
+    expect(ix.data[0]).toBe(MplCoreInstruction.UpdateCollectionV1)
+    // [16, Some(1) + len + "New Name", Some(1) + len + uri] — no third option.
+    const nameBuf = serializeString('New Name')
+    const uriBuf = serializeString('https://example.com/new.json')
+    const expected = Buffer.concat([
+      Buffer.from([MplCoreInstruction.UpdateCollectionV1]),
+      serializeOption('New Name', serializeString),
+      serializeOption('https://example.com/new.json', serializeString),
+    ])
+    expect(Buffer.from(ix.data).equals(expected)).toBe(true)
+    expect(ix.data.length).toBe(1 + 1 + nameBuf.length + 1 + uriBuf.length)
+  })
+
+  test('conveys the new authority via account index 3, placeholder when absent', () => {
+    const collection = Keypair.generate()
+    const payer = Keypair.generate()
+    const newAuthority = Keypair.generate()
+    const programId = new PublicKey(MPL_CORE_PROGRAM_ID)
+
+    const withAuth = updateCollectionV1({
+      collection: collection.publicKey,
+      payer: payer.publicKey,
+      newUpdateAuthority: newAuthority.publicKey,
+    })
+    expect(withAuth.keys[3].pubkey.equals(newAuthority.publicKey)).toBe(true)
+    expect(withAuth.keys[3].isSigner).toBe(false)
+    // system_program moved to index 4
+    expect(withAuth.keys[4].pubkey.toBase58()).toBe('11111111111111111111111111111111')
+    expect(withAuth.keys.length).toBe(5)
+
+    const withoutAuth = updateCollectionV1({
+      collection: collection.publicKey,
+      payer: payer.publicKey,
+    })
+    expect(withoutAuth.keys[3].pubkey.equals(programId)).toBe(true)
+    expect(withoutAuth.keys[4].pubkey.toBase58()).toBe('11111111111111111111111111111111')
   })
 })
 

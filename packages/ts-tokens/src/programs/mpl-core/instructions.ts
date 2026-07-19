@@ -204,13 +204,17 @@ export function createV2(params: {
 
   // Account order (CreateV2): asset, collection?, authority?, payer, owner?,
   // updateAuthority?, systemProgram. For Create, authority precedes payer.
+  // owner and updateAuthority are OPTIONAL accounts: when absent, the slot
+  // carries the mpl-core program id as the "None" placeholder (the convention
+  // used by the official client's getAccountMetasAndSigners) — never the
+  // payer, which on-chain reads as a real (conflicting) authority.
   const keys = [
     { pubkey: asset, isSigner: true, isWritable: true },
     { pubkey: collection ?? PROGRAM_ID, isSigner: false, isWritable: collection ? true : false },
     { pubkey: authority ?? payer, isSigner: true, isWritable: false },
     { pubkey: payer, isSigner: true, isWritable: true },
-    { pubkey: owner ?? payer, isSigner: false, isWritable: false },
-    { pubkey: updateAuthority ?? payer, isSigner: false, isWritable: false },
+    { pubkey: owner ?? PROGRAM_ID, isSigner: false, isWritable: false },
+    { pubkey: updateAuthority ?? PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 
@@ -387,21 +391,24 @@ export function updateCollectionV1(params: {
 }): TransactionInstruction {
   const { collection, payer, authority, newName, newUri, newUpdateAuthority } = params
 
+  // On-chain UpdateCollectionV1Args carries ONLY { new_name, new_uri } — the
+  // new update authority is NOT an args field; it is conveyed through the
+  // account at index 3.
   const data = Buffer.concat([
     serializeU8(MplCoreInstruction.UpdateCollectionV1),
     serializeOption(newName, serializeString),
     serializeOption(newUri, serializeString),
-    serializeOption(
-      newUpdateAuthority,
-      (v) => Buffer.concat([serializeU8(UpdateAuthorityType.Address), v.toBuffer()]),
-    ),
   ])
 
-  // Account order (UpdateCollectionV1): collection, payer, authority?, systemProgram.
+  // Account order (UpdateCollectionV1): collection, payer, authority?,
+  // newUpdateAuthority?, systemProgram. The new-update-authority slot holds
+  // the new authority pubkey, or the mpl-core program id placeholder when the
+  // authority is unchanged.
   const keys = [
     { pubkey: collection, isSigner: false, isWritable: true },
     { pubkey: payer, isSigner: true, isWritable: true },
     { pubkey: authority ?? payer, isSigner: true, isWritable: false },
+    { pubkey: newUpdateAuthority ?? PROGRAM_ID, isSigner: false, isWritable: false },
     { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
   ]
 

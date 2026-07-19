@@ -7,6 +7,7 @@
 import { PublicKey } from '@solana/web3.js'
 import type { Connection, TransactionInstruction } from '@solana/web3.js'
 import { TOKEN_2022_PROGRAM_ID } from '@solana/spl-token'
+import { ExtensionType } from '../programs/token-2022/types'
 import type { TokenConfig } from '../types'
 import { createConnection } from '../drivers/solana/connection'
 import { loadWallet } from '../drivers/solana/wallet'
@@ -24,8 +25,8 @@ export interface EmbeddedMetadata {
 
 // SPL Token Metadata interface discriminators —
 // sha256("spl_token_metadata_interface:<name>")[0..8]
-const TOKEN_METADATA_INITIALIZE = Buffer.from([210, 225, 30, 162, 88, 184, 77, 141])
-const TOKEN_METADATA_UPDATE_FIELD = Buffer.from([221, 233, 49, 45, 181, 202, 220, 200])
+const TOKEN_METADATA_INITIALIZE = Buffer.from([53, 201, 129, 93, 171, 163, 190, 1])
+const TOKEN_METADATA_UPDATE_FIELD = Buffer.from([130, 68, 42, 109, 52, 18, 206, 255])
 
 /**
  * Encode the UpdateField Field enum: Name = 0, Symbol = 1, Uri = 2,
@@ -58,7 +59,7 @@ function packString(value: string): Buffer {
 /**
  * Create instruction to initialize token metadata on a Token-2022 mint
  */
-function createInitializeTokenMetadataInstruction(
+export function createInitializeTokenMetadataInstruction(
   mint: PublicKey,
   updateAuthority: PublicKey,
   mintAuthority: PublicKey,
@@ -88,7 +89,7 @@ function createInitializeTokenMetadataInstruction(
 /**
  * Create instruction to update a metadata field
  */
-function createUpdateTokenMetadataFieldInstruction(
+export function createUpdateTokenMetadataFieldInstruction(
   mint: PublicKey,
   updateAuthority: PublicKey,
   field: string,
@@ -207,32 +208,43 @@ export async function getEmbeddedMetadata(
     const accountInfo = await connection.getAccountInfo(mintPubkey)
     if (!accountInfo || !accountInfo.data) return null
 
-    // Token metadata extension starts after the base mint data
-    // This is a simplified parser; full implementation would walk the TLV structure
+    // Mints with extensions are zero-padded to the legacy account size (165),
+    // followed by a 1-byte account type at offset 165, then the TLV entries.
+    // Each TLV header is 4 bytes: u16 type + u16 length — NOT 8 bytes.
     const data = accountInfo.data
+    const ACCOUNT_SIZE = 165
 
-    // Look for the metadata extension in the account data
-    // The extension data follows the base mint layout (82 bytes for Token-2022)
-    if (data.length <= 166) return null // No extensions present
+    if (data.length <= ACCOUNT_SIZE + 1) return null // No extensions present
 
-    // Simplified: try to parse as JSON-like structure
-    // Real implementation would use proper TLV parsing
-    const extensionData = data.subarray(166)
-    return parseMetadataExtension(extensionData)
+    let offset = ACCOUNT_SIZE + 1
+    while (offset + 4 <= data.length) {
+      const type = data.readUInt16LE(offset)
+      const length = data.readUInt16LE(offset + 2)
+      offset += 4
+
+      // Uninitialized (type 0) terminates the TLV list
+      if (type === 0 || offset + length > data.length) break
+
+      if (type === ExtensionType.TokenMetadata) {
+        return parseMetadataExtension(data.subarray(offset, offset + length))
+      }
+
+      offset += length
+    }
+
+    return null
   } catch {
     return null
   }
 }
 
 /**
- * Parse metadata extension from raw account data
+ * Parse the TokenMetadata extension VALUE (after its 4-byte TLV header)
  */
 function parseMetadataExtension(data: Buffer): EmbeddedMetadata | null {
   try {
     let offset = 0
 
-    // Skip extension type and length headers
-    // Look for string patterns in the data
     const readString = (): string => {
       if (offset + 4 > data.length) return ''
       const len = data.readUInt32LE(offset)
@@ -243,8 +255,9 @@ function parseMetadataExtension(data: Buffer): EmbeddedMetadata | null {
       return str
     }
 
-    // Skip to metadata content (past discriminator and authority)
-    offset = 8 + 32 + 32 // discriminator + update authority + mint
+    // TokenMetadata value layout: update_authority(32) + mint(32), then the
+    // length-prefixed strings.
+    offset = 32 + 32
 
     const name = readString()
     const symbol = readString()

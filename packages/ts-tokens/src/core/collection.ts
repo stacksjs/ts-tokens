@@ -58,6 +58,10 @@ export async function createCoreCollection(
 
 /**
  * Update an MPL Core collection
+ *
+ * On-chain `UpdateCollectionV1Args` only carries { new_name, new_uri }; the
+ * optional new update authority travels as the account at index 3 (handled by
+ * the updateCollectionV1 builder).
  */
 export async function updateCoreCollection(
   options: UpdateCoreCollectionOptions,
