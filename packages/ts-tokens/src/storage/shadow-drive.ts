@@ -12,6 +12,7 @@ import {
   SystemProgram,
 } from '@solana/web3.js'
 import nacl from 'tweetnacl'
+import { createHash } from 'node:crypto'
 import type { StorageAdapter, UploadResult, UploadOptions, BatchUploadResult, TokenConfig } from '../types'
 import { loadWallet } from '../drivers/solana/wallet'
 import { createConnection } from '../drivers/solana/connection'
@@ -27,11 +28,27 @@ export const SHADOW_DRIVE_PROGRAM_ID = new PublicKey('2e1wdyNhUvE76y6yUCvah2Kavi
 export const SHDW_TOKEN_MINT = new PublicKey('SHDWyBxihqiCj6YekG2GUr7wqKLeLAMK1gHZck9pL6y')
 
 /**
+ * Default Shadow Drive upload endpoint.
+ *
+ * WARNING: the hosted GenesysGo service at this URL is DEFUNCT — uploads
+ * against it will fail. This default is kept only for backwards
+ * compatibility; you MUST point `endpoint` at a running SHDW storage node
+ * (self-hosted or a community-operated one) via
+ * `storage.shadowDrive.endpoint` in your config.
+ */
+export const DEFAULT_SHADOW_ENDPOINT = 'https://shadow-storage.genesysgo.net'
+
+/**
  * Shadow Drive configuration
  */
 export interface ShadowDriveConfig {
   storageAccount?: string
   rpcEndpoint?: string
+  /**
+   * SHDW node upload endpoint. The default (GenesysGo hosted service) is
+   * defunct — set this to a running Shadow Drive node. See
+   * DEFAULT_SHADOW_ENDPOINT for details.
+   */
   endpoint: string
 }
 
@@ -39,7 +56,7 @@ export interface ShadowDriveConfig {
  * Default Shadow Drive configuration
  */
 const DEFAULT_CONFIG: ShadowDriveConfig = {
-  endpoint: 'https://shadow-storage.genesysgo.net',
+  endpoint: DEFAULT_SHADOW_ENDPOINT,
 }
 
 /**
@@ -80,6 +97,13 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
     const contentType = options?.contentType || 'application/octet-stream'
     const fileName = `file_${Date.now()}`
 
+    if (this.config.endpoint === DEFAULT_SHADOW_ENDPOINT) {
+      console.warn(
+        '[ts-tokens] WARNING: using the defunct GenesysGo Shadow Drive endpoint ' +
+        `(${DEFAULT_SHADOW_ENDPOINT}). Set storage.shadowDrive.endpoint to a running SHDW node.`
+      )
+    }
+
     const wallet = loadWallet(this.tokenConfig)
 
     // Create form data for upload
@@ -89,8 +113,12 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
     formData.append('storageAccount', this.config.storageAccount)
     formData.append('message', 'upload')
 
+    // Shadow Drive verifies the upload against the file's SHA-256 hash,
+    // NOT the client-generated filename — sign the hash.
+    const fileHash = createHash('sha256').update(bytes).digest('hex')
+
     // Sign the upload request
-    const message = new TextEncoder().encode(`Shadow Drive Signed Message:\nStorage Account: ${this.config.storageAccount}\nUpload files with hash: ${fileName}`)
+    const message = new TextEncoder().encode(`Shadow Drive Signed Message:\nStorage Account: ${this.config.storageAccount}\nUpload files with hash: ${fileHash}`)
     const signature = Buffer.from(nacl.sign.detached(message, wallet.secretKey)).toString('base64')
 
     const response = await fetch(`${this.config.endpoint}/upload`, {
@@ -210,15 +238,17 @@ export class ShadowDriveStorageAdapter implements StorageAdapter {
 
   /**
    * Estimate upload cost in lamports
+   *
+   * Honest answer: unavailable. Shadow Drive pricing depends on live SHDW
+   * token economics that must be queried from a running node — the previous
+   * implementation hardcoded a fabricated "$20/SOL" conversion, which was
+   * removed rather than mislead callers.
    */
-  async estimateCost(size: number): Promise<bigint> {
-    // Shadow Drive pricing: ~$0.05 per GB per year
-    // Convert to approximate lamports
-    const gbSize = size / (1024 * 1024 * 1024)
-    const usdCost = gbSize * 0.05
-    // Rough conversion: 1 SOL = ~$20, 1 SOL = 1e9 lamports
-    const lamports = Math.ceil((usdCost / 20) * 1e9)
-    return BigInt(lamports)
+  async estimateCost(_size: number): Promise<bigint> {
+    throw new Error(
+      'Shadow Drive cost estimates are unavailable: pricing must be queried from a ' +
+      'running SHDW node (the old hardcoded SOL/SHDW price guesses were removed as fabricated).'
+    )
   }
 
   /**
@@ -477,18 +507,18 @@ export function createShadowDriveAdapter(config?: Partial<ShadowDriveConfig>): S
 /**
  * Estimate SHDW token cost for storage
  *
- * Shadow Drive charges in SHDW tokens based on storage size.
+ * @deprecated UNAVAILABLE — the previous implementation hardcoded fabricated
+ * pricing ("~5 SHDW per GB", "~$0.05/GB/year", "1 SHDW ~= $0.01"). Real SHDW
+ * pricing must be obtained from a running Shadow Drive node or live market
+ * data. This function now throws rather than return made-up numbers.
  *
  * @param sizeInBytes - Storage size in bytes
- * @returns Estimated cost in SHDW token base units
  */
 export function estimateShdwCost(sizeInBytes: number): bigint {
-  // Approximate pricing: ~$0.05 per GB per year
-  // 1 SHDW ~= $0.01 (approximate, varies)
-  // Cost in SHDW base units (9 decimals)
-  const gbSize = sizeInBytes / (1024 * 1024 * 1024)
-  const shdwAmount = gbSize * 5 // ~5 SHDW per GB
-  return BigInt(Math.ceil(shdwAmount * 1e9))
+  throw new Error(
+    `estimateShdwCost(${sizeInBytes}) is unavailable: SHDW pricing is no longer hardcoded ` +
+    '(previous figures were fabricated). Query a running SHDW node for current storage pricing.'
+  )
 }
 
 /**
@@ -548,8 +578,17 @@ export function findStorageAccountPda(
 /**
  * Parse storage account data from on-chain account info
  *
+ * WARNING: This binary layout is UNVERIFIED — it was reverse-guessed, never
+ * checked against the actual Shadow Drive program's account schema. It may
+ * silently produce wrong values. To avoid mis-parsing, this function fails
+ * gracefully: it returns null when the buffer is too short to match the
+ * assumed layout (66 bytes) or when the initialized flag is not set, rather
+ * than returning garbage. Verify the layout against the Shadow Drive program
+ * source before relying on the returned fields.
+ *
  * @param data - Raw account data buffer
- * @returns Parsed storage account info
+ * @returns Parsed storage account info, or null if the buffer doesn't match
+ *          the assumed (unverified) layout
  */
 export function parseStorageAccount(data: Buffer): {
   isInitialized: boolean
@@ -558,11 +597,21 @@ export function parseStorageAccount(data: Buffer): {
   usedStorage: bigint
   immutable: boolean
   creationTime: bigint
-} {
+} | null {
+  // Assumed layout: discriminator(8) + isInitialized(1) + owner(32) +
+  // totalStorage(8) + usedStorage(8) + immutable(1) + creationTime(8) = 66 bytes
+  const ASSUMED_MIN_LENGTH = 66
+  if (data.length < ASSUMED_MIN_LENGTH) {
+    return null
+  }
+
   let offset = 8 // Skip discriminator
 
   const isInitialized = data.readUInt8(offset) === 1
   offset += 1
+  if (!isInitialized) {
+    return null
+  }
 
   const owner = new PublicKey(data.subarray(offset, offset + 32))
   offset += 32

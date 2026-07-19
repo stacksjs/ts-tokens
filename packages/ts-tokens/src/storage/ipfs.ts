@@ -8,11 +8,17 @@ import type { StorageAdapter, UploadResult, UploadOptions, UploadProgress, Batch
 
 /**
  * IPFS configuration
+ *
+ * Credentials: for Pinata, set `pinningApiKey` or the PINATA_JWT env var.
+ * For a local node, set `apiEndpoint` (e.g. http://localhost:5001).
+ * The legacy nft.storage / web3.storage upload APIs are decommissioned and
+ * now throw an actionable error if selected.
  */
 export interface IPFSConfig {
   gateway: string
   apiEndpoint?: string
   pinningService?: 'pinata' | 'nft.storage' | 'web3.storage' | 'infura'
+  /** Pinning service credential (Pinata JWT; falls back to PINATA_JWT env var) */
   pinningApiKey?: string
   pinningSecret?: string
   timeout: number
@@ -51,14 +57,20 @@ export class IPFSStorageAdapter implements StorageAdapter {
 
     let cid: string
 
-    if (this.config.pinningService) {
-      cid = await this.uploadViaPinningService(bytes, contentType, options)
+    // Pinata can be configured without touching code via the PINATA_JWT env var.
+    const pinningService =
+      this.config.pinningService || (process.env.PINATA_JWT ? 'pinata' : undefined)
+
+    if (pinningService) {
+      cid = await this.uploadViaPinningService(bytes, contentType, options, pinningService)
     } else if (this.config.apiEndpoint) {
       cid = await this.uploadViaLocalNode(bytes, options)
     } else {
       throw new Error(
-        'IPFS upload requires either a pinning service or local node API endpoint. ' +
-        'Set pinningService and pinningApiKey, or set apiEndpoint.'
+        'IPFS upload requires a working pinning service or a local node. Options: ' +
+        '(1) set pinningService: "pinata" and pinningApiKey (or the PINATA_JWT env var), ' +
+        '(2) run a local IPFS node and set apiEndpoint (e.g. http://localhost:5001). ' +
+        'Note: nft.storage and web3.storage legacy upload APIs are decommissioned.'
       )
     }
 
@@ -77,9 +89,10 @@ export class IPFSStorageAdapter implements StorageAdapter {
   private async uploadViaPinningService(
     data: Uint8Array,
     contentType: string,
-    options?: UploadOptions
+    options: UploadOptions | undefined,
+    pinningService: NonNullable<IPFSConfig['pinningService']>
   ): Promise<string> {
-    switch (this.config.pinningService) {
+    switch (pinningService) {
       case 'pinata':
         return this.uploadToPinata(data, contentType, options)
       case 'nft.storage':
@@ -89,20 +102,26 @@ export class IPFSStorageAdapter implements StorageAdapter {
       case 'infura':
         return this.uploadToInfura(data, contentType, options)
       default:
-        throw new Error(`Unknown pinning service: ${this.config.pinningService}`)
+        throw new Error(`Unknown pinning service: ${pinningService}`)
     }
   }
 
   /**
    * Upload to Pinata
+   *
+   * Credentials: `pinningApiKey` config option or the PINATA_JWT env var
+   * (a Pinata JWT).
    */
   private async uploadToPinata(
     data: Uint8Array,
     contentType: string,
     options?: UploadOptions
   ): Promise<string> {
-    if (!this.config.pinningApiKey) {
-      throw new Error('Pinata requires pinningApiKey (JWT token)')
+    const jwt = this.config.pinningApiKey || process.env.PINATA_JWT
+    if (!jwt) {
+      throw new Error(
+        'Pinata requires a JWT: set pinningApiKey in config or the PINATA_JWT environment variable'
+      )
     }
 
     const formData = new FormData()
@@ -119,7 +138,7 @@ export class IPFSStorageAdapter implements StorageAdapter {
     const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${this.config.pinningApiKey}`,
+        Authorization: `Bearer ${jwt}`,
       },
       body: formData,
       signal: AbortSignal.timeout(this.config.timeout),
@@ -136,64 +155,38 @@ export class IPFSStorageAdapter implements StorageAdapter {
 
   /**
    * Upload to NFT.Storage
+   *
+   * @deprecated The legacy api.nft.storage/upload endpoint was DECOMMISSIONED
+   * in 2024. Use pinningService 'pinata' (PINATA_JWT) or a local IPFS node
+   * (apiEndpoint) instead.
    */
   private async uploadToNFTStorage(
-    data: Uint8Array,
-    contentType: string,
-    options?: UploadOptions
+    _data: Uint8Array,
+    _contentType: string,
+    _options?: UploadOptions
   ): Promise<string> {
-    if (!this.config.pinningApiKey) {
-      throw new Error('NFT.Storage requires pinningApiKey')
-    }
-
-    const response = await fetch('https://api.nft.storage/upload', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.config.pinningApiKey}`,
-        'Content-Type': contentType,
-      },
-      body: data as BodyInit,
-      signal: AbortSignal.timeout(this.config.timeout),
-    })
-
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`NFT.Storage upload failed: ${error}`)
-    }
-
-    const result = await response.json()
-    return result.value.cid
+    throw new Error(
+      'NFT.Storage (api.nft.storage/upload) was decommissioned in 2024 and no longer accepts ' +
+      'uploads. Use pinningService: "pinata" (with PINATA_JWT) or a local IPFS node (apiEndpoint) instead.'
+    )
   }
 
   /**
    * Upload to Web3.Storage
+   *
+   * @deprecated The legacy api.web3.storage/upload endpoint was DECOMMISSIONED
+   * (pre-w3up API). Use pinningService 'pinata' (PINATA_JWT) or a local IPFS
+   * node (apiEndpoint) instead.
    */
   private async uploadToWeb3Storage(
-    data: Uint8Array,
-    contentType: string,
-    options?: UploadOptions
+    _data: Uint8Array,
+    _contentType: string,
+    _options?: UploadOptions
   ): Promise<string> {
-    if (!this.config.pinningApiKey) {
-      throw new Error('Web3.Storage requires pinningApiKey')
-    }
-
-    const response = await fetch('https://api.web3.storage/upload', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.config.pinningApiKey}`,
-        'X-Content-Type': contentType,
-      },
-      body: data as BodyInit,
-      signal: AbortSignal.timeout(this.config.timeout),
-    })
-
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`Web3.Storage upload failed: ${error}`)
-    }
-
-    const result = await response.json()
-    return result.cid
+    throw new Error(
+      'Web3.Storage (api.web3.storage/upload) was decommissioned (pre-w3up API) and no longer ' +
+      'accepts uploads. Use pinningService: "pinata" (with PINATA_JWT) or a local IPFS node (apiEndpoint) instead.'
+    )
   }
 
   /**

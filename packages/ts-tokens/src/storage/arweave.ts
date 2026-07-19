@@ -1,16 +1,38 @@
 /**
  * Arweave Storage Adapter
  *
- * Direct Arweave HTTP API implementation without external SDKs.
+ * Uploads go through an Irys (formerly Bundlr) node using spec-compliant
+ * ANS-104 data items signed with the Solana ed25519 keypair (tweetnacl).
+ * Reads go directly against an Arweave gateway. No external SDKs.
+ *
+ * Credentials: a Solana keypair is required for uploads (used to sign data
+ * items and as the Irys account address). Resolution order mirrors
+ * `loadWallet()`: wallet.keypairPath, TOKENS_KEYPAIR env var, or
+ * ~/.config/solana/id.json. The Irys account must also be funded — see the
+ * actionable error thrown on insufficient balance.
+ *
+ * Environment variables:
+ *   IRYS_NODE_URL   - override the Irys node (default https://node1.irys.xyz)
+ *   TOKENS_KEYPAIR  - Solana keypair (JSON byte array or base58 secret key)
  */
 
+import { createHash } from 'node:crypto'
+import nacl from 'tweetnacl'
 import type { StorageAdapter, UploadResult, UploadOptions, UploadProgress, BatchUploadResult } from '../types'
+import { encode as encodeBase58, decode as decodeBase58 } from '../utils/base58'
 
 /**
  * Arweave configuration
  */
 export interface ArweaveConfig {
+  /** Arweave gateway used for reads. @default 'https://arweave.net' */
   gateway: string
+  /**
+   * Irys (formerly Bundlr) node used for uploads.
+   * Overridable via adapter options or the IRYS_NODE_URL env var.
+   * @default 'https://node1.irys.xyz'
+   */
+  irysNode: string
   timeout: number
 }
 
@@ -19,6 +41,7 @@ export interface ArweaveConfig {
  */
 const DEFAULT_CONFIG: ArweaveConfig = {
   gateway: 'https://arweave.net',
+  irysNode: 'https://node1.irys.xyz',
   timeout: 30000,
 }
 
@@ -47,16 +70,25 @@ interface ArweaveTransaction {
 export class ArweaveStorageAdapter implements StorageAdapter {
   readonly name = 'arweave' as const
   private config: ArweaveConfig
-  private wallet: { publicKey: string; secretKey: Uint8Array } | null = null
+  private wallet: DataItemSigner | null = null
 
   constructor(config: Partial<ArweaveConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config }
+    const envNode = typeof process !== 'undefined' ? process.env?.IRYS_NODE_URL : undefined
+    this.config = {
+      ...DEFAULT_CONFIG,
+      ...(envNode ? { irysNode: envNode } : {}),
+      ...config,
+    }
   }
 
   /**
-   * Set the wallet for signing transactions
+   * Set the wallet used to sign ANS-104 data items.
+   *
+   * Accepts a Solana-style keypair: `publicKey` may be raw 32 bytes, a base58
+   * string, or a web3.js PublicKey-like object; `secretKey` is the 64-byte
+   * Solana secret key (or a 32-byte ed25519 seed).
    */
-  setWallet(wallet: { publicKey: string; secretKey: Uint8Array }): void {
+  setWallet(wallet: DataItemSigner): void {
     this.wallet = wallet
   }
 
@@ -249,82 +281,103 @@ export class ArweaveStorageAdapter implements StorageAdapter {
   }
 
   /**
-   * Submit data to Arweave
-   * Note: This is a simplified implementation. Full implementation would require
-   * proper transaction signing with RSA keys or using Bundlr/Irys for Solana wallets.
+   * Submit data to Arweave via an Irys node.
+   *
+   * Flow: build a signed ANS-104 ed25519 data item, check the node price for
+   * the item's byte count, verify the Irys account balance, then POST the
+   * data item. Large payloads are fine — Irys accepts data items of any
+   * practical size in a single POST, so no chunked path is needed.
+   *
+   * @returns The data item ID (which is also the Arweave transaction ID once seeded)
    */
   private async submitData(
     data: Uint8Array,
     tags: Array<{ name: string; value: string }>,
     onProgress?: (progress: UploadProgress) => void
   ): Promise<string> {
-    // For large files, use chunked upload
-    if (data.length > 100 * 1024) {
-      return this.submitChunkedData(data, tags, onProgress)
-    }
-
-    // Convert data to base64
-    const _base64Data = this.uint8ArrayToBase64(data)
-
-    // Report progress
-    if (onProgress) {
-      onProgress({ loaded: 0, total: data.length, percentage: 0 })
-    }
-
-    // In a real implementation, we would:
-    // 1. Create a transaction with proper format
-    // 2. Sign it with the wallet
-    // 3. Submit to the network
-    // For now, we'll throw an error indicating this needs wallet setup
     if (!this.wallet) {
       throw new Error(
-        'Arweave upload requires a wallet. Use setWallet() or consider using Bundlr/Irys for Solana wallet support.'
+        'Arweave uploads require a Solana keypair to sign ANS-104 data items. ' +
+        'Set wallet.keypairPath in tokens.config.ts, set the TOKENS_KEYPAIR environment variable, ' +
+        'create ~/.config/solana/id.json, or call setWallet() on the adapter.'
       )
     }
 
-    // Placeholder for actual transaction submission
-    // This would need proper Arweave transaction signing
-    throw new Error(
-      'Direct Arweave uploads not yet implemented. Use uploadViaGateway() or Bundlr/Irys integration.'
-    )
-  }
-
-  /**
-   * Submit chunked data for large files
-   */
-  private async submitChunkedData(
-    data: Uint8Array,
-    tags: Array<{ name: string; value: string }>,
-    onProgress?: (progress: UploadProgress) => void
-  ): Promise<string> {
-    const CHUNK_SIZE = 256 * 1024 // 256KB chunks
-    const chunks: Uint8Array[] = []
-
-    for (let i = 0; i < data.length; i += CHUNK_SIZE) {
-      chunks.push(data.slice(i, i + CHUNK_SIZE))
-    }
-
-    // Report initial progress
     if (onProgress) {
       onProgress({ loaded: 0, total: data.length, percentage: 0 })
     }
 
-    // In a real implementation, each chunk would be uploaded separately
-    // and then combined into a final transaction
-    throw new Error(
-      'Chunked Arweave uploads not yet implemented. Consider using Bundlr/Irys for large files.'
-    )
-  }
+    const { id, raw, owner } = createSignedDataItem(data, tags, this.wallet)
+    const node = this.config.irysNode.replace(/\/+$/, '')
+    const address = encodeBase58(owner)
 
-  /**
-   * Convert Uint8Array to base64
-   */
-  private uint8ArrayToBase64(bytes: Uint8Array): string {
-    let binary = ''
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i])
+    // 1. Price for this many bytes, in winston.
+    let price: bigint
+    try {
+      const res = await fetch(`${node}/price/arweave/${raw.length}`, {
+        signal: AbortSignal.timeout(this.config.timeout),
+      })
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} ${res.statusText}`)
+      }
+      price = BigInt((await res.text()).trim())
+    } catch (err) {
+      throw new Error(
+        `Failed to get upload price from Irys node ${node}: ` +
+        `${err instanceof Error ? err.message : String(err)}`
+      )
     }
-    return btoa(binary)
+
+    // 2. Balance of the signer's Irys account.
+    let balance: bigint
+    try {
+      const res = await fetch(`${node}/account/balance/arweave?address=${address}`, {
+        signal: AbortSignal.timeout(this.config.timeout),
+      })
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} ${res.statusText}`)
+      }
+      const body = await res.json() as { balance?: string | number }
+      balance = BigInt(body.balance ?? '0')
+    } catch (err) {
+      throw new Error(
+        `Failed to check Irys balance for ${address} on ${node}: ` +
+        `${err instanceof Error ? err.message : String(err)}`
+      )
+    }
+
+    if (balance < price) {
+      throw new Error(
+        `Insufficient Irys balance on ${node}: the upload costs ${price} winston but the ` +
+        `account for ${address} holds ${balance} winston. Fund the Irys account first ` +
+        `(e.g. \`npx irys fund ${price - balance} -n node1 -c arweave\` or the Irys dashboard), then retry.`
+      )
+    }
+
+    // 3. Submit the data item.
+    let response: Response
+    try {
+      response = await fetch(`${node}/tx/arweave`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: raw as unknown as BodyInit,
+        signal: AbortSignal.timeout(this.config.timeout),
+      })
+    } catch (err) {
+      throw new Error(
+        `Irys upload request failed (${node}/tx/arweave): ` +
+        `${err instanceof Error ? err.message : String(err)}`
+      )
+    }
+    if (!response.ok) {
+      const text = await response.text().catch(() => '')
+      throw new Error(`Irys node rejected the data item (HTTP ${response.status}): ${text}`)
+    }
+
+    if (onProgress) {
+      onProgress({ loaded: data.length, total: data.length, percentage: 100 })
+    }
+    return id
   }
 
   /**
@@ -409,14 +462,212 @@ export interface DataItem {
   data: Uint8Array
   /** Arweave tags */
   tags: Array<{ name: string; value: string }>
-  /** Signer public key (owner) */
+  /** Signer public key (owner) — 32 bytes for ed25519 items */
   owner: Uint8Array
-  /** Signature over the data item */
+  /** ed25519 signature over the data item (64 bytes) */
   signature?: Uint8Array
   /** Target address (optional) */
   target?: string
   /** Anchor value (optional) */
   anchor?: string
+}
+
+/**
+ * ANS-104 signature type for ed25519 (Solana) data items.
+ * Per the ANS-104 spec this is 2 (64-byte signature, 32-byte owner);
+ * type 1 is RSA (4096-bit Arweave wallets) and was used here incorrectly.
+ */
+export const ANS104_SIG_TYPE_ED25519 = 2
+
+/**
+ * Minimal signer shape for ANS-104 data items: a Solana ed25519 keypair.
+ * `publicKey` may be raw 32 bytes, a base58 string, or a web3.js
+ * PublicKey-like object; `secretKey` is the 64-byte Solana secret key
+ * (or a 32-byte ed25519 seed).
+ */
+export interface DataItemSigner {
+  publicKey: string | Uint8Array | { toBytes(): Uint8Array }
+  secretKey: Uint8Array
+}
+
+/**
+ * Resolve a signer public key to raw 32 bytes.
+ */
+function resolvePublicKeyBytes(
+  publicKey: DataItemSigner['publicKey']
+): Uint8Array {
+  if (typeof publicKey === 'string') {
+    return decodeBase58(publicKey)
+  }
+  if (publicKey instanceof Uint8Array) {
+    return publicKey
+  }
+  return publicKey.toBytes()
+}
+
+/**
+ * Resolve a signer secret key to the 64-byte ed25519 secret key tweetnacl
+ * expects. A 32-byte input is treated as a seed.
+ */
+function resolveSecretKey(secretKey: Uint8Array): Uint8Array {
+  if (secretKey.length === 64) {
+    return secretKey
+  }
+  if (secretKey.length === 32) {
+    return nacl.sign.keyPair.fromSeed(secretKey).secretKey
+  }
+  throw new Error(
+    `Invalid secret key length: expected 64 bytes (Solana secret key) or 32 bytes (seed), got ${secretKey.length}`
+  )
+}
+
+/**
+ * base64url-encode bytes (no padding) per RFC 4648 §5 — the encoding used
+ * for ANS-104 data item IDs.
+ */
+export function base64UrlEncode(bytes: Uint8Array): string {
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function sha256(data: Uint8Array): Uint8Array {
+  return new Uint8Array(createHash('sha256').update(data).digest())
+}
+
+function sha384(data: Uint8Array): Uint8Array {
+  return new Uint8Array(createHash('sha384').update(data).digest())
+}
+
+function concatBytes(...parts: Uint8Array[]): Uint8Array {
+  const total = parts.reduce((sum, p) => sum + p.length, 0)
+  const out = new Uint8Array(total)
+  let offset = 0
+  for (const part of parts) {
+    out.set(part, offset)
+    offset += part.length
+  }
+  return out
+}
+
+const utf8 = (s: string): Uint8Array => new TextEncoder().encode(s)
+
+/**
+ * Arweave deep-hash (SHA-384 based). This is the message that ANS-104
+ * data item signatures are computed over.
+ */
+function deepHashBlob(data: Uint8Array): Uint8Array {
+  const tag = concatBytes(utf8('blob'), utf8(String(data.length)))
+  return sha384(concatBytes(sha384(tag), data))
+}
+
+function deepHashList(chunks: Uint8Array[]): Uint8Array {
+  const tag = concatBytes(utf8('list'), utf8(String(chunks.length)))
+  let acc = sha384(tag)
+  for (const chunk of chunks) {
+    acc = sha384(concatBytes(acc, deepHashBlob(chunk)))
+  }
+  return acc
+}
+
+/**
+ * Encode a non-negative Avro long as zigzag varint.
+ * (Avro longs are zigzag-encoded; for n >= 0, zigzag(n) = 2n.)
+ */
+function writeAvroLong(n: number, out: number[]): void {
+  let v = n * 2
+  while (v > 0x7f) {
+    out.push((v & 0x7f) | 0x80)
+    v = Math.floor(v / 128)
+  }
+  out.push(v & 0x7f)
+}
+
+/**
+ * Serialize tags per the ANS-104 Avro schema:
+ *
+ *   { "type": "array", "items": { "type": "record", "name": "Tag",
+ *     "fields": [ { "name": "name", "type": "string" },
+ *                 { "name": "value", "type": "string" } ] } }
+ *
+ * Avro binary encoding of an array: a zigzag-varint block count, the items,
+ * then a zero terminator (single byte 0x00 encodes the empty array).
+ * Strings are a zigzag-varint byte length followed by UTF-8 bytes.
+ */
+export function serializeAvroTags(
+  tags: Array<{ name: string; value: string }>
+): Uint8Array {
+  if (tags.length === 0) {
+    return new Uint8Array([0])
+  }
+
+  const out: number[] = []
+  writeAvroLong(tags.length, out)
+  for (const tag of tags) {
+    const nameBytes = utf8(tag.name)
+    writeAvroLong(nameBytes.length, out)
+    out.push(...nameBytes)
+    const valueBytes = utf8(tag.value)
+    writeAvroLong(valueBytes.length, out)
+    out.push(...valueBytes)
+  }
+  out.push(0) // array terminator
+  return new Uint8Array(out)
+}
+
+/**
+ * ANS-104 data item ID: base64url(sha256(signature)).
+ */
+export function getDataItemId(signature: Uint8Array): string {
+  return base64UrlEncode(sha256(signature))
+}
+
+/**
+ * Build and sign an ANS-104 ed25519 data item.
+ *
+ * The signing message is the Arweave deep-hash of:
+ *   ["dataitem", "1", "2", owner, target, anchor, avroTags, data]
+ * matching the reference implementation (arbundles) used by Irys nodes.
+ *
+ * @param data - Raw payload bytes
+ * @param tags - Arweave tags (empty tags are valid)
+ * @param signer - Solana ed25519 keypair
+ * @returns The item ID, the serialized item, the signature, and the owner bytes
+ */
+export function createSignedDataItem(
+  data: Uint8Array,
+  tags: Array<{ name: string; value: string }>,
+  signer: DataItemSigner
+): { id: string; raw: Uint8Array; signature: Uint8Array; owner: Uint8Array } {
+  const owner = resolvePublicKeyBytes(signer.publicKey)
+  if (owner.length !== 32) {
+    throw new Error(`Invalid ed25519 public key length: expected 32 bytes, got ${owner.length}`)
+  }
+  const secretKey = resolveSecretKey(signer.secretKey)
+
+  // Sanity check: the secret key must match the declared public key.
+  const derived = nacl.sign.keyPair.fromSecretKey(secretKey).publicKey
+  if (!derived.every((b, i) => b === owner[i])) {
+    throw new Error('Signer public key does not match the provided secret key')
+  }
+
+  const tagsBytes = serializeAvroTags(tags)
+  const message = deepHashList([
+    utf8('dataitem'),
+    utf8('1'),
+    utf8(String(ANS104_SIG_TYPE_ED25519)),
+    owner,
+    new Uint8Array(0), // target (absent)
+    new Uint8Array(0), // anchor (absent)
+    tagsBytes,
+    data,
+  ])
+
+  const signature = nacl.sign.detached(message, secretKey)
+  const raw = serializeDataItem({ data, tags, owner, signature })
+  return { id: getDataItemId(signature), raw, signature, owner }
 }
 
 /**
@@ -430,7 +681,11 @@ export interface DataItem {
  *   - For each item: 32 bytes offset (u256 LE) + 32 bytes item ID
  *   - Concatenated serialized data items
  *
- * @param items - Array of DataItem objects to bundle
+ * The item ID is the raw 32-byte sha256 of the item's signature
+ * (base64url-encoded it becomes the textual item ID), per the ANS-104
+ * spec — NOT a prefix of the serialized item.
+ *
+ * @param items - Array of signed DataItem objects to bundle
  * @returns Serialized bundle as Uint8Array
  */
 export function bundleTransactions(items: DataItem[]): Uint8Array {
@@ -443,22 +698,23 @@ export function bundleTransactions(items: DataItem[]): Uint8Array {
 
   // Build offset/ID pairs
   const pairs: Uint8Array[] = []
-  let currentOffset = 0
   for (let i = 0; i < serializedItems.length; i++) {
-    // 32-byte offset
+    // 32-byte offset (byte length of the serialized item)
     const offsetBytes = new Uint8Array(32)
     const offsetView = new DataView(offsetBytes.buffer)
     offsetView.setUint32(0, serializedItems[i].length, true)
 
-    // 32-byte ID (SHA-256 of the serialized item)
-    const idBytes = new Uint8Array(32)
-    // Use a simple hash of the data as placeholder ID
-    for (let j = 0; j < Math.min(serializedItems[i].length, 32); j++) {
-      idBytes[j] = serializedItems[i][j]
+    // 32-byte ID = sha256(signature). Unsigned items have no valid ID.
+    const signature = items[i].signature
+    if (!signature || signature.length !== 64) {
+      throw new Error(
+        'bundleTransactions requires signed data items: item ' +
+        `${i} is missing its 64-byte ed25519 signature`
+      )
     }
+    const idBytes = sha256(signature)
 
     pairs.push(offsetBytes, idBytes)
-    currentOffset += serializedItems[i].length
   }
 
   // Combine: count + pairs + items
@@ -484,14 +740,14 @@ export function bundleTransactions(items: DataItem[]): Uint8Array {
 }
 
 /**
- * Serialize a single DataItem to bytes (ANS-104 format)
+ * Serialize a single DataItem to bytes (ANS-104 format, ed25519 / signature type 2)
  */
-function serializeDataItem(item: DataItem): Uint8Array {
+export function serializeDataItem(item: DataItem): Uint8Array {
   const parts: Uint8Array[] = []
 
-  // Signature type: 1 = ed25519 (2 bytes LE)
+  // Signature type: 2 = ed25519 (2 bytes LE)
   const sigType = new Uint8Array(2)
-  sigType[0] = 1
+  new DataView(sigType.buffer).setUint16(0, ANS104_SIG_TYPE_ED25519, true)
   parts.push(sigType)
 
   // Signature (64 bytes for ed25519, zero-filled if not provided)
@@ -499,6 +755,9 @@ function serializeDataItem(item: DataItem): Uint8Array {
   parts.push(signature)
 
   // Owner (32 bytes for ed25519)
+  if (item.owner.length !== 32) {
+    throw new Error(`Invalid owner length: expected 32 bytes, got ${item.owner.length}`)
+  }
   parts.push(item.owner)
 
   // Target (optional): 1 byte presence flag + 32 bytes if present
@@ -528,47 +787,19 @@ function serializeDataItem(item: DataItem): Uint8Array {
   new DataView(tagCount.buffer).setUint32(0, item.tags.length, true)
   parts.push(tagCount)
 
-  // Number of tag bytes (8 bytes LE) — compute after serializing tags
+  // Number of tag bytes (8 bytes LE)
   const serializedTags = serializeAvroTags(item.tags)
   const tagBytesLen = new Uint8Array(8)
   new DataView(tagBytesLen.buffer).setUint32(0, serializedTags.length, true)
   parts.push(tagBytesLen)
 
-  // Serialized tags
+  // Avro-serialized tags
   parts.push(serializedTags)
 
   // Data
   parts.push(item.data)
 
   // Combine all parts
-  const totalLen = parts.reduce((sum, p) => sum + p.length, 0)
-  const result = new Uint8Array(totalLen)
-  let offset = 0
-  for (const part of parts) {
-    result.set(part, offset)
-    offset += part.length
-  }
-  return result
-}
-
-/**
- * Serialize tags in Avro format for ANS-104
- */
-function serializeAvroTags(tags: Array<{ name: string; value: string }>): Uint8Array {
-  const parts: Uint8Array[] = []
-  for (const tag of tags) {
-    const nameBytes = new TextEncoder().encode(tag.name)
-    const valueBytes = new TextEncoder().encode(tag.value)
-
-    // Name length (2 bytes LE) + name + value length (2 bytes LE) + value
-    const nameLen = new Uint8Array(2)
-    new DataView(nameLen.buffer).setUint16(0, nameBytes.length, true)
-    const valueLen = new Uint8Array(2)
-    new DataView(valueLen.buffer).setUint16(0, valueBytes.length, true)
-
-    parts.push(nameLen, nameBytes, valueLen, valueBytes)
-  }
-
   const totalLen = parts.reduce((sum, p) => sum + p.length, 0)
   const result = new Uint8Array(totalLen)
   let offset = 0

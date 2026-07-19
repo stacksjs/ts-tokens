@@ -12,6 +12,7 @@ import type { StorageAdapter, StorageProvider, TokenConfig } from '../types'
 import { ArweaveStorageAdapter, createArweaveAdapter } from './arweave'
 import { IPFSStorageAdapter, createIPFSAdapter } from './ipfs'
 import { ShadowDriveStorageAdapter, createShadowDriveAdapter } from './shadow-drive'
+import { loadWallet } from '../drivers/solana/wallet'
 
 /**
  * Storage adapter registry
@@ -67,9 +68,31 @@ export function getStorageAdapter(
   let adapter: StorageAdapter
 
   switch (provider) {
-    case 'arweave':
-      adapter = createArweaveAdapter(config?.storage?.arweave)
+    case 'arweave': {
+      const arweaveAdapter = createArweaveAdapter(config?.storage?.arweave)
+      if (config) {
+        // Fail fast: uploads sign ANS-104 data items with the Solana keypair,
+        // so surface a missing-wallet problem here (at adapter construction)
+        // rather than mid-mint at upload time.
+        try {
+          const keypair = loadWallet(config)
+          arweaveAdapter.setWallet({
+            publicKey: keypair.publicKey.toBase58(),
+            secretKey: keypair.secretKey,
+          })
+        } catch (err) {
+          throw new Error(
+            'Storage provider "arweave" requires a Solana keypair to sign uploads ' +
+            '(Irys ANS-104 data items). Configure wallet.keypairPath in tokens.config.ts, ' +
+            'set the TOKENS_KEYPAIR environment variable, or create ~/.config/solana/id.json — ' +
+            'or choose a different storageProvider. ' +
+            `(${err instanceof Error ? err.message : String(err)})`
+          )
+        }
+      }
+      adapter = arweaveAdapter
       break
+    }
     case 'ipfs':
       adapter = createIPFSAdapter(config?.storage?.ipfs)
       break
@@ -133,6 +156,15 @@ class LocalStorageAdapter implements StorageAdapter {
     const hash = crypto.createHash('sha256').update(bytes).digest('hex').slice(0, 16)
     const ext = this.getExtension(contentType)
     const id = `${hash}${ext}`
+
+    // Loud warning: this URL only resolves on this machine. If it ends up in
+    // on-chain metadata, the asset is permanently unresolvable for everyone
+    // else. The local adapter is never in the default fallback chain — it is
+    // only reachable by explicit opt-in.
+    console.warn(
+      `[ts-tokens] WARNING: local storage adapter wrote ${id} — ${this.baseUrl}/${id} ` +
+      'is NOT publicly resolvable. Do not use these URLs in on-chain metadata.'
+    )
 
     // Ensure directory exists
     const fullDir = path.resolve(this.baseDir)
@@ -288,7 +320,15 @@ export function createStorageDriver(config: TokenConfig): StorageAdapter {
 /**
  * Storage fallback chain — tries providers in order until one succeeds
  *
- * Default order: arweave -> ipfs -> shadow-drive -> local
+ * Default order: arweave -> ipfs -> shadow-drive
+ *
+ * 'local' is deliberately NOT in the default chain: it produces
+ * http://localhost:... URLs that are not publicly resolvable and would be
+ * baked permanently into on-chain metadata. It is only used when passed
+ * explicitly in `providers`.
+ *
+ * If every provider fails, the thrown error aggregates each provider's
+ * failure reason (not just the last one).
  *
  * @param data - Data to upload
  * @param config - Token configuration
@@ -301,7 +341,7 @@ export async function uploadWithFallback(
   data: Uint8Array | string,
   config: TokenConfig,
   options?: { contentType?: string },
-  providers: StorageProvider[] = ['arweave', 'ipfs', 'shadow-drive', 'local']
+  providers: StorageProvider[] = ['arweave', 'ipfs', 'shadow-drive']
 ): Promise<{
   id: string
   url: string
@@ -331,7 +371,9 @@ export async function uploadWithFallback(
   }
 
   throw new Error(
-    `All storage providers failed:\n${errors.map(e => `  ${e.provider}: ${e.error}`).join('\n')}`
+    `All storage providers failed:\n${errors.map(e => `  ${e.provider}: ${e.error}`).join('\n')}\n` +
+    `Hint: 'local' storage is available only as an explicit opt-in (pass it in the providers list) ` +
+    'and its URLs are not publicly resolvable.'
   )
 }
 
