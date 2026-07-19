@@ -24,7 +24,11 @@ const config: TokenConfig = {
   commitment: 'confirmed',
   autoCreateAccounts: true,
 
-  // Storage provider for metadata
+  // Storage provider for metadata.
+  // 'arweave' uploads via Irys (https://node1.irys.xyz, override with IRYS_NODE_URL);
+  // needs a Solana keypair (see wallet config above) and a funded Irys balance.
+  // 'ipfs' needs PINATA_JWT or a local node; 'shadow-drive' needs a running SHDW
+  // node endpoint; 'local' is dev-only (URLs are NOT publicly resolvable).
   storageProvider: 'arweave', // 'arweave' | 'ipfs' | 'shadow-drive' | 'local'
 
   // Gateways
