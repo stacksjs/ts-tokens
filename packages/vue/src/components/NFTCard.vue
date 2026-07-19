@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { useNFT } from '../composables'
+import type { NFTDisplayInfo } from '../types'
+import NFTCardInner from './NFTCardInner.vue'
+import NFTCardView from './NFTCardView.vue'
 
-const props = withDefaults(defineProps<{
+/**
+ * NFTCard
+ *
+ * `nft` is optional: when provided (e.g. by NFTGallery, which already fetched
+ * the list), the card renders it directly instead of refetching. When only
+ * `mint` is given, the card fetches the NFT itself via `useNFT`.
+ */
+withDefaults(defineProps<{
   mint: string
+  nft?: NFTDisplayInfo
   showDetails?: boolean
 }>(), {
+  nft: undefined,
   showDetails: false,
 })
-
-const { nft, loading, error } = useNFT(() => props.mint)
 </script>
 
 <template>
-  <div v-if="loading" role="status" aria-label="Loading NFT">Loading...</div>
-  <div v-else-if="error" role="alert">Error loading NFT</div>
-  <div v-else-if="!nft">NFT not found</div>
-  <div v-else style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden;" role="article" :aria-label="`NFT: ${nft.name}`">
-    <img v-if="nft.image" :src="nft.image" :alt="nft.name" style="width: 100%; aspect-ratio: 1;" />
-    <div style="padding: 12px;">
-      <h3 style="margin: 0 0 4px;">{{ nft.name }}</h3>
-      <p style="margin: 0; color: #666; font-size: 14px;">{{ nft.symbol }}</p>
-      <p v-if="showDetails && nft.description" style="margin: 8px 0 0; font-size: 12px;">{{ nft.description }}</p>
-    </div>
-  </div>
+  <NFTCardView v-if="nft" :nft="nft" :show-details="showDetails" />
+  <NFTCardInner v-else :mint="mint" :show-details="showDetails" />
 </template>

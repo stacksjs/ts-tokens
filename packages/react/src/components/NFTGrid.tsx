@@ -19,7 +19,7 @@ export function NFTGrid({ owner, columns = 3, className, style }: NFTGridProps):
     <div className={className} style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: '16px', ...style }} role="list" aria-label="NFT collection">
       {nfts.map((nft) => (
         <div key={nft.mint} role="listitem">
-          <NFTCard mint={nft.mint} />
+          <NFTCard mint={nft.mint} nft={nft} />
         </div>
       ))}
     </div>

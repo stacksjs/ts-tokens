@@ -19,4 +19,4 @@ export * from './types'
 export { formatUnits } from './utils/format'
 
 // Plugin
-export { TokensPlugin, createTokens } from './plugin'
+export { TokensPlugin, createTokens, useTokens, TokensKey } from './plugin'

@@ -24,6 +24,6 @@ const filtered = computed(() => {
   <div v-else-if="error">Error: {{ error.message }}</div>
   <div v-else-if="filtered.length === 0">No NFTs found{{ collection ? ' in this collection' : '' }}</div>
   <div v-else :style="{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: '16px' }">
-    <NFTCard v-for="nft in filtered" :key="nft.mint" :mint="nft.mint" />
+    <NFTCard v-for="nft in filtered" :key="nft.mint" :mint="nft.mint" :nft="nft" />
   </div>
 </template>

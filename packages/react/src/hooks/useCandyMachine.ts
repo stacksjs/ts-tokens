@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { useConnection, useConfig } from '../context'
+import { useConnection } from '../context'
 import type { CandyMachineDisplayInfo } from '../types'
 
 /**
@@ -23,7 +23,6 @@ export interface CandyMachineState {
  */
 export function useCandyMachine(address: string): CandyMachineState {
   const connection = useConnection()
-  const _config = useConfig()
   const [candyMachine, setCandyMachine] = useState<CandyMachineDisplayInfo | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)

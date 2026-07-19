@@ -48,8 +48,9 @@ export function TokenMintForm({ mint, buildTransaction, onMint, className, style
   return (
     <form className={className} style={style} onSubmit={handleSubmit}>
       <div style={{ marginBottom: 8 }}>
-        <label style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>Amount to Mint</label>
+        <label htmlFor="token-mint-amount" style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>Amount to Mint</label>
         <input
+          id="token-mint-amount"
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
@@ -59,8 +60,9 @@ export function TokenMintForm({ mint, buildTransaction, onMint, className, style
         />
       </div>
       <div style={{ marginBottom: 8 }}>
-        <label style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>Destination (optional)</label>
+        <label htmlFor="token-mint-destination" style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>Destination (optional)</label>
         <input
+          id="token-mint-destination"
           type="text"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
