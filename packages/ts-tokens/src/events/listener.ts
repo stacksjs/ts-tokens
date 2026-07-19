@@ -38,7 +38,7 @@ export class EventListener {
    * The subscription bookkeeping and filtering below are correct and ready for
    * when parsing is wired up.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line pickier/no-unused-vars
   subscribe(callback: EventCallback, options: ListenerOptions = {}): number {
     throw new Error(
       'EventListener.subscribe() is not implemented: program-log parsing ' +
@@ -141,7 +141,7 @@ export class EventListener {
    * requires instruction/log parsing that is not yet available. This throws so
    * the "no events fire" gap is explicit rather than silently returning null.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line pickier/no-unused-vars
   private parseLogsToEvent(logs: { signature: string; logs: string[] }): TokenEvent | null {
     throw new Error(
       'parseLogsToEvent is not implemented: program-log decoding into ' +
@@ -316,7 +316,7 @@ export function onStake(
  * parsing that is not available yet, so `onEvent` could never fire. This throws
  * rather than starting a loop that silently never emits.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function pollEvents(
   connection: Connection,
   accounts: PublicKey[],

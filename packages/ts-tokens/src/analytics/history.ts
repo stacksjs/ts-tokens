@@ -8,6 +8,7 @@ import type { PriceHistory, PricePoint, TokenMetrics, CollectionMetrics, ExportO
 /**
  * Get price history for a token
  */
+// eslint-disable-next-line pickier/no-unused-vars
 export async function getPriceHistory(
   mint: PublicKey,
   period: '1h' | '24h' | '7d' | '30d' | '90d' | '1y' | 'all' = '7d'
@@ -22,7 +23,7 @@ export async function getPriceHistory(
 /**
  * Get token metrics
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function getTokenMetrics(
   connection: Connection,
   mint: PublicKey
@@ -38,7 +39,7 @@ export async function getTokenMetrics(
 /**
  * Get NFT collection metrics
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function getCollectionMetrics(
   collection: PublicKey
 ): Promise<CollectionMetrics> {

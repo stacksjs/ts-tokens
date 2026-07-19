@@ -13,7 +13,7 @@ import type { TradingVolume, WhaleActivity, WhaleWatchConfig } from './types'
  * transaction's token balance changes, which is not available yet. Returning
  * `trades * 1_000_000` and fixed buyer/seller ratios would be fabricated data.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function getTradingVolume(
   connection: Connection,
   mint: PublicKey,
@@ -32,7 +32,7 @@ export async function getTradingVolume(
  * NOTE: not implemented. This can only emit zero-filled buckets without real
  * per-transaction volume parsing (see `getTradingVolume`).
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function getVolumeBreakdown(
   connection: Connection,
   mint: PublicKey,
@@ -53,7 +53,7 @@ export async function getVolumeBreakdown(
  * so the alert callback could never fire. Rather than returning a watcher that
  * silently never alerts, construction throws.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export function createWhaleWatcher(
   connection: Connection,
   config: WhaleWatchConfig
@@ -73,7 +73,7 @@ export function createWhaleWatcher(
  * previous placeholder reported every signature with `amount: 0n` and the mint
  * as the address, which is fabricated data.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function getWhaleActivity(
   connection: Connection,
   mint: PublicKey,

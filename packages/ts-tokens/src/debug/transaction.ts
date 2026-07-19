@@ -70,7 +70,7 @@ export async function analyzeTransaction(
     instructions.push({
       programId,
       programName: getProgramName(programId),
-      accounts: ix.accountKeyIndexes.map(i => keys[i]).filter((k): k is PublicKey => k !== undefined),
+      accounts: ix.accountKeyIndexes.map(i => keys[i]).filter(k => k !== undefined),
       data: ix.data,
     })
   }

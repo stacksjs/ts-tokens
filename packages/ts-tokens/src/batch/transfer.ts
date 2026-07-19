@@ -30,7 +30,7 @@ import type {
  * to build the instructions and sign/send them with a wallet, or use the
  * config-driven ALT path (`batchTransferWithALT`) which loads a wallet.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function batchTransfer(
   connection: Connection,
   payer: PublicKey,

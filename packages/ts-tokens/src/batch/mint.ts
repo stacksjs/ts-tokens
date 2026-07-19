@@ -31,7 +31,7 @@ import type {
  * here. Use `prepareBatchMint` to build the instructions and sign/send them
  * with a wallet.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function batchMint(
   connection: Connection,
   payer: PublicKey,
@@ -55,7 +55,7 @@ export async function batchMint(
  * not correspond to any on-chain account. Minting NFT batches is intentionally
  * not implemented here.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line pickier/no-unused-vars
 export async function batchMintNFTs(
   connection: Connection,
   payer: PublicKey,
