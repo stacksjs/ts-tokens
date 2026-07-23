@@ -94,10 +94,10 @@
   "dependencies": {
     "ts-tokens": "workspace:*",
     "@solana/web3.js": "^1.98.4",
-    "@solana/spl-token": "^0.4.14"
+    "@solana/spl-token": "^0.4.15"
   },
   "devDependencies": {
     "@types/node": "^25.2.3",
-    "better-dx": "^0.2.6"
+    "better-dx": "^0.2.20"
   }
 }
