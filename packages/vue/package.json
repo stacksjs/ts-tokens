@@ -57,20 +57,20 @@
     "ts-tokens": "workspace:*"
   },
   "peerDependencies": {
-    "vue": "^3.5.28",
-    "@solana/spl-token": "^0.4.14",
+    "vue": "^3.5.40",
+    "@solana/spl-token": "^0.4.15",
     "@solana/web3.js": "^1.98.4"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.0",
-    "@vue/test-utils": "^2.4.6",
-    "better-dx": "^0.2.6",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vue/test-utils": "^2.4.11",
+    "better-dx": "^0.2.22",
     "bun-plugin-dtsx": "^0.11.1",
-    "vite": "^7.1.0",
-    "@solana/spl-token": "^0.4.14",
+    "vite": "^7.3.6",
+    "@solana/spl-token": "^0.4.15",
     "@solana/web3.js": "^1.98.4",
-    "happy-dom": "^20.6.2",
-    "vue": "^3.5.28"
+    "happy-dom": "^20.11.1",
+    "vue": "^3.5.40"
   },
   "lint-staged": {
     "*.{js,ts,vue}": "bunx --bun pickier . --fix"
