@@ -69,7 +69,7 @@
     "vite": "^7.1.0",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
-    "happy-dom": "^20.6.2",
+    "happy-dom": "^21.0.3",
     "vue": "^3.5.28"
   },
   "lint-staged": {
