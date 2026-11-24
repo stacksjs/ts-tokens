@@ -151,4 +151,4 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: pantry publish:commit './packages/ts-governance' && pantry publish:commit './packages/ts-tokens' && pantry publish:commit './packages/react' && pantry publish:commit './packages/vue'
         env:
-          PANTRY_REGISTRY_TOKEN: ${{ secrets.PANTRY_TOKEN }}
+          PANTRY_TOKEN: ${{ secrets.PANTRY_TOKEN }}
